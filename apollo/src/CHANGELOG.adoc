@@ -1,0 +1,22 @@
+= Apollo Changelog
+
+== Version 1.1
+
+Release Date:
+
+=== Model IO
+
+* Changed ModelIO to be folder based, which makes it easier to incorporate 3rd party model (e.g. Tensorflow)
+
+=== Tensorflow
+
+* Addeded dependency for Tensorflow 1.15
+* Basic model implementation TensorflowModel
+
+=== Bug Fixes
+
+* Fixed GreedyAveragePerceptron getFitParameters which was returning a new Parameters object each call.
+
+== Version 1.0
+
+Release Date: 05/03/2020

@@ -1,0 +1,23 @@
+= Apollo Changelog
+
+== Version 1.1
+
+Release Date:
+
+Clustering
+
+* Mapped Datum Output to the label of the generated NDArrays to use as an anchor back to the input object.
+* Added a DivisiveKMeans which is a recursive of KMeans that breaks clusters up until the cluster is a minimum size or has a good enough score.
+
+TensorFlow
+
+* TensorFlowModel provides a generic wrapper for SavedModelBundle.
+
+NDArray
+
+* Additional factory methods
+* Additional toFloat methods for easy conversion to TensorFlow Tensors.
+
+== Version 1.0
+
+Release Date: 05/03/2020

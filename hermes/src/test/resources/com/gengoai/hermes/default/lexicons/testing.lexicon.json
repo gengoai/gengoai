@@ -1,0 +1,40 @@
+{
+  "@spec": {
+    "caseSensitive": false,
+    "tagAttribute": "ENTITY_TYPE",
+    "language": "ENGLISH"
+  },
+  "@entries": [
+    {
+      "lemma": "alice",
+      "tag": "PERSON",
+      "probability": 0.8
+    },
+    {
+      "lemma": "white rabbit",
+      "tag": "ANIMAL"
+    },
+    {
+      "lemma": "rabbit",
+      "tag": "ANIMAL",
+      "probability": 0.9
+    },
+    {
+      "lemma": "think",
+      "tag": "ACTION",
+      "probability": 0.9,
+      "constraint": "(?!> 'it')"
+    },
+    {
+      "lemma": "think",
+      "tag": "ACTION",
+      "probability": 0.7,
+      "constraint": "(?> 'it')"
+    },
+    {
+      "lemma": "think",
+      "tag": "ACTION",
+      "probability": 0.2
+    }
+  ]
+}
