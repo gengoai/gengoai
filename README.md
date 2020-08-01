@@ -1,2 +1,1 @@
-# mono-repo
-Mono Repository for GengoAI projects
+Language + AI = ![GengoAI](https://www.gengoai.com/gengoai/images/gengoai.png)
