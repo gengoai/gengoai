@@ -72,7 +72,7 @@ Mango requires Java 11 and is available via the maven central repository.
 
 <dependency>
      <groupId>com.gengoai</groupId>
-     <artifactId>mango-swing-ui</artifactId>
+     <artifactId>mango-swing</artifactId>
      <version>1.1</version>
 </dependency>
 ----

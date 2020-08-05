@@ -23,7 +23,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.gengoai</groupId>
-    <artifactId>gengoai-pom</artifactId>
+    <artifactId>gengoai</artifactId>
     <version>1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
@@ -93,17 +93,17 @@
             </dependency>
             <dependency>
                 <groupId>com.gengoai</groupId>
-                <artifactId>mango-swing-ui</artifactId>
+                <artifactId>mango</artifactId>
+                <version>1.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.gengoai</groupId>
+                <artifactId>mango-swing</artifactId>
                 <version>1.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.gengoai</groupId>
                 <artifactId>apollo</artifactId>
-                <version>1.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>mango</artifactId>
                 <version>1.1-SNAPSHOT</version>
             </dependency>
 
@@ -197,11 +197,6 @@
                 <version>1.15.0</version>
             </dependency>
             <dependency>
-                <groupId>org.tensorflow</groupId>
-                <artifactId>libtensorflow_jni_gpu</artifactId>
-                <version>1.15.0</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-math3</artifactId>
                 <version>3.6.1</version>
@@ -243,7 +238,7 @@
             </dependency>
 
             <!-- ======================================================================== -->
-            <!-- Compile 3rd Party Dependencies -->
+            <!-- Compile Time 3rd Party Dependencies -->
             <!-- ======================================================================== -->
 
             <dependency>

@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.gengoai</groupId>
-        <artifactId>gengoai-pom</artifactId>
+        <artifactId>gengoai</artifactId>
         <version>1.1-SNAPSHOT</version>
     </parent>
     <artifactId>apollo</artifactId>
@@ -34,10 +34,6 @@
         <dependency>
             <groupId>org.tensorflow</groupId>
             <artifactId>tensorflow</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.tensorflow</groupId>
-            <artifactId>libtensorflow_jni_gpu</artifactId>
         </dependency>
         <dependency>
             <groupId>com.gengoai</groupId>
