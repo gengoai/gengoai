@@ -1,0 +1,20 @@
+= Mango Changelog
+
+== Version 1.1
+
+Release Date:
+
+== Merges
+
+* Merged mango-annotations into core mango.
+
+== SQL
+
+* Added com.gengoai.sql to provide a wrapper around dealing with SQL. Currently supports SQLite.
+
+
+
+== Version 1.0
+
+Release Date: 05/03/2020
+

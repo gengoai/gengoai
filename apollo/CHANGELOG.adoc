@@ -7,7 +7,7 @@ Release Date:
 Clustering
 
 * Mapped Datum Output to the label of the generated NDArrays to use as an anchor back to the input object.
-* Added a DivisiveKMeans which is a recursive of KMeans that breaks clusters up until the cluster is a minimum size or has a good enough score.
+* Added a DivisiveKMeans which is a recursive version of KMeans that breaks clusters up until the cluster is a minimum size or has a good enough score.
 
 TensorFlow
 

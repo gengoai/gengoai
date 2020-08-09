@@ -79,7 +79,7 @@
                         <configuration>
                             <backend>html5</backend>
                             <sourceHighlighter>coderay</sourceHighlighter>
-<!--                            <outputFile>index.htm</outputFile>-->
+                            <!--                            <outputFile>index.htm</outputFile>-->
                         </configuration>
                     </execution>
                     <execution>

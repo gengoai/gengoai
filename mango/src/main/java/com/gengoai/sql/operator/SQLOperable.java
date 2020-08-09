@@ -58,6 +58,10 @@ public interface SQLOperable extends SQLElement {
       return SQL.and(this, rhs);
    }
 
+   default SQLOperable as(@NonNull String name) {
+     return new SQLBinaryOperator("AS", SQL.group(this), SQL.C(name));
+   }
+
    /**
     * Informs the query that this element is to be sorted in ascending order.
     *

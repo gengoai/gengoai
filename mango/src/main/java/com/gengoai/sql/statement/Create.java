@@ -19,9 +19,9 @@
 
 package com.gengoai.sql.statement;
 
-import lombok.*;
 import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLObject;
+import lombok.*;
 
 /**
  * <p>SQL create statement for SQL objects (Table, Index, Trigger, etc).</p>

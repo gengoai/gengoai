@@ -81,10 +81,10 @@ public class SQLiteDataSet extends DataSet {
             SQLiteConnectionRegistry.getConnection("jdbc:sqlite:" + Strings.prependIfNotPresent(dataset.path(),
                                                                                                 "/")),
             SQLiteDialect.INSTANCE);
-      if(!executor.exists(dataTable)) {
+      if (!executor.exists(dataTable)) {
          executor.update(dataTable.create());
       }
-      if(!executor.exists(metadataTable)) {
+      if (!executor.exists(metadataTable)) {
          executor.batchUpdate(metadataTable.create(),
                               metadataTable.insert(InsertType.INSERT_OR_REPLACE)
                                            .values(SQL.L(SIZE_NAME), SQL.N(0)),
@@ -108,14 +108,14 @@ public class SQLiteDataSet extends DataSet {
                                                                         SQL.sql("cast(value as INTEGER)-1"))
                                                                    .where(name.eq(SQL.L(SIZE_NAME))))
                                      .build().create()
-                             );
+         );
       } else {
          Stream<Map<String, ?>> stream = executor.query(metadataTable.select(name, value)
                                                                      .where(name.neq(SQL.L(SIZE_NAME))),
                                                         r -> Map.of(r.getString(name.getName()),
                                                                     r.getObject(value.getName())));
          stream.forEach(m -> m.forEach(Unchecked.biConsumer((source, metadata) -> {
-            if(source.equals("ndArrayFactory")) {
+            if (source.equals("ndArrayFactory")) {
                super.ndArrayFactory = NDArrayFactory.valueOf(metadata.toString());
             } else {
                super.metadata.put(source, Json.parse(metadata.toString(), ObservationMetadata.class));
@@ -137,11 +137,11 @@ public class SQLiteDataSet extends DataSet {
 
          @Override
          public DataSet next() {
-            if(!itr.hasNext()) {
+            if (!itr.hasNext()) {
                throw new NoSuchElementException();
             }
             List<Datum> data = new ArrayList<>();
-            while(itr.hasNext() && data.size() < batchSize) {
+            while (itr.hasNext() && data.size() < batchSize) {
                data.add(itr.next());
             }
             return new InMemoryDataSet(data);
@@ -168,27 +168,22 @@ public class SQLiteDataSet extends DataSet {
    @Override
    public DataSet map(@NonNull SerializableFunction<? super Datum, ? extends Datum> function) {
       final Connection connection = executor.getConnection();
-      try(NamedPreparedStatement preparedStatement = new NamedPreparedStatement(connection, dataTable.update()
-                                                                                                     .set(json,
-                                                                                                          SQL.namedArgument(
-                                                                                                                "json"))
-                                                                                                     .where(SQL.C(
-                                                                                                           "rowid")
-                                                                                                               .eq(SQL.namedArgument(
-                                                                                                                     "rowid")))
-                                                                                                     .toSQL(executor.getDialect()))) {
+      try (NamedPreparedStatement preparedStatement =
+                 new NamedPreparedStatement(connection, dataTable.update().set(json, SQL.namedArgument("json"))
+                                                                 .where(SQL.C("rowid")
+                                                                           .eq(SQL.namedArgument("rowid")))
+                                                                 .toSQL(executor.getDialect()))) {
          AtomicLong processed = new AtomicLong(0);
-
          boolean isAutoCommit = connection.getAutoCommit();
          connection.setAutoCommit(false);
          parallelIdStream().forEach(Unchecked.consumer(t -> {
             long id = t.v1;
             Datum datum = function.apply(t.v2);
-            synchronized(this) {
+            synchronized (this) {
                preparedStatement.setObject("json", Json.dumps(datum));
                preparedStatement.setLong("rowid", id);
                preparedStatement.addBatch();
-               if(processed.incrementAndGet() % SQLExecutor.DEFAULT_BATCH_SIZE == 0) {
+               if (processed.incrementAndGet() % SQLExecutor.DEFAULT_BATCH_SIZE == 0) {
                   preparedStatement.executeBatch();
                   connection.commit();
                   processed.set(0);
@@ -196,12 +191,12 @@ public class SQLiteDataSet extends DataSet {
             }
          }));
 
-         if(processed.get() > 0) {
+         if (processed.get() > 0) {
             preparedStatement.executeBatch();
             connection.commit();
          }
          connection.setAutoCommit(isAutoCommit);
-      } catch(SQLException e) {
+      } catch (SQLException e) {
          throw new RuntimeException(e);
       }
       return this;
@@ -213,9 +208,11 @@ public class SQLiteDataSet extends DataSet {
                              .stream(executor.<Tuple2<Long, Datum>>parallelQuery(dataTable.select("rowid",
                                                                                                   json.getName()),
                                                                                  resultSet -> {
-                                                                                    long id = resultSet.getLong("rowid");
-                                                                                    Datum datum = Json.parse(resultSet.getString(
-                                                                                          json.getName()), Datum.class);
+                                                                                    long id = resultSet
+                                                                                          .getLong("rowid");
+                                                                                    Datum datum = Json
+                                                                                          .parse(resultSet.getString(
+                                                                                                json.getName()), Datum.class);
                                                                                     return $(id, datum);
                                                                                  },
                                                                                  "rowid"));
@@ -225,8 +222,9 @@ public class SQLiteDataSet extends DataSet {
    @SneakyThrows
    public MStream<Datum> parallelStream() {
       return StreamingContext.local().stream(executor.<Datum>parallelQuery(select(),
-                                                                           resultSet -> Json.parse(resultSet.getString(1),
-                                                                                                   Datum.class),
+                                                                           resultSet -> Json
+                                                                                 .parse(resultSet.getString(1),
+                                                                                        Datum.class),
                                                                            "rowid"));
    }
 
@@ -260,7 +258,7 @@ public class SQLiteDataSet extends DataSet {
    }
 
    private Select select() {
-      if(isShuffled) {
+      if (isShuffled) {
          return dataTable.selectAll().orderBy(SQL.F.random());
       }
       return dataTable.selectAll();
