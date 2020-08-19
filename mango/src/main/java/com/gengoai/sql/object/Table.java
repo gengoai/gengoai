@@ -38,6 +38,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * The type Table.
+ */
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -132,6 +135,14 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       return AlterTable.table(this).alterColumn(column);
    }
 
+   /**
+    * Batch insert int.
+    *
+    * @param context the context
+    * @param values  the values
+    * @return the int
+    * @throws SQLException the sql exception
+    */
    public int batchInsert(@NonNull SQLContext context,
                           @NonNull Stream<Map<String, ?>> values) throws SQLException {
       return insert().columns(columns.stream()
@@ -141,6 +152,15 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
                      .batch(context, values, (m, nps) -> nps.fromMap(m));
    }
 
+   /**
+    * Batch upsert int.
+    *
+    * @param context        the context
+    * @param indexedColumns the indexed columns
+    * @param values         the values
+    * @return the int
+    * @throws SQLException the sql exception
+    */
    public int batchUpsert(@NonNull SQLContext context,
                           @NonNull List<String> indexedColumns,
                           @NonNull Stream<Map<String, ?>> values) throws SQLException {
@@ -160,6 +180,12 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
                      .batch(context, values, (m, nps) -> nps.fromMap(m));
    }
 
+   /**
+    * Column column.
+    *
+    * @param name the name
+    * @return the column
+    */
    public Column column(String name) {
       Validation.notNullOrBlank(name);
       return columns.stream()
@@ -218,10 +244,26 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       return AlterTable.table(this).dropColumn(name);
    }
 
+   /**
+    * Drop index boolean.
+    *
+    * @param context the context
+    * @param name    the name
+    * @return the boolean
+    * @throws SQLException the sql exception
+    */
    public boolean dropIndex(@NonNull SQLContext context, String name) throws SQLException {
       return new Index(this, Validation.notNullOrBlank(name), false, Collections.emptyList()).drop(context);
    }
 
+   /**
+    * Drop index if exists boolean.
+    *
+    * @param context the context
+    * @param name    the name
+    * @return the boolean
+    * @throws SQLException the sql exception
+    */
    public boolean dropIndexIfExists(@NonNull SQLContext context, String name) throws SQLException {
       return new Index(this, Validation.notNullOrBlank(name), false, Collections.emptyList()).dropIfExists(context);
    }
@@ -245,6 +287,12 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       return "TABLE";
    }
 
+   /**
+    * Index index builder.
+    *
+    * @param name the name
+    * @return the index builder
+    */
    public IndexBuilder index(String name) {
       return Index.index(name, this);
    }
@@ -276,6 +324,14 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       return Insert.into(this).type(insertType).columns(c).namedParameters();
    }
 
+   /**
+    * Insert int.
+    *
+    * @param context the context
+    * @param values  the values
+    * @return the int
+    * @throws SQLException the sql exception
+    */
    public int insert(@NonNull SQLContext context, @NonNull Map<String, Object> values) throws SQLException {
       return insert().columns(Sets.transform(values.keySet(), SQL::C))
                      .namedParameters()
@@ -388,13 +444,52 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       return Update.table(this).type(updateType);
    }
 
-   public int upsert(@NonNull SQLContext context,
-                     String indexedColumn,
-                     @NonNull Map<String, Object> values) throws SQLException {
+   public int update(@NonNull SQLContext context,
+                     @NonNull UpdateType updateType,
+                     @NonNull Map<String, SQLElement> setParameters,
+                     @NonNull SQLElement where) throws SQLException {
+      Update update = update(updateType);
+      setParameters.forEach(update::set);
+      return update.where(where).update(context);
+   }
+
+   public int update(@NonNull SQLContext context,
+                     @NonNull Map<String, SQLElement> setParameters,
+                     @NonNull SQLElement where) throws SQLException {
+      Update update = update();
+      setParameters.forEach(update::set);
+      return update.where(where).update(context);
+   }
+
+   /**
+    * Perform an upsert on the table using the given context, list of columns to base the upsert on, and values to
+    * upserted.
+    *
+    * @param context       the context to perform the upsert over
+    * @param indexedColumn the column used to determine insert or upsert
+    * @param values        the values of the row to be upserted
+    * @return True if one or more rows were modified.
+    * @throws SQLException the sql exception
+    */
+   public boolean upsert(@NonNull SQLContext context,
+                         String indexedColumn,
+                         @NonNull Map<String, Object> values) throws SQLException {
       return upsert(context, List.of(Validation.notNullOrBlank(indexedColumn)), values);
    }
 
-   public int upsert(@NonNull SQLContext context, List<String> indexedColumns, @NonNull Map<String, Object> values) throws SQLException {
+   /**
+    * Perform an upsert on the table using the given context, list of columns to base the upsert on, and values to
+    * upserted.
+    *
+    * @param context        the context to perform the upsert over
+    * @param indexedColumns the columns used to determine insert or upsert
+    * @param values         the values of the row to be upserted
+    * @return True if one or more rows were modified.
+    * @throws SQLException the sql exception
+    */
+   public boolean upsert(@NonNull SQLContext context,
+                         List<String> indexedColumns,
+                         @NonNull Map<String, Object> values) throws SQLException {
       Validation.checkArgument(indexedColumns.size() > 0, "Must define at least one index column");
       UpsertClause upsertClause = UpsertClause.upsert()
                                               .indexedColumns(Lists.transform(indexedColumns, SQL::C))
@@ -407,7 +502,7 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       return insert().columns(Sets.transform(values.keySet(), SQL::C))
                      .namedParameters()
                      .onConflict(upsertClause)
-                     .update(context, values);
+                     .update(context, values) > 0;
    }
 
 

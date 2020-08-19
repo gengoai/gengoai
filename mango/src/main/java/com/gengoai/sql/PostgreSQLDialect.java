@@ -22,6 +22,7 @@ package com.gengoai.sql;
 import com.gengoai.LogUtils;
 import com.gengoai.sql.object.Column;
 import com.gengoai.sql.statement.InsertType;
+import com.gengoai.sql.statement.UpdateType;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 import lombok.extern.java.Log;
@@ -113,5 +114,14 @@ public class PostgreSQLDialect extends SQLDialect {
             return super.translate(keyword);
       }
 
+   }
+
+   @Override
+   protected String updateType(UpdateType updateType) {
+      if (updateType == UpdateType.UPDATE) {
+         return "UPDATE";
+      }
+      LogUtils.logWarning(log, "PostgreSQL does not support ''{0}'' using ''UPDATE'' instead", updateType);
+      return "UPDATE";
    }
 }//END OF PostgreSQLDialect
