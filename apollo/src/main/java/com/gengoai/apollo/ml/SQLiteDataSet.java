@@ -101,7 +101,7 @@ public class SQLiteDataSet extends DataSet {
                                                              .where(name.eq(SQL.L(SIZE_NAME))))
                                .build().create(),
                         Trigger.builder()
-                               .name("data_dete_size_dec")
+                               .name("data_delete_size_dec")
                                .table(dataTable)
                                .operation(SQLDMLOperation.DELETE)
                                .when(TriggerTime.AFTER)

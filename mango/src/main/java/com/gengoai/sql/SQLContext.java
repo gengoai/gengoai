@@ -48,7 +48,7 @@ import java.util.stream.Stream;
  * database. The executor provides wrappers around JDBC elements that will auto close when they are no longer in
  * memory.</p>
  */
-@Value(staticConstructor = "create")
+@Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class SQLContext implements Serializable {
    private static final long serialVersionUID = 1L;
@@ -58,6 +58,19 @@ public class SQLContext implements Serializable {
    public static int DEFAULT_BATCH_SIZE = 500;
    @NonNull Connection connection;
    @NonNull SQLDialect dialect;
+
+
+   /**
+    * Creates an {@link SQLContext} from the given JDBC Connection and will generate SQL using the given {@link
+    * SQLDialect}**.
+    *
+    * @param connection the connection to the database
+    * @param dialect    the SQL dialect for converting Mango SQL objects to SQL statements.
+    * @return the SQLExecutor
+    */
+   public static SQLContext create(@NonNull Connection connection, @NonNull SQLDialect dialect) {
+      return new SQLContext(connection, dialect);
+   }
 
    /**
     * Performs a batch update for a set of update statements that do not require any values to be specified. Note that
