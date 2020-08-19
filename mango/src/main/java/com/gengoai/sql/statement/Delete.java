@@ -19,12 +19,11 @@
 
 package com.gengoai.sql.statement;
 
-import com.gengoai.string.Strings;
-import lombok.*;
 import com.gengoai.sql.SQL;
-import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLElement;
 import com.gengoai.sql.object.Table;
+import com.gengoai.string.Strings;
+import lombok.*;
 
 /**
  * <p>SQL DELETE statement for delete rows from a table.</p>
@@ -33,9 +32,14 @@ import com.gengoai.sql.object.Table;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class Delete implements SQLUpdateStatement {
+public class Delete implements UpdateStatement {
+   private static final long serialVersionUID = 1L;
    private final SQLElement table;
    private SQLElement where;
+
+   private Delete(@NonNull SQLElement table) {
+      this.table = table;
+   }
 
    /**
     * Creates a Delete statement to delete from the given table
@@ -67,15 +71,6 @@ public class Delete implements SQLUpdateStatement {
       return new Delete(table);
    }
 
-   private Delete(@NonNull SQLElement table) {
-      this.table = table;
-   }
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.delete(this);
-   }
-
    /**
     * Sets the criteria (i.e. WHERE) for the deletion.
     *
@@ -94,7 +89,7 @@ public class Delete implements SQLUpdateStatement {
     * @return this Delete object
     */
    public Delete where(String whereClause) {
-      if(Strings.isNullOrBlank(whereClause)) {
+      if (Strings.isNullOrBlank(whereClause)) {
          this.where = null;
       } else {
          this.where = SQL.sql(whereClause);

@@ -31,7 +31,6 @@ import com.gengoai.io.resource.Resource;
 import com.gengoai.json.Json;
 import com.gengoai.stream.MStream;
 import com.gengoai.stream.StreamingContext;
-import com.gengoai.tuple.Tuples;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
@@ -43,6 +42,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+
+import static com.gengoai.tuple.Tuples.$;
 
 /**
  * <p>
@@ -76,6 +77,7 @@ import java.util.function.Consumer;
 @Accessors(fluent = true)
 public abstract class DataSet implements Iterable<Datum>, Serializable {
    private static final long serialVersionUID = 1L;
+   public static int PROBE_LIMIT = 500;
    protected final Map<String, ObservationMetadata> metadata = new ConcurrentHashMap<>();
    @NonNull
    protected NDArrayFactory ndArrayFactory = NDArrayFactory.ND;
@@ -131,6 +133,17 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     */
    public NDArrayFactory getNDArrayFactory() {
       return ndArrayFactory;
+   }
+
+   /**
+    * Sets the {@link NDArrayFactory} to use when constructing NDArray.
+    *
+    * @param ndArrayFactory the NDArrayFactory
+    * @return this DataSet
+    */
+   public DataSet setNDArrayFactory(@NonNull NDArrayFactory ndArrayFactory) {
+      this.ndArrayFactory = ndArrayFactory;
+      return this;
    }
 
    /**
@@ -199,10 +212,19 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     * @return this DataSet
     */
    public DataSet probe() {
-      parallelStream().flatMap(d -> d.entrySet().stream())
-                      .map(e -> Tuples.$(e.getKey(), e.getValue().getClass()))
+      parallelStream().limit(PROBE_LIMIT)
+                      .flatMap(d -> d.entrySet().stream())
+                      .map(e -> {
+                         if (e.getValue().isNDArray()) {
+                            return $(e.getKey(), e.getValue().getClass(), e.getValue().asNDArray().length());
+                         }
+                         return $(e.getKey(), e.getValue().getClass(), 0L);
+                      })
                       .distinct()
-                      .forEach(e -> updateMetadata(e.getKey(), m -> m.setType(e.getValue())));
+                      .forEach(e -> updateMetadata(e.v1, m -> {
+                         m.setType(e.v2);
+                         m.setDimension(e.v3);
+                      }));
       return this;
    }
 
@@ -231,26 +253,15 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
    public void save(@NonNull Resource resource,
                     int partitions,
                     @NonNull SaveMode saveMode) throws IOException {
-      if(saveMode.validate(resource)) {
+      if (saveMode.validate(resource)) {
          resource.mkdirs();
-         try(MultiFileWriter mfw = new MultiFileWriter(resource, "part-", partitions)) {
+         try (MultiFileWriter mfw = new MultiFileWriter(resource, "part-", partitions)) {
             parallelStream().forEach(Unchecked.consumer(d -> {
                mfw.write(Json.dumps(d) + "\n");
             }));
          }
          resource.getChild("metadata.json").write(Json.dumps(getMetadata()));
       }
-   }
-
-   /**
-    * Sets the {@link NDArrayFactory} to use when constructing NDArray.
-    *
-    * @param ndArrayFactory the NDArrayFactory
-    * @return this DataSet
-    */
-   public DataSet setNDArrayFactory(@NonNull NDArrayFactory ndArrayFactory) {
-      this.ndArrayFactory = ndArrayFactory;
-      return this;
    }
 
    /**
@@ -303,7 +314,7 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     */
    public DataSet updateMetadata(@NonNull String source, @NonNull Consumer<ObservationMetadata> updater) {
       metadata.compute(source, (s, md) -> {
-         if(md == null) {
+         if (md == null) {
             md = new ObservationMetadata();
          }
          updater.accept(md);

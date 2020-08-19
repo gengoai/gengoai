@@ -21,11 +21,12 @@ package com.gengoai.sql;
 
 import com.gengoai.Validation;
 import com.gengoai.sql.operator.SQLOperable;
-import com.gengoai.string.StringResolver;
 import lombok.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Encapsulates an SQL Function (e.g. count, max, substr, etc.)
@@ -33,96 +34,37 @@ import java.util.Map;
 @Value
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class SQLFunction implements SQLFormattable, SQLOperable {
+public class SQLFunction implements SQLOperable {
    private static final long serialVersionUID = 1L;
    String name;
-   @NonNull Map<String, SQLElement> args;
+   List<SQLElement> arguments;
+
 
    /**
-    * Constructs a binary function
+    * Constructs a generic SQLFunction made up of a function name and zero or more arguments.
     *
     * @param name the name of the function
-    * @param arg1 the first argument
-    * @param arg2 the second argument
-    * @return the sql function
+    * @param arg1 the arg 1
+    * @param args the arguments of the function
+    * @return the SQLFunction
     */
-   public static SQLFunction binaryFunction(String name, @NonNull SQLElement arg1, @NonNull SQLElement arg2) {
+   public static SQLFunction function(String name, @NonNull SQLElement arg1, @NonNull SQLElement... args) {
       Validation.notNullOrBlank(name, "Must specify a function name");
-      return new SQLFunction(name.toUpperCase(), Map.of("arg1", arg1, "arg2", arg2));
+      SQLFunction function = new SQLFunction(name.toUpperCase(), new ArrayList<>());
+      function.arguments.add(arg1);
+      function.arguments.addAll(Arrays.asList(args));
+      return function;
    }
 
-   /**
-    * Constructs a n-ary function taking zero or more arguments
-    *
-    * @param name the name of the function
-    * @param args the arguments
-    * @return the sql function
-    */
-   public static SQLFunction nAryFunction(String name, @NonNull SQLElement... args) {
+   public static SQLFunction function(String name, @NonNull List<SQLElement> args) {
       Validation.notNullOrBlank(name, "Must specify a function name");
-      Map<String, SQLElement> m = new HashMap<>();
-      for(int i = 0; i < args.length; i++) {
-         m.put("arg" + (i + 1), args[i]);
-      }
-      return new SQLFunction(name.toUpperCase(), m);
+      return new SQLFunction(name.toUpperCase(), new ArrayList<>(args));
    }
 
-   /**
-    * Constructs a n-ary function taking at least one argument.
-    *
-    * @param name the name of the function
-    * @param arg1 the first argument
-    * @param args the other arguments
-    * @return the sql function
-    */
-   public static SQLFunction nAryFunction(String name, @NonNull SQLElement arg1, @NonNull SQLElement... args) {
+   public static SQLFunction function(String name) {
       Validation.notNullOrBlank(name, "Must specify a function name");
-      Map<String, SQLElement> m = new HashMap<>();
-      m.put("arg1", arg1);
-      for(int i = 0; i < args.length; i++) {
-         m.put("arg" + (i + 2), args[i]);
-      }
-      return new SQLFunction(name.toUpperCase(), m);
+      return new SQLFunction(name.toUpperCase(), Collections.emptyList());
    }
 
-   /**
-    * Constructs a ternary function
-    *
-    * @param name the name of the function
-    * @param arg1 the first argument
-    * @param arg2 the second argument
-    * @param arg3 the third argument
-    * @return the sql function
-    */
-   public static SQLFunction ternaryFunction(String name,
-                                             @NonNull SQLElement arg1,
-                                             @NonNull SQLElement arg2,
-                                             @NonNull SQLElement arg3) {
-      Validation.notNullOrBlank(name, "Must specify a function name");
-      return new SQLFunction(name.toUpperCase(), Map.of("arg1", arg1, "arg2", arg2, "arg3", arg3));
-   }
 
-   /**
-    * Constructs an unary function
-    *
-    * @param name the name of the function
-    * @param arg  the argument
-    * @return the sql function
-    */
-   public static SQLFunction unaryFunction(String name, @NonNull SQLElement arg) {
-      Validation.notNullOrBlank(name, "Must specify a function name");
-      return new SQLFunction(name.toUpperCase(), Map.of("arg1", arg));
-   }
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      String template = dialect.getFunctionTemplate(name, args.size());
-      Map<String, String> map = new HashMap<>();
-      for(int i = 0; i < args.size(); i++) {
-         String key = "arg" + (i + 1);
-         map.put(key, dialect.toSQL(args.get(key)));
-      }
-      return StringResolver.resolve(template, map);
-   }
-
-}//END OF SqlFunction
+}//END OF SQLFunction

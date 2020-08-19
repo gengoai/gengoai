@@ -55,7 +55,7 @@ public final class SQLiteConnectionRegistry {
       lock.lock();
       try {
          WeakReference<Connection> reference = registry.get(jdbc);
-         if(reference == null || reference.get() == null) {
+         if (reference == null || reference.get() == null) {
             reference = new WeakReference<>(ResourceMonitor.monitor(DriverManager.getConnection(jdbc)));
             registry.put(jdbc, reference);
          }

@@ -19,28 +19,11 @@
 
 package com.gengoai.sql.constraint;
 
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
-import lombok.NonNull;
+import com.gengoai.sql.SQLElement;
 
-public enum Deferrable implements SQLFormattable {
-   NOT_DEFERRABLE {
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "NOT DEFERRABLE";
-      }
-   },
-   INITIALLY_IMMEDIATE {
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "DEFERRABLE INITIALLY IMMEDIATE";
-      }
-   },
-   INITIALLY_DEFERRED {
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "DEFERRABLE INITIALLY DEFERRED";
-      }
-   }
+public enum Deferrable implements SQLElement {
+   NOT_DEFERRABLE,
+   INITIALLY_IMMEDIATE,
+   INITIALLY_DEFERRED
 
 }//END OF Deferrable

@@ -20,8 +20,7 @@
 package com.gengoai.sql.statement;
 
 import com.gengoai.Validation;
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
+import com.gengoai.sql.SQLElement;
 import com.gengoai.sql.object.Column;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -31,7 +30,8 @@ import lombok.Value;
 /**
  * <p>Actions that can be performed when altering a table. Note that not all dbms may support all actioons.</p>
  */
-public interface AlterTableAction extends SQLFormattable {
+public interface AlterTableAction extends SQLElement {
+
 
    /**
     * Renames a column
@@ -54,10 +54,6 @@ public interface AlterTableAction extends SQLFormattable {
          this.newName = Validation.notNullOrBlank(newName);
       }
 
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "RENAME COLUMN " + SQLDialect.escape(oldName) + " TO " + SQLDialect.escape(newName);
-      }
    }//END OF RenameColumn
 
    /**
@@ -78,11 +74,7 @@ public interface AlterTableAction extends SQLFormattable {
          this.name = Validation.notNullOrBlank(name);
       }
 
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "DROP COLUMN " + SQLDialect.escape(name);
-      }
-   }//END OF RenameColumn
+   }//END OF DropColumn
 
    /**
     * Alters a column definition
@@ -97,10 +89,6 @@ public interface AlterTableAction extends SQLFormattable {
          this.newDefinition = newDefinition;
       }
 
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "ALTER COLUMN " + dialect.columnDefinition(newDefinition);
-      }
    }//END OF AlterColumn
 
    /**
@@ -116,10 +104,6 @@ public interface AlterTableAction extends SQLFormattable {
          this.newDefinition = newDefinition;
       }
 
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "ADD COLUMN " + dialect.columnDefinition(newDefinition);
-      }
    }//END OF AlterColumn
 
    /**
@@ -135,9 +119,7 @@ public interface AlterTableAction extends SQLFormattable {
          this.newTableName = Validation.notNullOrBlank(newTableName);
       }
 
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "RENAME TO " + SQLDialect.escape(newTableName);
-      }
    }//END OF RenameTable
+
+
 }//END OF AlterTableAction

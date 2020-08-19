@@ -57,6 +57,7 @@ public class ElmoSeq2SeqModel extends TensorFlowModel implements HStringMLModel 
                               @NonNull AnnotationType trainingAnnotationType) {
       super(Set.of(TOKENS),
             Maps.linkedHashMapOf($(LABEL, "label/truediv")),
+//            Maps.linkedHashMapOf($(LABEL, "label_1/truediv")),
             Collections.emptyMap());
       this.annotationType = annotationType;
       this.trainingAnnotationType = trainingAnnotationType;
@@ -69,7 +70,9 @@ public class ElmoSeq2SeqModel extends TensorFlowModel implements HStringMLModel 
       for (int i = 0; i < tensors.size(); i++) {
          Annotation sentence = hString.sentences().get(i);
          IOB.decode(sentence,
-                    tensors.get(i).get(LABEL).asNDArray()
+                    tensors.get(i)
+                           .get(LABEL)
+                           .asNDArray()
                            .decodeSequence(encoders.get(getOutput()), IOBValidator.INSTANCE),
                     annotationType);
       }

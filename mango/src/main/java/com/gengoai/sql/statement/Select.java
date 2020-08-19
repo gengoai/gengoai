@@ -19,27 +19,27 @@
 
 package com.gengoai.sql.statement;
 
-import com.gengoai.sql.SQL;
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLElement;
+import com.gengoai.SystemInfo;
+import com.gengoai.Validation;
+import com.gengoai.function.Unchecked;
+import com.gengoai.sql.*;
 import com.gengoai.string.Strings;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
  * <p>SQL statement for selecting data from a table</p>
  */
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-public class Select implements SQLQueryStatement {
+public class Select extends QueryStatement {
    private static final long serialVersionUID = 1L;
    @Getter
    private final List<SQLElement> columns = new ArrayList<>();
@@ -60,6 +60,10 @@ public class Select implements SQLQueryStatement {
    @Getter
    private SQLElement limit;
 
+   private Select(@NonNull SQLElement from) {
+      this.from.add(from);
+   }
+
    /**
     * Creates a new Select statement with the given table for the from clause
     *
@@ -78,10 +82,6 @@ public class Select implements SQLQueryStatement {
     */
    public static Select from(@NonNull String table) {
       return new Select(SQL.sql(table)).columns(SQL.ALL);
-   }
-
-   private Select(@NonNull SQLElement from) {
-      this.from.add(from);
    }
 
    /**
@@ -179,7 +179,7 @@ public class Select implements SQLQueryStatement {
     * @return this Select object
     */
    public Select having(String havingClause) {
-      if(Strings.isNullOrBlank(havingClause)) {
+      if (Strings.isNullOrBlank(havingClause)) {
          this.having = null;
       } else {
          this.having = SQL.sql(havingClause);
@@ -268,6 +268,155 @@ public class Select implements SQLQueryStatement {
    }
 
    /**
+    * Performs this Select query using the given {@link SQLContext} using the given {@link  ResultSetMapper} to map
+    * ResultSet to objects. This query method returns a parallel stream using 2 * the number processors as the partition
+    * count.
+    *
+    * @param <T>             the Iterator type parameter
+    * @param context         the context to perform the select over
+    * @param mapper          the mapper from ResultSet to Object
+    * @param partitionColumn the column to use for portioning (should be numeric)
+    * @return the ResultSetIterator over the results of the given {@link QueryStatement}
+    * @throws SQLException something happened trying to query
+    */
+   public final <T> Stream<T> queryParallel(@NonNull SQLContext context,
+                                            @NonNull ResultSetMapper<? extends T> mapper,
+                                            @NonNull String partitionColumn) throws SQLException {
+      return queryParallel(context, mapper, partitionColumn, 2 * SystemInfo.NUMBER_OF_PROCESSORS);
+   }
+
+   /**
+    * Performs this Select query using the given {@link SQLContext}  filling in named value placeholders using the given
+    * Map of values and returning the results as a {@link ResultSetIterator} using the given {@link ResultSetMapper}* to
+    * map ResultSet to objects. This query method returns a parallel stream using 2 * the number processors as the
+    * partition count.
+    *
+    * @param <T>             the Iterator type parameter
+    * @param context         the context to perform the select over
+    * @param values          the values to use to fill the query statement (by Name)
+    * @param mapper          the mapper from ResultSet to Object
+    * @param partitionColumn the column to use for portioning (should be numeric)
+    * @return the ResultSetIterator over the results of the given {@link QueryStatement}
+    * @throws SQLException something happened trying to query
+    */
+   public final <T> Stream<T> queryParallel(@NonNull SQLContext context,
+                                            @NonNull Map<String, ?> values,
+                                            @NonNull ResultSetMapper<? extends T> mapper,
+                                            @NonNull String partitionColumn) throws SQLException {
+      return queryParallel(context, values, mapper, partitionColumn, SystemInfo.NUMBER_OF_PROCESSORS * 2);
+   }
+
+   /**
+    * Performs this Select query using the given {@link SQLContext} using the given {@link  ResultSetMapper} to map
+    * ResultSet to objects. This query method returns a parallel stream.
+    *
+    * @param <T>             the Iterator type parameter
+    * @param context         the context to perform the select over
+    * @param mapper          the mapper from ResultSet to Object
+    * @param partitionColumn the column to use for portioning (should be numeric)
+    * @param numPartitions   the number of partitions (controls the parallelization
+    * @return the ResultSetIterator over the results of the given {@link QueryStatement}
+    * @throws SQLException something happened trying to query
+    */
+   public final <T> Stream<T> queryParallel(@NonNull SQLContext context,
+                                            @NonNull ResultSetMapper<? extends T> mapper,
+                                            @NonNull String partitionColumn,
+                                            int numPartitions) throws SQLException {
+      Validation.checkArgument(numPartitions > 0, "Number of partitions must be at least 1.");
+      updateWithColumnMod(partitionColumn, numPartitions, "?");
+      return IntStream.range(0, numPartitions)
+                      .parallel()
+                      .mapToObj(Unchecked.intFunction(i -> query(context, Collections.singletonList(i), mapper)))
+                      .flatMap(s -> s);
+   }
+
+   /**
+    * Performs this Select query using the given {@link SQLContext} filling in indexed value placeholders using the
+    * given Map of values and returning the results as a {@link ResultSetIterator} using the given {@link
+    * ResultSetMapper} to map ResultSet to objects. This query method returns a parallel stream using 2 times the number
+    * processors as the partition count.
+    *
+    * @param <T>             the Iterator type parameter
+    * @param context         the context to perform the select over
+    * @param values          the values to use to fill the query statement (by Name)
+    * @param mapper          the mapper from ResultSet to Object
+    * @param partitionColumn the column to use for portioning (should be numeric)
+    * @return the ResultSetIterator over the results of the given {@link QueryStatement}
+    * @throws SQLException something happened trying to query
+    */
+   public final <T> Stream<T> queryParallel(@NonNull SQLContext context,
+                                            @NonNull List<Object> values,
+                                            @NonNull ResultSetMapper<? extends T> mapper,
+                                            @NonNull String partitionColumn) throws SQLException {
+      return queryParallel(context, values, mapper, partitionColumn, SystemInfo.NUMBER_OF_PROCESSORS * 2);
+   }
+
+   /**
+    * Performs this Select query using the given {@link SQLContext} filling in named value placeholders using the given
+    * Map of values and returning the results as a {@link ResultSetIterator} using the given {@link ResultSetMapper} to
+    * map ResultSet to objects. This query method returns a parallel stream.
+    *
+    * @param <T>             the Iterator type parameter
+    * @param context         the context to perform the select over
+    * @param values          the values to use to fill the query statement (by Name)
+    * @param mapper          the mapper from ResultSet to Object
+    * @param partitionColumn the column to use for portioning (should be numeric)
+    * @param numPartitions   the number of partitions (controls the parallelization
+    * @return the ResultSetIterator over the results of the given {@link QueryStatement}
+    * @throws SQLException something happened trying to query
+    */
+   public <T> Stream<T> queryParallel(@NonNull SQLContext context,
+                                      @NonNull Map<String, ?> values,
+                                      @NonNull ResultSetMapper<? extends T> mapper,
+                                      @NonNull String partitionColumn,
+                                      int numPartitions
+   ) throws SQLException {
+      Validation.checkArgument(numPartitions > 0, "Number of partitions must be at least 1.");
+      final String pName = SQL.namedArgument(partitionColumn + "_mod").toString();
+      updateWithColumnMod(partitionColumn, numPartitions, pName);
+      return IntStream.range(0, numPartitions)
+                      .parallel()
+                      .mapToObj(Unchecked.intFunction(i -> {
+                         Map<String, Object> m = new HashMap<>(values);
+                         m.put(pName, i);
+                         return query(context, m, mapper);
+                      }))
+                      .flatMap(s -> s);
+   }
+
+   /**
+    * Performs this Select query using the given {@link SQLContext} filling  in indexed value placeholders using the
+    * given Map of values and returning the results as a {@link ResultSetIterator} using the given {@link
+    * ResultSetMapper}* to map ResultSet to objects. This query method returns a parallel stream.
+    *
+    * @param <T>             the Iterator type parameter
+    * @param context         the context to perform the select over
+    * @param values          the values to use to fill the query statement (by Name)
+    * @param mapper          the mapper from ResultSet to Object
+    * @param partitionColumn the column to use for portioning (should be numeric)
+    * @param numPartitions   the number of partitions (controls the parallelization
+    * @return the ResultSetIterator over the results of the given {@link QueryStatement}
+    * @throws SQLException something happened trying to query
+    */
+   public final <T> Stream<T> queryParallel(@NonNull SQLContext context,
+                                            @NonNull List<?> values,
+                                            @NonNull ResultSetMapper<? extends T> mapper,
+                                            @NonNull String partitionColumn,
+                                            int numPartitions
+   ) throws SQLException {
+      Validation.checkArgument(numPartitions > 0, "Number of partitions must be at least 1.");
+      updateWithColumnMod(partitionColumn, numPartitions, "?");
+      return IntStream.range(0, numPartitions)
+                      .parallel()
+                      .mapToObj(Unchecked.intFunction(i -> {
+                         List<Object> v = new ArrayList<>(values);
+                         v.add(i);
+                         return query(context, v, mapper);
+                      }))
+                      .flatMap(s -> s);
+   }
+
+   /**
     * Adds a right outer join with the given table on the given criteria to the from clause
     *
     * @param table    the table or expression to join with
@@ -278,9 +427,14 @@ public class Select implements SQLQueryStatement {
       return join(JoinType.LEFT_OUTER, table, criteria);
    }
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.select(this);
+
+   private void updateWithColumnMod(String partitionColumn, int numPartitions, String pName) {
+      SQLElement mod = SQL.sql(partitionColumn + " % " + numPartitions + " = " + pName);
+      if (getWhere() == null) {
+         where(mod);
+      } else {
+         where(SQL.and(getWhere(), mod));
+      }
    }
 
    /**
@@ -301,7 +455,7 @@ public class Select implements SQLQueryStatement {
     * @return this Select object
     */
    public Select where(String whereClause) {
-      if(Strings.isNullOrBlank(whereClause)) {
+      if (Strings.isNullOrBlank(whereClause)) {
          this.where = null;
       } else {
          this.where = SQL.sql(whereClause);
@@ -327,7 +481,7 @@ public class Select implements SQLQueryStatement {
     * @return this Select object
     */
    public Select window(String window) {
-      if(Strings.isNullOrBlank(window)) {
+      if (Strings.isNullOrBlank(window)) {
          this.window = null;
       } else {
          this.window = SQL.sql(window);

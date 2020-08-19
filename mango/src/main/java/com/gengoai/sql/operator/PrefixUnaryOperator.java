@@ -17,41 +17,41 @@
  * under the License.
  */
 
-package com.gengoai.sql.constraint.column;
+package com.gengoai.sql.operator;
 
-import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLElement;
-import com.gengoai.sql.constraint.ColumnConstraint;
-import com.gengoai.sql.constraint.Constraint;
 import lombok.*;
 
+/**
+ * Unary Prefix {@link SQLOperator}
+ */
 @Value
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-public class As extends Constraint implements ColumnConstraint {
+public class PrefixUnaryOperator extends SQLOperator {
    private static final long serialVersionUID = 1L;
-   SQLElement expression;
-   boolean stored;
+   @NonNull SQLElement arg1;
+   boolean requiresParenthesis;
 
-   public As(String name,
-             @NonNull SQLElement expression,
-             boolean stored) {
-      super(name);
-      this.expression = expression;
-      this.stored = stored;
+   /**
+    * Instantiates a new SQLPrefixUnaryOperator.
+    *
+    * @param operator            the operator
+    * @param arg1                the argument
+    * @param requiresParenthesis are parenthesis required
+    */
+   public PrefixUnaryOperator(String operator, @NonNull SQLElement arg1, boolean requiresParenthesis) {
+      super(operator);
+      this.arg1 = arg1;
+      this.requiresParenthesis = requiresParenthesis;
    }
 
    @Override
-   public boolean providesValue() {
-      return true;
+   public String toString() {
+      return "SQLPrefixUnaryOperator{" +
+            "operator='" + operator + '\'' +
+            ", arg1=" + arg1 +
+            '}';
    }
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      final String store = (stored
-                            ? "STORED"
-                            : "VIRTUAL");
-      return super.toSQL(dialect) + "AS (" + dialect.toSQL(expression) + ") " + store;
-   }
-
-}//END OF As
+}//END OF PrefixUnaryOperator

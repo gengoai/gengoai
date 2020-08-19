@@ -17,16 +17,21 @@
  * under the License.
  */
 
-package com.gengoai.sql;
+package com.gengoai.sql.object;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.gengoai.sql.NamedSQLElement;
+import com.gengoai.sql.SQLContext;
 import com.gengoai.sql.statement.Create;
 import com.gengoai.sql.statement.Drop;
+import lombok.NonNull;
+
+import java.sql.SQLException;
 
 /**
  * Base class for SQL objects, e.g. (Tables, Columns, Triggers, etc.)
  */
-public abstract class SQLObject implements SQLElement {
+public abstract class SQLObject implements NamedSQLElement {
    private static final long serialVersionUID = 1L;
    protected String name;
 
@@ -46,6 +51,11 @@ public abstract class SQLObject implements SQLElement {
       this.name = name;
    }
 
+
+   public boolean create(@NonNull SQLContext context) throws SQLException {
+      return new Create(this).update(context) > 0;
+   }
+
    /**
     * Creates a new {@link Create} statement setting the object to be created as this object.
     *
@@ -53,6 +63,14 @@ public abstract class SQLObject implements SQLElement {
     */
    public Create create() {
       return new Create(this);
+   }
+
+   public boolean createIfNotExists(@NonNull SQLContext context) throws SQLException {
+      return new Create(this).ifNotExists().update(context) > 0;
+   }
+
+   public boolean drop(@NonNull SQLContext context) throws SQLException {
+      return new Drop(this).update(context) > 0;
    }
 
    /**
@@ -63,6 +81,11 @@ public abstract class SQLObject implements SQLElement {
    public Drop drop() {
       return new Drop(this);
    }
+
+   public boolean dropIfExists(@NonNull SQLContext context) throws SQLException {
+      return new Drop(this).ifExists().update(context) > 0;
+   }
+
 
    /**
     * Gets the SQL Keyword associated with the object

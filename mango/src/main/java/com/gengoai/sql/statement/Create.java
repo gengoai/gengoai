@@ -19,8 +19,7 @@
 
 package com.gengoai.sql.statement;
 
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLObject;
+import com.gengoai.sql.object.SQLObject;
 import lombok.*;
 
 /**
@@ -29,7 +28,7 @@ import lombok.*;
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 @ToString
-public class Create implements SQLUpdateStatement {
+public class Create implements UpdateStatement {
    private static final long serialVersionUID = 1L;
    @Getter
    private final SQLObject object;
@@ -74,11 +73,6 @@ public class Create implements SQLUpdateStatement {
    public Create ifNotExists(boolean ifNotExists) {
       this.ifNotExists = ifNotExists;
       return this;
-   }
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.create(this);
    }
 
 }//END OF Create

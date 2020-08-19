@@ -17,36 +17,39 @@
  * under the License.
  */
 
-package com.gengoai.sql.constraint.column;
+package com.gengoai.sql.operator;
 
+import com.gengoai.sql.SQLConstants;
 import com.gengoai.sql.SQLElement;
-import com.gengoai.sql.constraint.ColumnConstraint;
-import com.gengoai.sql.constraint.Constraint;
 import lombok.*;
 
+/**
+ * Specialized operator for SQL Between operators
+ */
 @Value
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-public class Check extends Constraint implements ColumnConstraint {
+public class Between extends SQLOperator {
    private static final long serialVersionUID = 1L;
-   SQLElement expression;
+   @NonNull SQLElement column;
+   @NonNull SQLElement lower;
+   @NonNull SQLElement higher;
 
-   public Check(String name, @NonNull SQLElement expression) {
-      super(name);
-      this.expression = expression;
-   }
-
-   @Override
-   public boolean providesValue() {
-      return false;
+   public Between(@NonNull SQLElement column,
+                  @NonNull SQLElement lower,
+                  @NonNull SQLElement higher) {
+      super(SQLConstants.BETWEEN);
+      this.column = column;
+      this.lower = lower;
+      this.higher = higher;
    }
 
    @Override
    public String toString() {
-      return "Check{" +
-            "name=" + getName() +
-            ", expression=" + expression +
-            "}";
+      return "SQLBetween{" +
+            "column=" + column +
+            ", lower=" + lower +
+            ", higher=" + higher +
+            '}';
    }
-
-}//END OF Check
+}//END OF Between

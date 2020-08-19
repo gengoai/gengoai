@@ -20,6 +20,7 @@
 package com.gengoai.sql.operator;
 
 import com.gengoai.sql.SQL;
+import com.gengoai.sql.SQLConstants;
 import com.gengoai.sql.SQLElement;
 import lombok.NonNull;
 
@@ -35,7 +36,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable add(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.ADD, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.ADD, this, rhs);
    }
 
    /**
@@ -58,8 +59,14 @@ public interface SQLOperable extends SQLElement {
       return SQL.and(this, rhs);
    }
 
+   /**
+    * Defines an alias over a column, table, or subquery.
+    *
+    * @param name the name of the alias
+    * @return the SQLElement
+    */
    default SQLOperable as(@NonNull String name) {
-     return new SQLBinaryOperator("AS", SQL.group(this), SQL.C(name));
+      return new InfixBinaryOperator("AS", SQL.group(this), SQL.C(name));
    }
 
    /**
@@ -68,7 +75,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable asc() {
-      return new SQLPostfixUnaryOperator(SQLOperator.ASC, this, false);
+      return new PostfixUnaryOperator(SQLConstants.ASC, this, false);
    }
 
    /**
@@ -79,7 +86,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable between(@NonNull SQLElement lower, @NonNull SQLElement upper) {
-      return new SQLBetween(this, lower, upper);
+      return new Between(this, lower, upper);
    }
 
    /**
@@ -90,7 +97,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable between(@NonNull Number lower, @NonNull Number upper) {
-      return new SQLBetween(this, SQL.N(lower), SQL.N(upper));
+      return new Between(this, SQL.N(lower), SQL.N(upper));
    }
 
    /**
@@ -100,7 +107,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable concat(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.CONCAT, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.CONCAT, this, rhs);
    }
 
    /**
@@ -109,7 +116,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable desc() {
-      return new SQLPostfixUnaryOperator(SQLOperator.DESC, this, false);
+      return new PostfixUnaryOperator(SQLConstants.DESC, this, false);
    }
 
    /**
@@ -119,7 +126,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable div(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.DIVIDE, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.DIVIDE, this, rhs);
    }
 
    /**
@@ -139,7 +146,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable eq(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.EQUALS, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.EQUALS, this, rhs);
    }
 
    /**
@@ -159,7 +166,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable fullTextMatch(@NonNull String string) {
-      return new SQLBinaryOperator(SQLOperator.FULL_TEXT_MATCH, this, SQL.L(string));
+      return new InfixBinaryOperator(SQLConstants.FULL_TEXT_MATCH, this, SQL.L(string));
    }
 
    /**
@@ -169,7 +176,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable gt(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.GREATER_THAN, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.GREATER_THAN, this, rhs);
    }
 
    /**
@@ -189,7 +196,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable gte(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.GREATER_THAN_EQUALS, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.GREATER_THAN_EQUALS, this, rhs);
    }
 
    /**
@@ -210,7 +217,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable in(@NonNull SQLElement element) {
-      return new SQLBinaryOperator(SQLOperator.IN, this, element);
+      return new InfixBinaryOperator(SQLConstants.IN, this, element);
    }
 
    /**
@@ -219,7 +226,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable isNotNull() {
-      return new SQLBinaryOperator(SQLOperator.IS_NOT, this, SQL.nullValue());
+      return new InfixBinaryOperator(SQLConstants.IS_NOT, this, SQL.nullValue());
    }
 
    /**
@@ -228,7 +235,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable isNull() {
-      return new SQLBinaryOperator(SQLOperator.IS, this, SQL.nullValue());
+      return new InfixBinaryOperator(SQLConstants.IS, this, SQL.nullValue());
    }
 
    /**
@@ -238,7 +245,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable like(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.LIKE, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.LIKE, this, rhs);
    }
 
    /**
@@ -248,7 +255,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable lt(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.LESS_THAN, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.LESS_THAN, this, rhs);
    }
 
    /**
@@ -268,7 +275,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable lte(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.LESS_THAN_EQUALS, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.LESS_THAN_EQUALS, this, rhs);
    }
 
    /**
@@ -282,13 +289,33 @@ public interface SQLOperable extends SQLElement {
    }
 
    /**
+    * Creates an {@link SQLOperable} that is the result of taking mode <code>rhs</code> of this number.
+    *
+    * @param rhs the right hand side of the binary operator
+    * @return the SQLOperable
+    */
+   default SQLOperable mod(@NonNull Number rhs) {
+      return mod(SQL.N(rhs));
+   }
+
+   /**
+    * Creates an {@link SQLOperable} that is the result of taking mode <code>rhs</code> of this number.
+    *
+    * @param rhs the right hand side of the binary operator
+    * @return the SQLOperable
+    */
+   default SQLOperable mod(@NonNull SQLElement rhs) {
+      return new InfixBinaryOperator(SQLConstants.MOD, this, rhs);
+   }
+
+   /**
     * Multiplies this element with the given element.
     *
     * @param rhs the right hand side of the binary operator
     * @return the SQLOperable
     */
    default SQLOperable mul(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.MULTIPLY, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.MULTIPLY, this, rhs);
    }
 
    /**
@@ -308,7 +335,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable neq(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.NOT_EQUALS, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.NOT_EQUALS, this, rhs);
    }
 
    /**
@@ -327,7 +354,7 @@ public interface SQLOperable extends SQLElement {
     * @return the SQLOperable
     */
    default SQLOperable not() {
-      return new SQLPrefixUnaryOperator(SQLOperator.NOT, this, false);
+      return new PrefixUnaryOperator(SQLConstants.NOT, this, false);
    }
 
    /**
@@ -341,13 +368,43 @@ public interface SQLOperable extends SQLElement {
    }
 
    /**
+    * Creates an {@link SQLOperable} that is the result of raising this number to the power of <code>rhs</code>.
+    *
+    * @param rhs the right hand side of the binary operator
+    * @return the SQLOperable
+    */
+   default SQLOperable pow(@NonNull Number rhs) {
+      return pow(SQL.N(rhs));
+   }
+
+   /**
+    * Creates an {@link SQLOperable} that is the result of raising this number to the power of <code>rhs</code>.
+    *
+    * @param rhs the right hand side of the binary operator
+    * @return the SQLOperable
+    */
+   default SQLOperable pow(@NonNull SQLElement rhs) {
+      return new InfixBinaryOperator(SQLConstants.POW, this, rhs);
+   }
+
+   /**
+    * Checks if this element matches the given regular expression
+    *
+    * @param regex the regex
+    * @return the SQLOperable
+    */
+   default SQLOperable regexp(@NonNull String regex) {
+      return new InfixBinaryOperator(SQLConstants.REGEXP, this, SQL.L(regex));
+   }
+
+   /**
     * Subtracts the given element from this element with.
     *
     * @param rhs the right hand side of the binary operator
     * @return the SQLOperable
     */
    default SQLOperable sub(@NonNull SQLElement rhs) {
-      return new SQLBinaryOperator(SQLOperator.SUBTRACT, this, rhs);
+      return new InfixBinaryOperator(SQLConstants.SUBTRACT, this, rhs);
    }
 
    /**

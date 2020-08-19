@@ -21,7 +21,7 @@ package com.gengoai.sql.sqlite;
 
 import com.gengoai.sql.SQL;
 import com.gengoai.sql.SQLElement;
-import com.gengoai.sql.SQLObject;
+import com.gengoai.sql.object.SQLObject;
 import com.gengoai.sql.object.Table;
 import com.gengoai.sql.statement.*;
 import lombok.*;
@@ -76,7 +76,7 @@ public class SQLiteFullTextTable extends SQLObject {
     *
     * @return the sql update statement
     */
-   public SQLUpdateStatement rebuild() {
+   public UpdateStatement rebuild() {
       return Insert.into(this).columns(getName()).values(SQL.L("rebuild"));
    }
 

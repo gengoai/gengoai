@@ -17,13 +17,23 @@
  * under the License.
  */
 
-package com.gengoai.sql.statement;
+package com.gengoai.sql.constraint;
 
-import com.gengoai.sql.SQLFormattable;
+import com.gengoai.sql.SQLElement;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-/**
- * Base interface for SQL Statements
- */
-public interface SQLStatement extends SQLFormattable {
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
+public class CheckConstraint extends Constraint {
+   private static final long serialVersionUID = 1L;
+   @Getter
+   private final SQLElement expression;
 
-}//END OF SQLStatement
+   protected CheckConstraint(String name, @NonNull SQLElement expression) {
+      super(name);
+      this.expression = expression;
+   }
+
+}//END OF CheckConstraint

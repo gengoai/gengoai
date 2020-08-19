@@ -20,7 +20,6 @@
 package com.gengoai.sql.statement;
 
 import com.gengoai.sql.SQL;
-import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLElement;
 import com.gengoai.sql.object.Table;
 import com.gengoai.string.Strings;
@@ -35,7 +34,7 @@ import java.util.List;
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 @ToString
-public class Update implements SQLUpdateStatement {
+public class Update implements UpdateStatement {
    private static final long serialVersionUID = 1L;
    @Getter
    private final SQLElement table;
@@ -47,6 +46,10 @@ public class Update implements SQLUpdateStatement {
    private UpdateType updateType = UpdateType.UPDATE;
    @Getter
    private SQLElement where;
+
+   private Update(@NonNull SQLElement table) {
+      this.table = table;
+   }
 
    /**
     * Creates a new Update statement which will update the given table
@@ -66,10 +69,6 @@ public class Update implements SQLUpdateStatement {
     */
    public static Update table(@NonNull SQLElement table) {
       return new Update(table);
-   }
-
-   private Update(@NonNull SQLElement table) {
-      this.table = table;
    }
 
    /**
@@ -118,11 +117,6 @@ public class Update implements SQLUpdateStatement {
       return set(column, SQL.namedArgument(column));
    }
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.update(this);
-   }
-
    /**
     * Sets the type of update to perform.
     *
@@ -152,7 +146,7 @@ public class Update implements SQLUpdateStatement {
     * @return this Update statement
     */
    public Update where(String whereClause) {
-      if(Strings.isNullOrBlank(whereClause)) {
+      if (Strings.isNullOrBlank(whereClause)) {
          this.where = null;
       } else {
          this.where = SQL.sql(whereClause);

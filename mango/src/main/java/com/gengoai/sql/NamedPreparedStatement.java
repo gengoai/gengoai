@@ -29,6 +29,7 @@ import java.net.URL;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,10 +47,6 @@ public class NamedPreparedStatement implements PreparedStatement {
    private final static Pattern namedItemPattern = Pattern.compile(namePatternString);
    private final ArrayListMultimap<String, Integer> nameIndexMap = new ArrayListMultimap<>();
    private PreparedStatement statement = null;
-
-   public static String sanitize(@NonNull String str) {
-      return str.replaceAll("\\W", "a");
-   }
 
    /**
     * <p>
@@ -80,6 +77,11 @@ public class NamedPreparedStatement implements PreparedStatement {
 
       init(connection, sql, generateKeys);
 
+   }
+
+   public static String sanitize(@NonNull String str) {
+      str = str.strip().replaceFirst("^\"", "").replaceFirst("\"$", "");
+      return str.replaceAll("\\W", "a");
    }
 
    @Override
@@ -199,6 +201,15 @@ public class NamedPreparedStatement implements PreparedStatement {
       return statement.executeUpdate(arg0, arg1);
    }
 
+   public void fromMap(@NonNull Map<String, ?> map) throws SQLException {
+      for (Map.Entry<String, ?> e : map.entrySet()) {
+         String key = sanitize(e.getKey());
+         if (nameIndexMap.containsKey(key)) {
+            setObject(key, e.getValue());
+         }
+      }
+   }
+
    @Override
    public Connection getConnection() throws SQLException {
       return statement.getConnection();
@@ -210,8 +221,18 @@ public class NamedPreparedStatement implements PreparedStatement {
    }
 
    @Override
+   public void setFetchDirection(int arg0) throws SQLException {
+      statement.setFetchDirection(arg0);
+   }
+
+   @Override
    public int getFetchSize() throws SQLException {
       return statement.getFetchSize();
+   }
+
+   @Override
+   public void setFetchSize(int arg0) throws SQLException {
+      statement.setFetchSize(arg0);
    }
 
    @Override
@@ -220,11 +241,11 @@ public class NamedPreparedStatement implements PreparedStatement {
    }
 
    protected Collection<Integer> getLocationsForName(String name) {
-      if(nameIndexMap.containsKey(name)) {
+      if (nameIndexMap.containsKey(name)) {
          Collection<Integer> rval = nameIndexMap.get(name);
          return rval.size() > 0
-                ? rval
-                : null;
+               ? rval
+               : null;
       }
 
       return null;
@@ -236,8 +257,18 @@ public class NamedPreparedStatement implements PreparedStatement {
    }
 
    @Override
+   public void setMaxFieldSize(int arg0) throws SQLException {
+      statement.setMaxFieldSize(arg0);
+   }
+
+   @Override
    public int getMaxRows() throws SQLException {
       return statement.getMaxRows();
+   }
+
+   @Override
+   public void setMaxRows(int arg0) throws SQLException {
+      statement.setMaxRows(arg0);
    }
 
    @Override
@@ -263,6 +294,11 @@ public class NamedPreparedStatement implements PreparedStatement {
    @Override
    public int getQueryTimeout() throws SQLException {
       return statement.getQueryTimeout();
+   }
+
+   @Override
+   public void setQueryTimeout(int arg0) throws SQLException {
+      statement.setQueryTimeout(arg0);
    }
 
    @Override
@@ -300,7 +336,7 @@ public class NamedPreparedStatement implements PreparedStatement {
       Matcher nameMatcher = namedItemPattern.matcher(sql);
       int idx = 1;
 
-      while(nameMatcher.find()) {
+      while (nameMatcher.find()) {
          String name = nameMatcher.group(1);
          nameIndexMap.put(name, idx);
          idx++;
@@ -310,8 +346,8 @@ public class NamedPreparedStatement implements PreparedStatement {
 
       statement = connection.prepareStatement(sql,
                                               generateKeys
-                                              ? Statement.RETURN_GENERATED_KEYS
-                                              : Statement.NO_GENERATED_KEYS);
+                                                    ? Statement.RETURN_GENERATED_KEYS
+                                                    : Statement.NO_GENERATED_KEYS);
    }
 
    @Override
@@ -327,6 +363,11 @@ public class NamedPreparedStatement implements PreparedStatement {
    @Override
    public boolean isPoolable() throws SQLException {
       return statement.isPoolable();
+   }
+
+   @Override
+   public void setPoolable(boolean arg0) throws SQLException {
+      statement.setPoolable(arg0);
    }
 
    @Override
@@ -348,10 +389,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setArray(String arg0, Array arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setArray(i, arg1);
       }
    }
@@ -371,10 +412,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setAsciiStream(String arg0, InputStream arg1)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setAsciiStream(i, arg1);
       }
    }
@@ -396,10 +437,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setAsciiStream(String arg0, InputStream arg1, int arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setAsciiStream(i, arg1, arg2);
       }
    }
@@ -421,10 +462,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setAsciiStream(String arg0, InputStream arg1, long arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setAsciiStream(i, arg1, arg2);
       }
    }
@@ -443,10 +484,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setBigDecimal(String arg0, BigDecimal arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBigDecimal(i, arg1);
       }
    }
@@ -466,10 +507,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setBinaryStream(String arg0, InputStream arg1)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBinaryStream(i, arg1);
       }
    }
@@ -491,10 +532,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setBinaryStream(String arg0, InputStream arg1, int arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBinaryStream(i, arg1, arg2);
       }
    }
@@ -516,10 +557,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setBinaryStream(String arg0, InputStream arg1, long arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBinaryStream(i, arg1, arg2);
       }
    }
@@ -533,10 +574,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setBlob(String arg0, Blob arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBlob(i, arg1);
       }
    }
@@ -555,10 +596,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setBlob(String arg0, InputStream arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBlob(i, arg1);
       }
    }
@@ -579,10 +620,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setBlob(String arg0, InputStream arg1, long arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBlob(i, arg1, arg2);
       }
    }
@@ -602,10 +643,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setBoolean(String arg0, boolean arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBoolean(i, arg1);
       }
    }
@@ -624,10 +665,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setByte(String arg0, byte arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setByte(i, arg1);
       }
    }
@@ -646,10 +687,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setBytes(String arg0, byte[] arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setBytes(i, arg1);
       }
    }
@@ -668,10 +709,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setCharacterStream(String arg0, Reader arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setCharacterStream(i, arg1);
       }
    }
@@ -692,10 +733,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setCharacterStream(String arg0, Reader arg1, int arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setCharacterStream(i, arg1, arg2);
       }
    }
@@ -717,10 +758,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setCharacterStream(String arg0, Reader arg1, long arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setCharacterStream(i, arg1, arg2);
       }
    }
@@ -740,10 +781,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setClob(String arg0, Clob arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setClob(i, arg1);
       }
    }
@@ -762,10 +803,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setClob(String arg0, Reader arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setClob(i, arg1);
       }
    }
@@ -785,10 +826,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setClob(String arg0, Reader arg1, long arg2) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setClob(i, arg1, arg2);
       }
    }
@@ -813,10 +854,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setDate(String arg0, Date arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setDate(i, arg1);
       }
    }
@@ -837,10 +878,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setDate(String arg0, Date arg1, Calendar arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setDate(i, arg1, arg2);
       }
    }
@@ -859,10 +900,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setDouble(String arg0, double arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setDouble(i, arg1);
       }
    }
@@ -877,16 +918,6 @@ public class NamedPreparedStatement implements PreparedStatement {
       statement.setEscapeProcessing(arg0);
    }
 
-   @Override
-   public void setFetchDirection(int arg0) throws SQLException {
-      statement.setFetchDirection(arg0);
-   }
-
-   @Override
-   public void setFetchSize(int arg0) throws SQLException {
-      statement.setFetchSize(arg0);
-   }
-
    /**
     * Sets the designated parameter to the given Java float value.
     *
@@ -896,10 +927,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setFloat(String arg0, float arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setFloat(i, arg1);
       }
    }
@@ -918,10 +949,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setInt(String arg0, int arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setInt(i, arg1);
       }
    }
@@ -940,10 +971,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setLong(String arg0, long arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setLong(i, arg1);
       }
    }
@@ -951,16 +982,6 @@ public class NamedPreparedStatement implements PreparedStatement {
    @Override
    public void setLong(int arg0, long arg1) throws SQLException {
       statement.setLong(arg0, arg1);
-   }
-
-   @Override
-   public void setMaxFieldSize(int arg0) throws SQLException {
-      statement.setMaxFieldSize(arg0);
-   }
-
-   @Override
-   public void setMaxRows(int arg0) throws SQLException {
-      statement.setMaxRows(arg0);
    }
 
    /**
@@ -973,10 +994,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setNCharacterStream(String arg0, Reader arg1)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setNCharacterStream(i, arg1);
       }
    }
@@ -998,10 +1019,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setNCharacterStream(String arg0, Reader arg1, long arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setNCharacterStream(i, arg1, arg2);
       }
    }
@@ -1022,10 +1043,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setNClob(String arg0, NClob arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setNClob(i, arg1);
       }
    }
@@ -1045,10 +1066,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setNClob(String arg0, Reader arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setNClob(i, arg1);
       }
    }
@@ -1070,10 +1091,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setNClob(String arg0, Reader arg1, long arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setNClob(i, arg1, arg2);
       }
    }
@@ -1095,10 +1116,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setNString(String arg0, String arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setNString(i, arg1);
       }
    }
@@ -1118,10 +1139,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setNull(String arg0, int arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setNull(i, arg1);
       }
    }
@@ -1144,10 +1165,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setNull(String arg0, int arg1, String arg2) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setNull(i, arg1, arg2);
       }
    }
@@ -1173,10 +1194,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setObject(String arg0, Object arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setObject(i, arg1);
       }
    }
@@ -1192,10 +1213,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setObject(String arg0, Object arg1, int arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setObject(i, arg1, arg2);
       }
    }
@@ -1211,10 +1232,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setObject(String arg0, Object arg1, int arg2, int arg3)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setObject(i, arg1, arg2, arg3);
       }
    }
@@ -1225,25 +1246,15 @@ public class NamedPreparedStatement implements PreparedStatement {
       statement.setObject(arg0, arg1, arg2, arg3);
    }
 
-   @Override
-   public void setPoolable(boolean arg0) throws SQLException {
-      statement.setPoolable(arg0);
-   }
-
-   @Override
-   public void setQueryTimeout(int arg0) throws SQLException {
-      statement.setQueryTimeout(arg0);
-   }
-
    /**
     * @see #setRef(int, Ref)
     */
    public void setRef(String arg0, Ref arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setRef(i, arg1);
       }
    }
@@ -1258,10 +1269,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setRowId(String arg0, RowId arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setRowId(i, arg1);
       }
    }
@@ -1276,10 +1287,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setSQLXML(String arg0, SQLXML arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setSQLXML(i, arg1);
       }
    }
@@ -1299,10 +1310,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setShort(String arg0, short arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setShort(i, arg1);
       }
    }
@@ -1317,10 +1328,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setString(String arg0, String arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setString(i, arg1);
       }
    }
@@ -1335,10 +1346,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setTime(String arg0, Time arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setTime(i, arg1);
       }
    }
@@ -1355,10 +1366,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setTime(String arg0, Time arg1, Calendar arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setTime(i, arg1, arg2);
       }
    }
@@ -1373,10 +1384,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setTimestamp(String arg0, Timestamp arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setTimestamp(i, arg1);
       }
    }
@@ -1393,10 +1404,10 @@ public class NamedPreparedStatement implements PreparedStatement {
    public void setTimestamp(String arg0, Timestamp arg1, Calendar arg2)
          throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setTimestamp(i, arg1, arg2);
       }
    }
@@ -1411,10 +1422,10 @@ public class NamedPreparedStatement implements PreparedStatement {
     */
    public void setURL(String arg0, URL arg1) throws SQLException {
       Collection<Integer> locs = getLocationsForName(arg0);
-      if(locs == null) {
+      if (locs == null) {
          throw new SQLException(arg0 + " is not a named query item");
       }
-      for(int i : locs) {
+      for (int i : locs) {
          statement.setURL(i, arg1);
       }
    }

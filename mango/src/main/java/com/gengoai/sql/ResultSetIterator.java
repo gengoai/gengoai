@@ -64,7 +64,7 @@ public class ResultSetIterator<T> implements Iterator<T>, Serializable {
    @Override
    @SneakyThrows
    public T next() {
-      if(!hasNext) {
+      if (!hasNext) {
          throw new NoSuchElementException();
       }
       T out = mapper.map(resultSet.object);

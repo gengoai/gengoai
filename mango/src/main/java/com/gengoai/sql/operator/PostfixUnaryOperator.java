@@ -20,7 +20,6 @@
 package com.gengoai.sql.operator;
 
 import com.gengoai.Validation;
-import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLElement;
 import lombok.*;
 
@@ -31,7 +30,7 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class SQLPostfixUnaryOperator extends SQLOperator {
+public class PostfixUnaryOperator extends SQLOperator {
    private static final long serialVersionUID = 1L;
    @NonNull SQLElement arg1;
    boolean requiresParenthesis;
@@ -43,18 +42,10 @@ public class SQLPostfixUnaryOperator extends SQLOperator {
     * @param arg1                the argument
     * @param requiresParenthesis are parenthesis required
     */
-   public SQLPostfixUnaryOperator(String operator, @NonNull SQLElement arg1, boolean requiresParenthesis) {
+   public PostfixUnaryOperator(String operator, @NonNull SQLElement arg1, boolean requiresParenthesis) {
       super(Validation.notNullOrBlank(operator));
       this.arg1 = arg1;
       this.requiresParenthesis = requiresParenthesis;
-   }
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      if(isRequiresParenthesis()) {
-         return toSQL(dialect, arg1) + dialect.translateOperator(getOperator());
-      }
-      return toSQL(dialect, arg1) + " " + dialect.translateOperator(getOperator());
    }
 
    @Override
@@ -64,4 +55,4 @@ public class SQLPostfixUnaryOperator extends SQLOperator {
             ", arg1=" + arg1 +
             '}';
    }
-}//END OF SQLPostfixUnaryOperator
+}//END OF PostfixUnaryOperator

@@ -21,7 +21,6 @@ package com.gengoai.sql.statement;
 
 import com.gengoai.sql.NamedPreparedStatement;
 import com.gengoai.sql.SQL;
-import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLElement;
 import com.gengoai.sql.object.Table;
 import lombok.*;
@@ -39,7 +38,7 @@ import java.util.stream.Stream;
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 @ToString
-public class Insert implements SQLUpdateStatement {
+public class Insert implements UpdateStatement {
    private static final long serialVersionUID = 1L;
    @Getter
    private final SQLElement table;
@@ -48,13 +47,17 @@ public class Insert implements SQLUpdateStatement {
    @Getter
    private final List<SQLElement> values = new ArrayList<>();
    @Getter
-   private SQLQueryStatement select;
+   private QueryStatement select;
    @Getter
    private boolean defaultValues = false;
    @Getter
    private InsertType insertType = InsertType.INSERT;
    @Getter
    private UpsertClause onConflict;
+
+   private Insert(@NonNull SQLElement table) {
+      this.table = table;
+   }
 
    /**
     * Create an Insert statement that will insert into the given table.
@@ -74,10 +77,6 @@ public class Insert implements SQLUpdateStatement {
     */
    public static Insert into(@NonNull SQLElement table) {
       return new Insert(table);
-   }
-
-   private Insert(@NonNull SQLElement table) {
-      this.table = table;
    }
 
    /**
@@ -149,7 +148,9 @@ public class Insert implements SQLUpdateStatement {
       this.defaultValues = false;
       this.values.clear();
       this.select = null;
-      columns.stream().map(SQL::namedArgument).forEach(this.values::add);
+      columns.stream()
+             .map(SQL::namedArgument)
+             .forEach(this.values::add);
       return this;
    }
 
@@ -171,16 +172,11 @@ public class Insert implements SQLUpdateStatement {
     * @param select the select statement to use for inserting values
     * @return this Insert statement
     */
-   public Insert select(@NonNull SQLQueryStatement select) {
+   public Insert select(@NonNull QueryStatement select) {
       this.defaultValues = false;
       this.values.clear();
       this.select = select;
       return this;
-   }
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.insert(this);
    }
 
    /**

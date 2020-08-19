@@ -19,48 +19,43 @@
 
 package com.gengoai.sql.operator;
 
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLElement;
+import com.gengoai.Validation;
+import com.gengoai.sql.statement.QueryStatement;
 import lombok.*;
 
 /**
- * Specialized operator for SQL Between operators
+ * A {@link SQLOperator} which works on {@link QueryStatement}s and result is also an {@link QueryStatement}
  */
 @Value
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @EqualsAndHashCode(callSuper = true)
-public class SQLBetween extends SQLOperator {
+public class QueryOperator extends QueryStatement implements SQLOperable {
    private static final long serialVersionUID = 1L;
-   @NonNull SQLElement column;
-   @NonNull SQLElement lower;
-   @NonNull SQLElement higher;
+   @NonNull String name;
+   @NonNull QueryStatement query1;
+   @NonNull QueryStatement query2;
 
-   public SQLBetween(@NonNull SQLElement column,
-                     @NonNull SQLElement lower,
-                     @NonNull SQLElement higher) {
-      super(SQLOperator.BETWEEN);
-      this.column = column;
-      this.lower = lower;
-      this.higher = higher;
-   }
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.toSQL(column) +
-            " " +
-            dialect.translateOperator(getOperator()) +
-            " " +
-            dialect.toSQL(lower) +
-            " AND " +
-            dialect.toSQL(higher);
+   /**
+    * Instantiates a new SQLQueryOperator.
+    *
+    * @param operator the operator
+    * @param query1   the first query
+    * @param query2   the second query
+    */
+   public QueryOperator(String operator,
+                        @NonNull QueryStatement query1,
+                        @NonNull QueryStatement query2) {
+      this.name = Validation.notNullOrBlank(operator);
+      this.query1 = query1;
+      this.query2 = query2;
    }
 
    @Override
    public String toString() {
-      return "SQLBetween{" +
-            "column=" + column +
-            ", lower=" + lower +
-            ", higher=" + higher +
+      return "SQLQueryOperator{" +
+            "operator='" + name + '\'' +
+            ", query1=" + query1 +
+            ", query2=" + query2 +
             '}';
    }
-}//END OF SQLBetween
+}//END OF QueryOperator

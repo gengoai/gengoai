@@ -42,7 +42,7 @@ public enum DataSetType {
 
       @Override
       public DataSet create(@NonNull MStream<Datum> stream) {
-         return new StreamingDataSet(stream.toDistributedStream());
+         return new StreamingDataSet(stream.toDistributedStream()).probe();
       }
    },
    /**
@@ -61,9 +61,8 @@ public enum DataSetType {
    LocalStreaming {
       @Override
       protected DataSet create(@NonNull MStream<Datum> stream) {
-         if(stream.isDistributed()) {
-            return new StreamingDataSet(StreamingContext.local()
-                                                        .stream(stream.collect()));
+         if (stream.isDistributed()) {
+            return new StreamingDataSet(StreamingContext.local().stream(stream.collect())).probe();
          }
          return new StreamingDataSet(stream);
       }
@@ -71,7 +70,7 @@ public enum DataSetType {
    OnDisk {
       @Override
       public DataSet create(@NonNull MStream<Datum> stream) {
-         return new SQLiteDataSet(stream.javaStream());
+         return new SQLiteDataSet(stream.javaStream()).probe();
       }
 
    };
