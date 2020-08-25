@@ -7,43 +7,22 @@ import com.gengoai.conversion.Cast;
 import com.gengoai.string.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * Generic Tuple of any degree.
+ * <p>Generic N-degree tuple.</p>
  *
  * @author David B. Bracewell
  */
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public class NTuple extends Tuple {
    private static final long serialVersionUID = 1L;
+   @JsonProperty("array")
    private final Object[] array;
-
-   /**
-    * Of n tuple.
-    *
-    * @param <T>   the type parameter
-    * @param items the items
-    * @return the n tuple
-    */
-   @SafeVarargs
-   public static <T> NTuple of(T... items) {
-      return new NTuple(items);
-   }
-
-   /**
-    * Of n tuple.
-    *
-    * @param <T>   the type parameter
-    * @param items the items
-    * @return the n tuple
-    */
-   public static <T> NTuple of(List<T> items) {
-      return new NTuple(items.toArray());
-   }
 
    /**
     * Instantiates a new N tuple.
@@ -51,9 +30,29 @@ public class NTuple extends Tuple {
     * @param other the other
     */
    @JsonCreator
-   public NTuple(@JsonProperty Object[] other) {
+   public NTuple(@NonNull @JsonProperty Object[] other) {
       array = new Object[other.length];
       System.arraycopy(other, 0, array, 0, other.length);
+   }
+
+   /**
+    * Creates an NTuple of the given items
+    *
+    * @param items the items
+    * @return the NTuple
+    */
+   public static NTuple of(@NonNull Object... items) {
+      return new NTuple(items);
+   }
+
+   /**
+    * Creates an NTuple of the given items
+    *
+    * @param items the items
+    * @return the NTuple
+    */
+   public static NTuple of(@NonNull List<?> items) {
+      return new NTuple(items.toArray());
    }
 
    @Override
@@ -77,10 +76,6 @@ public class NTuple extends Tuple {
    @Override
    public <T> T get(int i) {
       return Cast.as(array[i]);
-   }
-
-   public Object[] getArray() {
-      return array();
    }
 
    @Override

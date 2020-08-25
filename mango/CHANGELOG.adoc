@@ -10,9 +10,9 @@ Release Date:
 
 == SQL
 
-* Added com.gengoai.sql to provide a wrapper around dealing with SQL. Currently supports SQLite.
-
-
+* Added com.gengoai.sql to provide a wrapper around dealing with SQL. Currently supports SQLite and to some degree PostGreSQL. This needs to be enhanced in the future to more gracefully handle differences in SQL (e.g. PostgreSQL requires a function to be use in Triggers).
+I will work on improving this packages as needed.
+Currently, it is in place for disk-based DataSets in Apollo.
 
 == Version 1.0
 

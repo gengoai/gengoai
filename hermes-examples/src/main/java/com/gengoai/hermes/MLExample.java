@@ -26,11 +26,15 @@ import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.DataSetType;
 import com.gengoai.apollo.ml.Datum;
+import com.gengoai.apollo.ml.encoder.FixedEncoder;
+import com.gengoai.apollo.ml.encoder.IndexEncoder;
 import com.gengoai.apollo.ml.evaluation.MultiClassEvaluation;
 import com.gengoai.apollo.ml.feature.Featurizer;
 import com.gengoai.apollo.ml.model.LibLinear;
 import com.gengoai.apollo.ml.model.PipelineModel;
 import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.ml.observation.VariableSequence;
+import com.gengoai.apollo.ml.transform.Transformer;
 import com.gengoai.apollo.ml.transform.vectorizer.HashingVectorizer;
 import com.gengoai.apollo.ml.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.hermes.corpus.DocumentCollection;
@@ -39,9 +43,14 @@ import com.gengoai.hermes.ml.ElmoTokenEmbedding;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.feature.ValueCalculator;
 import com.gengoai.hermes.tools.HermesCLI;
+import com.gengoai.io.Resources;
+import com.gengoai.json.Json;
 import com.gengoai.stream.StreamingContext;
 
+import java.util.List;
+
 import static com.gengoai.collection.Maps.hashMapOf;
+import static com.gengoai.hermes.ResourceType.WORD_LIST;
 import static com.gengoai.tuple.Tuples.$;
 
 /**
@@ -185,35 +194,44 @@ public class MLExample extends HermesCLI {
 
       //Simple binary featurizer that converts tokens to lower case and removes stop words
       Featurizer<HString> featurizer = TermExtractor.builder()
-            .valueCalculator(ValueCalculator.Binary)
-            .ignoreStopwords()
-            .toLowerCase()
-            .build();
+                                                    .valueCalculator(ValueCalculator.Binary)
+                                                    .ignoreStopwords()
+                                                    .toLowerCase()
+                                                    .build();
 
       //Build an in-memory dataset from a corpus constructed using the raw labels and documents in the String[][] above
       DataSet dataSet = DocumentCollection.create(StreamingContext.local()
-            .stream(training)
-            .map(example -> Document.create(example[1], Language.ENGLISH, hashMapOf($(label, example[0])))))
-            .annotate(Types.TOKEN)
-            .asDataSet(HStringDataSetGenerator.builder()
-                  .dataSetType(DataSetType.InMemory)
-                  .defaultInput(featurizer)
-                  .defaultOutput(h -> Variable.binary(h.attribute(label)))
-                  .build());
+                                                                  .stream(training)
+                                                                  .map(example -> Document
+                                                                        .create(example[1], Language.ENGLISH, hashMapOf($(label, example[0])))))
+                                          .annotate(Types.TOKEN)
+                                          .asDataSet(HStringDataSetGenerator.builder()
+                                                                            .dataSetType(DataSetType.InMemory)
+                                                                            .defaultInput(featurizer)
+                                                                            .defaultOutput(h -> Variable
+                                                                                  .binary(h.attribute(label)))
+                                                                            .build());
+
+
+
+
+
+
+
 
       //Perform 10-fold cross-validation and output the results to System.out
       //Don't expect great results with this size data and feature set
       MultiClassEvaluation.crossvalidation(dataSet,
-            PipelineModel.builder()
-                  .defaultInput(new HashingVectorizer(25, true))
-                  .defaultOutput(new IndexingVectorizer())
-                  .build(new LibLinear(p -> {
-                     p.verbose.set(false);
-                     p.bias.set(true);
-                  })),
-            10,
-            Datum.DEFAULT_OUTPUT)
-            .report();
+                                           PipelineModel.builder()
+                                                        .defaultInput(new HashingVectorizer(25, true))
+                                                        .defaultOutput(new IndexingVectorizer())
+                                                        .build(new LibLinear(p -> {
+                                                           p.verbose.set(false);
+                                                           p.bias.set(true);
+                                                        })),
+                                           10,
+                                           Datum.DEFAULT_OUTPUT)
+                          .report();
 
 
       //Lets try this again using Elmo token embeddings
@@ -222,14 +240,16 @@ public class MLExample extends HermesCLI {
       final ElmoTokenEmbedding elmo = ResourceType.MODEL.load("elmo", Language.ENGLISH);
 
       dataSet = DocumentCollection.create(StreamingContext.local()
-            .stream(training)
-            .map(example -> Document.create(example[1], Language.ENGLISH, hashMapOf($(label, example[0])))))
-            .annotate(Types.TOKEN, Types.SENTENCE)
-            .asDataSet(HStringDataSetGenerator.builder()
-                  .dataSetType(DataSetType.InMemory)
-                  .defaultInput(h -> elmo.apply(h).embedding())
-                  .defaultOutput(h -> Variable.binary(h.attribute(label)))
-                  .build());
+                                                          .stream(training)
+                                                          .map(example -> Document
+                                                                .create(example[1], Language.ENGLISH, hashMapOf($(label, example[0])))))
+                                  .annotate(Types.TOKEN, Types.SENTENCE)
+                                  .asDataSet(HStringDataSetGenerator.builder()
+                                                                    .dataSetType(DataSetType.InMemory)
+                                                                    .defaultInput(h -> elmo.apply(h).embedding())
+                                                                    .defaultOutput(h -> Variable
+                                                                          .binary(h.attribute(label)))
+                                                                    .build());
 
       //We need to update the metadata to set the dimension of the elmo embeddings
       dataSet.updateMetadata(Datum.DEFAULT_INPUT, m -> {
@@ -238,15 +258,15 @@ public class MLExample extends HermesCLI {
       });
 
       MultiClassEvaluation.crossvalidation(dataSet,
-            PipelineModel.builder()
-                  .defaultOutput(new IndexingVectorizer())
-                  .build(new LibLinear(p -> {
-                     p.verbose.set(false);
-                     p.bias.set(true);
-                  })),
-            10,
-            Datum.DEFAULT_OUTPUT)
-            .report();
+                                           PipelineModel.builder()
+                                                        .defaultOutput(new IndexingVectorizer())
+                                                        .build(new LibLinear(p -> {
+                                                           p.verbose.set(false);
+                                                           p.bias.set(true);
+                                                        })),
+                                           10,
+                                           Datum.DEFAULT_OUTPUT)
+                          .report();
    }
 
 }//END OF MLExample

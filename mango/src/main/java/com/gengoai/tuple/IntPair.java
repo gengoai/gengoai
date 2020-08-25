@@ -24,7 +24,8 @@ import lombok.Value;
 import java.io.Serializable;
 
 /**
- * A pair of primitive int values.
+ * <p>A specialized Tuple of integer values. Comparison is made by comparing the first value (v1) and if they are the
+ * same then comparing the second value (v2).</p>
  */
 @Value(staticConstructor = "of")
 public class IntPair implements Serializable, Comparable<IntPair> {
@@ -39,11 +40,11 @@ public class IntPair implements Serializable, Comparable<IntPair> {
 
    @Override
    public int compareTo(IntPair o) {
-      if(o == null) {
+      if (o == null) {
          return 1;
       }
       int cmp = Integer.compare(v1, o.v1);
-      if(cmp == 0) {
+      if (cmp == 0) {
          cmp = Integer.compare(v2, o.v2);
       }
       return cmp;

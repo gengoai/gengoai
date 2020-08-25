@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gengoai.conversion.Cast;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -39,6 +40,7 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @JsonDeserialize(as = Tuple3.class)
+@Getter
 public class Tuple3<A, B, C> extends Tuple {
    private static final long serialVersionUID = 1L;
    /**
@@ -54,8 +56,21 @@ public class Tuple3<A, B, C> extends Tuple {
     */
    public final C v3;
 
+   @JsonCreator
+   protected Tuple3(@JsonProperty Object[] array) {
+      this.v1 = Cast.as(array[0]);
+      this.v2 = Cast.as(array[1]);
+      this.v3 = Cast.as(array[2]);
+   }
+
+   private Tuple3(A v1, B v2, C v3) {
+      this.v1 = v1;
+      this.v2 = v2;
+      this.v3 = v3;
+   }
+
    /**
-    * Of tuple 3.
+    * Static Constructor
     *
     * @param <A> the type parameter
     * @param <B> the type parameter
@@ -67,26 +82,6 @@ public class Tuple3<A, B, C> extends Tuple {
     */
    public static <A, B, C> Tuple3<A, B, C> of(A a, B b, C c) {
       return new Tuple3<>(a, b, c);
-   }
-
-   @JsonCreator
-   protected Tuple3(@JsonProperty Object[] array) {
-      this.v1 = Cast.as(array[0]);
-      this.v2 = Cast.as(array[1]);
-      this.v3 = Cast.as(array[2]);
-   }
-
-   /**
-    * Instantiates a new Tuple 3.
-    *
-    * @param v1 the first value
-    * @param v2 the second value
-    * @param v3 the third value
-    */
-   public Tuple3(A v1, B v2, C v3) {
-      this.v1 = v1;
-      this.v2 = v2;
-      this.v3 = v3;
    }
 
    @Override
@@ -117,7 +112,7 @@ public class Tuple3<A, B, C> extends Tuple {
 
    @Override
    public <T> T get(int i) {
-      switch(i) {
+      switch (i) {
          case 0:
             return Cast.as(v1);
          case 1:
@@ -129,17 +124,6 @@ public class Tuple3<A, B, C> extends Tuple {
       }
    }
 
-   public A getV1() {
-      return this.v1;
-   }
-
-   public B getV2() {
-      return this.v2;
-   }
-
-   public C getV3() {
-      return this.v3;
-   }
 
    @Override
    public Tuple2<B, C> shiftLeft() {

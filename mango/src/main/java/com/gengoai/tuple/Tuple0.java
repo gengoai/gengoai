@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.NonNull;
 
 import java.io.ObjectStreamException;
 import java.util.function.Function;
@@ -42,12 +43,13 @@ public final class Tuple0 extends Tuple {
     */
    public static Tuple0 INSTANCE = new Tuple0();
 
+   private Tuple0() {
+   }
+
+
    @JsonCreator
    private static Tuple0 getInstance(@JsonProperty Object o) {
       return INSTANCE;
-   }
-
-   private Tuple0() {
    }
 
    @Override
@@ -72,7 +74,7 @@ public final class Tuple0 extends Tuple {
    }
 
    @Override
-   public Tuple mapValues(Function<Object, ?> function) {
+   public Tuple mapValues(@NonNull Function<Object, ?> function) {
       return this;
    }
 

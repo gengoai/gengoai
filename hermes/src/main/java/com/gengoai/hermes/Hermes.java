@@ -56,8 +56,24 @@ public final class Hermes {
                                                            e('$'),
                                                            e('.')));
 
+
+   public static final String URL = "https://github.com/gengoai/models/releases/download/%s/%s.tar.xz";
+
    private Hermes() {
       throw new IllegalAccessError();
+   }
+
+
+   public static void main(String[] args) throws Exception {
+      downloadData(Language.ENGLISH, "LATEST");
+   }
+
+   public static void downloadData(@NonNull Language language, @NonNull String version) throws Exception {
+      Resource download_location = Resources
+            .from("/home/ik/" + String.format("%s.tar.xz", language.getCode().toLowerCase()));
+      download_location
+            .write(Resources.from(String.format(URL, version.toLowerCase(), language.getCode().toLowerCase()))
+                            .readBytes());
    }
 
    /**
@@ -79,8 +95,8 @@ public final class Hermes {
    }
 
    /**
-    * Get the default language. The default language is specified using <code>hermes.defaultLanguage/code>.
-    * If the configuration option is not set, it will default to the language matching the system locale.
+    * Get the default language. The default language is specified using <code>hermes.defaultLanguage/code>. If the
+    * configuration option is not set, it will default to the language matching the system locale.
     *
     * @return the default language
     */
