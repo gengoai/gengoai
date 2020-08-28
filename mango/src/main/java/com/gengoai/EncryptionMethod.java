@@ -66,9 +66,9 @@ public enum EncryptionMethod {
             cipher.init(mode, secretkey);
             return cipher;
          } catch (InvalidKeyException
-                     | NoSuchAlgorithmException
-                     | NoSuchPaddingException
-                     | InvalidKeySpecException e) {
+               | NoSuchAlgorithmException
+               | NoSuchPaddingException
+               | InvalidKeySpecException e) {
             throw new RuntimeException(e);
          }
       }
@@ -116,29 +116,6 @@ public enum EncryptionMethod {
    }
 
    /**
-    * <p>Ensures the the key is needed length for the encryption method.</p>
-    *
-    * @param key The key
-    * @return A key of the need length
-    */
-   protected final byte[] ensureKeyLength(byte[] key) {
-      try {
-         if (key.length == keyLength) {
-            return key;
-         }
-         MessageDigest digest;
-         digest = MessageDigest.getInstance("MD5");
-         byte[] keyBytes = Arrays.copyOf(digest.digest(key), keyLength);
-         for (int j = 0, k = 16; j < (keyLength - 16); ) {
-            keyBytes[k++] = keyBytes[j++];
-         }
-         return keyBytes;
-      } catch (NoSuchAlgorithmException e) {
-         throw new RuntimeException(e);
-      }
-   }
-
-   /**
     * <p>Constructs a cipher for the given key and mode.</p>
     *
     * @param key  The key
@@ -152,50 +129,10 @@ public enum EncryptionMethod {
          cipher.init(mode, keySpec);
          return cipher;
       } catch (InvalidKeyException
-                  | NoSuchAlgorithmException
-                  | NoSuchPaddingException e) {
+            | NoSuchAlgorithmException
+            | NoSuchPaddingException e) {
          throw new RuntimeException(e);
       }
-   }
-
-   /**
-    * Encrypts content into a Base64 encoded string.
-    *
-    * @param content The content
-    * @param key     The password
-    * @return A Base64 encoded version of the encrypted content
-    */
-   public final String encrypt(String content, String key) {
-      return encrypt(content.getBytes(), key.getBytes());
-   }
-
-   /**
-    * Encrypts content into a Base64 encoded string.
-    *
-    * @param content The content
-    * @param key     The password
-    * @return A Base64 encoded version of the encrypted content
-    */
-   public String encrypt(byte[] content, byte[] key) {
-      try {
-         Cipher cipher = constructCipher(key, Cipher.ENCRYPT_MODE);
-         byte[] encryptedText = cipher.doFinal(content);
-         return new String(Base64.getEncoder().withoutPadding().encode(encryptedText));
-      } catch (IllegalBlockSizeException
-                  | BadPaddingException e) {
-         throw new RuntimeException(e);
-      }
-   }
-
-   /**
-    * Decrypts encrypted content in a Base64 encoded string into a string.
-    *
-    * @param content The encrypted content
-    * @param key     The password
-    * @return An unencrypted version of the content
-    */
-   public final String decryptToString(String content, String key) {
-      return new String(decrypt(content, key.getBytes()), StandardCharsets.UTF_8);
    }
 
    /**
@@ -221,6 +158,69 @@ public enum EncryptionMethod {
          Cipher cipher = constructCipher(key, Cipher.DECRYPT_MODE);
          return cipher.doFinal(Base64.getDecoder().decode(content.trim()));
       } catch (IllegalBlockSizeException | BadPaddingException e) {
+         throw new RuntimeException(e);
+      }
+   }
+
+   /**
+    * Decrypts encrypted content in a Base64 encoded string into a string.
+    *
+    * @param content The encrypted content
+    * @param key     The password
+    * @return An unencrypted version of the content
+    */
+   public final String decryptToString(String content, String key) {
+      return new String(decrypt(content, key.getBytes()), StandardCharsets.UTF_8);
+   }
+
+   /**
+    * Encrypts content into a Base64 encoded string.
+    *
+    * @param content The content
+    * @param key     The password
+    * @return A Base64 encoded version of the encrypted content
+    */
+   public String encrypt(byte[] content, byte[] key) {
+      try {
+         Cipher cipher = constructCipher(key, Cipher.ENCRYPT_MODE);
+         byte[] encryptedText = cipher.doFinal(content);
+         return new String(Base64.getEncoder().withoutPadding().encode(encryptedText));
+      } catch (IllegalBlockSizeException
+            | BadPaddingException e) {
+         throw new RuntimeException(e);
+      }
+   }
+
+   /**
+    * Encrypts content into a Base64 encoded string.
+    *
+    * @param content The content
+    * @param key     The password
+    * @return A Base64 encoded version of the encrypted content
+    */
+   public final String encrypt(String content, String key) {
+      return encrypt(content.getBytes(), key.getBytes());
+   }
+
+   /**
+    * <p>Ensures the the key is needed length for the encryption method.</p>
+    *
+    * @param key The key
+    * @return A key of the need length
+    */
+   protected final byte[] ensureKeyLength(byte[] key) {
+      try {
+         if (key.length == keyLength) {
+            return key;
+         }
+         MessageDigest digest;
+         digest = MessageDigest.getInstance("MD5");
+         byte[] keyBytes = Arrays.copyOf(digest.digest(key), keyLength);
+         for (int j = 0, k = 16; j < (keyLength - 16); ) {
+            keyBytes[k++] = keyBytes[j++];
+         }
+         return keyBytes;
+      } catch (NoSuchAlgorithmException e) {
          throw new RuntimeException(e);
       }
    }

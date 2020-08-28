@@ -57,24 +57,11 @@ public final class Hermes {
                                                            e('.')));
 
 
-   public static final String URL = "https://github.com/gengoai/models/releases/download/%s/%s.tar.xz";
 
    private Hermes() {
       throw new IllegalAccessError();
    }
 
-
-   public static void main(String[] args) throws Exception {
-      downloadData(Language.ENGLISH, "LATEST");
-   }
-
-   public static void downloadData(@NonNull Language language, @NonNull String version) throws Exception {
-      Resource download_location = Resources
-            .from("/home/ik/" + String.format("%s.tar.xz", language.getCode().toLowerCase()));
-      download_location
-            .write(Resources.from(String.format(URL, version.toLowerCase(), language.getCode().toLowerCase()))
-                            .readBytes());
-   }
 
    /**
     * Attempts to find and return the Class for the default implementation of the given resource for the given language

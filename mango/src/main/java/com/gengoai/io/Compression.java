@@ -26,6 +26,8 @@ import com.gengoai.Validation;
 import lombok.NonNull;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -94,10 +96,25 @@ public enum Compression {
       public OutputStream compressOutputStream(OutputStream outputStream) throws IOException {
          return new BZip2CompressorOutputStream(notNull(outputStream));
       }
+   },
+   XZ(new byte[]{-3, 55, 122, 88, 90, 0}) {
+      @Override
+      public OutputStream compressOutputStream(OutputStream outputStream) throws IOException {
+         return new XZCompressorOutputStream(outputStream);
+      }
+
+      @Override
+      public InputStream decompressInputStream(InputStream inputStream) throws IOException {
+         return new XZCompressorInputStream(inputStream);
+      }
    };
 
-   private static final int LONGEST_MAGIC_NUMBER = 3;
+   private static final int LONGEST_MAGIC_NUMBER = 6;
    private final byte[] header;
+
+   Compression(byte[] header) {
+      this.header = header;
+   }
 
    /**
     * Detects the compression of the given InputStream returning a {@link CompressedInputStream} that allows for reading
@@ -112,12 +129,12 @@ public enum Compression {
       byte[] buffer = new byte[LONGEST_MAGIC_NUMBER];
       PushbackInputStream pushbackInputStream = new PushbackInputStream(is, LONGEST_MAGIC_NUMBER);
       int read = pushbackInputStream.read(buffer);
-      if(read == -1) {
+      if (read == -1) {
          return new CompressedInputStream(is, NONE);
       }
       pushbackInputStream.unread(buffer, 0, read);
-      for(Compression value : values()) {
-         if(value != NONE && matches(value.header, buffer)) {
+      for (Compression value : values()) {
+         if (value != NONE && matches(value.header, buffer)) {
             return new CompressedInputStream(pushbackInputStream, value);
          }
       }
@@ -129,12 +146,12 @@ public enum Compression {
       byte[] buffer = new byte[LONGEST_MAGIC_NUMBER];
       PushbackInputStream pushbackInputStream = new PushbackInputStream(is, LONGEST_MAGIC_NUMBER);
       int read = pushbackInputStream.read(buffer);
-      if(read == -1) {
+      if (read == -1) {
          return Compression.NONE;
       }
       pushbackInputStream.unread(buffer, 0, read);
-      for(Compression value : values()) {
-         if(value != NONE && matches(value.header, buffer)) {
+      for (Compression value : values()) {
+         if (value != NONE && matches(value.header, buffer)) {
             return value;
          }
       }
@@ -142,19 +159,15 @@ public enum Compression {
    }
 
    private static boolean matches(byte[] a1, byte[] a2) {
-      if(a1.length > a2.length) {
+      if (a1.length > a2.length) {
          return false;
       }
-      for(int i = 0; i < a1.length; i++) {
-         if(a1[i] != a2[i]) {
+      for (int i = 0; i < a1.length; i++) {
+         if (a1[i] != a2[i]) {
             return false;
          }
       }
       return true;
-   }
-
-   Compression(byte[] header) {
-      this.header = header;
    }
 
    /**

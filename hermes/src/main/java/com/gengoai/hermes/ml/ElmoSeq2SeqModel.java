@@ -56,8 +56,8 @@ public class ElmoSeq2SeqModel extends TensorFlowModel implements HStringMLModel 
    protected ElmoSeq2SeqModel(@NonNull AnnotationType annotationType,
                               @NonNull AnnotationType trainingAnnotationType) {
       super(Set.of(TOKENS),
-            Maps.linkedHashMapOf($(LABEL, "label/truediv")),
-//            Maps.linkedHashMapOf($(LABEL, "label_1/truediv")),
+//            Maps.linkedHashMapOf($(LABEL, "label/truediv")),
+            Maps.linkedHashMapOf($(LABEL, "label_1/truediv")),
             Collections.emptyMap());
       this.annotationType = annotationType;
       this.trainingAnnotationType = trainingAnnotationType;

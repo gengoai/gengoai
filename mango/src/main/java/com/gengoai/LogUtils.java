@@ -44,6 +44,10 @@ public final class LogUtils {
     */
    public static final Logger ROOT = Logger.getLogger("");
 
+   private LogUtils() {
+      throw new IllegalAccessError();
+   }
+
    /**
     * Adds a file handler that writes to the location specified in <code>com.gengoai.logging.dir</code> or if not set
     * <code>USER_HOME/logs/</code>. The filenames are in the form of <code>basename%g</code> where %g is the rotated
@@ -390,7 +394,7 @@ public final class LogUtils {
                 .getLoggerNames()
                 .asIterator()
                 .forEachRemaining(loggerName -> {
-                   if(loggerName.startsWith(logger) && !loggerName.equals(logger)) {
+                   if (loggerName.startsWith(logger) && !loggerName.equals(logger)) {
                       Logger.getLogger(loggerName).setLevel(level);
                    }
                 });

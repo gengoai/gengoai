@@ -205,7 +205,7 @@ public abstract class TensorFlowModel implements Model {
    public void save(@NonNull Resource resource) throws IOException {
       for (String name : Sets.union(getInputs(), getOutputs())) {
          Encoder encoder = encoders.get(name);
-         if (!encoder.isFixed()) {
+         if (encoder != null && !encoder.isFixed()) {
             Json.dumpPretty(encoder, resource.getChild(name + ".encoder.json.gz").setCompression(Compression.GZIP));
          }
       }

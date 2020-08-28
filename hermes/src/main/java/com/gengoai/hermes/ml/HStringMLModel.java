@@ -113,7 +113,7 @@ public interface HStringMLModel extends Model, SerializableFunction<HString, HSt
     */
    void setVersion(String version);
 
-   default DataSet transform(@NonNull DocumentCollection documentCollection){
+   default DataSet transform(@NonNull DocumentCollection documentCollection) {
       return getDataGenerator().generate(documentCollection.parallelStream());
    }
 

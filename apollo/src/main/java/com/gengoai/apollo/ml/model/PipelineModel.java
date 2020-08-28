@@ -41,8 +41,8 @@ import java.util.Set;
  * <p>
  * A pipeline model pairs a {@link Model} with a {@link Transformer} where the transformer is used to preprocess the
  * {@link DataSet} and {@link Datum} before fitting and transformation. Additionally, pipeline models will attempt to
- * decode the model output ({@link com.gengoai.apollo.math.linalg.NDArray}) based on the {@link LabelType}. For example, a
- * classifier would have its output NDArray transformed into a {@link com.gengoai.apollo.ml.observation.Classification}
+ * decode the model output ({@link com.gengoai.apollo.math.linalg.NDArray}) based on the {@link LabelType}. For example,
+ * a classifier would have its output NDArray transformed into a {@link com.gengoai.apollo.ml.observation.Classification}
  * and a sequence labeler would have its output translated into a {@link com.gengoai.apollo.ml.observation.VariableSequence}.
  * </p>
  * <p>
@@ -68,6 +68,11 @@ public class PipelineModel implements Model {
    @NonNull
    private Transformer transformer;
 
+   private PipelineModel(@NonNull Model model, @NonNull Transformer preprocessors) {
+      this.model = model;
+      this.transformer = preprocessors;
+   }
+
    /**
     * Creates a new Builder to construct a PipelineModel
     *
@@ -75,21 +80,6 @@ public class PipelineModel implements Model {
     */
    public static Builder builder() {
       return new Builder();
-   }
-
-   private PipelineModel(@NonNull Model model, @NonNull Transformer preprocessors) {
-      this.model = model;
-      this.transformer = preprocessors;
-   }
-
-   /**
-    * Gets the model wrapped by this PipelineModel as the given model type
-    *
-    * @param <T> the type parameter
-    * @return the wrapped model
-    */
-   public <T extends Model> T getWrappedModel() {
-      return Cast.as(model);
    }
 
    @Override
@@ -109,7 +99,7 @@ public class PipelineModel implements Model {
    }
 
    private Encoder getEncoder(String name) {
-      if(hasEncoder(name)) {
+      if (hasEncoder(name)) {
          return transformer.getMetadata().get(name).getEncoder();
       }
       return NoOptEncoder.INSTANCE;
@@ -135,6 +125,16 @@ public class PipelineModel implements Model {
       return model.getOutputs();
    }
 
+   /**
+    * Gets the model wrapped by this PipelineModel as the given model type
+    *
+    * @param <T> the type parameter
+    * @return the wrapped model
+    */
+   public <T extends Model> T getWrappedModel() {
+      return Cast.as(model);
+   }
+
    private boolean hasEncoder(String name) {
       ObservationMetadata om = transformer.getMetadata().getOrDefault(name, new ObservationMetadata());
       return getLabelType(name) != LabelType.NDArray && om.getEncoder() != null;
@@ -143,11 +143,11 @@ public class PipelineModel implements Model {
    @Override
    public DataSet transform(@NonNull DataSet dataset) {
       dataset = transformer.transform(dataset).map(this::transform);
-      for(String output : model.getOutputs()) {
+      for (String output : model.getOutputs()) {
          dataset.updateMetadata(output, m -> {
             m.setType(getLabelType(output).getObservationClass());
             m.setEncoder(getEncoder(output));
-            if(getLabelType(output) != LabelType.NDArray) {
+            if (getLabelType(output) != LabelType.NDArray) {
                m.setDimension(m.getEncoder().size());
             }
          });
@@ -158,9 +158,9 @@ public class PipelineModel implements Model {
    @Override
    public Datum transform(@NonNull Datum datum) {
       Datum y = model.transform(transformer.transform(datum));
-      for(String name : model.getOutputs()) {
+      for (String name : model.getOutputs()) {
          Observation o = y.get(name);
-         if(o.isNDArray() && hasEncoder(name)) {
+         if (o.isNDArray() && hasEncoder(name)) {
             y.put(name, getLabelType(name).transform(getEncoder(name), o));
          }
       }
@@ -214,7 +214,7 @@ public class PipelineModel implements Model {
        */
       public Builder source(@NonNull String[] inputs,
                             @NonNull MultiInputTransform... transforms) {
-         for(MultiInputTransform transform : transforms) {
+         for (MultiInputTransform transform : transforms) {
             this.transforms.add(transform.inputs(inputs));
          }
          return this;
@@ -229,7 +229,7 @@ public class PipelineModel implements Model {
        */
       public Builder source(@NonNull String name,
                             @NonNull SingleSourceTransform... transforms) {
-         for(SingleSourceTransform transform : transforms) {
+         for (SingleSourceTransform transform : transforms) {
             this.transforms.add(transform.source(name));
          }
          return this;
