@@ -39,6 +39,8 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.IntConsumer;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -59,6 +61,22 @@ public final class FileUtils {
    }
 
 
+   public static void copyWithProgress(@NonNull InputStream in,
+                                       @NonNull Resource out,
+                                       double inSize,
+                                       @NonNull IntConsumer progress) throws IOException {
+      byte[] buffer = new byte[1024];
+      double totalRead = 0;
+      try (OutputStream fos = out.outputStream()) {
+         int read;
+         while ((read = in.read(buffer)) > 0) {
+            fos.write(buffer, 0, read);
+            totalRead += read;
+            progress.accept((int) Math.floor((totalRead / inSize) * 100));
+         }
+      }
+   }
+
    /**
     * Extracts a compressed and/or archived file from the given source to the given target.
     *
@@ -66,20 +84,37 @@ public final class FileUtils {
     * @param target the target directory or file to store the content
     * @throws IOException Something went wrong during extraction
     */
-   public static void extract(@NonNull File source, @NonNull File target) throws IOException {
+   public static void extract(@NonNull File source,
+                              @NonNull File target) throws IOException {
+      extract(source, target, (f, v) -> {
+      });
+   }
+
+   /**
+    * Extracts a compressed and/or archived file from the given source to the given target.
+    *
+    * @param source the source (compressed and/or archived) file
+    * @param target the target directory or file to store the content
+    * @throws IOException Something went wrong during extraction
+    */
+   public static void extract(@NonNull File source,
+                              @NonNull File target,
+                              @NonNull BiConsumer<String, Integer> progress) throws IOException {
       final CompressorStreamFactory compressorStreamFactory = new CompressorStreamFactory();
       final ArchiveStreamFactory streamFactory = new ArchiveStreamFactory();
       try (InputStream is = new BufferedInputStream(new FileInputStream(source))) {
          InputStream cis = is;
+         double fileSize = Files.size(source.toPath());
          try {
             String guess = CompressorStreamFactory.detect(is);
-            cis = new BufferedInputStream(compressorStreamFactory.createCompressorInputStream(guess, is));
+            cis = compressorStreamFactory.createCompressorInputStream(guess, is);
+            cis = new BufferedInputStream(cis);
          } catch (CompressorException e) {
             //Assume its not compressed
          }
          try {
             String archiveFormat = ArchiveStreamFactory.detect(cis);
-            extract(streamFactory.createArchiveInputStream(archiveFormat, cis), target.toPath());
+            extract(streamFactory.createArchiveInputStream(archiveFormat, cis), target.toPath(), progress);
          } catch (ArchiveException e) {
             //Assume its not an archive
             String file = source.getName();
@@ -87,19 +122,26 @@ public final class FileUtils {
                file = source.toPath().getFileName().toString();
                file = file.substring(0, indexOfFileExtension(file));
             }
-            Files.copy(cis, target.toPath().resolve(file));
+            copyWithProgress(cis, Resources.fromFile(target), fileSize, pct -> progress
+                  .accept(FileUtils.baseName(source.getName()), pct));
          }
       }
    }
 
-   private static void extract(ArchiveInputStream ais, @NonNull Path targetDir) throws IOException {
+   private static void extract(ArchiveInputStream ais,
+                               Path targetDir,
+                               BiConsumer<String, Integer> progress) throws IOException {
       for (ArchiveEntry ze; (ze = ais.getNextEntry()) != null; ) {
          Path resolvedPath = targetDir.resolve(ze.getName());
          if (ze.isDirectory()) {
             Files.createDirectories(resolvedPath);
          } else {
             Files.createDirectories(resolvedPath.getParent());
-            Files.copy(ais, resolvedPath);
+            final String name = ze.getName();
+            copyWithProgress(ais,
+                             Resources.fromFile(resolvedPath.toFile()),
+                             ze.getSize(),
+                             p -> progress.accept(name, p));
          }
       }
    }
