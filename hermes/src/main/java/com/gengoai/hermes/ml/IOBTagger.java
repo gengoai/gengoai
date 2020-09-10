@@ -61,7 +61,7 @@ public class IOBTagger extends BaseHStringMLModel {
 
    @Override
    public HString apply(@NonNull HString hString) {
-      for(Annotation sentence : hString.sentences()) {
+      for (Annotation sentence : hString.sentences()) {
          onEstimate(sentence, transform(getDataGenerator().apply(sentence)));
       }
       return hString;

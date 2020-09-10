@@ -19,20 +19,13 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.model.LabelType;
-import com.gengoai.apollo.ml.model.Model;
-import com.gengoai.apollo.ml.model.TensorFlowModel;
 import com.gengoai.apollo.ml.model.TensorUtils;
 import com.gengoai.apollo.ml.observation.Variable;
 import com.gengoai.apollo.ml.transform.Transformer;
 import com.gengoai.apollo.ml.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.collection.Maps;
-import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.AnnotationType;
-import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import lombok.NonNull;
 import org.tensorflow.Tensor;
@@ -44,12 +37,11 @@ import java.util.Set;
 
 import static com.gengoai.tuple.Tuples.$;
 
-public class ElmoSeq2SeqModel extends TensorFlowModel implements HStringMLModel {
+public abstract class ElmoSeq2SeqModel extends TensorFlowSequenceLabeler {
    public static final String LABEL = "label";
    public static final String TOKENS = "tokens";
    public static final String SEQUENCE_LENGTH = "seq_len";
    private static final long serialVersionUID = 1L;
-   private final AnnotationType annotationType;
    private final AnnotationType trainingAnnotationType;
 
 
@@ -58,26 +50,12 @@ public class ElmoSeq2SeqModel extends TensorFlowModel implements HStringMLModel 
       super(Set.of(TOKENS),
 //            Maps.linkedHashMapOf($(LABEL, "label/truediv")),
             Maps.linkedHashMapOf($(LABEL, "label_1/truediv")),
-            Collections.emptyMap());
-      this.annotationType = annotationType;
+            Collections.emptyMap(),
+            IOBValidator.INSTANCE,
+            IOB.decoder(annotationType));
       this.trainingAnnotationType = trainingAnnotationType;
    }
 
-   @Override
-   public HString apply(@NonNull HString hString) {
-      DataSet dataSet = getDataGenerator().generate(Collections.singleton(hString));
-      List<Datum> tensors = processBatch(dataSet);
-      for (int i = 0; i < tensors.size(); i++) {
-         Annotation sentence = hString.sentences().get(i);
-         IOB.decode(sentence,
-                    tensors.get(i)
-                           .get(LABEL)
-                           .asNDArray()
-                           .decodeSequence(encoders.get(getOutput()), IOBValidator.INSTANCE),
-                    annotationType);
-      }
-      return hString;
-   }
 
    @Override
    protected Map<String, Tensor<?>> createTensors(DataSet batch) {
@@ -91,41 +69,11 @@ public class ElmoSeq2SeqModel extends TensorFlowModel implements HStringMLModel 
    }
 
    @Override
-   protected Datum decode(Datum datum, List<NDArray> yHat, long slice) {
-      datum.put(LABEL, yHat.get(0).slice((int) slice));
-      return datum;
-   }
-
-   @Override
-   public Model delegate() {
-      return this;
-   }
-
-   @Override
    public HStringDataSetGenerator getDataGenerator() {
       return HStringDataSetGenerator.builder(Types.SENTENCE)
                                     .tokenSequence(TOKENS, h -> Variable.binary(h.toString()))
                                     .source(LABEL, IOB.encoder(trainingAnnotationType))
                                     .build();
    }
-
-   @Override
-   public LabelType getLabelType(@NonNull String name) {
-      if (name.equals("label")) {
-         return LabelType.Sequence;
-      }
-      throw new IllegalArgumentException("'" + name + "' is not a valid output for this model.");
-   }
-
-   @Override
-   public String getVersion() {
-      return "gengoai_elmo_residual_bilstm_crf_v1.0";
-   }
-
-   @Override
-   public void setVersion(String version) {
-      throw new UnsupportedOperationException();
-   }
-
 
 }//END OF ElmoSeq2SeqModel

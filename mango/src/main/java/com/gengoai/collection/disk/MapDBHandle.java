@@ -34,7 +34,7 @@ import java.io.Serializable;
 import static com.gengoai.LogUtils.logFine;
 
 /**
- * The type Map db handle.
+ * Wraps and manages a MapDB DB store.
  */
 @EqualsAndHashCode(exclude = "store")
 @Log
@@ -84,21 +84,39 @@ public final class MapDBHandle implements Serializable, AutoCloseable {
     */
    public void delete() {
       String path = file.getAbsolutePath();
-      for(File f : new File[]{file, new File(path + ".p"), new File(path + ".t")}) {
-         if(f.exists()) {
+      for (File f : new File[]{file, new File(path + ".p"), new File(path + ".t")}) {
+         if (f.exists()) {
             f.delete();
          }
       }
    }
 
+   /**
+    * Gets the global boolean value with the given name
+    *
+    * @param name the name
+    * @return the boolean
+    */
    public Atomic.Boolean getBoolean(String name) {
       return getStore().getAtomicBoolean(name);
    }
 
+   /**
+    * Gets global integer value with the given name.
+    *
+    * @param name the name
+    * @return the integer
+    */
    public Atomic.Integer getInteger(String name) {
       return getStore().getAtomicInteger(name);
    }
 
+   /**
+    * Gets the global long value with the given name.
+    *
+    * @param name the name
+    * @return the long
+    */
    public Atomic.Long getLong(String name) {
       return getStore().getAtomicLong(name);
    }
@@ -109,9 +127,9 @@ public final class MapDBHandle implements Serializable, AutoCloseable {
     * @return the store
     */
    protected DB getStore() {
-      if(store == null || store.isClosed()) {
-         synchronized(this) {
-            if(store == null || store.isClosed()) {
+      if (store == null || store.isClosed()) {
+         synchronized (this) {
+            if (store == null || store.isClosed()) {
                store = MapDBRegistry.get(file, compressed);
             }
          }
@@ -119,14 +137,32 @@ public final class MapDBHandle implements Serializable, AutoCloseable {
       return store;
    }
 
+   /**
+    * Gets the gloabl string value for the given name.
+    *
+    * @param name the name
+    * @return the string
+    */
    public Atomic.String getString(String name) {
       return getStore().getAtomicString(name);
    }
 
+   /**
+    * Gets the global value of the given variable name.
+    *
+    * @param <E>  the type parameter
+    * @param name the name
+    * @return the var
+    */
    public <E> Atomic.Var<E> getVar(String name) {
       return getStore().getAtomicVar(name);
    }
 
+   /**
+    * Is closed.
+    *
+    * @return True if closed, False if not
+    */
    public boolean isClosed() {
       return store == null || store.isClosed();
    }

@@ -25,6 +25,7 @@ import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.DataSetType;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.Encoder;
+import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.apollo.ml.transform.Transformer;
 import com.gengoai.collection.Sets;
 import com.gengoai.io.Compression;
@@ -64,18 +65,19 @@ import java.util.stream.Stream;
 public abstract class TensorFlowModel implements Model {
    private static final long serialVersionUID = 1L;
    protected final Map<String, Encoder> encoders = new HashMap<>();
-   protected final Set<String> inputs;
-   protected final LinkedHashMap<String, String> outputs;
+   private final Set<String> inputs;
+   private final LinkedHashMap<String, String> outputs;
    private final FitParameters<?> fitParameters = new FitParameters<>();
    protected Resource modelFile;
    protected volatile transient Transformer transformer;
    private volatile transient MonitoredObject<SavedModelBundle> model;
 
+
    /**
     * Instantiates a new TensorFlowModel.
     *
-    * @param outputs  the model outputs
     * @param inputs   the model inputs
+    * @param outputs  the model outputs
     * @param encoders the encoders
     */
    protected TensorFlowModel(@NonNull Set<String> inputs,
@@ -109,6 +111,12 @@ public abstract class TensorFlowModel implements Model {
       }
    }
 
+   /**
+    * Create tensors map.
+    *
+    * @param batch the batch
+    * @return the map
+    */
    protected abstract Map<String, Tensor<?>> createTensors(DataSet batch);
 
    /**
@@ -118,33 +126,39 @@ public abstract class TensorFlowModel implements Model {
     */
    protected abstract Transformer createTransformer();
 
-   protected Datum decode(Datum datum, List<NDArray> yHat, long slice) {
+   /**
+    * Decode datum.
+    *
+    * @param datum the datum
+    * @param yHat  the y hat
+    * @param slice the slice
+    * @return the datum
+    */
+   private Datum decode(Datum datum, List<NDArray> yHat, long slice) {
       int i = 0;
       for (Map.Entry<String, String> e : outputs.entrySet()) {
          NDArray ndArray = yHat.get(i);
          if (ndArray.shape().order() > 2) {
-            datum.put(e.getKey(), yHat.get(i).slice((int) slice));
+            datum.put(e.getKey(), decodeNDArray(e.getKey(), yHat.get(i).slice((int) slice)));
          } else {
-            datum.put(e.getKey(), yHat.get(i).getRow((int) slice));
+            datum.put(e.getKey(), decodeNDArray(e.getKey(), yHat.get(i).getRow((int) slice)));
          }
          i++;
       }
       return datum;
    }
 
+   protected abstract Observation decodeNDArray(String name, NDArray ndArray);
+
    @Override
    public void estimate(@NonNull DataSet dataset) {
       dataset = createTransformer().fitAndTransform(dataset);
-      dataset.getMetadata()
-             .forEach((k, v) -> encoders.put(k, v.getEncoder()));
+      dataset.getMetadata().forEach((k, v) -> encoders.put(k, v.getEncoder()));
       Resource tmp = Resources.temporaryFile();
-      try {
-         Json.dumpPretty(dataset, tmp);
-      } catch (IOException e) {
-         throw new RuntimeException(e);
-      }
+      dataset.persist(tmp);
       System.out.println("DataSet saved to: " + tmp.descriptor());
    }
+
 
    @Override
    public FitParameters<?> getFitParameters() {
@@ -161,6 +175,11 @@ public abstract class TensorFlowModel implements Model {
       return Collections.unmodifiableSet(outputs.keySet());
    }
 
+   /**
+    * Gets tensor flow model.
+    *
+    * @return the tensor flow model
+    */
    protected final SavedModelBundle getTensorFlowModel() {
       if (model == null) {
          synchronized (this) {
@@ -177,7 +196,14 @@ public abstract class TensorFlowModel implements Model {
       return model.object;
    }
 
-   protected List<Datum> processBatch(DataSet batch) {
+
+   /**
+    * Process batch list.
+    *
+    * @param batch the batch
+    * @return the list
+    */
+   protected final List<Datum> processBatch(DataSet batch) {
       batch = transformer.transform(batch);
       Session.Runner runner = getTensorFlowModel().session().runner();
       Map<String, Tensor<?>> tensors = createTensors(batch);
@@ -194,10 +220,7 @@ public abstract class TensorFlowModel implements Model {
       batch.stream()
            .zipWithIndex()
            .forEachLocal((d, i) -> output.add(decode(d, results, i)));
-
-
       tensors.values().forEach(Tensor::close);
-
       return output;
    }
 

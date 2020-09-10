@@ -314,6 +314,7 @@ public class CoNLLEvaluation implements SequenceLabelerEvaluation {
       return c / (c + m);
    }
 
+
    private Set<Tuple3<Integer, Integer, String>> tags(Sequence<?> sequence) {
       Set<Tuple3<Integer, Integer, String>> tags = new HashSet<>();
       for(int i = 0; i < sequence.size(); ) {

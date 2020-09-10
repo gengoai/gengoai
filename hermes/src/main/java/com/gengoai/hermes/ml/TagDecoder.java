@@ -19,18 +19,17 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.hermes.Types;
+import com.gengoai.apollo.ml.observation.Sequence;
+import com.gengoai.hermes.HString;
+import lombok.NonNull;
 
-public class ElmoNERModel extends ElmoSeq2SeqModel {
-   private static final long serialVersionUID = 1L;
+import java.io.Serializable;
 
-   public ElmoNERModel() {
-      super(Types.ML_ENTITY, Types.ENTITY);
-   }
+/**
+ * @author David B. Bracewell
+ */
+public interface TagDecoder extends Serializable {
 
-   @Override
-   public String getVersion() {
-      return "gengoai_elmo_residual_bilstm_crf_v1.0";
-   }
+   void decode(@NonNull HString sentence, @NonNull Sequence<?> result);
 
-}//END OF ElmoNERModel
+}//END OF TagDecoder

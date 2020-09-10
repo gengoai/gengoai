@@ -20,19 +20,30 @@ import java.util.logging.Logger;
 import static com.gengoai.tuple.Tuples.$;
 
 /**
- * <p>Tracks start and ending times to determine total time taken.</p>
+ * <p>A specialized version of a Stopwatch that is thread safe. Tracks start and ending times per thread to determine
+ * total time taken across threads.</p>
  * <p>Normal usage of a Stopwatch is a follows:
  * <pre>
  * {@code
- *    var sw = Stopwatch.createStarted() //optionally you can give your Stopwatch a name
+ *    var sw = new MultithreadedStopwatch("MyStopwatch");
  *    //Perform some activity
- *    sw.stop();
- *    System.out.println(sw); // output total time
- *    sw.reset();
- *    sw.start();
- *    //Perform another activity
- *    sw.stop();
- *    System.out.println(sw); // output total time
+ *    new Thread(() -> {
+ *       sw.start();
+ *       // do something....
+ *       sw.stop();
+ *    }).start();
+ *    new Thread(() -> {
+ *       sw.start();
+ *       // do something....
+ *       sw.stop();
+ *    }).start();
+ *    new Thread(() -> {
+ *       sw.start();
+ *       // do something....
+ *       sw.stop();
+ *    }).start();
+ *    //Wait until all threads are complete
+ *    System.out.println(sw); // Output the sum of times spent in the three threads and the average time spent per start/stop.
  * }
  * </pre>
  *
@@ -46,10 +57,22 @@ public class MultithreadedStopwatch implements Serializable {
    private Duration elapsedTime = Duration.ofNanos(0);
    private AtomicLong calls = new AtomicLong();
 
+   /**
+    * Instantiates a new Multithreaded stopwatch with the given name.
+    *
+    * @param name the name of the stopwatch
+    */
    public MultithreadedStopwatch(String name) {
       this(name, determineLevel(name));
    }
 
+   /**
+    * Instantiates a new Multithreaded stopwatch with given name and logging at given level. The stopwatch will log the
+    * current stopwatch status at the given log level on a fixed interval of every 30 seconds.
+    *
+    * @param name  the name of the stopwatch
+    * @param level the log level
+    */
    public MultithreadedStopwatch(String name, @NonNull Level level) {
       this.name = name;
       final Logger logger = Strings.isNotNullOrBlank(name)
@@ -136,6 +159,11 @@ public class MultithreadedStopwatch implements Serializable {
       return elapsedTime.plus(duration);
    }
 
+   /**
+    * Gets elapsed time as string.
+    *
+    * @return the elapsed time as string
+    */
    public String getElapsedTimeAsString() {
       return getElapsedTime()
             .toString()

@@ -181,6 +181,10 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
       return update("ApplyLexicon", doc -> lexicon.extract(doc).forEach(onMatch));
    }
 
+   default DocumentCollection apply(@NonNull SerializableFunction<HString, HString> function) {
+      return update(function.getClass().getSimpleName(), function::apply);
+   }
+
    /**
     * Applies token regular expression to the corpus creating annotations of the given type for matches.
     *

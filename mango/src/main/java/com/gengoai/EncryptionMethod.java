@@ -21,6 +21,8 @@
 
 package com.gengoai;
 
+import lombok.NonNull;
+
 import javax.crypto.*;
 import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -86,13 +88,7 @@ public enum EncryptionMethod {
     */
    BLOWFISH("Blowfish", 16);
 
-   /**
-    * The Encryption method Name.
-    */
    protected final String name;
-   /**
-    * The length of the key in bytes.
-    */
    protected final int keyLength;
 
    EncryptionMethod(String name, int keyLength) {
@@ -107,6 +103,7 @@ public enum EncryptionMethod {
     * @return An EncryptionMethod
     */
    public static EncryptionMethod fromName(String name) {
+      Validation.notNullOrBlank(name, "Invalid EncryptionMethod, a null or empty name was provided");
       for (EncryptionMethod en : EncryptionMethod.values()) {
          if (en.name.equals(name)) {
             return en;
@@ -122,7 +119,7 @@ public enum EncryptionMethod {
     * @param mode The mode
     * @return The Cipher
     */
-   protected Cipher constructCipher(byte[] key, int mode) {
+   protected Cipher constructCipher(@NonNull byte[] key, int mode) {
       try {
          SecretKeySpec keySpec = new SecretKeySpec(ensureKeyLength(key), name);
          Cipher cipher = Cipher.getInstance(name);
@@ -142,7 +139,7 @@ public enum EncryptionMethod {
     * @param key     The password
     * @return An unencrypted version of the content
     */
-   public final byte[] decrypt(String content, String key) {
+   public final byte[] decrypt(@NonNull String content, @NonNull String key) {
       return decrypt(content, key.getBytes());
    }
 
@@ -153,7 +150,7 @@ public enum EncryptionMethod {
     * @param key     The password
     * @return An unencrypted version of the content
     */
-   public byte[] decrypt(String content, byte[] key) {
+   public byte[] decrypt(@NonNull String content, @NonNull byte[] key) {
       try {
          Cipher cipher = constructCipher(key, Cipher.DECRYPT_MODE);
          return cipher.doFinal(Base64.getDecoder().decode(content.trim()));
@@ -169,7 +166,7 @@ public enum EncryptionMethod {
     * @param key     The password
     * @return An unencrypted version of the content
     */
-   public final String decryptToString(String content, String key) {
+   public final String decryptToString(@NonNull String content, @NonNull String key) {
       return new String(decrypt(content, key.getBytes()), StandardCharsets.UTF_8);
    }
 
@@ -180,7 +177,7 @@ public enum EncryptionMethod {
     * @param key     The password
     * @return A Base64 encoded version of the encrypted content
     */
-   public String encrypt(byte[] content, byte[] key) {
+   public String encrypt(@NonNull byte[] content, @NonNull byte[] key) {
       try {
          Cipher cipher = constructCipher(key, Cipher.ENCRYPT_MODE);
          byte[] encryptedText = cipher.doFinal(content);
@@ -198,7 +195,7 @@ public enum EncryptionMethod {
     * @param key     The password
     * @return A Base64 encoded version of the encrypted content
     */
-   public final String encrypt(String content, String key) {
+   public final String encrypt(@NonNull String content, @NonNull String key) {
       return encrypt(content.getBytes(), key.getBytes());
    }
 

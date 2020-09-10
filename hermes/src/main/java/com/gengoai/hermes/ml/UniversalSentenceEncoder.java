@@ -25,6 +25,7 @@ import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.model.LabelType;
 import com.gengoai.apollo.ml.model.Model;
 import com.gengoai.apollo.ml.model.TensorFlowModel;
+import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.apollo.ml.observation.Variable;
 import com.gengoai.apollo.ml.transform.Transformer;
 import com.gengoai.collection.Iterators;
@@ -83,6 +84,11 @@ public class UniversalSentenceEncoder extends TensorFlowModel implements HString
    @Override
    protected Transformer createTransformer() {
       return new Transformer(Collections.emptyList());
+   }
+
+   @Override
+   protected Observation decodeNDArray(String name, NDArray ndArray) {
+      return ndArray;
    }
 
    @Override

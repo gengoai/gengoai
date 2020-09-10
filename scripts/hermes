@@ -1,6 +1,6 @@
 #!/bin/bash
 
-work_dir=$(pwd)
+WORK_DIR=$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)")
 CLASSPATH='lib/*'
 
 
@@ -14,14 +14,14 @@ then
 	JAVA_OPTS="-Xmx8g"
 fi
 
-if [ -z "$HERMES_RESOURCES" ]
+if [ -z "$HERMES_CONFIG" ]
 then
-	HERMES_RESOURCES="--hermes.resources.dir=$work_dir/resources"
+	HERMES_CONFIG="$WORK_DIR/config.conf"
 fi
 
 if [ -z "$SPARK_HOME" ]
 then
-	SPARK_HOME="$work_dir/spark/"
+	SPARK_HOME="$WORK_DIR/spark/"
 fi
 
 
@@ -30,27 +30,17 @@ function help() {
 }
 
 function run() {
-  java "$JAVA_OPTS" -cp "$CLASSPATH" "$1" "${@:2}" "$HERMES_RESOURCES"
+  java "$JAVA_OPTS" -cp "$CLASSPATH" "$1" "${@:2}" --config "$HERMES_CONFIG"
 }
 
 function spark() {
   if [ "$1" == "LOCAL" ]; then
-    java "$JAVA_OPTS" -cp "$CLASSPATH:spark/*" "$2"  "${@:3}" "$HERMES_RESOURCES"
+    java "$JAVA_OPTS" -cp "$CLASSPATH:spark/*" "$2"  "${@:3}" --config "$HERMES_CONFIG"
   else
     echo "DISTRIBUTED"
   fi
 }
 
-function download() {
-  mkdir -p "$work_dir/resources/"
-  LANGUAGE=$(echo "${1}" | tr "[:lower:]" "[:upper:]")
-  if [[ "$LANGUAGE" == "ENGLISH" || "$LANGUAGE" == "EN" ]]
-  then
-    echo "Downloading models for $LANGUAGE"
-  else
-    echo "Unfortunately, $LANGUAGE is not supported at this time."
-  fi
-}
 
 function find_program() {
     if [ ${programs[$1]+_} ]
@@ -92,10 +82,6 @@ case $ACTION in
       ;;
     spark-local)
       spark "LOCAL" "$PROGRAM" "${@:3:}"
-      ;;
-    download)
-      #download "$PROGRAM"
-      echo "Currently not implemented please see the Hermes releases on https://github.com/gengoai/hermes/releases to download"
       ;;
     help | -h | *)
       help

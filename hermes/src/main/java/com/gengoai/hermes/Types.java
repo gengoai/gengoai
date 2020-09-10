@@ -77,7 +77,11 @@ public interface Types {
     * RelationType defining dependency relations.
     */
    RelationType DEPENDENCY = RelationType.make("DEPENDENCY");
+
+
    AttributeType<NDArray> EMBEDDING = AttributeType.make("EMBEDDING", NDArray.class);
+
+
    /**
     * Attribute defining the type of entity for Entity annotations
     */
@@ -273,12 +277,12 @@ public interface Types {
     */
    static String toName(@NonNull String type, @NonNull String name) {
       type = type.toLowerCase();
-      if(!type.endsWith(".")) {
+      if (!type.endsWith(".")) {
          type = type + ".";
       }
       return name.toLowerCase().startsWith(type)
-             ? name.substring(type.length())
-             : name;
+            ? name.substring(type.length())
+            : name;
    }
 
    /**
@@ -290,12 +294,12 @@ public interface Types {
     */
    static String toTypeName(@NonNull String type, @NonNull String name) {
       int dot = name.indexOf('.');
-      if(dot < 0) {
+      if (dot < 0) {
          return Strings.toTitleCase(type) + "." + name;
       }
 
       String sub = name.substring(0, dot);
-      if(sub.equalsIgnoreCase(type)) {
+      if (sub.equalsIgnoreCase(type)) {
          return Strings.toTitleCase(type) + name.substring(dot);
       }
 

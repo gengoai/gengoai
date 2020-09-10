@@ -23,19 +23,19 @@ final class AnnotationUtils {
 
    public static void readCurrent(Collection<String> target, FileObject fileObject) throws IOException {
       try {
-         try(BufferedReader reader = new BufferedReader(new InputStreamReader(fileObject.openInputStream(),
-                                                                              StandardCharsets.UTF_8))) {
+         try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileObject.openInputStream(),
+                                                                               StandardCharsets.UTF_8))) {
             reader.lines().forEach(target::add);
          }
-      } catch(FileNotFoundException | NoSuchFileException x) {
+      } catch (FileNotFoundException | NoSuchFileException x) {
          // ignore because we don't care at this point
       }
    }
 
    public static void writeOutput(Collection<String> collection, FileObject fileObject) throws IOException {
-      try(BufferedWriter writer = new BufferedWriter(
+      try (BufferedWriter writer = new BufferedWriter(
             new OutputStreamWriter(fileObject.openOutputStream(), StandardCharsets.UTF_8))) {
-         for(String line : collection) {
+         for (String line : collection) {
             writer.write(line);
             writer.newLine();
          }

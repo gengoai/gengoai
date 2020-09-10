@@ -136,7 +136,9 @@ public final class FileUtils {
          if (ze.isDirectory()) {
             Files.createDirectories(resolvedPath);
          } else {
-            Files.createDirectories(resolvedPath.getParent());
+            if (!Files.exists(resolvedPath.getParent())) {
+               Files.createDirectories(resolvedPath.getParent());
+            }
             final String name = ze.getName();
             copyWithProgress(ais,
                              Resources.fromFile(resolvedPath.toFile()),
