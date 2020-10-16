@@ -22,9 +22,9 @@ package com.gengoai.hermes.ml;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.model.LabelType;
 import com.gengoai.apollo.ml.model.Model;
+import com.gengoai.apollo.ml.model.TFVarSpec;
 import com.gengoai.apollo.ml.model.TensorFlowModel;
 import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
 import com.gengoai.apollo.ml.observation.Observation;
@@ -32,7 +32,10 @@ import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
 import lombok.NonNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author David B. Bracewell
@@ -42,12 +45,11 @@ public abstract class TensorFlowSequenceLabeler extends TensorFlowModel implemen
    private final TagDecoder tagDecoder;
    private final SequenceValidator validator;
 
-   public TensorFlowSequenceLabeler(@NonNull Set<String> inputs,
-                                    @NonNull LinkedHashMap<String, String> outputs,
-                                    @NonNull Map<String, Encoder> encoders,
+   public TensorFlowSequenceLabeler(@NonNull Map<String, TFVarSpec> inputs,
+                                    @NonNull LinkedHashMap<String, TFVarSpec> outputs,
                                     @NonNull SequenceValidator validator,
                                     @NonNull TagDecoder tagDecoder) {
-      super(inputs, outputs, encoders);
+      super(inputs, outputs);
       this.validator = validator;
       this.tagDecoder = tagDecoder;
    }
@@ -65,7 +67,7 @@ public abstract class TensorFlowSequenceLabeler extends TensorFlowModel implemen
 
    @Override
    protected Observation decodeNDArray(String name, NDArray ndArray) {
-      return ndArray.decodeSequence(encoders.get(name), validator);
+      return ndArray.decodeSequence(outputs.get(name).getEncoder(), validator);
    }
 
    @Override

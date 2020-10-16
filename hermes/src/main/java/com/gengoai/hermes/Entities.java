@@ -47,60 +47,80 @@ public interface Entities {
    // INTERNET ENTITY TYPES
    //-----------------------------------------------------------------------------------------
    EntityType INTERNET = EntityType.make("INTERNET");
-   EntityType EMAIL = EntityType.make(INTERNET, "EMAIL");
    EntityType EMOTICON = EntityType.make(INTERNET, "EMOTICON");
    EntityType HASH_TAG = EntityType.make(INTERNET, "HASH_TAG");
-   EntityType REPLY = EntityType.make(INTERNET, "REPLY");
-   EntityType URL = EntityType.make(INTERNET, "URL");
 
    //-----------------------------------------------------------------------------------------
    // LOCATION ENTITY TYPES
    //-----------------------------------------------------------------------------------------
    EntityType LOCATION = EntityType.make("LOCATION");
-   EntityType RELATIVE_LOCATION = EntityType.make(LOCATION, "RELATIVE_LOCATION");
+
    EntityType GPE = EntityType.make(LOCATION, "GPE");
    EntityType CITY = EntityType.make(GPE, "CITY");
    EntityType COUNTY = EntityType.make(GPE, "COUNTY");
    EntityType PROVINCE = EntityType.make(GPE, "PROVINCE");
    EntityType COUNTRY = EntityType.make(GPE, "COUNTRY");
+
    EntityType REGION = EntityType.make(LOCATION, "REGION");
+   EntityType CONTINENTAL_REGION = EntityType.make(REGION, "CONTINENTAL_REGION");
+   EntityType DOMESTIC_REGION = EntityType.make(REGION, "DOMESTIC_REGION");
+
    EntityType GEOLOGICAL_REGION = EntityType.make(LOCATION, "GEOLOGICAL_REGION");
    EntityType LANDFORM = EntityType.make(GEOLOGICAL_REGION, "LANDFORM");
    EntityType WATER_FORM = EntityType.make(GEOLOGICAL_REGION, "WATER_FORM");
    EntityType SEA = EntityType.make(GEOLOGICAL_REGION, "SEA");
+
+
    EntityType ASTRAL_BODY = EntityType.make(LOCATION, "ASTRAL_BODY");
    EntityType STAR = EntityType.make(ASTRAL_BODY, "STAR");
    EntityType PLANET = EntityType.make(ASTRAL_BODY, "PLANET");
-   EntityType POSTAL_ADDRESS = EntityType.make(LOCATION, "POSTAL_ADDRESS");
+   EntityType CONSTELLATION = EntityType.make(ASTRAL_BODY, "CONSTELLATION");
+
+   EntityType RELATIVE_LOCATION = EntityType.make(LOCATION, "RELATIVE_LOCATION");
+
+   EntityType ADDRESS = EntityType.make(LOCATION, "ADDRESS");
+   EntityType POSTAL_ADDRESS = EntityType.make(ADDRESS, "POSTAL_ADDRESS");
+   EntityType PHONE_NUMBER = EntityType.make(ADDRESS, "PHONE_NUMBER");
+   EntityType REPLY = EntityType.make(ADDRESS, "REPLY");
+   EntityType EMAIL = EntityType.make(ADDRESS, "EMAIL");
+   EntityType URL = EntityType.make(ADDRESS, "URL");
 
    //-----------------------------------------------------------------------------------------
    // FACILITY ENTITY TYPES
    //-----------------------------------------------------------------------------------------
    EntityType FACILITY = EntityType.make("FACILITY");
+
+   EntityType FACILITY_PART = EntityType.make(FACILITY, "FACILITY_PART");
+
    EntityType GOE = EntityType.make(FACILITY, "GOE");
+   EntityType PUBLIC_INSTITUTION = EntityType.make(GOE, "PUBLIC_INSTITUTION");
    EntityType SCHOOL = EntityType.make(GOE, "SCHOOL");
+   EntityType RESEARCH_INSTITUTE = EntityType.make(GOE, "RESEARCH_INSTITUTE");
    EntityType MUSEUM = EntityType.make(GOE, "MUSEUM");
+   EntityType MARKET = EntityType.make(GOE, "MARKET");
+   EntityType PARK = EntityType.make(GOE, "PARK");
+   EntityType ZOO = EntityType.make(GOE, "ZOO");
+   EntityType THEATER = EntityType.make(GOE, "THEATER");
+   EntityType WORSHIP_PLACE = EntityType.make(GOE, "WORSHIP_PLACE");
    EntityType AMUSEMENT_PARK = EntityType.make(GOE, "AMUSEMENT_PARK");
-   EntityType STATION_TOP = EntityType.make(FACILITY, "STATION_TOP");
-   EntityType AIRPORT = EntityType.make(STATION_TOP, "AIRPORT");
-   EntityType STATION = EntityType.make(STATION_TOP, "STATION");
-   EntityType PORT = EntityType.make(STATION_TOP, "PORT");
-   EntityType CAR_STOP = EntityType.make(STATION_TOP, "CAR_STOP");
+   EntityType AIRPORT = EntityType.make(GOE, "AIRPORT");
+   EntityType STATION = EntityType.make(GOE, "STATION");
+   EntityType PORT = EntityType.make(GOE, "PORT");
+   EntityType CAR_STOP = EntityType.make(GOE, "CAR_STOP");
+
    EntityType LINE = EntityType.make(FACILITY, "LINE");
    EntityType RAILROAD = EntityType.make(LINE, "RAILROAD");
    EntityType ROAD = EntityType.make(LINE, "ROAD");
    EntityType WATERWAY = EntityType.make(LINE, "WATERWAY");
    EntityType TUNNEL = EntityType.make(LINE, "TUNNEL");
    EntityType BRIDGE = EntityType.make(LINE, "BRIDGE");
-   EntityType PARK = EntityType.make(FACILITY, "PARK");
-   EntityType MONUMENT = EntityType.make(FACILITY, "MONUMENT");
 
    //-----------------------------------------------------------------------------------------
    // NUMBER ENTITY TYPES
    //-----------------------------------------------------------------------------------------
    EntityType NUMBER = EntityType.make("NUMBER");
-   EntityType CARDINAL = EntityType.make(NUMBER,"CARDINAL");
-   EntityType ORDINAL = EntityType.make(NUMBER,"ORDINAL");
+   EntityType CARDINAL = EntityType.make(NUMBER, "CARDINAL");
+   EntityType ORDINAL = EntityType.make(NUMBER, "ORDINAL");
    EntityType POINT = EntityType.make(NUMBER, "POINT");
    EntityType MONEY = EntityType.make(NUMBER, "MONEY");
    EntityType MULTIPLICATION = EntityType.make(NUMBER, "MULTIPLICATION");
@@ -128,17 +148,27 @@ public interface Entities {
    // ORGANIZATION ENTITY TYPES
    //-----------------------------------------------------------------------------------------
    EntityType ORGANIZATION = EntityType.make("ORGANIZATION");
-   EntityType COMPANY = EntityType.make(ORGANIZATION, "COMPANY");
-   EntityType COMPANY_GROUP = EntityType.make(ORGANIZATION, "COMPANY_GROUP");
-   EntityType MILITARY = EntityType.make(ORGANIZATION, "MILITARY");
-   EntityType INSTITUTE = EntityType.make(ORGANIZATION, "INSTITUTE");
-   EntityType MARKET = EntityType.make(ORGANIZATION, "MARKET");
+
+   EntityType INTERNATIONAL_ORGANIZATION = EntityType.make(ORGANIZATION, "INTERNATIONAL_ORGANIZATION");
+   EntityType SHOW_ORGANIZATION = EntityType.make(ORGANIZATION, "SHOW_ORGANIZATION");
+   EntityType FAMILY = EntityType.make(ORGANIZATION, "FAMILY");
+
+   EntityType ETHNIC_GROUP = EntityType.make(ORGANIZATION, "ETHNIC_GROUP");
+   EntityType NATIONALITY = EntityType.make(ETHNIC_GROUP, "NATIONALITY");
+
+   EntityType SPORTS_ORGANIZATION = EntityType.make(ORGANIZATION, "SPORTS_ORGANIZATION");
+   EntityType PRO_SPORTS_ORGANIZATION = EntityType.make(SPORTS_ORGANIZATION, "PRO_SPORTS_ORGANIZATION");
+   EntityType SPORTS_LEAGUE = EntityType.make(SPORTS_ORGANIZATION, "SPORTS_LEAGUE");
+
+   EntityType CORPORATION = EntityType.make(ORGANIZATION, "CORPORATION");
+   EntityType COMPANY = EntityType.make(CORPORATION, "COMPANY");
+   EntityType COMPANY_GROUP = EntityType.make(CORPORATION, "COMPANY_GROUP");
+
    EntityType POLITICAL_ORGANIZATION = EntityType.make(ORGANIZATION, "POLITICAL_ORGANIZATION");
    EntityType GOVERNMENT = EntityType.make(POLITICAL_ORGANIZATION, "GOVERNMENT");
    EntityType POLITICAL_PARTY = EntityType.make(POLITICAL_ORGANIZATION, "POLITICAL_PARTY");
-   EntityType PUBLIC_INSTITUTION = EntityType.make(POLITICAL_ORGANIZATION, "PUBLIC_INSTITUTION");
-   EntityType GROUP = EntityType.make(ORGANIZATION, "GROUP");
-   EntityType SPORTS_TEAM = EntityType.make(GROUP, "SPORTS_TEAM");
+   EntityType CABINET = EntityType.make(POLITICAL_ORGANIZATION, "CABINET");
+   EntityType MILITARY = EntityType.make(POLITICAL_ORGANIZATION, "MILITARY");
 
 
    //-----------------------------------------------------------------------------------------
@@ -146,8 +176,7 @@ public interface Entities {
    //-----------------------------------------------------------------------------------------
    EntityType PERSON = EntityType.make("PERSON");
    EntityType PERSON_GROUP = EntityType.make(PERSON, "PERSON_GROUP");
-   EntityType ETHNIC_GROUP = EntityType.make(PERSON_GROUP, "ETHNIC_GROUP");
-   EntityType NATIONALITY = EntityType.make(PERSON_GROUP, "NATIONALITY");
+
    EntityType TITLE = EntityType.make(PERSON, "TITLE");
    EntityType POSITION_TITLE = EntityType.make(TITLE, "POSITION_TITLE");
    EntityType OCCUPATION = EntityType.make(PERSON, "OCCUPATION");

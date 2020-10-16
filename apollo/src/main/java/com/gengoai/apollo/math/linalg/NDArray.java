@@ -66,8 +66,8 @@ import java.util.stream.Stream;
       creatorVisibility = JsonAutoDetect.Visibility.NONE
 )
 public abstract class NDArray implements Serializable, Observation {
-   private static final long serialVersionUID = 1L;
    protected static final NumberFormat decimalFormatter = new DecimalFormat(" 0.000000;-0");
+   private static final long serialVersionUID = 1L;
    @JsonProperty("shape")
    protected final Shape shape;
    @JsonProperty("label")
@@ -102,7 +102,7 @@ public abstract class NDArray implements Serializable, Observation {
     * @return the new NDArray with the scalar value added
     */
    public NDArray add(double value) {
-      if(value == 0) {
+      if (value == 0) {
          return copy();
       }
       return map(value, Operator::add);
@@ -145,7 +145,7 @@ public abstract class NDArray implements Serializable, Observation {
     * @return this NDArray with the scalar value added
     */
    public NDArray addi(double value) {
-      if(value != 0) {
+      if (value != 0) {
          return mapi(value, Operator::add);
       }
       return this;
@@ -196,11 +196,11 @@ public abstract class NDArray implements Serializable, Observation {
    public abstract long argmin();
 
    private double asDouble(Object object) {
-      if(object == null) {
+      if (object == null) {
          return Double.NaN;
-      } else if(object instanceof NDArray) {
+      } else if (object instanceof NDArray) {
          NDArray array = Cast.as(object);
-         if(array.shape.isScalar()) {
+         if (array.shape.isScalar()) {
             return array.scalar();
          }
          return array.argmax();
@@ -214,11 +214,11 @@ public abstract class NDArray implements Serializable, Observation {
    }
 
    private NDArray asNDArray(Object o, int dimension) {
-      if(o == null) {
+      if (o == null) {
          return com.gengoai.apollo.math.linalg.NDArrayFactory.ND.empty();
-      } else if(o instanceof Number) {
+      } else if (o instanceof Number) {
          Number numLabel = Cast.as(o);
-         if(dimension == 1) {
+         if (dimension == 1) {
             return com.gengoai.apollo.math.linalg.NDArrayFactory.ND.scalar(numLabel.floatValue());
          }
          return com.gengoai.apollo.math.linalg.NDArrayFactory.ND.array(dimension).set(numLabel.intValue(), 1f);
@@ -297,13 +297,27 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public abstract NDArray compact();
 
-   public boolean isEmpty(){
-      return shape.sliceLength == 0 && shape.matrixLength == 0;
-   }
-
    @Override
    public NDArray copy() {
       return Copyable.deepCopy(this);
+   }
+
+   public Sequence<?> decodeSequence(@NonNull Encoder encoder, @NonNull SequenceValidator validator) {
+      VariableSequence sequence = new VariableSequence();
+      String previous = "O";
+      for (int word = 0; word < rows(); word++) {
+         NDArray matrix = getRow(word);
+         int l = (int) matrix.argmax();
+         String tag = encoder.decode(l);
+         while (!validator.isValid(tag, previous, matrix)) {
+            matrix.set(l, Double.NEGATIVE_INFINITY);
+            l = (int) matrix.argmax();
+            tag = encoder.decode(l);
+         }
+         previous = tag;
+         sequence.add(Variable.real(tag, matrix.get(l)));
+      }
+      return sequence;
    }
 
    /**
@@ -577,6 +591,17 @@ public abstract class NDArray implements Serializable, Observation {
    }
 
    /**
+    * Sets the label associated with the NDArray
+    *
+    * @param label the label
+    * @return This NDArray
+    */
+   public NDArray setLabel(Object label) {
+      this.label = label;
+      return this;
+   }
+
+   /**
     * Gets the label associated with the NDArray as a double value.
     *
     * @return the label as double
@@ -612,6 +637,17 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public <T> T getPredicted() {
       return Cast.as(predicted);
+   }
+
+   /**
+    * Sets the predicted label for this NDArray.
+    *
+    * @param predicted the predicted label
+    * @return this NDArray
+    */
+   public NDArray setPredicted(Object predicted) {
+      this.predicted = predicted;
+      return this;
    }
 
    /**
@@ -695,6 +731,17 @@ public abstract class NDArray implements Serializable, Observation {
    }
 
    /**
+    * Sets the weight associated with the NDArray.
+    *
+    * @param weight the weight
+    * @return this NDArray
+    */
+   public NDArray setWeight(double weight) {
+      this.weight = (float) weight;
+      return this;
+   }
+
+   /**
     * Creates a new NDArray with elements equal to <code>1.0</code> if its value is greater than  to the given value.
     *
     * @param value the value to test
@@ -744,6 +791,10 @@ public abstract class NDArray implements Serializable, Observation {
     * @return True if the NDArray is made up of dense slices, False otherwise
     */
    public abstract boolean isDense();
+
+   public boolean isEmpty() {
+      return shape.sliceLength == 0 && shape.matrixLength == 0;
+   }
 
    @Override
    public boolean isNDArray() {
@@ -1184,11 +1235,11 @@ public abstract class NDArray implements Serializable, Observation {
       builder.append("[");
       builder.append(rowToString(slice, 0, maxC));
       int breakPoint = maxR / 2;
-      for(int i = 1; i < slice.rows(); i++) {
+      for (int i = 1; i < slice.rows(); i++) {
          builder.append(",");
-         if(i == breakPoint) {
+         if (i == breakPoint) {
             int nj = Math.max(slice.rows() - breakPoint, i + 1);
-            if(nj > i + 1) {
+            if (nj > i + 1) {
                builder.append(System.lineSeparator()).append("     ...").append(System.lineSeparator());
             }
             i = nj;
@@ -1343,13 +1394,13 @@ public abstract class NDArray implements Serializable, Observation {
       StringBuilder builder = new StringBuilder("[");
       builder.append(decimalFormatter.format(slice.get(i, 0)));
       int breakPoint = maxC / 2;
-      for(int j = 1; j < slice.columns(); j++) {
-         if(j == breakPoint) {
+      for (int j = 1; j < slice.columns(); j++) {
+         if (j == breakPoint) {
             int nj = Math.max(slice.columns() - breakPoint, j + 1);
-            if(nj > j + 1 && nj < slice.columns()) {
+            if (nj > j + 1 && nj < slice.columns()) {
                builder.append(", ...");
             }
-            if(nj < slice.columns()) {
+            if (nj < slice.columns()) {
                j = nj;
             } else {
                continue;
@@ -1470,8 +1521,8 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public NDArray select(@NonNull DoublePredicate predicate) {
       return map(v -> predicate.test(v)
-                      ? v
-                      : 0.0);
+            ? v
+            : 0.0);
    }
 
    /**
@@ -1483,8 +1534,8 @@ public abstract class NDArray implements Serializable, Observation {
    public NDArray select(@NonNull NDArray rhs) {
       return map(rhs,
                  (v1, v2) -> v2 == 1.0
-                             ? 1.0
-                             : 0.0);
+                       ? 1.0
+                       : 0.0);
    }
 
    /**
@@ -1495,8 +1546,8 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public NDArray selecti(@NonNull DoublePredicate predicate) {
       return mapi(v -> predicate.test(v)
-                       ? v
-                       : 0.0);
+            ? v
+            : 0.0);
    }
 
    /**
@@ -1509,8 +1560,8 @@ public abstract class NDArray implements Serializable, Observation {
    public NDArray selecti(@NonNull NDArray rhs) {
       return mapi(rhs,
                   (v1, v2) -> v2 == 1.0
-                              ? 1.0
-                              : 0.0);
+                        ? 1.0
+                        : 0.0);
    }
 
    /**
@@ -1565,17 +1616,6 @@ public abstract class NDArray implements Serializable, Observation {
    public abstract NDArray setColumn(int i, @NonNull NDArray array);
 
    /**
-    * Sets the label associated with the NDArray
-    *
-    * @param label the label
-    * @return This NDArray
-    */
-   public NDArray setLabel(Object label) {
-      this.label = label;
-      return this;
-   }
-
-   /**
     * Sets the matrix associated with the given kernel and channel.
     *
     * @param kernel  the kernel index
@@ -1585,17 +1625,6 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public NDArray setMatrix(int kernel, int channel, @NonNull NDArray array) {
       return setSlice(shape.sliceIndex(kernel, channel), array);
-   }
-
-   /**
-    * Sets the predicted label for this NDArray.
-    *
-    * @param predicted the predicted label
-    * @return this NDArray
-    */
-   public NDArray setPredicted(Object predicted) {
-      this.predicted = predicted;
-      return this;
    }
 
    /**
@@ -1615,17 +1644,6 @@ public abstract class NDArray implements Serializable, Observation {
     * @return this NDArray
     */
    public abstract NDArray setSlice(int slice, @NonNull NDArray array);
-
-   /**
-    * Sets the weight associated with the NDArray.
-    *
-    * @param weight the weight
-    * @return this NDArray
-    */
-   public NDArray setWeight(double weight) {
-      this.weight = (float) weight;
-      return this;
-   }
 
    /**
     * Gets the shape of the NDArray.
@@ -1844,7 +1862,7 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public NDArray test(@NonNull DoublePredicate predicate) {
       return map(v -> {
-         if(predicate.test(v)) {
+         if (predicate.test(v)) {
             return 1.0;
          }
          return 0d;
@@ -1861,7 +1879,7 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public NDArray test(@NonNull NDArray rhs, @NonNull DoubleBinaryPredicate predicate) {
       return map(rhs, (v1, v2) -> {
-         if(predicate.test(v1, v2)) {
+         if (predicate.test(v1, v2)) {
             return 1.0;
          }
          return 0d;
@@ -1876,7 +1894,7 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public NDArray testi(@NonNull DoublePredicate predicate) {
       return mapi(v -> {
-         if(predicate.test(v)) {
+         if (predicate.test(v)) {
             return 1.0;
          }
          return 0d;
@@ -1893,7 +1911,7 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public NDArray testi(@NonNull NDArray rhs, @NonNull DoubleBinaryPredicate predicate) {
       return mapi(rhs, (v1, v2) -> {
-         if(predicate.test(v1, v2)) {
+         if (predicate.test(v1, v2)) {
             return 1.0;
          }
          return 0d;
@@ -1943,9 +1961,9 @@ public abstract class NDArray implements Serializable, Observation {
    public String toString(int maxSlices, int maxRows, int maxColumns) {
       StringBuilder builder = new StringBuilder("[");
 
-      if(shape.isVector()) {
-         for(long i = 0; i < length(); i++) {
-            if(i > 0) {
+      if (shape.isVector()) {
+         for (long i = 0; i < length(); i++) {
+            if (i > 0) {
                builder.append(", ");
             }
             builder.append(get((int) i));
@@ -1955,11 +1973,11 @@ public abstract class NDArray implements Serializable, Observation {
       String outDot = Strings.repeat(Strings.padStart(".", 8, ' '), Math.min(columns(), maxColumns + 2));
       printSlice(slice(0), maxRows, maxColumns, builder);
       int breakPoint = maxSlices / 2;
-      for(int i = 1; i < shape.sliceLength; i++) {
+      for (int i = 1; i < shape.sliceLength; i++) {
          builder.append(",");
-         if(i == breakPoint) {
+         if (i == breakPoint) {
             int nj = Math.max(shape.sliceLength - breakPoint, i + 1);
-            if(nj > i + 1) {
+            if (nj > i + 1) {
                builder.append(System.lineSeparator())
                       .append(System.lineSeparator()).append(outDot)
                       .append(System.lineSeparator()).append(outDot)
@@ -2034,24 +2052,6 @@ public abstract class NDArray implements Serializable, Observation {
        */
       void apply(long index, double value);
 
-   }
-
-   public Sequence<?> decodeSequence(@NonNull Encoder encoder, @NonNull SequenceValidator validator) {
-      VariableSequence sequence = new VariableSequence();
-      String previous = "O";
-      for (int word = 0; word < rows(); word++) {
-         NDArray matrix = getRow(word);
-         int l = (int) matrix.argmax();
-         String tag = encoder.decode(l);
-         while (!validator.isValid(tag, previous, matrix)) {
-            matrix.set(l, Double.NEGATIVE_INFINITY);
-            l = (int) matrix.argmax();
-            tag = encoder.decode(l);
-         }
-         previous = tag;
-         sequence.add(Variable.real(tag, matrix.get(l)));
-      }
-      return sequence;
    }
 
 }//END OF NDArray

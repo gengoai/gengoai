@@ -19,21 +19,36 @@
 
 package com.gengoai.hermes.wordnet.io;
 
+import com.gengoai.LogUtils;
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.conversion.TypeConversionException;
 import com.gengoai.conversion.TypeConverter;
 import com.gengoai.hermes.wordnet.Sense;
 import com.gengoai.hermes.wordnet.WordNet;
+import lombok.extern.java.Log;
 import org.kohsuke.MetaInfServices;
 
 import java.lang.reflect.Type;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @MetaInfServices
+@Log
 public class SenseConverter implements TypeConverter {
+   private final AtomicBoolean loggedWarning = new AtomicBoolean(false);
+
    @Override
    public Object convert(Object source, Type... parameters) throws TypeConversionException {
-      if(source instanceof Sense) {
+      if (source instanceof Sense) {
          return Cast.as(source);
+      }
+      if (!Config.hasProperty("WordNet.db")) {
+         if(!loggedWarning.getAndSet(true)){
+            LogUtils.logWarning(log, "WordNet configuration file has not been loaded. Sense information will be stored as strings.");
+         }
+         //This will allow loading a corpus that has the wordnet.jar in the path
+         //but user has not added the wordnet config.
+         return source.toString();
       }
       return WordNet.getInstance().getSenseFromID(source.toString());
    }

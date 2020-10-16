@@ -22,13 +22,10 @@ package com.gengoai.hermes.ml;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.model.LabelType;
-import com.gengoai.apollo.ml.model.Model;
-import com.gengoai.apollo.ml.model.TensorFlowModel;
-import com.gengoai.apollo.ml.model.TensorUtils;
+import com.gengoai.apollo.ml.encoder.NoOptEncoder;
+import com.gengoai.apollo.ml.model.*;
 import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.transform.Transformer;
 import com.gengoai.collection.Iterators;
 import com.gengoai.collection.Maps;
 import com.gengoai.hermes.Annotation;
@@ -39,7 +36,6 @@ import org.tensorflow.Tensor;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 import static com.gengoai.tuple.Tuples.$;
 
@@ -51,9 +47,8 @@ public class ElmoTokenEmbedding extends TensorFlowModel implements HStringMLMode
    private static final long serialVersionUID = 1L;
 
    public ElmoTokenEmbedding() {
-      super(Set.of(Datum.DEFAULT_INPUT),
-            Maps.linkedHashMapOf($(Datum.DEFAULT_INPUT, OUTPUT)),
-            Collections.emptyMap());
+      super(Map.of(Datum.DEFAULT_INPUT, TFVarSpec.varSpec(TOKENS, NoOptEncoder.INSTANCE, -1)),
+            Maps.linkedHashMapOf($(Datum.DEFAULT_INPUT, TFVarSpec.varSpec(OUTPUT, NoOptEncoder.INSTANCE, -1))));
    }
 
    @Override
@@ -73,11 +68,6 @@ public class ElmoTokenEmbedding extends TensorFlowModel implements HStringMLMode
    @Override
    protected Map<String, Tensor<?>> createTensors(DataSet batch) {
       return TensorUtils.sequence2StringTensor(batch, Datum.DEFAULT_INPUT, TOKENS, SEQUENCE_LENGTH);
-   }
-
-   @Override
-   protected Transformer createTransformer() {
-      return new Transformer(Collections.emptyList());
    }
 
    @Override

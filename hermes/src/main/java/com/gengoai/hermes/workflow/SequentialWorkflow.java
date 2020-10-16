@@ -30,6 +30,8 @@ import com.gengoai.collection.Lists;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.json.Json;
 import com.gengoai.json.JsonEntry;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 
@@ -57,18 +59,13 @@ import static com.gengoai.LogUtils.logInfo;
       isGetterVisibility = JsonAutoDetect.Visibility.NONE,
       creatorVisibility = JsonAutoDetect.Visibility.NONE
 )
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public final class SequentialWorkflow implements Workflow {
-   private static final long serialVersionUID = 1L;
    public static final String TYPE = "Sequential";
+   private static final long serialVersionUID = 1L;
    @Option(description = "List of actions to perform run")
    private List<Action> actions = new ArrayList<>();
    private Context startingContext = new Context();
-
-   /**
-    * Instantiates a new Workflow.
-    */
-   private SequentialWorkflow() {
-   }
 
    /**
     * Instantiates a new Workflow.
@@ -87,9 +84,9 @@ public final class SequentialWorkflow implements Workflow {
       Iterator<JsonEntry> itr = entry.getProperty("actions").elementIterator();
       try {
          int idx = 0;
-         while(itr.hasNext()) {
+         while (itr.hasNext()) {
             JsonEntry a = itr.next();
-            if(a.isString()) {
+            if (a.isString()) {
                String name = a.asString();
                Action action = BaseWorkflowIO.createBean(name, beans.get(name), singletons);
                actions.add(action);
@@ -98,7 +95,7 @@ public final class SequentialWorkflow implements Workflow {
             }
             idx++;
          }
-      } catch(Exception e) {
+      } catch (Exception e) {
          throw new RuntimeException(e);
       }
    }
@@ -106,6 +103,11 @@ public final class SequentialWorkflow implements Workflow {
    @Override
    public Context getStartingContext() {
       return startingContext.copy();
+   }
+
+   @Override
+   public void setStartingContext(Context context) {
+      this.startingContext = context.copy();
    }
 
    @Override
@@ -123,22 +125,22 @@ public final class SequentialWorkflow implements Workflow {
     */
    public final DocumentCollection process(@NonNull DocumentCollection input,
                                            @NonNull Context context) throws
-                                                                     Exception {
+         Exception {
       DocumentCollection corpus = input;
       context.merge(startingContext);
       Stopwatch sw = Stopwatch.createStarted();
-      for(Action processor : actions) {
+      for (Action processor : actions) {
          Stopwatch actionTime = Stopwatch.createStarted();
          logInfo(LogUtils.getLogger(getClass()),
                  "Running {0}...", processor.getClass().getSimpleName());
-         if(processor.getOverrideStatus()) {
+         if (processor.getOverrideStatus()) {
             corpus = processor.process(corpus, context);
             logInfo(LogUtils.getLogger(getClass()),
                     "Completed {0} [Recomputed] ({1})",
                     processor.getClass().getSimpleName(),
                     actionTime);
          } else {
-            if(processor.loadPreviousState(corpus, context) == State.LOADED) {
+            if (processor.loadPreviousState(corpus, context) == State.LOADED) {
                logInfo(LogUtils.getLogger(getClass()),
                        "Completed {0} [Loaded] ({1})",
                        processor.getClass().getSimpleName(),
@@ -156,16 +158,11 @@ public final class SequentialWorkflow implements Workflow {
       return corpus;
    }
 
-   @Override
-   public void setStartingContext(Context context) {
-      this.startingContext = context.copy();
-   }
-
    @JsonValue
    protected JsonEntry toEntry() {
       JsonEntry obj = BaseWorkflowIO.serialize(this);
       JsonEntry actionArray = JsonEntry.array();
-      for(Action action : actions) {
+      for (Action action : actions) {
          JsonEntry ao = JsonEntry.object();
          ao.mergeObject(Json.asJsonEntry(action));
          actionArray.addValue(ao);

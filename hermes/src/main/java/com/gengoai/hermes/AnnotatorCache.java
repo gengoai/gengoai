@@ -51,9 +51,9 @@ final class AnnotatorCache {
     * @return The instance of the <code>AnnotatorFactory</code>
     */
    public static AnnotatorCache getInstance() {
-      if(INSTANCE == null) {
-         synchronized(AnnotatorCache.class) {
-            if(INSTANCE == null) {
+      if (INSTANCE == null) {
+         synchronized (AnnotatorCache.class) {
+            if (INSTANCE == null) {
                INSTANCE = new AnnotatorCache();
             }
          }
@@ -69,7 +69,7 @@ final class AnnotatorCache {
    }
 
    private String createKey(AnnotatableType type, Language language) {
-      if(language == Language.UNKNOWN) {
+      if (language == Language.UNKNOWN) {
          return type.name();
       }
       return type.name() + "::" + language;
@@ -87,7 +87,7 @@ final class AnnotatorCache {
     */
    public Annotator get(@NonNull AnnotatableType annotationType, @NonNull Language language) {
       String key = createKey(annotationType, language);
-      if(!cache.containsKey(key)) {
+      if (!cache.containsKey(key)) {
          cache.put(key, annotationType.getAnnotator(language));
       }
       return cache.get(key);
@@ -116,10 +116,11 @@ final class AnnotatorCache {
                             @NonNull Annotator annotator) {
       Validation.checkArgument(annotator.satisfies().contains(annotationType),
                                "Attempting to register " + annotator.getClass()
-                                                                    .getName() + " for " + annotationType.name() + " which it does not provide");
+                                                                    .getName() + " for " + annotationType
+                                     .name() + " which it does not provide");
       cache.put(createKey(annotationType, language), annotator);
 
-      if(language == Language.UNKNOWN) {
+      if (language == Language.UNKNOWN) {
          Config.setProperty("Annotator" + annotationType.name() + ".annotator", "CACHED");
       } else {
          Config.setProperty("Annotator" + annotationType.name() + ".annotator." + language, "CACHED");

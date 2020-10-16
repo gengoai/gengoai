@@ -119,7 +119,7 @@ public final class Fragments {
 
       @Override
       public List<Annotation> annotations(AnnotationType type) {
-         if(type == Types.TOKEN) {
+         if (type == Types.TOKEN) {
             return Collections.singletonList(this);
          }
          return Collections.emptyList();

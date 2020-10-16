@@ -49,8 +49,8 @@ class CRFSequenceOutput(OutputBlock):
         return {self.__output: crf_loss}
 
     def metrics(self) -> Dict[str, Any]:
-        from keras_contrib.metrics import crf_accuracy
-        return {self.__output: crf_accuracy}
+        from keras_contrib.metrics import crf_marginal_accuracy
+        return {self.__output: crf_marginal_accuracy}
 
     def _create_output_layers(self) -> Dict[str, K.layers.Layer]:
         from keras_contrib.layers import CRF

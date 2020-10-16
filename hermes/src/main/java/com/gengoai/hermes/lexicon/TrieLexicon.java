@@ -28,6 +28,7 @@ import com.gengoai.conversion.Cast;
 import com.gengoai.hermes.HString;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,11 +60,11 @@ public class TrieLexicon extends Lexicon {
    }
 
    public synchronized void add(@NonNull LexiconEntry lexiconEntry) {
-      if(Strings.isNotNullOrBlank(lexiconEntry.getLemma())) {
+      if (Strings.isNotNullOrBlank(lexiconEntry.getLemma())) {
          String norm = normalize(lexiconEntry.getLemma());
          this.maxTokenLength = Math.max(maxTokenLength, lexiconEntry.getTokenLength());
          this.maxLemmaLength = Math.max(maxLemmaLength, norm.length());
-         if(lexiconEntry.getProbability() > 0 && lexiconEntry.getProbability() <= 1) {
+         if (lexiconEntry.getProbability() > 0 && lexiconEntry.getProbability() <= 1) {
             this.probabilistic = true;
          } else {
             lexiconEntry = LexiconEntry.of(lexiconEntry.getLemma(),
@@ -90,7 +91,7 @@ public class TrieLexicon extends Lexicon {
    @Override
    public Set<LexiconEntry> get(String word) {
       word = normalize(word);
-      if(trie.containsKey(word)) {
+      if (trie.containsKey(word)) {
          return new HashSet<>(trie.get(word));
       }
       return Collections.emptySet();
@@ -137,20 +138,24 @@ public class TrieLexicon extends Lexicon {
    }
 
    @Override
-   public List<LexiconEntry> match(HString string) {
+   public List<LexiconEntry> match(@NonNull HString string) {
       String str = normalize(string);
-      if(!trie.containsKey(str)) {
-         if(isCaseSensitive() && Strings.isUpperCase(string)) {
-            return Collections.emptyList();
+      List<LexiconEntry> matches = trie.getOrDefault(str, Collections.emptyList())
+                                       .stream()
+                                       .filter(le -> le.getConstraint() == null || le.getConstraint().test(string))
+                                       .sorted()
+                                       .collect(Collectors.toList());
+      if (matches.isEmpty() && !isCaseSensitive()) {
+         String lemmaNorm = normalize(string.getLemma());
+         if (!lemmaNorm.equals(str)) {
+            return trie.getOrDefault(lemmaNorm, Collections.emptyList())
+                       .stream()
+                       .filter(le -> le.getConstraint() == null || le.getConstraint().test(string))
+                       .sorted()
+                       .collect(Collectors.toList());
          }
-         str = normalize(string.getLemma());
-      }
-      if(trie.containsKey(str)) {
-         return Cast.as(trie.get(str)
-                            .stream()
-                            .filter(le -> le.getConstraint() == null || le.getConstraint().test(string))
-                            .sorted()
-                            .collect(Collectors.toList()));
+      } else {
+         return matches;
       }
       return Collections.emptyList();
    }
@@ -158,7 +163,7 @@ public class TrieLexicon extends Lexicon {
    @Override
    public List<LexiconEntry> match(String hString) {
       String str = normalize(hString);
-      if(trie.containsKey(str)) {
+      if (trie.containsKey(str)) {
          return Cast.as(trie.get(str)
                             .stream()
                             .sorted()

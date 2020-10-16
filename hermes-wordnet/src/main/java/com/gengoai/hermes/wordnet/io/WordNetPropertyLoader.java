@@ -34,24 +34,24 @@ import com.gengoai.hermes.wordnet.properties.PropertyName;
 public abstract class WordNetPropertyLoader {
 
 
-  /**
-   * Loads the properties into the given database
-   *
-   * @param db the database to load the properties for
-   */
-  public abstract void load(WordNetDB db);
+   /**
+    * Loads the properties into the given database
+    *
+    * @param db the database to load the properties for
+    */
+   public abstract void load(WordNetDB db);
 
 
-  /**
-   * Set property.
-   *
-   * @param synset   the synset
-   * @param name     the name
-   * @param property the property
-   */
-  protected final void setProperty(Synset synset, PropertyName name, Property property) {
-    Cast.as(synset, SynsetImpl.class).setProperty(name, property);
-  }
+   /**
+    * Set property.
+    *
+    * @param synset   the synset
+    * @param name     the name
+    * @param property the property
+    */
+   protected final void setProperty(Synset synset, PropertyName name, Property property) {
+      Cast.as(synset, SynsetImpl.class).setProperty(name, property);
+   }
 
 
 }//END OF WordNetPropertyLoader

@@ -98,7 +98,7 @@ public class CorpusApp extends HermesCLI {
          final List<String> ids = getCorpus().getIds();
          id = ids.get(rnd.nextInt(ids.size()));
       } else {
-         id = getPositionalArgs()[0];
+         id = getPositionalArgs()[1];
       }
       try(Corpus corpus = getCorpus()) {
          final Document document = corpus.getDocument(id);

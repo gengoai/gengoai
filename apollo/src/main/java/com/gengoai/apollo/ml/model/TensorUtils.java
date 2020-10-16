@@ -44,7 +44,6 @@ public final class TensorUtils {
    }
 
 
-
    public static Map<String, Tensor<?>> sequence2StringTensor(@NonNull DataSet batch,
                                                               @NonNull String tokenObservation,
                                                               @NonNull String tokenOutputName,

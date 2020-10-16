@@ -63,13 +63,17 @@ public class FixedEncoder implements Encoder {
          this.alphabet.addAll(Iterables.filter(Iterables.transform(vocabFile.readLines(), String::strip),
                                                Strings::isNotNullOrBlank));
          this.unknown = Strings.emptyToNull(unknown);
-      } catch(IOException e) {
+      } catch (IOException e) {
          throw new RuntimeException(e);
       }
    }
 
    public FixedEncoder(@NonNull Iterable<String> alphabet) {
       this(alphabet, null);
+   }
+
+   public static FixedEncoder fixedEncoder(@NonNull Resource vocabFile, String unknown) {
+      return new FixedEncoder(vocabFile, unknown);
    }
 
    @Override
@@ -80,7 +84,7 @@ public class FixedEncoder implements Encoder {
    @Override
    public int encode(String variableName) {
       int index = alphabet.getId(variableName);
-      if(index == -1 && unknown != null) {
+      if (index == -1 && unknown != null) {
          index = alphabet.getId(unknown);
       }
       return index;

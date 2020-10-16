@@ -404,7 +404,7 @@ public final class Config implements Serializable {
       }
 
       //Check if we should only explain the config
-      if (NamedOption.DUMP_CONFIG.<Boolean>getValue()) {
+      if (parser.isSet(NamedOption.DUMP_CONFIG)) {
          getInstance().setterFunction = ConfigExplainSettingFunction.INSTANCE;
       } else {
          getInstance().setterFunction = ConfigSettingFunction.INSTANCE;
@@ -508,7 +508,6 @@ public final class Config implements Serializable {
 
    public static void loadApplicationConfig(String applicationName) {
       if (!Strings.isNullOrBlank(applicationName)) {
-         getInstance().setterFunction = ConfigSettingFunction.INSTANCE;
          final String appConfName = applicationName.replaceAll("\\s+", "_").toLowerCase() + CONF_EXTENSION;
          //Look for application specific properties
          Stream.of(

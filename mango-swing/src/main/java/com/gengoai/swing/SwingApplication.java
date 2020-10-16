@@ -54,65 +54,11 @@ import java.util.function.Supplier;
  * @author David B. Bracewell
  */
 public abstract class SwingApplication extends Application {
-   private static final long serialVersionUID = 1L;
    public static final JComponent SEPARATOR = null;
+   private static final long serialVersionUID = 1L;
    public final JFrame mainWindowFrame;
    private final JPanel southPanel = new JPanel(new BorderLayout());
    protected SwingApplicationConfig properties;
-
-   private static JToolBar createToolBar(@NonNull Object... components) {
-      JToolBar toolBar = new JToolBar();
-      toolBar.setFloatable(false);
-      for(Object component : components) {
-         if(component == null) {
-            toolBar.addSeparator();
-         } else if(component instanceof Dimension) {
-            toolBar.addSeparator(Cast.as(component));
-         } else if(component instanceof View) {
-            toolBar.add(Cast.<View>as(component).getRoot());
-         } else {
-            toolBar.add(Cast.<Component>as(component));
-         }
-      }
-      return toolBar;
-   }
-
-   public static void runApplication(Supplier<? extends SwingApplication> supplier,
-                                     String applicationName,
-                                     String[] args) {
-      SwingUtilities.invokeLater(() -> {
-         SwingApplicationConfig config = new SwingApplicationConfig();
-         try {
-            config.load(Resources.from(applicationName + ".properties"));
-         } catch(IOException e) {
-            throw new RuntimeException(e);
-         }
-         final String lookAndFeel = config.get("lookAndFeel").asString("light");
-         try {
-            switch(lookAndFeel.toLowerCase()) {
-               case "dark":
-                  UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
-                  break;
-               case "light":
-                  UIManager.setLookAndFeel("com.formdev.flatlaf.FlatLightLaf");
-                  break;
-               case "darcula":
-                  UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarculaLaf");
-                  break;
-               case "intellij":
-                  UIManager.setLookAndFeel("com.formdev.flatlaf.FlatIntelliJLaf");
-                  break;
-               default:
-                  UIManager.setLookAndFeel(lookAndFeel);
-            }
-         } catch(Exception e) {
-            e.printStackTrace();
-         }
-         SwingApplication swingApplication = supplier.get();
-         swingApplication.properties = config;
-         swingApplication.run(args);
-      });
-   }
 
    /**
     * Instantiates a new Application.
@@ -129,6 +75,82 @@ public abstract class SwingApplication extends Application {
    protected SwingApplication(String name) {
       super(name);
       this.mainWindowFrame = new JFrame();
+   }
+
+   private static JToolBar createToolBar(@NonNull Object... components) {
+      JToolBar toolBar = new JToolBar();
+      toolBar.setFloatable(false);
+      for (Object component : components) {
+         if (component == null) {
+            toolBar.addSeparator();
+         } else if (component instanceof Dimension) {
+            toolBar.addSeparator(Cast.as(component));
+         } else if (component instanceof View) {
+            toolBar.add(Cast.<View>as(component).getRoot());
+         } else {
+            toolBar.add(Cast.<Component>as(component));
+         }
+      }
+      return toolBar;
+   }
+
+   public static void runApplication(Supplier<? extends SwingApplication> supplier,
+                                     String applicationName,
+                                     String windowTitle,
+                                     String[] args) {
+      SwingUtilities.invokeLater(() -> {
+         SwingApplicationConfig config = new SwingApplicationConfig();
+         try {
+            config.load(Resources.from(applicationName + ".properties"));
+         } catch (IOException e) {
+            throw new RuntimeException(e);
+         }
+         final String lookAndFeel = config.get("lookAndFeel").asString("light");
+         try {
+            switch (lookAndFeel.toLowerCase()) {
+               case "system":
+                  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                  break;
+               case "dark":
+                  UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
+                  break;
+               case "light":
+                  UIManager.setLookAndFeel("com.formdev.flatlaf.FlatLightLaf");
+                  break;
+               case "darcula":
+                  UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarculaLaf");
+                  break;
+               case "intellij":
+                  UIManager.setLookAndFeel("com.formdev.flatlaf.FlatIntelliJLaf");
+                  break;
+               default:
+                  UIManager.setLookAndFeel(lookAndFeel);
+            }
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+         SwingApplication swingApplication = supplier.get();
+         swingApplication.properties = config;
+         swingApplication.mainWindowFrame.setTitle(windowTitle);
+         try {
+            Toolkit xToolkit = Toolkit.getDefaultToolkit();
+            java.lang.reflect.Field awtAppClassNameField = xToolkit.getClass().getDeclaredField("awtAppClassName");
+            awtAppClassNameField.setAccessible(true);
+            awtAppClassNameField.set(xToolkit, windowTitle);
+         } catch (Exception e) {
+            //Ignore
+         }
+         //Mac
+         try {
+            // take the menu bar off the jframe
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+            // set the name of the application menu item
+            System.setProperty("com.apple.mrj.application.apple.menu.about.name", windowTitle);
+         } catch (Exception e) {
+            //Ignore
+         }
+         swingApplication.run(args);
+      });
    }
 
    public JFrame getFrame() {
@@ -149,7 +171,7 @@ public abstract class SwingApplication extends Application {
 
    protected JMenuBar menuBar(@NonNull JMenu... menus) {
       JMenuBar menuBar = new JMenuBar();
-      for(JMenu menu : menus) {
+      for (JMenu menu : menus) {
          menuBar.add(menu);
       }
       mainWindowFrame.setJMenuBar(menuBar);
@@ -157,7 +179,7 @@ public abstract class SwingApplication extends Application {
    }
 
    protected void onClose() throws Exception {
-      if((mainWindowFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH) {
+      if ((mainWindowFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH) {
          properties.set("window.maximized", "true");
       } else {
          properties.set("window.maximized", "false");
@@ -178,7 +200,7 @@ public abstract class SwingApplication extends Application {
    }
 
    public void setCenterComponent(Component component) {
-      if(component instanceof View) {
+      if (component instanceof View) {
          mainWindowFrame.add(((View) component).getRoot(), BorderLayout.CENTER);
       } else {
          mainWindowFrame.add(component, BorderLayout.CENTER);
@@ -186,7 +208,7 @@ public abstract class SwingApplication extends Application {
    }
 
    public void setEastComponent(Component component) {
-      if(component instanceof View) {
+      if (component instanceof View) {
          mainWindowFrame.add(((View) component).getRoot(), BorderLayout.EAST);
       } else {
          mainWindowFrame.add(component, BorderLayout.EAST);
@@ -210,7 +232,7 @@ public abstract class SwingApplication extends Application {
    }
 
    public void setSouthComponent(Component component) {
-      if(component instanceof View) {
+      if (component instanceof View) {
          southPanel.add(((View) component).getRoot(), BorderLayout.CENTER);
       } else {
          southPanel.add(component, BorderLayout.CENTER);
@@ -222,7 +244,7 @@ public abstract class SwingApplication extends Application {
    }
 
    public void setWestComponent(Component component) {
-      if(component instanceof View) {
+      if (component instanceof View) {
          mainWindowFrame.add(((View) component).getRoot(), BorderLayout.WEST);
       } else {
          mainWindowFrame.add(component, BorderLayout.WEST);
@@ -236,7 +258,7 @@ public abstract class SwingApplication extends Application {
       mainWindowFrame.setMinimumSize(new Dimension(800, 600));
       mainWindowFrame.setSize(new Dimension(width, height));
 
-      if(properties.get("window.maximized").asBooleanValue(false)) {
+      if (properties.get("window.maximized").asBooleanValue(false)) {
          mainWindowFrame.setExtendedState(mainWindowFrame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
       } else {
          Rectangle screenRectangle = mainWindowFrame.getGraphicsConfiguration()
@@ -261,7 +283,7 @@ public abstract class SwingApplication extends Application {
             try {
                onClose();
                properties.save();
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                ex.printStackTrace();
             }
          }

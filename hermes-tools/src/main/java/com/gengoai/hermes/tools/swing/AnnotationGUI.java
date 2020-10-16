@@ -59,7 +59,7 @@ public class AnnotationGUI extends HermesGUI {
                                                                                              KeyEvent.CTRL_DOWN_MASK));
 
    public static void main(String[] args) {
-      runApplication(AnnotationGUI::new, "AnnotationGUI", args);
+      runApplication(AnnotationGUI::new, "AnnotationGUI", "Hermes Annotation GUI", args);
    }
 
    private void closeAll() {

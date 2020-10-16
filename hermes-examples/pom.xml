@@ -36,6 +36,10 @@
         </dependency>
         <dependency>
             <groupId>com.gengoai</groupId>
+            <artifactId>hermes-wordnet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gengoai</groupId>
             <artifactId>hermes-tools</artifactId>
         </dependency>
         <dependency>

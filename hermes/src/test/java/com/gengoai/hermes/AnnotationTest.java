@@ -51,8 +51,8 @@ public class AnnotationTest {
 
       assertTrue(a.isAnnotation());
 
-      assertTrue(a.tagIsA(Entities.INTERNET));
-      assertTrue(a.tagIsA("INTERNET"));
+      assertTrue(a.tagIsA(Entities.LOCATION));
+      assertTrue(a.tagIsA("LOCATION"));
 
 
    }

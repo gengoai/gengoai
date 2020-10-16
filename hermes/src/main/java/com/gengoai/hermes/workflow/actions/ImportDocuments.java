@@ -24,22 +24,24 @@ import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.workflow.Action;
+import com.gengoai.hermes.workflow.ActionDescription;
 import com.gengoai.hermes.workflow.Context;
 import com.gengoai.string.Strings;
 import lombok.extern.java.Log;
+import org.kohsuke.MetaInfServices;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Log
 public class ImportDocuments implements Action {
-   private static final long serialVersionUID = 1L;
    public static final String CORPUS_LOCATION = "CORPUS_LOCATION";
+   private static final long serialVersionUID = 1L;
 
    @Override
    public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
       String location = context.getString(CORPUS_LOCATION);
-      if(Strings.isNullOrBlank(location)) {
+      if (Strings.isNullOrBlank(location)) {
          throw new IllegalStateException("No corpus location specified. Please specify using a "
                                                + CORPUS_LOCATION + " context value"
          );
@@ -52,5 +54,18 @@ public class ImportDocuments implements Action {
          return d;
       }));
       return toCorpus;
+   }
+
+   @MetaInfServices
+   public static class ImportDocumentDescription implements ActionDescription {
+      @Override
+      public String description() {
+         return "Import documents into a Corpus. The corpus is specified using the context value 'CORPUS_LOCATION'.";
+      }
+
+      @Override
+      public String name() {
+         return ImportDocuments.class.getName();
+      }
    }
 }//END OF ImportDocuments

@@ -449,8 +449,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
    default Counter<String> termCount(@NonNull Extractor extractor) {
       ProgressLogger progressLogger = ProgressLogger.create(this, "termCount");
       MCounterAccumulator<String> termCounts = getStreamingContext().counterAccumulator();
-      parallelStream().parallel()
-                      .forEach(doc -> {
+      parallelStream().forEach(doc -> {
                          progressLogger.start();
                          termCounts.merge(extractor.extract(doc).count());
                          progressLogger.stop(doc.tokenLength());

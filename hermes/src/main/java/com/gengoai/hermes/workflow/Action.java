@@ -42,7 +42,7 @@ import java.io.Serializable;
  *
  * @author David B. Bracewell
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public interface Action extends Serializable {
 

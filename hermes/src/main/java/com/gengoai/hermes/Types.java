@@ -107,6 +107,7 @@ public interface Types {
     * List of String attribute for defining a collection of keywords/phrases
     */
    AttributeType<List<String>> KEYWORDS = AttributeType.make("KEYWORDS", parameterizedType(List.class, String.class));
+   AttributeType<List<String>> SUMMARY = AttributeType.make("SUMMARY", parameterizedType(List.class, String.class));
    /**
     * Language attribute defining the language a specific span is written in
     */

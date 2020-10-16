@@ -20,20 +20,18 @@
 package com.gengoai.hermes.ml;
 
 import com.gengoai.apollo.ml.DataSet;
+import com.gengoai.apollo.ml.encoder.IndexEncoder;
+import com.gengoai.apollo.ml.encoder.NoOptEncoder;
+import com.gengoai.apollo.ml.model.TFVarSpec;
 import com.gengoai.apollo.ml.model.TensorUtils;
 import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.transform.Transformer;
-import com.gengoai.apollo.ml.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.collection.Maps;
 import com.gengoai.hermes.AnnotationType;
 import com.gengoai.hermes.Types;
 import lombok.NonNull;
 import org.tensorflow.Tensor;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static com.gengoai.tuple.Tuples.$;
 
@@ -47,10 +45,9 @@ public abstract class ElmoSeq2SeqModel extends TensorFlowSequenceLabeler {
 
    protected ElmoSeq2SeqModel(@NonNull AnnotationType annotationType,
                               @NonNull AnnotationType trainingAnnotationType) {
-      super(Set.of(TOKENS),
+      super(Map.of(TOKENS, TFVarSpec.varSpec(TOKENS, NoOptEncoder.INSTANCE, -1)),
 //            Maps.linkedHashMapOf($(LABEL, "label/truediv")),
-            Maps.linkedHashMapOf($(LABEL, "label_1/truediv")),
-            Collections.emptyMap(),
+            Maps.linkedHashMapOf($(LABEL, TFVarSpec.varSpec("label_1/truediv", new IndexEncoder("O"), -1))),
             IOBValidator.INSTANCE,
             IOB.decoder(annotationType));
       this.trainingAnnotationType = trainingAnnotationType;
@@ -62,11 +59,11 @@ public abstract class ElmoSeq2SeqModel extends TensorFlowSequenceLabeler {
       return TensorUtils.sequence2StringTensor(batch, TOKENS, TOKENS, SEQUENCE_LENGTH);
    }
 
-   @Override
-   protected Transformer createTransformer() {
-      IndexingVectorizer labelVectorizer = new IndexingVectorizer(encoders.get(LABEL)).source(LABEL);
-      return new Transformer(List.of(labelVectorizer));
-   }
+//   @Override
+//   protected Transformer createTransformer() {
+//      IndexingVectorizer labelVectorizer = new IndexingVectorizer(encoders.get(LABEL)).source(LABEL);
+//      return new Transformer(List.of(labelVectorizer));
+//   }
 
    @Override
    public HStringDataSetGenerator getDataGenerator() {

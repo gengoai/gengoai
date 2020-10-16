@@ -23,10 +23,13 @@ import com.gengoai.hermes.AnnotatableType;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.workflow.Action;
+import com.gengoai.hermes.workflow.ActionDescription;
 import com.gengoai.hermes.workflow.Context;
 import com.gengoai.string.Strings;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.java.Log;
+import org.kohsuke.MetaInfServices;
 
 import java.util.Arrays;
 
@@ -38,18 +41,12 @@ import static com.gengoai.LogUtils.logConfig;
  * @author David B. Bracewell
  */
 @Log
+@MetaInfServices
+@NoArgsConstructor
 public class Annotate implements Action {
-   private static final long serialVersionUID = 1L;
    public static final String ANNOTATABLE_TYPE_CONFIG = "ANNOTATE_TYPES";
-   private AnnotatableType[] types = {Types.SENTENCE, Types.LEMMA, Types.PHRASE_CHUNK, Types.DEPENDENCY, Types.ENTITY};
-
-   public Annotate() {
-
-   }
-
-   public Annotate(@NonNull AnnotatableType... types) {
-      this.types = types;
-   }
+   private static final long serialVersionUID = 1L;
+   private AnnotatableType[] types = Types.BASE_ANNOTATIONS;
 
    /**
     * Get types string [ ].
@@ -58,22 +55,6 @@ public class Annotate implements Action {
     */
    public String[] getTypes() {
       return Arrays.stream(types).map(AnnotatableType::canonicalName).toArray(String[]::new);
-   }
-
-   @Override
-   public DocumentCollection process(@NonNull DocumentCollection corpus, @NonNull Context context) throws Exception {
-      String contextTypes = context.getString(ANNOTATABLE_TYPE_CONFIG);
-      if(Strings.isNotNullOrBlank(contextTypes)) {
-         AnnotatableType[] types = Strings.split(contextTypes, ',')
-                                          .stream()
-                                          .map(AnnotatableType::valueOf)
-                                          .toArray(AnnotatableType[]::new);
-         logConfig(log, "Annotating corpus for {0}", Arrays.toString(types));
-         return corpus.annotate(types);
-      } else {
-         logConfig(log, "Annotating corpus for {0}", Arrays.toString(types));
-         return corpus.annotate(types);
-      }
    }
 
    /**
@@ -88,9 +69,51 @@ public class Annotate implements Action {
    }
 
    @Override
+   public DocumentCollection process(@NonNull DocumentCollection corpus, @NonNull Context context) throws Exception {
+      String contextTypes = context.getString(ANNOTATABLE_TYPE_CONFIG);
+      if (Strings.isNotNullOrBlank(contextTypes)) {
+         AnnotatableType[] types = Strings.split(contextTypes, ',')
+                                          .stream()
+                                          .map(AnnotatableType::valueOf)
+                                          .toArray(AnnotatableType[]::new);
+         logConfig(log, "Annotating corpus for {0}", Arrays.toString(types));
+         return corpus.annotate(types);
+      } else {
+         logConfig(log, "Annotating corpus for {0}", Arrays.toString(types));
+         return corpus.annotate(types);
+      }
+   }
+
+   @Override
    public String toString() {
       return "AnnotateProcessor{" +
             "types=" + Arrays.toString(types) +
             '}';
+   }
+
+   @MetaInfServices
+   public static class AnnotateDescription implements ActionDescription {
+      @Override
+      public String description() {
+         return "Action to annotate the document collection with a set of AnnotatableTypes. " +
+               "To specify add a 'types' property to your json definition with an array of AnnotatableType names " +
+               "or set the context value 'ANNOTATE_TYPES' on the command line (command separated list). " +
+               "If no types are specified, then the types defined in `Types.BASE_ANNOTATIONS` are used. " +
+               "\n\nVia Workflow Json:\n" +
+               "--------------------------------------\n" +
+               "{\n" +
+               "   \"@type\"=\"" + Annotate.class.getName() + "\",\n" +
+               "   \"types\"=[\"TOKEN\", \"SENTENCE\"]\n" +
+               "}" +
+               "\n\nVia Context:\n" +
+               "--------------------------------------\n" +
+               "ANNOTATE_TYPES=\"TOKEN\",\"SENTENCE\"";
+      }
+
+      @Override
+      public String name() {
+         return Annotate.class.getName();
+      }
+
    }
 }//END OF AnnotateProcessor

@@ -127,6 +127,7 @@ public class Downloader extends CommandLineApplication {
    @Override
    protected void programLogic() throws Exception {
       if (getPositionalArgs().length == 0) {
+
          throw new IllegalStateException("No Operation Given");
       }
 

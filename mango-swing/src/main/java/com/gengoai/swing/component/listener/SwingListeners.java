@@ -21,7 +21,7 @@ package com.gengoai.swing.component.listener;
 
 import lombok.NonNull;
 
-import javax.swing.JComponent;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.event.*;
@@ -148,7 +148,7 @@ public class SwingListeners {
 
    public static KeyListener enterKeyPressed(@NonNull Consumer<KeyEvent> eventConsumer) {
       return keyPressed(e -> {
-         if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
             eventConsumer.accept(e);
          }
       });
@@ -290,7 +290,7 @@ public class SwingListeners {
       return new MouseAdapter() {
          @Override
          public void mouseClicked(MouseEvent e) {
-            if(e.getClickCount() == 2) {
+            if (e.getClickCount() == 2) {
                eventHandler.accept(e);
             }
          }
@@ -463,7 +463,7 @@ public class SwingListeners {
     * @return This FluentComponent
     */
    public static <T extends JComponent> T removeAllKeyListeners(@NonNull T component) {
-      for(KeyListener kl : component.getListeners(KeyListener.class)) {
+      for (KeyListener kl : component.getListeners(KeyListener.class)) {
          component.removeKeyListener(kl);
       }
       return component;

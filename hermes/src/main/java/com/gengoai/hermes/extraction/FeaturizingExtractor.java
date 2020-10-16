@@ -25,6 +25,7 @@ package com.gengoai.hermes.extraction;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.gengoai.apollo.ml.feature.Featurizer;
 import com.gengoai.hermes.HString;
+import com.gengoai.hermes.extraction.lyre.LyreExpression;
 
 /**
  * Combines an {@link Extractor} with an Apollo <code>Featurizer</code> allowing for the output of the extractor to be
@@ -32,7 +33,7 @@ import com.gengoai.hermes.HString;
  *
  * @author David B. Bracewell
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, defaultImpl = LyreExpression.class)
 public abstract class FeaturizingExtractor extends Featurizer<HString> implements Extractor {
    private static final long serialVersionUID = 1L;
 

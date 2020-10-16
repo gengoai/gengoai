@@ -22,6 +22,7 @@
 package com.gengoai.hermes.wordnet.io.properties;
 
 import com.gengoai.hermes.wordnet.Synset;
+import com.gengoai.hermes.wordnet.WordNetPOS;
 import com.gengoai.hermes.wordnet.io.WordNetDB;
 import com.gengoai.hermes.wordnet.properties.PropertyName;
 import com.gengoai.hermes.wordnet.properties.SumoConcept;
@@ -43,23 +44,13 @@ public class SumoPropertyLoader extends TSVPropertyLoader {
    @Override
    protected void processRow(List<String> row, WordNetDB db, PropertyName name) {
       if (row.size() >= 4) {
-         final String key = row.get(0) + row.get(1);
-         Synset synset = db.getSynsetFromId(
-            Strings.padStart(key, 9, '0').toLowerCase()
-                                           );
-
-         for (int i = 2; i < row.size(); i += 2) {
-            if (Strings.isNotNullOrBlank(row.get(i)) || Strings.isNotNullOrBlank(row.get(i + 1))) {
-               break;
-            }
-            String concept = row.get(i);
-            SumoRelation relation = SumoRelation.fromString(row.get(i + 1));
-
-            setProperty(
-               synset,
-               name,
-               new SumoConcept(concept, relation)
-                       );
+         final String key = row.get(0) + WordNetPOS.fromString(row.get(1)).getTag();
+         String concept = row.get(2);
+         String relation = row.get(3);
+         Synset synset = db.getSynsetFromId(Strings.padStart(key, 9, '0').toLowerCase());
+         if (synset != null && Strings.isNotNullOrBlank(concept) && Strings.isNotNullOrBlank(relation)) {
+            SumoConcept sumoConcept = new SumoConcept(concept, SumoRelation.fromString(relation));
+            setProperty(synset, name, sumoConcept);
          }
       }
    }

@@ -68,7 +68,6 @@ import static com.gengoai.tuple.Tuples.$;
  * </ul></p>
  */
 public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFormat, Serializable {
-   private static final long serialVersionUID = 1L;
    /**
     * True create a document per sentence, False multiple sentences per document
     */
@@ -90,7 +89,7 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
     * True override sentence boundaries with Hermes boundaries
     */
    public static final ParameterDef<Boolean> OVERRIDE_SENTENCES = ParameterDef.boolParam("overrideSentences");
-
+   private static final long serialVersionUID = 1L;
    private final CoNLLParameters parameters;
 
    CoNLLFormat(@NonNull CoNLLParameters parameters) {
@@ -104,34 +103,34 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
       Map<Tuple2<Integer, Integer>, Long> sentenceIndexToIDMap = new HashMap<>();
 
       boolean keepSentences = !parameters.overrideSentences.value();
-      for(ListIterator<CoNLLRow> iterator = list.listIterator(); iterator.hasNext(); ) {
+      for (ListIterator<CoNLLRow> iterator = list.listIterator(); iterator.hasNext(); ) {
          CoNLLRow token = iterator.next();
-         if(lastSentenceStart == -1) {
+         if (lastSentenceStart == -1) {
             lastSentenceStart = token.getStart();
          }
          token.setAnnotationID(document.createAnnotation(Types.TOKEN, token.getStart(), token.getEnd(),
                                                          Collections.emptyMap()).getId());
          sentenceIndexToIDMap.put($(token.getSentence(), token.getIndex()), token.getAnnotationID());
-         if(!iterator.hasNext() || token.getSentence() != list.get(iterator.nextIndex()).getSentence()) {
-            if(keepSentences) {
+         if (!iterator.hasNext() || token.getSentence() != list.get(iterator.nextIndex()).getSentence()) {
+            if (keepSentences) {
                document.createAnnotation(Types.SENTENCE,
                                          lastSentenceStart,
                                          token.getEnd(),
                                          hashMapOf($(Types.INDEX, sentenceIndex))
-                                        );
+               );
             }
             sentenceIndex++;
             lastSentenceStart = -1;
          }
       }
-      for(CoNLLColumnProcessor processor : CoNLLProcessors.get(parameters.fields.value())) {
+      for (CoNLLColumnProcessor processor : CoNLLProcessors.get(parameters.fields.value())) {
          processor.processInput(document, list, sentenceIndexToIDMap);
       }
-      if(keepSentences) {
+      if (keepSentences) {
          document.setCompleted(Types.SENTENCE, "PROVIDED");
       }
       document.setCompleted(Types.TOKEN, "PROVIDED");
-      if(document.isCompleted(Types.PART_OF_SPEECH)) {
+      if (document.isCompleted(Types.PART_OF_SPEECH)) {
          document.annotate(Types.CATEGORY);
       }
       return document;
@@ -156,12 +155,12 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
       final DocumentFactory documentFactory = parameters.getDocumentFactory();
 
       final String resource = file.strip();
-      for(String line : resource.split("\\r?\\n")) {
+      for (String line : resource.split("\\r?\\n")) {
          line = line.strip();
-         if(Strings.isNullOrBlank(line) || line.trim().startsWith("-X-") || line.startsWith("# newdoc id")) {
-            if(list.size() > lastSize) {
+         if (Strings.isNullOrBlank(line) || line.trim().startsWith("-X-") || line.startsWith("# newdoc id")) {
+            if (list.size() > lastSize) {
                sentenceIndex++;
-               if(oneDocumentPerSentence) {
+               if (oneDocumentPerSentence) {
                   documents.add(createDocument(content.toString(), list, documentFactory));
                   sentenceIndex = 0;
                   list.clear();
@@ -169,14 +168,14 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
                   lastSize = 0;
                }
             }
-         } else if(line.strip().startsWith("#")) {
+         } else if (line.strip().startsWith("#")) {
             continue;
          } else {
             List<String> parts = Arrays.asList(line.split(FS));
             CoNLLRow row = new CoNLLRow();
             row.setSentence(sentenceIndex);
-            for(int i = 0; i < processors.size(); i++) {
-               if(Strings.isNullOrBlank(parts.get(i))) {
+            for (int i = 0; i < processors.size(); i++) {
+               if (Strings.isNullOrBlank(parts.get(i))) {
                   continue;
                }
                processors.get(i).updateRow(row, parts.get(i));
@@ -187,7 +186,7 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
             list.add(row);
          }
       }
-      if(list.size() > 0) {
+      if (list.size() > 0) {
          documents.add(createDocument(content.toString(), list, documentFactory));
       }
       return documents.stream();
@@ -198,11 +197,11 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
       final List<CoNLLColumnProcessor> processors = CoNLLProcessors.get(parameters.fields.value());
       final String FS = "\t";
       int index = 0;
-      try(BufferedWriter writer = new BufferedWriter(outputResource.writer())) {
-         for(Annotation sentence : document.sentences()) {
-            for(Annotation token : sentence.tokens()) {
-               for(int i = 0; i < processors.size(); i++) {
-                  if(i > 0) {
+      try (BufferedWriter writer = new BufferedWriter(outputResource.writer())) {
+         for (Annotation sentence : document.sentences()) {
+            for (Annotation token : sentence.tokens()) {
+               for (int i = 0; i < processors.size(); i++) {
+                  if (i > 0) {
                      writer.write(FS);
                   }
                   writer.write(processors.get(i).processOutput(document, token, index));
@@ -223,7 +222,7 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
 
       @Override
       public DocFormat create(DocFormatParameters parameters) {
-         if(parameters instanceof CoNLLParameters) {
+         if (parameters instanceof CoNLLParameters) {
             return new CoNLLFormat(Cast.as(parameters));
          }
          throw new IllegalArgumentException("Invalid parameter class, expecting: " +

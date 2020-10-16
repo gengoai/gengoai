@@ -55,20 +55,24 @@ import java.util.Collection;
 @JsonSerialize(using = AnnotatableType.Serializer.class)
 @JsonDeserialize(using = AnnotatableType.Deserializer.class)
 public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> implements AnnotatableType {
-   private static final HierarchicalRegistry<AnnotationType> registry = new HierarchicalRegistry<>(
-         AnnotationType::new,
-         AnnotationType.class,
-         "ROOT");
-   private static final long serialVersionUID = 1L;
-   /**
-    * The constant ROOT representing the base annotation type.
-    */
-   public static final AnnotationType ROOT = registry.ROOT;
    /**
     * The constant TYPE name.
     */
    public static final String TYPE = "Annotation";
+   private static final HierarchicalRegistry<AnnotationType> registry = new HierarchicalRegistry<>(
+         AnnotationType::new,
+         AnnotationType.class,
+         "ROOT");
+   /**
+    * The constant ROOT representing the base annotation type.
+    */
+   public static final AnnotationType ROOT = registry.ROOT;
+   private static final long serialVersionUID = 1L;
    private volatile AttributeType<? extends Tag> tagAttributeType = null;
+
+   private AnnotationType(String name) {
+      super(name);
+   }
 
    /**
     * Determines if the given name is a defined AnnotationType
@@ -93,12 +97,12 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
                                      String name,
                                      AttributeType<? extends Tag> tagAttributeType) {
       AnnotationType annotationType = registry.make(parent, name);
-      if(tagAttributeType == null && annotationType.tagAttributeType == null) {
+      if (tagAttributeType == null && annotationType.tagAttributeType == null) {
          annotationType.tagAttributeType = Config.get(TYPE, annotationType.name(), "tag").as(AttributeType.class);
-      } else if(tagAttributeType != null && annotationType.tagAttributeType == null) {
+      } else if (tagAttributeType != null && annotationType.tagAttributeType == null) {
          annotationType.tagAttributeType = tagAttributeType;
          Config.setProperty(TYPE + "." + annotationType.name() + ".tag", tagAttributeType.name());
-      } else if(tagAttributeType != null && !annotationType.tagAttributeType.equals(tagAttributeType)) {
+      } else if (tagAttributeType != null && !annotationType.tagAttributeType.equals(tagAttributeType)) {
          throw new IllegalArgumentException(
                "Attempting to change tag of " + name + " from " + annotationType.tagAttributeType + " to " + tagAttributeType);
       }
@@ -148,23 +152,19 @@ public final class AnnotationType extends HierarchicalEnumValue<AnnotationType> 
       return registry.values();
    }
 
-   private AnnotationType(String name) {
-      super(name);
-   }
-
    /**
     * @return the attribute associated with the tag of this annotation.
     */
    public AttributeType<Tag> getTagAttribute() {
-      if(tagAttributeType == null) {
-         synchronized(this) {
-            if(tagAttributeType == null) {
+      if (tagAttributeType == null) {
+         synchronized (this) {
+            if (tagAttributeType == null) {
                AnnotationType t = parent();
-               while(tagAttributeType == null && t != null) {
+               while (tagAttributeType == null && t != null) {
                   tagAttributeType = t.tagAttributeType;
                   t = t.parent();
                }
-               if(tagAttributeType == null) {
+               if (tagAttributeType == null) {
                   tagAttributeType = Types.TAG;
                }
             }

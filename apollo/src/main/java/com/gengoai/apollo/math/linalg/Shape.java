@@ -203,6 +203,10 @@ public class Shape implements Serializable, Copyable<Shape> {
             && (shape[2] > 0 ^ shape[3] > 0);
    }
 
+   public int get(int axis){
+      return shape[axis];
+   }
+
    /**
     * Gets the number of kernels
     *

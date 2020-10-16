@@ -23,6 +23,7 @@ package com.gengoai.hermes.wordnet.properties;
 
 import com.gengoai.EnumValue;
 import com.gengoai.Registry;
+import com.gengoai.annotation.Preload;
 import lombok.NonNull;
 
 import java.util.Collection;
@@ -32,6 +33,7 @@ import java.util.Collection;
  *
  * @author David B. Bracewell
  */
+@Preload
 public class PropertyName extends EnumValue<PropertyName> implements Comparable<PropertyName> {
    private static final long serialVersionUID = 1L;
    private static final Registry<PropertyName> registry = new Registry<>(PropertyName::new, PropertyName.class);
@@ -55,7 +57,11 @@ public class PropertyName extends EnumValue<PropertyName> implements Comparable<
    /**
     * The constant SUMO_CONCEPT.
     */
-   public static final PropertyName SUMO_CONCEPT = make("SUMO_CONCEPT");
+   public static final PropertyName SUMO_CONCEPT = make("SUMO");
+
+   private PropertyName(String name) {
+      super(name);
+   }
 
    /**
     * <p>Creates a new or retrieves an existing instance of PropertyName with the given name.</p>
@@ -84,10 +90,6 @@ public class PropertyName extends EnumValue<PropertyName> implements Comparable<
     */
    public static Collection<PropertyName> values() {
       return registry.values();
-   }
-
-   private PropertyName(String name) {
-      super(name);
    }
 
    @Override

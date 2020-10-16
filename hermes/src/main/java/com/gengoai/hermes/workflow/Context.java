@@ -97,9 +97,9 @@ public class Context implements Serializable, Copyable<Context> {
     * @return the value
     */
    public <T> T getAs(String name, @NonNull Class<T> clazz) {
-      if(properties.containsKey(name)) {
+      if (properties.containsKey(name)) {
          TypedObject<?> o = properties.get(name);
-         if(o.getValue() instanceof Val) {
+         if (o.getValue() instanceof Val) {
             return ((Val) o.getValue()).as(clazz);
          }
          return Cast.as(o.getValue(), clazz);
@@ -117,7 +117,7 @@ public class Context implements Serializable, Copyable<Context> {
     * @return the value
     */
    public <T> T getAs(String name, @NonNull Type type) {
-      if(properties.containsKey(name)) {
+      if (properties.containsKey(name)) {
          return Converter.convertSilently(properties.get(name).getValue(), type);
       }
       return Config.get(name).as(type);
@@ -135,7 +135,7 @@ public class Context implements Serializable, Copyable<Context> {
     * @return the value
     */
    public <T> T getAs(String name, @NonNull Class<T> clazz, T defaultValue) {
-      if(properties.containsKey(name)) {
+      if (properties.containsKey(name)) {
          return Cast.as(properties.get(name).getValue(), clazz);
       }
       return Config.get(name).as(clazz, defaultValue);
@@ -220,9 +220,9 @@ public class Context implements Serializable, Copyable<Context> {
     * @param value the value
     */
    public void property(String name, Object value) {
-      if(value == null) {
+      if (value == null) {
          this.properties.remove(name);
-      } else if(value instanceof TypedObject) {
+      } else if (value instanceof TypedObject) {
          this.properties.put(name, Cast.as(value));
       } else {
          this.properties.put(name, new TypedObject<>(value));

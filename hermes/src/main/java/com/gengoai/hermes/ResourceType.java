@@ -63,7 +63,7 @@ public enum ResourceType {
          try {
             return Cast.as(TrieWordList.read(locate(configKey, resourceName, language)
                                                    .orElseThrow(() -> new RuntimeException(resourceName + " does not exist."))));
-         } catch(IOException e) {
+         } catch (IOException e) {
             throw new RuntimeException(e);
          }
       }
@@ -92,7 +92,7 @@ public enum ResourceType {
                               .orElseThrow(() -> new RuntimeException(resourceName + " does not exist.")));
       }
    },
-   MORPHOLOGY_RULES("models", ".json") {
+   MORPHOLOGY_RULES("lexicons", ".json") {
       @Override
       public <T> T load(@NonNull String configKey, @NonNull String resourceName, @NonNull Language language) {
          return Cast.as(locate(configKey, resourceName, language)
@@ -105,11 +105,11 @@ public enum ResourceType {
    private final String type;
    private final String[] fileExtensions;
 
-   ResourceType(String configName, String... fileExtensions) {
-      this.type = configName;
+   ResourceType(String type, String... fileExtensions) {
+      this.type = type;
       this.fileExtensions = fileExtensions.length > 0
-                            ? fileExtensions
-                            : new String[]{Strings.EMPTY};
+            ? fileExtensions
+            : new String[]{Strings.EMPTY};
    }
 
    /**
@@ -159,13 +159,13 @@ public enum ResourceType {
     * @return the config value
     */
    public Optional<String> getConfigValue(@NonNull String resourceName, @NonNull Language language) {
-      for(String r : new String[]{
+      for (String r : new String[]{
             Config.get(resourceName, language, type).asString(),
             Config.get(resourceName, language).asString(),
             Config.get(resourceName, type).asString(),
             Config.get(resourceName).asString()
       }) {
-         if(Strings.isNotNullOrBlank(r)) {
+         if (Strings.isNotNullOrBlank(r)) {
             logFinest(log, "Found configuration value for ''{0}'' and language ''{1}'': {2}",
                       resourceName,
                       language,
@@ -245,9 +245,9 @@ public enum ResourceType {
       String langCode = language.getCode().toLowerCase();
       Resource baseDir = Hermes.getResourcesDir();
       Resource classpathDir = Resources.fromClasspath(HERMES_PACKAGE.replace('.', '/') + "/");
-      for(String ext : fileExtensions) {
+      for (String ext : fileExtensions) {
          String nameWithExt = Strings.appendIfNotPresent(resourceName, ext);
-         for(Resource r : Arrays.asList(
+         for (Resource r : Arrays.asList(
                Config.get(configKey, language, type).asResource(),
                baseDir.getChild(langCode).getChild(type).getChild(nameWithExt),
                classpathDir.getChild(langCode).getChild(type).getChild(nameWithExt),
@@ -256,8 +256,8 @@ public enum ResourceType {
                Config.get(configKey, type).asResource(),
                baseDir.getChild("default").getChild(type).getChild(nameWithExt),
                classpathDir.getChild("default").getChild(type).getChild(nameWithExt))) {
-            if(r != null && r.exists()) {
-               if(resourceName.equalsIgnoreCase(configKey)) {
+            if (r != null && r.exists()) {
+               if (resourceName.equalsIgnoreCase(configKey)) {
                   logFinest(log, "Found resource ''{0}'' for language ''{1}'': {2}",
                             resourceName,
                             language,
