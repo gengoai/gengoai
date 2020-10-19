@@ -6,3 +6,4 @@
 /python/glove.6B.zip
 /python/models/
 /python/.keras
+**/__pycache__/**
