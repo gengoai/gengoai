@@ -18,12 +18,13 @@
      ~ specific language governing permissions and limitations
      ~ under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.gengoai</groupId>
     <artifactId>gengoai</artifactId>
-    <version>1.1</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Parent POM for the GengoAI Mono repo.</description>
@@ -35,10 +36,10 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git@github.com:gengoai/gengoai.git</connection>
-        <developerConnection>scm:git:git@github.com:gengoai/gengoai.git</developerConnection>
-        <url>git@github.com:gengoai/gengoai.git</url>
-        <tag>gengoai-1.1</tag>
+        <connection>scm:git:git@github.com:gengoai/mono-repo.git</connection>
+        <developerConnection>scm:git:git@github.com:gengoai/mono-repo.git</developerConnection>
+        <url>git@github.com:gengoai/mono-repo.git</url>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
