@@ -62,9 +62,8 @@ import java.util.*;
             " Command Line Arguments"
 )
 public class Installer extends CommandLineApplication {
-   private static final String BASE_URL = "https://github.com/gengoai/data";
-   private static final Resource REPO_URL = Resources.from("https://raw.githubusercontent.com/gengoai/data/main/");
-   private static final Resource RELEASE_URL = Resources.from("https://github.com/gengoai/data/releases/download/");
+   private static final Resource BASE_URL = Resources.from("https://gengoai.link/");
+   private static final Resource RELEASES_URL = BASE_URL.getChild("releases/");
    private static final String MANIFEST_FILE = "manifest.json";
    private static final String HERMES_CORE_FILE = "hermes.tar.gz";
    private static final String SPARK_LIB_FILE = "hermes_spark.tar.gz";
@@ -113,7 +112,7 @@ public class Installer extends CommandLineApplication {
       Language language = Language.fromString(args[1].toUpperCase());
       Validation.checkArgument(language != Language.UNKNOWN, "Invalid language: '" + args[1] + "'");
 
-      Resource rootDir = REPO_URL.getChild(Strings.appendIfNotPresent(manifest.languageDir(language), "/"));
+      Resource rootDir = BASE_URL.getChild(Strings.appendIfNotPresent(manifest.languageDir(language), "/"));
       ModelDefinitions modelDefinitions = new ModelDefinitions(manifest.languageDir(language));
       Set<String> models = gatherModels(rootDir, args);
 
@@ -131,7 +130,7 @@ public class Installer extends CommandLineApplication {
       Language language = Language.fromString(args[1].toUpperCase());
       Validation.checkArgument(language != Language.UNKNOWN, "Invalid language: '" + args[1] + "'");
 
-      Resource rootDir = REPO_URL.getChild(Strings.appendIfNotPresent(manifest.languageDir(language), "/"));
+      Resource rootDir = BASE_URL.getChild(Strings.appendIfNotPresent(manifest.languageDir(language), "/"));
       ModelDefinitions modelDefinitions = new ModelDefinitions(manifest.languageDir(language));
       PackageList packageList = Json.parse(rootDir.getChild(PACKAGES_JSON), PackageList.class);
       System.out.printf("   Packages for %s\n", language);
@@ -148,7 +147,7 @@ public class Installer extends CommandLineApplication {
       String[] args = getPositionalArgs();
       Validation.checkArgument(args.length > 0,
                                "No installation resource specified. Must be one of [CORE_LIBS,SPARK_LIBS, MODEL]");
-      Manifest manifest = Json.parse(REPO_URL.getChild(MANIFEST_FILE), Manifest.class);
+      Manifest manifest = Json.parse(BASE_URL.getChild(MANIFEST_FILE), Manifest.class);
       InstallResource resource = InstallResource.valueOf(getPositionalArgs()[0].toUpperCase());
       if (installDir == null) {
          installDir = Resources.from(SystemInfo.USER_HOME).getChild("hermes");
@@ -156,14 +155,14 @@ public class Installer extends CommandLineApplication {
       installDir.mkdirs();
       switch (resource) {
          case CORE_LIBS:
-            download(RELEASE_URL.getChild("System_" + manifest.effectiveReleaseVersion(version) + "/")
-                                .getChild(HERMES_CORE_FILE), installDir);
+            download(RELEASES_URL.getChild(manifest.effectiveReleaseVersion(version) + "/")
+                                 .getChild(HERMES_CORE_FILE), installDir);
             File hermes = installDir.getChild("hermes").asFile().orElseThrow();
             hermes.setExecutable(true);
             break;
          case SPARK_LIBS:
-            download(RELEASE_URL.getChild("System_" + manifest.effectiveReleaseVersion(version) + "/")
-                                .getChild(SPARK_LIB_FILE), installDir);
+            download(RELEASES_URL.getChild(manifest.effectiveReleaseVersion(version) + "/")
+                                 .getChild(SPARK_LIB_FILE), installDir);
             break;
          case MODEL:
             if (Config.get("ls").asBooleanValue(false)) {
@@ -206,7 +205,7 @@ public class Installer extends CommandLineApplication {
 
       public ModelDefinitions(String languageDir) throws Exception {
          this.languageDir = languageDir;
-         Map<String, JsonEntry> json = Json.parseObject(REPO_URL.getChild(Strings.appendIfNotPresent(languageDir, "/"))
+         Map<String, JsonEntry> json = Json.parseObject(BASE_URL.getChild(Strings.appendIfNotPresent(languageDir, "/"))
                                                                 .getChild(RELEASES_JSON));
          json.forEach((m, j) -> {
             if (j.hasProperty("variants")) {
@@ -256,7 +255,9 @@ public class Installer extends CommandLineApplication {
          }
          Validation.checkArgument(e.versions.contains(version), "Unknown Version: '" + version + "'");
 
-         return RELEASE_URL.getChild(languageDir + "_" + version + "/").getChild(String.format("%s.tar.gz", model));
+         return BASE_URL.getChild(languageDir + "/")
+                        .getChild(version + "/")
+                        .getChild(String.format("%s.tar.gz", model));
       }
 
       public Resource resolveTargetDir(String model, Resource installDir) {
