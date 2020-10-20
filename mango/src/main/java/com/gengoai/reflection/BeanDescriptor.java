@@ -66,10 +66,10 @@ public final class BeanDescriptor implements Serializable {
     * @throws IllegalAccessException Couldn't access the class.
     */
    public Object createInstance() throws
-                                  InstantiationException,
-                                  IllegalAccessException,
-                                  NoSuchMethodException,
-                                  InvocationTargetException {
+         InstantiationException,
+         IllegalAccessException,
+         NoSuchMethodException,
+         InvocationTargetException {
       return clazz.getDeclaredConstructor().newInstance();
    }
 
@@ -81,7 +81,7 @@ public final class BeanDescriptor implements Serializable {
    public Object createInstanceQuietly() {
       try {
          return clazz.getDeclaredConstructor().newInstance();
-      } catch(InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+      } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
          logFinest(log, e);
          return null;
       }
@@ -89,10 +89,10 @@ public final class BeanDescriptor implements Serializable {
 
    @Override
    public boolean equals(Object obj) {
-      if(this == obj) {
+      if (this == obj) {
          return true;
       }
-      if(obj == null || getClass() != obj.getClass()) {
+      if (obj == null || getClass() != obj.getClass()) {
          return false;
       }
       final BeanDescriptor other = (BeanDescriptor) obj;
@@ -194,15 +194,15 @@ public final class BeanDescriptor implements Serializable {
    }
 
    private void setReadWrite(Class<?> clazz) {
-      if(clazz == null) {
+      if (clazz == null) {
          return;
       }
       Reflect.onClass(clazz).getMethods().forEach(method -> {
          String name = method.getName();
-         if(!name.equals("getClass") && !method.isAnnotationPresent(Ignore.class)) {
-            if(name.startsWith("get") || name.startsWith("is")) {
+         if (!name.equals("getClass") && !method.isAnnotationPresent(Ignore.class)) {
+            if (name.startsWith("get") || name.startsWith("is")) {
                readMethods.put(transformName(name), method.getElement());
-            } else if(name.startsWith("set")) {
+            } else if (name.startsWith("set") || (name.startsWith("add") && method.getParameterCount() == 1)) {
                writeMethods.put(transformName(name), method.getElement());
             }
          }
@@ -211,10 +211,10 @@ public final class BeanDescriptor implements Serializable {
 
    private String transformName(String name) {
       int prefixLen = 3;
-      if(name.startsWith("is")) {
+      if (name.startsWith("is")) {
          prefixLen = 2;
       }
-      if(name.length() == prefixLen) {
+      if (name.length() == prefixLen) {
          return Strings.EMPTY;
       }
       char[] carrry = name.substring(prefixLen).toCharArray();

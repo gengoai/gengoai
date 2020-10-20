@@ -87,6 +87,13 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
     */
    public GraphViz(VertexEncoder<V> vertexEncoder, EdgeEncoder<V> edgeEncoder) {
       this(vertexEncoder, edgeEncoder, Format.PNG);
+      if( SystemInfo.isUnix() ){
+         DOT = "/usr/bin/dot";
+      } else if ( SystemInfo.isWindows()){
+         DOT = "c:\\Program Files\\Graphviz\\";
+      } else {
+         DOT = "/usr/local/bin/dot";
+      }
    }
 
    /**

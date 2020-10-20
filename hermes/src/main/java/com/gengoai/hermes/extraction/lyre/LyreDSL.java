@@ -65,7 +65,6 @@ import static java.util.Comparator.comparingInt;
  * @author David B. Bracewell
  */
 public final class LyreDSL {
-   private static final Pattern FLAGS = Pattern.compile("^\\(\\?[a-z]+\\)", Pattern.CASE_INSENSITIVE);
    /**
     * Returns the current Object being processed. Note that one-argument methods in Lyre (e.g. lower, isUpper, etc.)
     * have an implied `$_` argument if none is given.
@@ -332,6 +331,7 @@ public final class LyreDSL {
     * </pre>
     */
    public static final LyreExpression upper = upper($_);
+   private static final Pattern FLAGS = Pattern.compile("^\\(\\?[a-z]+\\)", Pattern.CASE_INSENSITIVE);
 
    /**
     * Returns <b>true</b> if all items in the given list evaluates to *true* for the given predicate expression.
@@ -385,7 +385,7 @@ public final class LyreDSL {
                                 LyreExpressionType.determineCommonType(Arrays.asList(expressions)),
                                 o -> {
                                    Object out = o;
-                                   for(LyreExpression expression : expressions) {
+                                   for (LyreExpression expression : expressions) {
                                       out = expression.applyAsObject(out);
                                    }
                                    return out;
@@ -464,7 +464,7 @@ public final class LyreDSL {
                                 HSTRING,
                                 o -> process(true, expression.applyAsObject(o),
                                              h -> {
-                                                if(Strings.isNullOrBlank(tag)) {
+                                                if (Strings.isNullOrBlank(tag)) {
                                                    return toHString(h).annotations(type);
                                                 } else {
                                                    return toHString(h).annotationStream(type)
@@ -561,8 +561,8 @@ public final class LyreDSL {
                                "Illegal Expression: attribute only accepts a HSTRING, but '"
                                      + expression + "' was provided which is of type " + expression.getType());
       LyreExpressionType eType = TypeUtils.isAssignable(type.getValueType(), String.class)
-                                 ? STRING
-                                 : OBJECT;
+            ? STRING
+            : OBJECT;
       return new LyreExpression(formatMethod(String.format("$%s", type), expression),
                                 eType,
                                 o -> process(false, expression.applyAsObject(o),
@@ -625,8 +625,8 @@ public final class LyreDSL {
    }
 
    private static boolean compareObjectPredicate(Object l, Object r, NumericComparison comparison) {
-      if(l == null || r == null) {
-         switch(comparison) {
+      if (l == null || r == null) {
+         switch (comparison) {
             case EQ:
                return l == r;
             case NE:
@@ -635,14 +635,14 @@ public final class LyreDSL {
                return false;
          }
       }
-      if(l instanceof Number && r instanceof Number) {
+      if (l instanceof Number && r instanceof Number) {
          return comparison.compare(Cast.<Number>as(l).doubleValue(),
                                    Cast.<Number>as(r).doubleValue());
       }
-      if(l instanceof Tag && r instanceof Tag) {
+      if (l instanceof Tag && r instanceof Tag) {
          Tag lTag = Cast.as(l);
          Tag rTag = Cast.as(r);
-         switch(comparison) {
+         switch (comparison) {
             case EQ:
                return lTag.isInstance(rTag);
             case NE:
@@ -652,44 +652,44 @@ public final class LyreDSL {
          }
       }
 
-      if(l.getClass().isInstance(r) || r.getClass().isInstance(l)) {
-         if(comparison == NumericComparison.EQ) {
+      if (l.getClass().isInstance(r) || r.getClass().isInstance(l)) {
+         if (comparison == NumericComparison.EQ) {
             return l.equals(r);
          }
-         if(comparison == NumericComparison.NE) {
+         if (comparison == NumericComparison.NE) {
             return !l.equals(r);
          }
          return comparison.compare(Sorting.compare(l, r), 0);
       }
 
-      if((l instanceof CharSequence) && (r instanceof CharSequence)) {
+      if ((l instanceof CharSequence) && (r instanceof CharSequence)) {
          String lStr = l.toString();
          String rStr = r.toString();
-         if(comparison == NumericComparison.EQ) {
+         if (comparison == NumericComparison.EQ) {
             return Objects.equals(lStr, rStr);
          }
-         if(comparison == NumericComparison.NE) {
+         if (comparison == NumericComparison.NE) {
             return !Objects.equals(lStr, rStr);
          }
          return comparison.compare(Sorting.compare(lStr, rStr), 0);
       }
 
-      if(!(r instanceof CharSequence)) {
+      if (!(r instanceof CharSequence)) {
          Object lConv = Converter.convertSilently(l, r.getClass());
-         if(lConv != null) {
+         if (lConv != null) {
             return compareObjectPredicate(lConv, r, comparison);
          }
-         if(r instanceof Number) {
+         if (r instanceof Number) {
             return compareObjectPredicate(Double.NaN, r, comparison);
          }
       }
 
-      if(!(l instanceof CharSequence)) {
+      if (!(l instanceof CharSequence)) {
          Object rConv = Converter.convertSilently(r, l.getClass());
-         if(rConv != null) {
+         if (rConv != null) {
             return compareObjectPredicate(l, rConv, comparison);
          }
-         if(l instanceof Number) {
+         if (l instanceof Number) {
             return compareObjectPredicate(l, Double.NaN, comparison);
          }
       }
@@ -734,14 +734,14 @@ public final class LyreDSL {
                                 o -> {
                                    HString targ = toHString(expression.applyAsObject(o));
                                    int pos = (int) relative_position.applyAsDouble(toHString(o));
-                                   if(pos == 0) {
+                                   if (pos == 0) {
                                       return targ;
-                                   } else if(pos > 0) {
-                                      for(int i = 0; i < pos; i++) {
+                                   } else if (pos > 0) {
+                                      for (int i = 0; i < pos; i++) {
                                          targ = targ.next(Types.TOKEN);
                                       }
                                    } else {
-                                      for(int i = 0; i < Math.abs(pos); i++) {
+                                      for (int i = 0; i < Math.abs(pos); i++) {
                                          targ = targ.previous(Types.TOKEN);
                                       }
                                    }
@@ -783,7 +783,8 @@ public final class LyreDSL {
    public static LyreExpression count(@NonNull LyreExpression expression, @NonNull LyreExpression valueCalculator) {
       Validation.checkArgument(valueCalculator.isInstance(STRING),
                                "Illegal Expression: valueCalculater only accepts a STRING representing the ValueCalculator to use, but '"
-                                     + valueCalculator + "' was provided which is of type " + valueCalculator.getType());
+                                     + valueCalculator + "' was provided which is of type " + valueCalculator
+                                     .getType());
       return count(expression, ValueCalculator.valueOf(valueCalculator.apply(null)));
    }
 
@@ -878,21 +879,21 @@ public final class LyreDSL {
                                      + expression + "' was provided which is of type " + expression.getType());
       return new LyreExpression(formatMethod(String.format("@%s%s",
                                                            direction == OUTGOING
-                                                           ? ">"
-                                                           : "<",
+                                                                 ? ">"
+                                                                 : "<",
                                                            Strings.isNullOrBlank(relation)
-                                                           ? ""
-                                                           : "{" + relation + "}"),
+                                                                 ? ""
+                                                                 : "{" + relation + "}"),
                                              expression),
                                 HSTRING, o -> process(true, expression.applyAsObject(o), a -> {
          HString h = toHString(a);
-         if(direction == OUTGOING) {
-            if(Strings.isNullOrBlank(relation) || h.dependencyIsA(relation)) {
+         if (direction == OUTGOING) {
+            if (Strings.isNullOrBlank(relation) || h.dependencyIsA(relation)) {
                return h.dependency().v2;
             }
             return null;
          } else {
-            if(Strings.isNullOrBlank(relation)) {
+            if (Strings.isNullOrBlank(relation)) {
                return h.children();
             }
             return h.children(relation);
@@ -953,7 +954,7 @@ public final class LyreDSL {
                                 PREDICATE,
                                 o -> processPred(expression.applyAsObject(o),
                                                  a -> {
-                                                    if(a instanceof List) {
+                                                    if (a instanceof List) {
                                                        return Cast.<List>as(a).size() > 0;
                                                     }
                                                     return Optional.ofNullable(a)
@@ -1007,7 +1008,7 @@ public final class LyreDSL {
                                         @NonNull ValueCalculator calculator,
                                         @NonNull LyreExpression expression) {
       StringBuilder name = new StringBuilder();
-      switch(calculator) {
+      switch (calculator) {
          case Binary:
             name.append("binary");
             break;
@@ -1017,7 +1018,7 @@ public final class LyreDSL {
          case Frequency:
             name.append("frequency");
       }
-      if(Strings.isNotNullOrBlank(prefix)) {
+      if (Strings.isNotNullOrBlank(prefix)) {
          name.append("{'").append(prefix).append("'}");
       }
       return new LyreExpression(formatMethod(name.toString(), expression),
@@ -1043,22 +1044,24 @@ public final class LyreDSL {
    public static LyreExpression filter(@NonNull LyreExpression list, @NonNull LyreExpression predicate) {
       return new LyreExpression(formatMethod("filter", list, predicate),
                                 list.getType(),
-                                obj -> list.applyAsList(obj).stream().filter(predicate::testObject).collect(
-                                      Collectors.toList()));
+                                obj -> list.applyAsList(obj)
+                                           .stream()
+                                           .filter(predicate::testObject)
+                                           .collect(Collectors.toList()));
    }
 
    static Object filter(Object o, SerializablePredicate<Object> function) {
-      if(o instanceof Collection) {
+      if (o instanceof Collection) {
          return postProcess(Cast.<Collection<?>>as(o)
                                   .stream()
                                   .map(o2 -> filter(o2, function))
                                   .filter(Objects::nonNull)
                                   .collect(Collectors.toList())
-                           );
+         );
       }
       return function.test(o)
-             ? o
-             : null;
+            ? o
+            : null;
    }
 
    /**
@@ -1095,8 +1098,8 @@ public final class LyreDSL {
 
    private static List<Object> flatten(Collection<Object> list) {
       List<Object> output = new ArrayList<>();
-      for(Object o : list) {
-         if(o instanceof Collection) {
+      for (Object o : list) {
+         if (o instanceof Collection) {
             output.addAll(flatten(Cast.<Collection<Object>>as(o)));
          } else {
             output.add(o);
@@ -1106,7 +1109,7 @@ public final class LyreDSL {
    }
 
    private static String formatMethod(String methodName, LyreExpression... arguments) {
-      if(arguments == null || arguments.length < 1 || (arguments.length == 1 && arguments[0] == $_)) {
+      if (arguments == null || arguments.length < 1 || (arguments.length == 1 && arguments[0] == $_)) {
          return methodName;
       }
       return String.format("%s(%s)", methodName, Stream.of(arguments)
@@ -1206,7 +1209,7 @@ public final class LyreDSL {
                                 o -> {
                                    List<?> list = listExpression.applyAsList(o);
                                    int ei = (int) index.applyAsDouble(toHString(o));
-                                   if(ei < 0) {
+                                   if (ei < 0) {
                                       ei = Math.max(list.size() + ei, 0);
                                    }
                                    return Iterables.get(list, ei).orElse(null);
@@ -1305,7 +1308,7 @@ public final class LyreDSL {
                                 obj -> {
                                    HString bucket = toHString(container.applyAsObject(obj));
                                    final SerializablePredicate<HString> effective;
-                                   if(expression.getType().isInstance(PREDICATE)) {
+                                   if (expression.getType().isInstance(PREDICATE)) {
                                       effective = expression;
                                    } else {
                                       effective = v -> expression.applyAsObject(v) != null;
@@ -1356,8 +1359,8 @@ public final class LyreDSL {
       return new LyreExpression(formatMethod("if", condition, whenTrue, whenFalse),
                                 LyreExpressionType.determineCommonType(Arrays.asList(whenFalse, whenTrue)),
                                 o -> condition.testObject(o)
-                                     ? whenTrue.applyAsObject(o)
-                                     : whenFalse.applyAsObject(o));
+                                      ? whenTrue.applyAsObject(o)
+                                      : whenFalse.applyAsObject(o));
    }
 
    /**
@@ -1379,19 +1382,19 @@ public final class LyreDSL {
                                 o -> {
                                    Object bucket = container.applyAsObject(o);
                                    Object searchingFor = object.applyAsObject(o);
-                                   if(bucket == null || searchingFor == null) {
+                                   if (bucket == null || searchingFor == null) {
                                       return false;
                                    }
-                                   if(bucket instanceof WordList) {
+                                   if (bucket instanceof WordList) {
                                       WordList wordList = Cast.as(bucket);
                                       return wordList.contains(searchingFor.toString());
                                    }
-                                   if(bucket instanceof Collection) {
+                                   if (bucket instanceof Collection) {
                                       Collection<?> c = Cast.as(bucket);
-                                      if(c.isEmpty()) {
+                                      if (c.isEmpty()) {
                                          return false;
                                       }
-                                      if(searchingFor instanceof HString) {
+                                      if (searchingFor instanceof HString) {
                                          return c.contains(searchingFor) || c.contains(searchingFor.toString());
                                       }
                                       return c.contains(searchingFor);
@@ -1496,18 +1499,18 @@ public final class LyreDSL {
                                    final AnnotationType aType = Types.annotation(type.apply(toHString(o)));
                                    final LyreExpression token = annotation(Types.TOKEN);
                                    return process(false, andPipe(expression, token).applyAsObject(o), o2 -> {
-                                      if(o2 == null) {
+                                      if (o2 == null) {
                                          return "O";
                                       }
                                       final HString h = toHString(o2);
-                                      if(h.isEmpty() || !h.hasAnnotation(aType)) {
+                                      if (h.isEmpty() || !h.hasAnnotation(aType)) {
                                          return "O";
                                       }
                                       final Annotation a = Iterables.getFirst(h.annotations(aType), null);
                                       String tag = a.hasTag()
-                                                   ? a.getTag().name()
-                                                   : null;
-                                      if(h.start() == a.start()) {
+                                            ? a.getTag().name()
+                                            : null;
+                                      if (h.start() == a.start()) {
                                          return "B-" + tag;
                                       }
                                       return "I-" + tag;
@@ -1631,16 +1634,16 @@ public final class LyreDSL {
    }
 
    private static boolean isNullOrEmpty(Object o) {
-      if(o == null) {
+      if (o == null) {
          return true;
       }
-      if(o instanceof Collection) {
+      if (o instanceof Collection) {
          return Cast.<Collection<?>>as(o).isEmpty();
       }
-      if(o instanceof CharSequence) {
+      if (o instanceof CharSequence) {
          return Strings.isNullOrBlank(o.toString());
       }
-      if(o instanceof Number) {
+      if (o instanceof Number) {
          return Double.isFinite(Cast.<Number>as(o).doubleValue());
       }
       return false;
@@ -1837,10 +1840,10 @@ public final class LyreDSL {
                                 NUMERIC,
                                 o -> {
                                    Object a = expression.applyAsObject(o);
-                                   if(a == null) {
+                                   if (a == null) {
                                       return 0.0;
                                    }
-                                   if(a instanceof Collection) {
+                                   if (a instanceof Collection) {
                                       return (double) Cast.<Collection>as(a).size();
                                    }
                                    return (double) a.toString().length();
@@ -1888,10 +1891,10 @@ public final class LyreDSL {
                                    Object out = process(false, o, h -> elements.stream()
                                                                                .map(e -> e.applyAsObject(h))
                                                                                .collect(Collectors.toList()));
-                                   if(out == null) {
+                                   if (out == null) {
                                       return Collections.emptyList();
                                    }
-                                   if(!(out instanceof Collection)) {
+                                   if (!(out instanceof Collection)) {
                                       return Collections.singletonList(out);
                                    }
                                    return out;
@@ -1941,10 +1944,10 @@ public final class LyreDSL {
                                 NUMERIC,
                                 o -> {
                                    Object a = expression.applyAsObject(o);
-                                   if(a == null) {
+                                   if (a == null) {
                                       return 0.0;
                                    }
-                                   if(a instanceof Collection) {
+                                   if (a instanceof Collection) {
                                       return (double) Cast.<Collection>as(a).size();
                                    }
                                    return 1;
@@ -1986,7 +1989,7 @@ public final class LyreDSL {
                                 PREDICATE,
                                 o -> {
                                    HString hString = toHString(o).next(Types.TOKEN);
-                                   if(condition.test(hString)) {
+                                   if (condition.test(hString)) {
                                       return expression.applyAsObject(o);
                                    }
                                    return null;
@@ -2009,7 +2012,7 @@ public final class LyreDSL {
                                 PREDICATE,
                                 o -> {
                                    HString hString = toHString(o).previous(Types.TOKEN);
-                                   if(condition.test(hString)) {
+                                   if (condition.test(hString)) {
                                       return expression.applyAsObject(o);
                                    }
                                    return null;
@@ -2075,13 +2078,14 @@ public final class LyreDSL {
                                      + minimumLength + "' was provided which is of type " + minimumLength.getType());
       Validation.checkArgument(paddingCharacter.isInstance(HSTRING, STRING, OBJECT),
                                "Illegal Expression: lpad paddingCharacter only accepts a HSTRING, STRING, or OBJECT, but '"
-                                     + paddingCharacter + "' was provided which is of type " + paddingCharacter.getType());
+                                     + paddingCharacter + "' was provided which is of type " + paddingCharacter
+                                     .getType());
       return new LyreExpression(formatMethod("lpad", expression, minimumLength, paddingCharacter),
                                 STRING,
                                 o -> {
                                    int amt = (int) minimumLength.applyAsDouble(o);
                                    String pad = paddingCharacter.applyAsString(o);
-                                   if(Strings.isNullOrBlank(pad) || pad.length() > 1) {
+                                   if (Strings.isNullOrBlank(pad) || pad.length() > 1) {
                                       throw new IllegalArgumentException("Invalid padding character: " + pad);
                                    }
                                    return process(true,
@@ -2197,10 +2201,10 @@ public final class LyreDSL {
                                 o -> list.applyAsList(o)
                                          .stream()
                                          .max(Comparator.comparingDouble(h -> (h instanceof HString)
-                                                                              ? Cast.<HString>as(h)
-                                                                                    .attribute(Types.CONFIDENCE, 0.0)
-                                                                              : 0.0
-                                                                        ))
+                                               ? Cast.<HString>as(h)
+                                               .attribute(Types.CONFIDENCE, 0.0)
+                                               : 0.0
+                                         ))
                                          .orElse(null));
    }
 
@@ -2255,7 +2259,7 @@ public final class LyreDSL {
                                 PREDICATE,
                                 o -> {
                                    HString hString = toHString(o).next(Types.TOKEN);
-                                   if(!condition.test(hString)) {
+                                   if (!condition.test(hString)) {
                                       return expression.applyAsObject(o);
                                    }
                                    return null;
@@ -2279,7 +2283,7 @@ public final class LyreDSL {
                                 o -> {
                                    HString $ = expression.applyAsHString(toHString(o));
                                    HString hString = $.previous(Types.TOKEN);
-                                   if(!condition.test(hString)) {
+                                   if (!condition.test(hString)) {
                                       return $;
                                    }
                                    return null;
@@ -2338,7 +2342,7 @@ public final class LyreDSL {
                                 LyreExpressionType.determineCommonType(Arrays.asList(expression, defaultValue)),
                                 o -> {
                                    Object o1 = expression.applyAsObject(o);
-                                   if(o1 == null) {
+                                   if (o1 == null) {
                                       return defaultValue.applyAsObject(o);
                                    }
                                    return o1;
@@ -2394,9 +2398,9 @@ public final class LyreDSL {
                                       .collect(Collectors.joining(" |> ")),
                                 LyreExpressionType.determineCommonType(Arrays.asList(expressions)),
                                 o -> {
-                                   for(LyreExpression expression : expressions) {
+                                   for (LyreExpression expression : expressions) {
                                       Object out = expression.applyAsObject(o);
-                                      if(!isNullOrEmpty(out)) {
+                                      if (!isNullOrEmpty(out)) {
                                          return out;
                                       }
                                    }
@@ -2413,7 +2417,7 @@ public final class LyreDSL {
    public static LyreExpression plus(@NonNull LyreExpression... expressions) {
       Validation.checkArgument(expressions.length > 1, "Must concatenate two or more expressions");
       LyreExpression toReturn = plus(expressions[0], expressions[1]);
-      for(int i = 2; i < expressions.length; i++) {
+      for (int i = 2; i < expressions.length; i++) {
          toReturn = plus(toReturn, expressions[i]);
       }
       return toReturn;
@@ -2432,28 +2436,28 @@ public final class LyreDSL {
                                 o -> {
                                    Object l = left.applyAsObject(o);
                                    Object r = right.applyAsObject(o);
-                                   if(l instanceof Collection<?>) {
+                                   if (l instanceof Collection<?>) {
                                       List<?> list = new ArrayList<>(Cast.as(l));
-                                      if(r instanceof Collection<?>) {
+                                      if (r instanceof Collection<?>) {
                                          list.addAll(Cast.as(r));
-                                      } else if(r != null) {
+                                      } else if (r != null) {
                                          list.add(Cast.as(r));
                                       }
                                       return list;
                                    }
-                                   if(r instanceof Collection && l == null) {
+                                   if (r instanceof Collection && l == null) {
                                       return r;
                                    }
-                                   if(l instanceof HString && r instanceof HString) {
+                                   if (l instanceof HString && r instanceof HString) {
                                       return toHString(l).union(toHString(r));
                                    }
-                                   if(l instanceof Number && r instanceof Number) {
+                                   if (l instanceof Number && r instanceof Number) {
                                       return Cast.<Number>as(l).doubleValue() + Cast.<Number>as(r).doubleValue();
-                                   } else if(l == null && r == null) {
+                                   } else if (l == null && r == null) {
                                       return Collections.emptyList();
-                                   } else if(l == null) {
+                                   } else if (l == null) {
                                       return r;
-                                   } else if(r == null) {
+                                   } else if (r == null) {
                                       return l;
                                    }
                                    return l.toString() + r.toString();
@@ -2480,17 +2484,17 @@ public final class LyreDSL {
    }
 
    private static Object postProcess(Object o) {
-      if(o instanceof Collection) {
+      if (o instanceof Collection) {
          Collection<?> c = Cast.<Collection<?>>as(o)
                .stream()
                .filter(Objects::nonNull)
                .filter(h -> !(h instanceof HString) || !Cast.<HString>as(h).isEmpty())
                .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(cs.toString()))
                .collect(Collectors.toList());
-         if(c.isEmpty()) {
+         if (c.isEmpty()) {
             return null;
          }
-         if(c.size() == 1) {
+         if (c.size() == 1) {
             return c.iterator().next();
          }
       }
@@ -2498,10 +2502,10 @@ public final class LyreDSL {
    }
 
    private static Object process(boolean ignoreNulls, Object o, SerializableFunction<Object, ?> function) {
-      if(ignoreNulls && o == null) {
+      if (ignoreNulls && o == null) {
          return null;
       }
-      if(o instanceof Collection) {
+      if (o instanceof Collection) {
          return postProcess(Cast.<Collection<?>>as(o)
                                   .stream()
                                   .map(v -> postProcess(function.apply(v)))
@@ -2513,7 +2517,7 @@ public final class LyreDSL {
    }
 
    private static Object processPred(Object o, SerializablePredicate<Object> function) {
-      if(o instanceof Collection) {
+      if (o instanceof Collection) {
          return postProcess(Cast.<Collection<?>>as(o)
                                   .stream()
                                   .filter(Objects::nonNull)
@@ -2526,18 +2530,18 @@ public final class LyreDSL {
    }
 
    private static List<?> recursiveListApply(Collection<?> c, Function<Object, ?> operator) {
-      if(c == null) {
+      if (c == null) {
          return null;
       }
       List<Object> output = new ArrayList<>();
-      for(Object o : c) {
+      for (Object o : c) {
          Object toAdd;
-         if(o instanceof Collection) {
+         if (o instanceof Collection) {
             toAdd = postProcess(recursiveListApply(Cast.as(o), operator));
          } else {
             toAdd = postProcess(operator.apply(o));
          }
-         if(toAdd != null) {
+         if (toAdd != null) {
             output.add(toAdd);
          }
       }
@@ -2586,17 +2590,17 @@ public final class LyreDSL {
    public static LyreExpression regex(@NonNull String pattern, boolean matchFullSpan) {
       String str = "/" + FLAGS.matcher(pattern).replaceFirst("") + "/"
             + (Re.next(FLAGS.matcher(pattern)).contains("i")
-               ? "i"
-               : "")
+            ? "i"
+            : "")
             + (matchFullSpan
-               ? "g"
-               : "");
+            ? "g"
+            : "");
       final Pattern regex = Pattern.compile(pattern);
       return new LyreExpression(str,
                                 PREDICATE,
                                 o -> {
                                    HString hString = toHString(o);
-                                   if(matchFullSpan) {
+                                   if (matchFullSpan) {
                                       return regex.matcher(hString).matches();
                                    }
                                    return regex.matcher(hString).find();
@@ -2681,23 +2685,23 @@ public final class LyreDSL {
                                      + expression + "' was provided which is of type " + expression.getType());
       return new LyreExpression(formatMethod(String.format("@%s%s%s",
                                                            direction == OUTGOING
-                                                           ? ">"
-                                                           : "<",
+                                                                 ? ">"
+                                                                 : "<",
                                                            type.name(),
                                                            Strings.isNullOrBlank(relation)
-                                                           ? ""
-                                                           : "{" + relation + "}"),
+                                                                 ? ""
+                                                                 : "{" + relation + "}"),
                                              expression),
                                 HSTRING,
                                 o -> process(true, expression.applyAsObject(o), a -> {
                                    HString h = toHString(a);
-                                   if(direction == OUTGOING) {
-                                      if(Strings.isNullOrBlank(relation)) {
+                                   if (direction == OUTGOING) {
+                                      if (Strings.isNullOrBlank(relation)) {
                                          return h.outgoing(type);
                                       }
                                       return h.outgoing(type, relation);
                                    } else {
-                                      if(Strings.isNullOrBlank(relation)) {
+                                      if (Strings.isNullOrBlank(relation)) {
                                          return h.incoming(type);
                                       }
                                       return h.incoming(type, relation);
@@ -2749,13 +2753,14 @@ public final class LyreDSL {
                                      + minimumLength + "' was provided which is of type " + minimumLength.getType());
       Validation.checkArgument(paddingCharacter.isInstance(HSTRING, STRING, OBJECT),
                                "Illegal Expression: rpad paddingCharacter only accepts a HSTRING, STRING, or OBJECT, but '"
-                                     + paddingCharacter + "' was provided which is of type " + paddingCharacter.getType());
+                                     + paddingCharacter + "' was provided which is of type " + paddingCharacter
+                                     .getType());
       return new LyreExpression(formatMethod("rpad", expression, minimumLength, paddingCharacter),
                                 STRING,
                                 o -> {
                                    int amt = (int) minimumLength.applyAsDouble(o);
                                    String pad = paddingCharacter.applyAsString(o);
-                                   if(Strings.isNullOrBlank(pad) || pad.length() > 1) {
+                                   if (Strings.isNullOrBlank(pad) || pad.length() > 1) {
                                       throw new IllegalArgumentException("Invalid padding character: " + pad);
                                    }
                                    return process(true,
@@ -2809,17 +2814,17 @@ public final class LyreDSL {
       String str = "/" + FLAGS.matcher(pattern).replaceFirst("") + "/"
             + replacement + "/"
             + (Re.next(FLAGS.matcher(pattern)).contains("i")
-               ? "i"
-               : "")
+            ? "i"
+            : "")
             + (replaceAll
-               ? "g"
-               : "");
+            ? "g"
+            : "");
       final Pattern regex = Pattern.compile(pattern);
       return new LyreExpression(str,
                                 STRING,
                                 o -> {
                                    HString hString = toHString(o);
-                                   if(replaceAll) {
+                                   if (replaceAll) {
                                       return regex.matcher(hString).replaceAll(replacement);
                                    }
                                    return regex.matcher(hString).replaceFirst(replacement);
@@ -2858,36 +2863,36 @@ public final class LyreDSL {
                                 expression.getType(),
                                 obj -> {
                                    Object o = expression.applyAsObject(obj);
-                                   if(o == null) {
+                                   if (o == null) {
                                       return null;
                                    }
-                                   if(o instanceof Collection) {
+                                   if (o instanceof Collection) {
                                       List<?> list = Lists.asArrayList(Cast.<Iterable<?>>as(o));
-                                      if(list.isEmpty()) {
+                                      if (list.isEmpty()) {
                                          return list;
                                       }
                                       int s = start >= 0
-                                              ? start
-                                              : Math.max(0, list.size() + start);
+                                            ? start
+                                            : Math.max(0, list.size() + start);
                                       int e = Math.min(end > 0
-                                                       ? end
-                                                       : Math.max(0, list.size() + end),
+                                                             ? end
+                                                             : Math.max(0, list.size() + end),
                                                        list.size());
-                                      if(e - s == 1) {
+                                      if (e - s == 1) {
                                          return list.get(s);
                                       }
                                       return list.subList(s, e);
                                    }
                                    int s = start >= 0
-                                           ? start
-                                           : Math.max(0, o.toString().length() + start);
+                                         ? start
+                                         : Math.max(0, o.toString().length() + start);
                                    int e = end > 0
-                                           ? Math.min(end, o.toString().length())
-                                           : Math.max(0, o.toString().length() + end);
-                                   if(o instanceof HString) {
+                                         ? Math.min(end, o.toString().length())
+                                         : Math.max(0, o.toString().length() + end);
+                                   if (o instanceof HString) {
                                       return Cast.<HString>as(o).substring(s, e);
                                    }
-                                   if(s >= o.toString().length()) {
+                                   if (s >= o.toString().length()) {
                                       return null;
                                    }
                                    return o.toString().substring(s, e);
@@ -3001,12 +3006,12 @@ public final class LyreDSL {
                                              expression.applyAsObject(o),
                                              h -> {
                                                 Annotation annotation = toHString(h).asAnnotation();
-                                                if(annotation.tagIsA(value)) {
+                                                if (annotation.tagIsA(value)) {
                                                    return true;
                                                 }
                                                 try {
                                                    return annotation.pos().isInstance(PartOfSpeech.valueOf(value));
-                                                } catch(IllegalArgumentException e) {
+                                                } catch (IllegalArgumentException e) {
                                                    return false;
                                                 }
                                              }));
@@ -3026,7 +3031,7 @@ public final class LyreDSL {
       Validation.checkArgument(expression.isInstance(HSTRING, STRING),
                                "Illegal Expression: tlen only accepts a HSTRING or STRING, but '"
                                      + expression + "' was provided which is of type " + expression.getType());
-      return new LyreExpression("tokenLen", NUMERIC, o -> toHString(expression.applyAsObject(o)).tokenLength());
+      return new LyreExpression("tlen", NUMERIC, o -> toHString(expression.applyAsObject(o)).tokenLength());
    }
 
    /**
@@ -3108,7 +3113,7 @@ public final class LyreDSL {
       return new LyreExpression(formatMethod("when", condition, expression),
                                 expression.getType(),
                                 o -> {
-                                   if(condition.testObject(o)) {
+                                   if (condition.testObject(o)) {
                                       return expression.applyAsObject(o);
                                    }
                                    return null;

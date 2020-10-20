@@ -39,30 +39,12 @@ public final class Json {
       MAPPER.addMixIn(ParameterizedType.class, Mixins.TypeMixin.class);
    }
 
+   private Json() {
+      throw new IllegalAccessError();
+   }
+
    public static JsonEntry asJsonEntry(Object o) {
       return JsonEntry.from(o);
-   }
-
-   /**
-    * Creates a <code>JsonReader</code> to read from the given resource.
-    *
-    * @param resource the resource to read
-    * @return the json reader
-    * @throws IOException Something went wrong creating the reader
-    */
-   public static JsonReader createReader(@NonNull Resource resource) throws IOException {
-      return null;// new JsonReader(resource);
-   }
-
-   /**
-    * Creates a <code>JsonWriter</code> to write to the given resource.
-    *
-    * @param resource the resource
-    * @return the json writer
-    * @throws IOException something went wrong creating the writer
-    */
-   public static JsonWriter createWriter(@NonNull Resource resource) throws IOException {
-      return null;// new JsonWriter(resource);
    }
 
    /**
@@ -74,13 +56,13 @@ public final class Json {
     * @throws IOException Something went wrong writing to the given resource
     */
    public static Resource dump(Object object, @NonNull Resource resource) throws IOException {
-      try(Writer writer = resource.writer()) {
-         if(object instanceof JsonEntry) {
+      try (Writer writer = resource.writer()) {
+         if (object instanceof JsonEntry) {
             MAPPER.writeValue(writer, ((JsonEntry) object).getElement());
          } else {
             MAPPER.writeValue(writer, object);
          }
-      } catch(JsonProcessingException e) {
+      } catch (JsonProcessingException e) {
          throw new RuntimeException(e);
       }
       return resource;
@@ -95,13 +77,13 @@ public final class Json {
     * @throws IOException Something went wrong writing to the given resource
     */
    public static Resource dumpPretty(Object object, @NonNull Resource resource) throws IOException {
-      try(Writer writer = resource.writer()) {
-         if(object instanceof JsonEntry) {
+      try (Writer writer = resource.writer()) {
+         if (object instanceof JsonEntry) {
             MAPPER.writerWithDefaultPrettyPrinter().writeValue(writer, ((JsonEntry) object).getElement());
          } else {
             MAPPER.writerWithDefaultPrettyPrinter().writeValue(writer, object);
          }
-      } catch(JsonProcessingException e) {
+      } catch (JsonProcessingException e) {
          throw new RuntimeException(e);
       }
       return resource;
@@ -115,11 +97,11 @@ public final class Json {
     */
    public static String dumps(Object object) {
       try {
-         if(object instanceof JsonEntry) {
+         if (object instanceof JsonEntry) {
             return MAPPER.writeValueAsString(((JsonEntry) object).getElement());
          }
          return MAPPER.writeValueAsString(object);
-      } catch(JsonProcessingException e) {
+      } catch (JsonProcessingException e) {
          throw new RuntimeException(e);
       }
    }
@@ -132,11 +114,11 @@ public final class Json {
     */
    public static String dumpsPretty(Object object) {
       try {
-         if(object instanceof JsonEntry) {
+         if (object instanceof JsonEntry) {
             return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(((JsonEntry) object).getElement());
          }
          return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(object);
-      } catch(JsonProcessingException e) {
+      } catch (JsonProcessingException e) {
          throw new RuntimeException(e);
       }
    }
@@ -163,18 +145,18 @@ public final class Json {
     */
    public static <T> T parse(@NonNull String json, @NonNull Type type) throws IOException {
       try {
-         if(type instanceof ParameterizedType) {
+         if (type instanceof ParameterizedType) {
             ParameterizedType pt = Cast.as(type);
             Class<?> baseClass = TypeUtils.asClass(pt.getRawType());
             Class<?>[] params = new Class[pt.getActualTypeArguments().length];
-            for(int i = 0; i < params.length; i++) {
+            for (int i = 0; i < params.length; i++) {
                params[i] = TypeUtils.asClass(pt.getActualTypeArguments()[i]);
             }
             return MAPPER.readValue(json, TypeFactory.defaultInstance()
                                                      .constructParametricType(baseClass, params));
          }
          return MAPPER.readValue(json, TypeUtils.asClass(type));
-      } catch(IOException e) {
+      } catch (IOException e) {
          throw new RuntimeException(e);
       }
    }
@@ -187,7 +169,7 @@ public final class Json {
     * @throws IOException Something went wrong parsing the resource
     */
    public static JsonEntry parse(@NonNull Resource json) throws IOException {
-      try(Reader reader = json.reader()) {
+      try (Reader reader = json.reader()) {
          return new JsonEntry(MAPPER.readTree(reader));
       }
    }
@@ -252,20 +234,16 @@ public final class Json {
    }
 
    public static JavaType typeToJavaType(Type type) {
-      if(type instanceof ParameterizedType) {
+      if (type instanceof ParameterizedType) {
          ParameterizedType pt = Cast.as(type);
          Class<?> baseClass = TypeUtils.asClass(pt.getRawType());
          Class<?>[] params = new Class[pt.getActualTypeArguments().length];
-         for(int i = 0; i < params.length; i++) {
+         for (int i = 0; i < params.length; i++) {
             params[i] = TypeUtils.asClass(pt.getActualTypeArguments()[i]);
          }
          return TypeFactory.defaultInstance().constructParametricType(baseClass, params);
       }
       return TypeFactory.defaultInstance().constructType(type);
-   }
-
-   private Json() {
-      throw new IllegalAccessError();
    }
 
 }//END OF Json

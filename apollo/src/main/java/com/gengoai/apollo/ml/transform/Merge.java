@@ -74,15 +74,15 @@ public class Merge implements Transform {
    }
 
    private void assertCanMerge(List<Observation> obs) {
-      if(obs.stream().anyMatch(Sequence.class::isInstance)) {
-         if(!obs.stream().allMatch(Sequence.class::isInstance)) {
+      if (obs.stream().anyMatch(Sequence.class::isInstance)) {
+         if (!obs.stream().allMatch(Sequence.class::isInstance)) {
             throw new IllegalStateException("Cannot merge non-sequences with sequences");
          }
-      } else if(obs.stream().anyMatch(NDArray.class::isInstance)) {
-         if(!obs.stream().allMatch(NDArray.class::isInstance)) {
+      } else if (obs.stream().anyMatch(NDArray.class::isInstance)) {
+         if (!obs.stream().allMatch(NDArray.class::isInstance)) {
             throw new IllegalStateException("Cannot merge non-NDArray with NDArray");
          }
-         if(obs.stream().map(o -> o.asNDArray().shape()).distinct().count() > 1) {
+         if (obs.stream().map(o -> o.asNDArray().shape()).distinct().count() > 1) {
             throw new IllegalStateException("Cannot merge NDArray of different shapes");
          }
       }
@@ -116,15 +116,15 @@ public class Merge implements Transform {
                                                               .filter(Objects::nonNull)
                                                               .findFirst()
                                                               .orElse(null));
-      if(!keepInputs) {
-         for(String source : inputs) {
+      if (!keepInputs) {
+         for (String source : inputs) {
             data.removeMetadata(source);
          }
       }
       data.updateMetadata(output, m -> {
          m.setEncoder(null);
          m.setDimension(-1);
-         if(!Sequence.class.isAssignableFrom(type) && !NDArray.class.isAssignableFrom(type)) {
+         if (!Sequence.class.isAssignableFrom(type) && !NDArray.class.isAssignableFrom(type)) {
             m.setType(VariableCollection.class);
          } else {
             m.setType(type);
@@ -136,27 +136,27 @@ public class Merge implements Transform {
    @Override
    public Datum transform(@NonNull Datum datum) {
       List<Observation> observations = new ArrayList<>();
-      for(String input : inputs) {
+      for (String input : inputs) {
          Observation o = datum.get(input);
-         if(prependSourceName) {
+         if (prependSourceName) {
             o = o.copy();
             o.updateVariables(v -> v.addSourceName(input));
          }
          observations.add(o);
       }
-      if(observations.isEmpty()) {
+      if (observations.isEmpty()) {
          return datum;
       }
       assertCanMerge(observations);
       Observation out;
-      if(observations.get(0).isNDArray()) {
+      if (observations.get(0).isNDArray()) {
          out = VectorCompositions.Sum.compose(Cast.cast(observations));
-      } else if(observations.get(0).isSequence()) {
+      } else if (observations.get(0).isSequence()) {
          out = Sequence.merge(Cast.cast(observations), nameSpace);
       } else {
          out = VariableCollection.mergeVariableSpace(observations.stream(), nameSpace);
       }
-      if(!keepInputs) {
+      if (!keepInputs) {
          inputs.forEach(datum::remove);
       }
       datum.put(output, out);

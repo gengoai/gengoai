@@ -45,6 +45,14 @@ public class IndexEncoder implements Encoder {
    @JsonProperty("unknown")
    private String unknownName;
 
+   public static IndexEncoder iobLabelEncoder(){
+      return new IndexEncoder("O");
+   }
+
+   public static IndexEncoder indexEncoder(String unknownName){
+      return new IndexEncoder(unknownName);
+   }
+
    /**
     * Instantiates a new IndexEncoder
     */

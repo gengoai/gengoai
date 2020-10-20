@@ -147,7 +147,7 @@ public final class ParameterDef<T> implements Serializable {
    void checkType(Class<?> type) {
       if (!this.type.isAssignableFrom(type)) {
          throw new IllegalArgumentException(
-            "Invalid type: " + type.getSimpleName() + ", expecting " + this.type.getSimpleName()
+               "Invalid type: " + type.getSimpleName() + ", expecting " + this.type.getSimpleName()
          );
       }
    }
@@ -163,7 +163,7 @@ public final class ParameterDef<T> implements Serializable {
       }
       if (!type.isInstance(value)) {
          throw new IllegalArgumentException(
-            "Invalid value: " + value + ", expecting " + type.getSimpleName()
+               "Invalid value: " + value + ", expecting " + type.getSimpleName()
          );
       }
    }

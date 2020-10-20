@@ -18,13 +18,12 @@
      ~ specific language governing permissions and limitations
      ~ under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.gengoai</groupId>
-    <artifactId>gengoai-pom</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <artifactId>gengoai</artifactId>
+    <version>1.1</version>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Parent POM for the GengoAI Mono repo.</description>
@@ -36,10 +35,10 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git@github.com:gengoai/mono-repo.git</connection>
-        <developerConnection>scm:git:git@github.com:gengoai/mono-repo.git</developerConnection>
-        <url>git@github.com:gengoai/mono-repo.git</url>
-        <tag>HEAD</tag>
+        <connection>scm:git:git@github.com:gengoai/gengoai.git</connection>
+        <developerConnection>scm:git:git@github.com:gengoai/gengoai.git</developerConnection>
+        <url>git@github.com:gengoai/gengoai.git</url>
+        <tag>gengoai-1.1</tag>
     </scm>
 
     <developers>
@@ -68,6 +67,7 @@
         <module>hermes-examples</module>
         <module>hermes-tools</module>
         <module>hermes-wordnet</module>
+        <module>installer</module>
     </modules>
 
     <dependencyManagement>
@@ -79,32 +79,32 @@
             <dependency>
                 <groupId>com.gengoai</groupId>
                 <artifactId>hermes</artifactId>
-                <version>1.1-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.gengoai</groupId>
                 <artifactId>hermes-tools</artifactId>
-                <version>1.1-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.gengoai</groupId>
                 <artifactId>hermes-wordnet</artifactId>
-                <version>1.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>mango-swing-ui</artifactId>
-                <version>1.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>apollo</artifactId>
-                <version>1.1-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.gengoai</groupId>
                 <artifactId>mango</artifactId>
-                <version>1.1-SNAPSHOT</version>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.gengoai</groupId>
+                <artifactId>mango-swing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.gengoai</groupId>
+                <artifactId>apollo</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
 
@@ -120,19 +120,19 @@
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-mllib_2.12</artifactId>
-                <version>3.0.0-preview2</version>
+                <version>3.0.1</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-core_2.12</artifactId>
-                <version>3.0.0-preview2</version>
+                <version>3.0.1</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql_2.12</artifactId>
-                <version>3.0.0-preview2</version>
+                <version>3.0.1</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -192,6 +192,11 @@
                 <version>1.20</version>
             </dependency>
             <dependency>
+                <groupId>org.tukaani</groupId>
+                <artifactId>xz</artifactId>
+                <version>1.8</version>
+            </dependency>
+            <dependency>
                 <groupId>org.tensorflow</groupId>
                 <artifactId>tensorflow</artifactId>
                 <version>1.15.0</version>
@@ -243,7 +248,7 @@
             </dependency>
 
             <!-- ======================================================================== -->
-            <!-- Compile 3rd Party Dependencies -->
+            <!-- Compile Time 3rd Party Dependencies -->
             <!-- ======================================================================== -->
 
             <dependency>
@@ -256,7 +261,7 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>4.13.1</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -306,6 +311,7 @@
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>3.1.1</version>
                         <configuration>
+                            <additionalparam>-Xdoclint:none</additionalparam>
                             <failOnError>false</failOnError>
                             <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
                         </configuration>

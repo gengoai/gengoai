@@ -19,9 +19,8 @@
 
 package com.gengoai.sql.statement;
 
+import com.gengoai.sql.object.SQLObject;
 import lombok.*;
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLObject;
 
 /**
  * <p>SQL Drop statement for SQL Objects (Table, Index, Trigger, etc)</p>
@@ -29,7 +28,7 @@ import com.gengoai.sql.SQLObject;
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 @ToString
-public class Drop implements SQLUpdateStatement {
+public class Drop implements UpdateStatement {
    private static final long serialVersionUID = 1L;
    @Getter
    private final SQLObject object;
@@ -76,9 +75,5 @@ public class Drop implements SQLUpdateStatement {
       return this;
    }
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.drop(this);
-   }
 
 }//END OF Drop

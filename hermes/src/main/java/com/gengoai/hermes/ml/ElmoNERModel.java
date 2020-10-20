@@ -28,4 +28,9 @@ public class ElmoNERModel extends ElmoSeq2SeqModel {
       super(Types.ML_ENTITY, Types.ENTITY);
    }
 
+   @Override
+   public String getVersion() {
+      return "gengoai_elmo_residual_bilstm_crf_v1.0";
+   }
+
 }//END OF ElmoNERModel

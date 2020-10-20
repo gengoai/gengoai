@@ -19,20 +19,14 @@
 
 package com.gengoai.sql.constraint;
 
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
-import lombok.NonNull;
+import com.gengoai.sql.SQLElement;
 
-public enum ForeignKeyAction implements SQLFormattable {
+public enum ForeignKeyAction implements SQLElement {
    SET_NULL,
    SET_DEFAULT,
    CASCADE,
    RESTRICT,
    NO_ACTION;
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return name().replace('_', ' ');
-   }
 
-}//END OF ForeignKeyActions
+}//END OF ForeignKeyAction

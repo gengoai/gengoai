@@ -30,6 +30,7 @@ import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
+import lombok.Value;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -37,36 +38,18 @@ import java.util.Set;
 
 public final class IOB {
 
+   private IOB() {
+      throw new IllegalAccessError();
+   }
+
    public static void decode(@NonNull HString sentence,
                              @NonNull Sequence<?> result,
                              @NonNull AnnotationType annotationType) {
-      for(int i = 0; i < sentence.tokenLength(); ) {
-         String label = result.get(i).asVariable().getName();
-         double score = result.get(i).asVariable().getValue();
-         if(label.equals("O")) {
-            i++;
-         } else {
-            Annotation start = sentence.tokenAt(i);
-            String type = label.substring(2);
-            double p = score;
-            i++;
-            final String insideType = "I-" + type;
-            while(i < sentence.tokenLength() &&
-                  result.get(i).asVariable().getName().equals(insideType)) {
-               p *= score;
-               i++;
-            }
-            Annotation end = sentence.tokenAt(i - 1);
-            HString span = start.union(end);
-            Annotation annotation = sentence.document()
-                                            .annotationBuilder(annotationType)
-                                            .bounds(span)
-                                            .createAttached();
-            annotation.put(annotationType.getTagAttribute(),
-                           annotationType.getTagAttribute().decode(type));
-            annotation.put(Types.CONFIDENCE, p);
-         }
-      }
+      decoder(annotationType).decode(sentence, result);
+   }
+
+   public static TagDecoder decoder(@NonNull final AnnotationType annotationType) {
+      return new IOBDecoder(annotationType);
    }
 
    public static ObservationExtractor<HString> encoder(@NonNull final AnnotationType annotationType,
@@ -78,8 +61,41 @@ public final class IOB {
       return new IOBEncoder(annotationType, Collections.emptySet());
    }
 
-   private IOB() {
-      throw new IllegalAccessError();
+   @Value
+   private static class IOBDecoder implements TagDecoder {
+      private static final long serialVersionUID = 1L;
+      AnnotationType annotationType;
+
+      @Override
+      public void decode(@NonNull HString sentence, @NonNull Sequence<?> result) {
+         for (int i = 0; i < sentence.tokenLength(); ) {
+            String label = result.get(i).asVariable().getName();
+            double score = result.get(i).asVariable().getValue();
+            if (label.equals("O")) {
+               i++;
+            } else {
+               Annotation start = sentence.tokenAt(i);
+               String type = label.substring(2);
+               double p = score;
+               i++;
+               final String insideType = "I-" + type;
+               while (i < sentence.tokenLength() &&
+                     result.get(i).asVariable().getName().equals(insideType)) {
+                  p *= score;
+                  i++;
+               }
+               Annotation end = sentence.tokenAt(i - 1);
+               HString span = start.union(end);
+               Annotation annotation = sentence.document()
+                                               .annotationBuilder(annotationType)
+                                               .bounds(span)
+                                               .createAttached();
+               annotation.put(annotationType.getTagAttribute(),
+                              annotationType.getTagAttribute().decode(type));
+               annotation.put(Types.CONFIDENCE, p);
+            }
+         }
+      }
    }
 
    private static class IOBEncoder implements ObservationExtractor<HString> {
@@ -95,12 +111,12 @@ public final class IOB {
       @Override
       public Observation extractObservation(@NonNull HString annotation) {
          VariableSequence sequence = new VariableSequence();
-         for(Annotation token : annotation.tokens()) {
+         for (Annotation token : annotation.tokens()) {
             Optional<Annotation> target = token.annotations(annotationType).stream().findFirst();
             String label = target.map(a -> {
                String tag = a.getTag().name();
-               if(Strings.isNotNullOrBlank(tag) && (validTags.isEmpty() || validTags.contains(tag))) {
-                  if(a.start() == token.start()) {
+               if (Strings.isNotNullOrBlank(tag) && (validTags.isEmpty() || validTags.contains(tag))) {
+                  if (a.start() == token.start()) {
                      return "B-" + a.getTag().name();
                   } else {
                      return "I-" + a.getTag().name();

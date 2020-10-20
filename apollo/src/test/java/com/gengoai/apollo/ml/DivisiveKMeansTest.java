@@ -17,7 +17,7 @@ public class DivisiveKMeansTest extends BaseClustererTest {
 
    @Override
    public boolean passes(SilhouetteEvaluation mce) {
-      return mce.getAvgSilhouette() >= 0.70;
+      return mce.getAvgSilhouette() >= 0.60;
    }
 
 }//END OF KMeansTest

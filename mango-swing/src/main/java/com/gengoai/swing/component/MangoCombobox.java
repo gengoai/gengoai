@@ -67,7 +67,6 @@ public class MangoCombobox<E> extends JComboBox<E> {
                //pass
             }
             text += key;
-            System.out.println(text);
             text = text.toLowerCase();
             for(int i = 0; i < getItemCount(); i++) {
                String item = toStringFunction.apply(getItemAt(i));

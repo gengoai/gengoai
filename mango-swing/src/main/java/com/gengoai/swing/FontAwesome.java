@@ -22,6 +22,7 @@ package com.gengoai.swing;
 import com.gengoai.Validation;
 import com.gengoai.io.Resources;
 import lombok.NonNull;
+import lombok.val;
 
 import javax.swing.*;
 import javax.swing.text.JTextComponent;

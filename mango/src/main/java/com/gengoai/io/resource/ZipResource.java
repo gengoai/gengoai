@@ -31,11 +31,11 @@ public class ZipResource extends BaseResource implements ReadOnlyResource {
    public ZipResource(String zipFile, String entry) {
       try {
          this.zipFile = new ZipFile(zipFile.replaceFirst("^file:", ""));
-      } catch(IOException e) {
+      } catch (IOException e) {
          throw new RuntimeException(e);
       }
-      if(Strings.isNotNullOrBlank(entry)) {
-         if(entry.startsWith("/")) {
+      if (Strings.isNotNullOrBlank(entry)) {
+         if (entry.startsWith("/")) {
             entry = entry.substring(1);
          }
          this.entry = this.zipFile.getEntry(entry);
@@ -45,8 +45,8 @@ public class ZipResource extends BaseResource implements ReadOnlyResource {
    @Override
    public String baseName() {
       return entry == null
-             ? Strings.EMPTY
-             : FileUtils.baseName(entry.getName());
+            ? Strings.EMPTY
+            : FileUtils.baseName(entry.getName());
    }
 
    @Override
@@ -55,7 +55,7 @@ public class ZipResource extends BaseResource implements ReadOnlyResource {
    }
 
    private int depth(String s) {
-      if(s.endsWith("/")) {
+      if (s.endsWith("/")) {
          return Strings.count(s, "/") - 1;
       }
       return Strings.count(s, "/");
@@ -64,26 +64,26 @@ public class ZipResource extends BaseResource implements ReadOnlyResource {
    @Override
    public String descriptor() {
       return zipFile.getName() + (entry == null
-                                  ? ""
-                                  : "!" + entry.getName());
+            ? ""
+            : "!" + entry.getName());
    }
 
    @Override
    public boolean exists() {
       try {
-         if(zipFile == null || entry == null) {
+         if (zipFile == null || entry == null) {
             return false;
          }
          createInputStream();
          return true;
-      } catch(IOException | ExceptionInInitializerError e) {
+      } catch (IOException | ExceptionInInitializerError e) {
          return false;
       }
    }
 
    @Override
    public Resource getChild(String relativePath) {
-      if(entry == null) {
+      if (entry == null) {
          return new ZipResource(zipFile.getName(), relativePath);
       }
       return new ZipResource(zipFile.getName(), Strings.appendIfNotPresent(entry.getName(), "/") + relativePath);
@@ -91,16 +91,16 @@ public class ZipResource extends BaseResource implements ReadOnlyResource {
 
    @Override
    public List<Resource> getChildren(Pattern pattern, boolean recursive) {
-      if(entry != null && !entry.isDirectory()) {
+      if (entry != null && !entry.isDirectory()) {
          return Collections.emptyList();
       }
       List<Resource> resources = new ArrayList<>();
       Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
       final int tDepth = depth(entry.getName());
       final String path = entry.getName();
-      while(enumeration.hasMoreElements()) {
+      while (enumeration.hasMoreElements()) {
          final String ze = enumeration.nextElement().getName();
-         if(ze.startsWith(path)
+         if (ze.startsWith(path)
                && ze.length() > path.length()
                && (recursive || depth(ze) == (tDepth + 1))
                && pattern.matcher(ze.substring(path.length() + 1)).matches()) {

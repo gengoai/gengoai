@@ -17,7 +17,7 @@ public class KMeansTest extends BaseClustererTest {
 
    @Override
    public boolean passes(SilhouetteEvaluation mce) {
-      return mce.getAvgSilhouette() >= 0.85;
+      return mce.getAvgSilhouette() >= 0.65;
    }
 
 }//END OF KMeansTest

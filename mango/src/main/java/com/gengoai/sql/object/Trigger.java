@@ -20,8 +20,7 @@
 package com.gengoai.sql.object;
 
 import com.gengoai.sql.SQLElement;
-import com.gengoai.sql.SQLObject;
-import com.gengoai.sql.statement.SQLUpdateStatement;
+import com.gengoai.sql.statement.UpdateStatement;
 import com.gengoai.string.Strings;
 import lombok.*;
 
@@ -36,11 +35,12 @@ import java.io.Serializable;
 @Builder
 @Data
 public class Trigger extends SQLObject {
+   private static final long serialVersionUID = 1L;
    private boolean isTemporary;
    private @NonNull TriggerTime when;
    private @NonNull SQLDMLOperation operation;
    private @NonNull SQLElement table;
-   private @NonNull SQLUpdateStatement updateStatement;
+   private @NonNull UpdateStatement updateStatement;
    private boolean isRowLevelTrigger;
    private SQLElement where;
 
@@ -49,7 +49,7 @@ public class Trigger extends SQLObject {
                    @NonNull TriggerTime when,
                    @NonNull SQLDMLOperation operation,
                    @NonNull SQLElement table,
-                   @NonNull SQLUpdateStatement updateStatement, boolean isRowLevelTrigger, SQLElement where) {
+                   @NonNull UpdateStatement updateStatement, boolean isRowLevelTrigger, SQLElement where) {
       super(name);
       this.isTemporary = isTemporary;
       this.when = when;
@@ -78,13 +78,13 @@ public class Trigger extends SQLObject {
        * @return the trigger
        */
       public Trigger build() {
-         if(Strings.isNullOrBlank(name)) {
+         if (Strings.isNullOrBlank(name)) {
             name = "TRIGGER_" + Strings.randomHexString(10);
          }
-         if(when == null) {
+         if (when == null) {
             when = TriggerTime.BEFORE;
          }
-         if(operation == null) {
+         if (operation == null) {
             operation = SQLDMLOperation.INSERT;
          }
          return new Trigger(name,

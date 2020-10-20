@@ -30,7 +30,7 @@ import lombok.NonNull;
 
 /**
  * <p>
- * A {@link SequenceTagger} for assigning {@link PartOfSpeech} to tokens.
+ * A {@link HStringMLModel} for assigning {@link PartOfSpeech} to tokens.
  * </p>
  *
  * @author David B. Bracewell
@@ -51,7 +51,7 @@ public class POSTagger extends BaseHStringMLModel {
    @Override
    protected void onEstimate(HString sentence, Datum result) {
       Sequence<?> sequence = result.get(getOutput()).asSequence();
-      for(int i = 0; i < sentence.tokenLength(); i++) {
+      for (int i = 0; i < sentence.tokenLength(); i++) {
          Annotation token = sentence.tokenAt(i);
          token.put(Types.PART_OF_SPEECH, PartOfSpeech.valueOf(sequence.get(i).asVariable().getName()));
       }

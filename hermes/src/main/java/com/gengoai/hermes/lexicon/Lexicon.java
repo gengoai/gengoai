@@ -102,7 +102,7 @@ public abstract class Lexicon implements Predicate<HString>, WordList, Extractor
       HString tmp = match.getSpan().document().substring(match.getSpan().start(), match.getSpan().end());
       tmp.put(Types.CONFIDENCE, match.getScore());
       tmp.put(Types.MATCHED_STRING, match.getMatchedString());
-      if(Strings.isNotNullOrBlank(match.getTag())) {
+      if (Strings.isNotNullOrBlank(match.getTag())) {
          tmp.put(Types.MATCHED_TAG, match.getTag());
       }
       return tmp;
@@ -115,7 +115,7 @@ public abstract class Lexicon implements Predicate<HString>, WordList, Extractor
 
    @Override
    public Extraction extract(@NonNull HString source) {
-      if(isProbabilistic()) {
+      if (isProbabilistic()) {
          return Extraction.fromHStringList(viterbi(source));
       }
       return Extraction.fromHStringList(longestMatchFirst(source));
@@ -178,7 +178,7 @@ public abstract class Lexicon implements Predicate<HString>, WordList, Extractor
    public final double getProbability(@NonNull HString hString, @NonNull Tag tag) {
       return match(hString).stream()
                            .filter(le -> {
-                              if(Strings.isNullOrBlank(le.getTag())) {
+                              if (Strings.isNullOrBlank(le.getTag())) {
                                  return false;
                               }
                               Tag leTag = Converter.convertSilently(le.getTag(), tag.getClass());
@@ -241,32 +241,32 @@ public abstract class Lexicon implements Predicate<HString>, WordList, Extractor
       List<HString> results = new LinkedList<>();
       List<Annotation> tokens = source.tokens();
 
-      for(int i = 0; i < tokens.size(); ) {
+      for (int i = 0; i < tokens.size(); ) {
          Annotation token = tokens.get(i);
-         if(this.isPrefixMatch(token)) {
+         if (this.isPrefixMatch(token)) {
             LexiconMatch bestMatch = null;
-            for(int j = i + 1; j <= tokens.size(); j++) {
+            for (int j = i + 1; j <= tokens.size(); j++) {
                HString temp = HString.union(tokens.subList(i, j));
-               if(temp.length() > getMaxLemmaLength()) {
+               if (temp.length() > getMaxLemmaLength()) {
                   break;
                }
                List<LexiconEntry> entries = match(temp);
-               if(entries.size() > 0) {
+               if (entries.size() > 0) {
                   bestMatch = new LexiconMatch(temp, entries.get(0));
                }
-               if(!this.isPrefixMatch(temp)) {
+               if (!this.isPrefixMatch(temp)) {
                   break;
                }
             }
 
-            if(bestMatch != null) {
+            if (bestMatch != null) {
                results.add(createFragment(bestMatch));
                i += bestMatch.getSpan().tokenLength();
             } else {
                i++;
             }
 
-         } else if(test(token)) {
+         } else if (test(token)) {
             results.add(createFragment(new LexiconMatch(token, match(token).get(0))));
             i++;
          } else {
@@ -300,7 +300,7 @@ public abstract class Lexicon implements Predicate<HString>, WordList, Extractor
     * @return the string
     */
    protected String normalize(CharSequence sequence) {
-      if(isCaseSensitive()) {
+      if (isCaseSensitive()) {
          return sequence.toString();
       }
       return sequence.toString().toLowerCase();
@@ -329,17 +329,17 @@ public abstract class Lexicon implements Predicate<HString>, WordList, Extractor
       LexiconMatch[] matches = new LexiconMatch[n + 1];
       double[] best = new double[n + 1];
       best[0] = 0;
-      for(int end = 1; end <= n; end++) {
+      for (int end = 1; end <= n; end++) {
          matches[end] = new LexiconMatch(tokens.get(end - 1), 0d, "", null);
-         for(int start = end - 1; start >= 0; start--) {
+         for (int start = end - 1; start >= 0; start--) {
             HString span = HString.union(tokens.subList(start, end));
-            if(span.length() > maxLen) {
+            if (span.length() > maxLen) {
                break;
             }
             LexiconEntry entry = match(span).stream().findFirst().orElse(LexiconEntry.empty());
             LexiconMatch score = new LexiconMatch(span, entry.getProbability(), entry.getLemma(), entry.getTag());
             double segmentScore = score.getScore() + best[start];
-            if(segmentScore >= best[end]) {
+            if (segmentScore >= best[end]) {
                best[end] = segmentScore;
                matches[end] = score;
             }
@@ -347,9 +347,9 @@ public abstract class Lexicon implements Predicate<HString>, WordList, Extractor
       }
       int i = n;
       List<HString> results = new LinkedList<>();
-      while(i > 0) {
+      while (i > 0) {
          LexiconMatch match = matches[i];
-         if(match.getScore() > 0) {
+         if (match.getScore() > 0) {
             results.add(createFragment(match));
          }
          i = i - matches[i].getSpan().tokenLength();

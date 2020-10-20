@@ -19,21 +19,16 @@
 
 package com.gengoai.sql.statement;
 
-import lombok.NonNull;
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
+import com.gengoai.sql.SQLElement;
 
 /**
  * Type of Join
  */
-public enum JoinType implements SQLFormattable {
+public enum JoinType implements SQLElement {
    INNER,
    CROSS,
    LEFT_OUTER,
    RIGHT_OUTER;
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return name().replace('_', ' ');
-   }
+
 }//END OF JoinType

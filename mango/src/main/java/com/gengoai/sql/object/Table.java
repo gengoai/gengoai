@@ -20,36 +20,38 @@
 package com.gengoai.sql.object;
 
 import com.gengoai.Validation;
+import com.gengoai.collection.Lists;
+import com.gengoai.collection.Sets;
+import com.gengoai.sql.NamedSQLElement;
 import com.gengoai.sql.SQL;
+import com.gengoai.sql.SQLContext;
 import com.gengoai.sql.SQLElement;
-import com.gengoai.sql.SQLObject;
-import com.gengoai.sql.constraint.TableConstraint;
+import com.gengoai.sql.constraint.Constraint;
 import com.gengoai.sql.operator.SQLOperable;
 import com.gengoai.sql.statement.*;
-import com.gengoai.string.Strings;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * <p>Defines an SQL table including its name, columns, and constraints.</p>
+ * The type Table.
  */
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
-public class Table extends SQLObject {
+@Getter
+public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
    private static final long serialVersionUID = 1L;
-   @Getter
+   @NonNull
    private final List<Column> columns = new ArrayList<>();
-   @Getter
-   private final List<TableConstraint> constraints = new ArrayList<>();
-   @Getter
-   private final String tableType;
+   @NonNull
+   private final List<Constraint> constraints = new ArrayList<>();
+   private final SQLElement type;
+
 
    /**
     * Instantiates a new Table.
@@ -57,7 +59,7 @@ public class Table extends SQLObject {
     * @param name      the name of the Table
     * @param tableType RDMS specific string defining type of table
     */
-   public Table(String name, String tableType) {
+   public Table(String name, SQLElement tableType) {
       this(name, tableType, Collections.emptyList(), Collections.emptyList());
    }
 
@@ -79,35 +81,15 @@ public class Table extends SQLObject {
     * @param constraints the constraints on the table
     */
    public Table(String name,
-                String tableType,
+                SQLElement tableType,
                 @NonNull List<Column> columns,
-                @NonNull List<TableConstraint> constraints) {
+                @NonNull List<Constraint> constraints) {
       super(Validation.notNullOrBlank(name));
-      this.tableType = Strings.emptyToNull(tableType);
+      this.type = tableType;
       this.columns.addAll(columns);
       this.constraints.addAll(constraints);
    }
 
-   /**
-    * Instantiates a new Table.
-    *
-    * @param name      the name of the Table
-    * @param tableType RDMS specific string defining type of table
-    * @param columns   the columns on the table
-    */
-   public Table(String name, String tableType, @NonNull List<Column> columns) {
-      this(name, tableType, columns, Collections.emptyList());
-   }
-
-   /**
-    * Instantiates a new Table.
-    *
-    * @param name    the name of the Table
-    * @param columns the columns on the table
-    */
-   public Table(String name, @NonNull List<Column> columns) {
-      this(name, null, columns, Collections.emptyList());
-   }
 
    /**
     * Adds the given column to the table definition generating an {@link AlterTable} statement to perform on the
@@ -124,14 +106,14 @@ public class Table extends SQLObject {
    }
 
    /**
-    * Adds the given {@link TableConstraint} to the table definition generating an {@link AlterTable} statement to
-    * perform on the database.
+    * Adds the given {@link Constraint} to the table definition generating an {@link AlterTable} statement to perform on
+    * the database.
     *
-    * @param tableConstraint the table constraint to add
+    * @param constraint the table constraint to add
     * @return the {@link AlterTable} statement needed to sync the code definition with the database definition
     */
-   public AlterTable addConstraint(@NonNull TableConstraint tableConstraint) {
-      this.constraints.add(tableConstraint);
+   public AlterTable addConstraint(@NonNull Constraint constraint) {
+      this.constraints.add(constraint);
       return AlterTable.table(this);
    }
 
@@ -154,41 +136,96 @@ public class Table extends SQLObject {
    }
 
    /**
-    * Generates a select statement to return the total number of rows in the table
+    * Batch insert int.
     *
-    * @return the select "count (0)" select statement.
+    * @param context the context
+    * @param values  the values
+    * @return the int
+    * @throws SQLException the sql exception
     */
-   public Select countAll() {
-      return select(SQL.F.count("0"));
+   public int batchInsert(@NonNull SQLContext context,
+                          @NonNull Stream<Map<String, ?>> values) throws SQLException {
+      return insert().columns(columns.stream()
+                                     .filter(Column::isRequired)
+                                     .collect(Collectors.toList()))
+                     .namedParameters()
+                     .batch(context, values, (m, nps) -> nps.fromMap(m));
    }
 
    /**
-    * Creates a delete statement that will delete all rows matching the given where criteria
+    * Batch upsert int.
     *
-    * @param where the criteria for row deletion
-    * @return the delete statement
+    * @param context        the context
+    * @param indexedColumns the indexed columns
+    * @param values         the values
+    * @return the int
+    * @throws SQLException the sql exception
     */
-   public Delete delete(String where) {
-      return Delete.from(this).where(where);
+   public int batchUpsert(@NonNull SQLContext context,
+                          @NonNull List<String> indexedColumns,
+                          @NonNull Stream<Map<String, ?>> values) throws SQLException {
+      Validation.checkArgument(indexedColumns.size() > 0, "Must define at least one index column");
+      UpsertClause upsertClause = UpsertClause.upsert()
+                                              .indexedColumns(Lists.transform(indexedColumns, SQL::C))
+                                              .doUpdateSet();
+      columns.stream()
+             .filter(Column::isRequired)
+             .filter(c -> indexedColumns.stream().noneMatch(ic -> SQL.columnNamesEqual(ic, c.getName())))
+             .forEach(c -> upsertClause.set(c, SQL.C("excluded", c.getName())));
+      return insert().columns(columns.stream()
+                                     .filter(Column::isRequired)
+                                     .collect(Collectors.toList()))
+                     .namedParameters()
+                     .onConflict(upsertClause)
+                     .batch(context, values, (m, nps) -> nps.fromMap(m));
    }
 
    /**
-    * Creates a delete statement that will delete all rows matching the given where criteria
+    * Column column.
     *
-    * @param where the criteria for row deletion
-    * @return the delete statement
+    * @param name the name
+    * @return the column
     */
-   public Delete delete(SQLElement where) {
-      return Delete.from(this).where(where);
+   public Column column(String name) {
+      Validation.notNullOrBlank(name);
+      return columns.stream()
+                    .filter(c -> SQL.columnNamesEqual(c.getName(), name))
+                    .findFirst()
+                    .orElseThrow(NoSuchElementException::new);
    }
 
    /**
-    * Creates a delete statement that will delete all rows in the table
+    * Performs a <code>select count(0)</code> from this table.
     *
-    * @return the delete statement
+    * @param context the context to perform the query on
+    * @return the result of the select count query
+    * @throws SQLException something happened trying to query
     */
-   public Delete deleteAll() {
-      return Delete.from(this);
+   public long count(@NonNull SQLContext context) throws SQLException {
+      return Select.from(this).columns(SQL.F.count("0")).queryScalarLong(context);
+   }
+
+   /**
+    * Deletes all rows matching the given where criteria
+    *
+    * @param context the {@link SQLContext} to perform the delete on
+    * @param where   the criteria for row deletion
+    * @return the number of items deleted
+    * @throws SQLException something happened trying to update
+    */
+   public int delete(@NonNull SQLContext context, @NonNull SQLElement where) throws SQLException {
+      return Delete.from(this).where(where).update(context);
+   }
+
+   /**
+    * Deletes all rows from the table
+    *
+    * @param context the {@link SQLContext} to perform the delete on
+    * @return the number of items deleted
+    * @throws SQLException something happened trying to update
+    */
+   public int deleteAll(@NonNull SQLContext context) throws SQLException {
+      return Delete.from(this).update(context);
    }
 
    /**
@@ -207,30 +244,57 @@ public class Table extends SQLObject {
       return AlterTable.table(this).dropColumn(name);
    }
 
+   /**
+    * Drop index boolean.
+    *
+    * @param context the context
+    * @param name    the name
+    * @return the boolean
+    * @throws SQLException the sql exception
+    */
+   public boolean dropIndex(@NonNull SQLContext context, String name) throws SQLException {
+      return new Index(this, Validation.notNullOrBlank(name), false, Collections.emptyList()).drop(context);
+   }
+
+   /**
+    * Drop index if exists boolean.
+    *
+    * @param context the context
+    * @param name    the name
+    * @return the boolean
+    * @throws SQLException the sql exception
+    */
+   public boolean dropIndexIfExists(@NonNull SQLContext context, String name) throws SQLException {
+      return new Index(this, Validation.notNullOrBlank(name), false, Collections.emptyList()).dropIfExists(context);
+   }
+
+   /**
+    * Checks if this table exists in the database using the given {@link SQLContext}
+    *
+    * @param context the context to use to check for the table's existence.
+    * @return True if table exists, False otherwise
+    * @throws SQLException something happened trying to query for table existence
+    */
+   public boolean exists(@NonNull SQLContext context) throws SQLException {
+      try (ResultSet rs = context.getConnection().getMetaData()
+                                 .getTables(null, null, getName(), new String[]{"TABLE"})) {
+         return rs.next();
+      }
+   }
+
    @Override
    public String getKeyword() {
       return "TABLE";
    }
 
    /**
-    * Create a non-unique index with a given name on the table over the given columns.
+    * Index index builder.
     *
-    * @param name    the name of the index
-    * @param columns the columns in the index
-    * @return the index
+    * @param name the name
+    * @return the index builder
     */
-   public Index index(String name, @NonNull SQLElement... columns) {
-      return new Index(this, name, false, Arrays.asList(columns));
-   }
-
-   /**
-    * Create a non-unique index on the table over the given columns.
-    *
-    * @param columns the columns in the index
-    * @return the index
-    */
-   public Index index(@NonNull SQLElement... columns) {
-      return new Index(this, Arrays.asList(columns));
+   public IndexBuilder index(String name) {
+      return Index.index(name, this);
    }
 
    /**
@@ -238,10 +302,10 @@ public class Table extends SQLObject {
     * setting the values to either be default (if no columns are required) or named parameters based on the column
     * name.
     *
-    * @return thiae insert statement
+    * @return the insert statement
     */
    public Insert insert() {
-      return insert(InsertType.INSERT);
+      return insert(InsertType.INSERT_OR_FAIL);
    }
 
    /**
@@ -253,13 +317,25 @@ public class Table extends SQLObject {
     * @return the insert statement
     */
    public Insert insert(@NonNull InsertType insertType) {
-      List<Column> c = columns.stream()
-                              .filter(Column::isRequired)
-                              .collect(Collectors.toList());
-      if(c.isEmpty()) {
+      List<Column> c = columns.stream().filter(Column::isRequired).collect(Collectors.toList());
+      if (c.isEmpty()) {
          return Insert.into(this).type(insertType).defaultValues();
       }
       return Insert.into(this).type(insertType).columns(c).namedParameters();
+   }
+
+   /**
+    * Insert int.
+    *
+    * @param context the context
+    * @param values  the values
+    * @return the int
+    * @throws SQLException the sql exception
+    */
+   public int insert(@NonNull SQLContext context, @NonNull Map<String, Object> values) throws SQLException {
+      return insert().columns(Sets.transform(values.keySet(), SQL::C))
+                     .namedParameters()
+                     .update(context, values);
    }
 
    /**
@@ -306,27 +382,9 @@ public class Table extends SQLObject {
     * @return the {@link AlterTable} statement needed to sync the code definition with the database definition
     */
    public AlterTable renameTable(@NonNull String newName) {
+      AlterTable at = AlterTable.table(SQL.sql(this.name)).renameTable(newName);
       this.name = newName;
-      return AlterTable.table(this).renameTable(newName);
-   }
-
-   /**
-    * Creates a select statement selecting from this table with nothing else specified
-    *
-    * @return the select statement
-    */
-   public Select select() {
-      return Select.from(this);
-   }
-
-   /**
-    * Creates a select statement selecting from this table returning the specified columns
-    *
-    * @param columns the columns to select
-    * @return the select statement
-    */
-   public Select select(@NonNull SQLElement... columns) {
-      return Select.from(this).columns(columns);
+      return at;
    }
 
    /**
@@ -336,7 +394,26 @@ public class Table extends SQLObject {
     * @return the select statement
     */
    public Select select(@NonNull String... columns) {
-      return Select.from(this).columns(Stream.of(columns).map(SQL::sql).collect(Collectors.toList()));
+      return Select.from(this).columns(Lists.transform(Arrays.asList(columns), SQL::C));
+   }
+
+   /**
+    * Creates a select statement selecting from this table returning the specified columns
+    *
+    * @param columns the columns to select
+    * @return the select statement
+    */
+   public Select select(@NonNull SQLElement... columns) {
+      return Select.from(this).columns(Arrays.asList(columns));
+   }
+
+   /**
+    * Creates a select statement selecting from this table with nothing else specified
+    *
+    * @return the select statement
+    */
+   public Select select() {
+      return Select.from(name);
    }
 
    /**
@@ -346,32 +423,6 @@ public class Table extends SQLObject {
     */
    public Select selectAll() {
       return Select.from(this).columns(SQL.ALL);
-   }
-
-   @Override
-   public String toString() {
-      return name;
-   }
-
-   /**
-    * Create a unique index with a given name on the table over the given columns.
-    *
-    * @param name    the name of the index
-    * @param columns the columns in the index
-    * @return the index
-    */
-   public Index uniqueIndex(String name, @NonNull SQLElement... columns) {
-      return new Index(this, name, true, Arrays.asList(columns));
-   }
-
-   /**
-    * Create a unique index on the table over the given columns.
-    *
-    * @param columns the columns in the index
-    * @return the index
-    */
-   public Index uniqueIndex(@NonNull SQLElement... columns) {
-      return new Index(this, "UNIQUE_" + Strings.randomHexString(5), true, Arrays.asList(columns));
    }
 
    /**
@@ -393,4 +444,66 @@ public class Table extends SQLObject {
       return Update.table(this).type(updateType);
    }
 
-}//END OF TableDef
+   public int update(@NonNull SQLContext context,
+                     @NonNull UpdateType updateType,
+                     @NonNull Map<String, SQLElement> setParameters,
+                     @NonNull SQLElement where) throws SQLException {
+      Update update = update(updateType);
+      setParameters.forEach(update::set);
+      return update.where(where).update(context);
+   }
+
+   public int update(@NonNull SQLContext context,
+                     @NonNull Map<String, SQLElement> setParameters,
+                     @NonNull SQLElement where) throws SQLException {
+      Update update = update();
+      setParameters.forEach(update::set);
+      return update.where(where).update(context);
+   }
+
+   /**
+    * Perform an upsert on the table using the given context, list of columns to base the upsert on, and values to
+    * upserted.
+    *
+    * @param context       the context to perform the upsert over
+    * @param indexedColumn the column used to determine insert or upsert
+    * @param values        the values of the row to be upserted
+    * @return True if one or more rows were modified.
+    * @throws SQLException the sql exception
+    */
+   public boolean upsert(@NonNull SQLContext context,
+                         String indexedColumn,
+                         @NonNull Map<String, Object> values) throws SQLException {
+      return upsert(context, List.of(Validation.notNullOrBlank(indexedColumn)), values);
+   }
+
+   /**
+    * Perform an upsert on the table using the given context, list of columns to base the upsert on, and values to
+    * upserted.
+    *
+    * @param context        the context to perform the upsert over
+    * @param indexedColumns the columns used to determine insert or upsert
+    * @param values         the values of the row to be upserted
+    * @return True if one or more rows were modified.
+    * @throws SQLException the sql exception
+    */
+   public boolean upsert(@NonNull SQLContext context,
+                         List<String> indexedColumns,
+                         @NonNull Map<String, Object> values) throws SQLException {
+      Validation.checkArgument(indexedColumns.size() > 0, "Must define at least one index column");
+      UpsertClause upsertClause = UpsertClause.upsert()
+                                              .indexedColumns(Lists.transform(indexedColumns, SQL::C))
+                                              .doUpdateSet();
+      for (String s : values.keySet()) {
+         if (indexedColumns.stream().noneMatch(c -> SQL.columnNamesEqual(c, s))) {
+            upsertClause.set(s, SQL.C("excluded", s));
+         }
+      }
+      return insert().columns(Sets.transform(values.keySet(), SQL::C))
+                     .namedParameters()
+                     .onConflict(upsertClause)
+                     .update(context, values) > 0;
+   }
+
+
+}//END OF Table

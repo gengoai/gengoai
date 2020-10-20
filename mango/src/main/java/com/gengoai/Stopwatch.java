@@ -44,7 +44,6 @@ import static com.gengoai.Validation.notNull;
  * }
  * </pre>
  *
- *
  * @author David B. Bracewell
  */
 public class Stopwatch implements Serializable, AutoCloseable {
@@ -69,7 +68,7 @@ public class Stopwatch implements Serializable, AutoCloseable {
 
    private Stopwatch(boolean started, String name, Logger logger, Level level) {
       this.name = name;
-      if(started) {
+      if (started) {
          start();
       }
       this.logger = logger;
@@ -196,8 +195,8 @@ public class Stopwatch implements Serializable, AutoCloseable {
     */
    public long getElapsedTime() {
       return isRunning
-             ? elapsedTime + (TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()) - this.start)
-             : elapsedTime;
+            ? elapsedTime + (TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()) - this.start)
+            : elapsedTime;
    }
 
    private long getSystemNano() {
@@ -240,7 +239,7 @@ public class Stopwatch implements Serializable, AutoCloseable {
    @Override
    public String toString() {
       StringBuilder stringBuilder = new StringBuilder();
-      if(Strings.isNotNullOrBlank(name)) {
+      if (Strings.isNotNullOrBlank(name)) {
          stringBuilder.append(name).append(": ");
       }
       stringBuilder.append(Duration.ofNanos(getElapsedTime()).toString()

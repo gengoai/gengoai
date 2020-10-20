@@ -22,11 +22,13 @@ package com.gengoai.hermes.ml;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
+import com.gengoai.apollo.ml.encoder.NoOptEncoder;
 import com.gengoai.apollo.ml.model.LabelType;
 import com.gengoai.apollo.ml.model.Model;
+import com.gengoai.apollo.ml.model.TFVarSpec;
 import com.gengoai.apollo.ml.model.TensorFlowModel;
+import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.transform.Transformer;
 import com.gengoai.collection.Iterators;
 import com.gengoai.collection.Maps;
 import com.gengoai.hermes.Annotation;
@@ -46,9 +48,9 @@ public class UniversalSentenceEncoder extends TensorFlowModel implements HString
    private static final long serialVersionUID = 1L;
 
    public UniversalSentenceEncoder() {
-      super(Collections.singleton(Datum.DEFAULT_INPUT),
-            Maps.linkedHashMapOf($(Datum.DEFAULT_OUTPUT, Datum.DEFAULT_OUTPUT)),
-            Collections.emptyMap());
+      super(Map.of(Datum.DEFAULT_INPUT, TFVarSpec.varSpec(Datum.DEFAULT_INPUT, NoOptEncoder.INSTANCE, -1)),
+            Maps.linkedHashMapOf($(Datum.DEFAULT_OUTPUT, TFVarSpec
+                  .varSpec(Datum.DEFAULT_OUTPUT, NoOptEncoder.INSTANCE, -1))));
    }
 
    @Override
@@ -80,9 +82,10 @@ public class UniversalSentenceEncoder extends TensorFlowModel implements HString
       return Map.of(Datum.DEFAULT_INPUT, Tensor.create(input));
    }
 
+
    @Override
-   protected Transformer createTransformer() {
-      return new Transformer(Collections.emptyList());
+   protected Observation decodeNDArray(String name, NDArray ndArray) {
+      return ndArray;
    }
 
    @Override

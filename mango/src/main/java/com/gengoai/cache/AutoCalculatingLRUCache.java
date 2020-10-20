@@ -1,6 +1,7 @@
 package com.gengoai.cache;
 
 import com.gengoai.function.SerializableFunction;
+import lombok.NonNull;
 
 /**
  * Auto calculating LRU cache that calculates values for keys when retrieved using a {@link SerializableFunction}.
@@ -10,6 +11,7 @@ import com.gengoai.function.SerializableFunction;
  * @author David B. Bracewell
  */
 public class AutoCalculatingLRUCache<K, V> extends LRUCache<K, V> {
+   @NonNull
    private final SerializableFunction<K, V> valueCalculator;
 
    /**
@@ -26,6 +28,13 @@ public class AutoCalculatingLRUCache<K, V> extends LRUCache<K, V> {
    @Override
    public V get(K key) {
       return cache.computeIfAbsent(key, valueCalculator);
+   }
+
+   @Override
+   public String toString() {
+      return "AutoCalculatingLRUCache{" +
+            "size=" + size() +
+            '}';
    }
 
 }//END OF AutoCalculatingLRUCache

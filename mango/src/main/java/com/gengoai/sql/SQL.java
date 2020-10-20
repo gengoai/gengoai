@@ -20,18 +20,26 @@
 package com.gengoai.sql;
 
 import com.gengoai.Validation;
+import com.gengoai.conversion.Cast;
+import com.gengoai.sql.constraint.Constraint;
+import com.gengoai.sql.constraint.ConstraintBuilder;
 import com.gengoai.sql.object.Column;
 import com.gengoai.sql.object.Table;
+import com.gengoai.sql.operator.PrefixUnaryOperator;
 import com.gengoai.sql.operator.SQLOperable;
-import com.gengoai.sql.operator.SQLOperator;
-import com.gengoai.sql.operator.SQLPrefixUnaryOperator;
-import com.gengoai.sql.statement.SQLQueryStatement;
-import com.gengoai.sql.statement.SQLUpdateStatement;
+import com.gengoai.sql.statement.QueryStatement;
+import com.gengoai.sql.statement.UpdateStatement;
 import com.gengoai.string.Strings;
 import lombok.*;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,6 +56,10 @@ public final class SQL {
     */
    public static final SQLElement INDEXED_ARGUMENT = sql("?");
 
+   private SQL() {
+      throw new IllegalAccessError();
+   }
+
    /**
     * An {@link SQLOperable} defining a column name.
     *
@@ -55,7 +67,32 @@ public final class SQL {
     * @return the SQLOperable
     */
    public static SQLOperable C(String column) {
-      return C(null, column);
+      return C(Strings.EMPTY, column);
+   }
+
+   /**
+    * Static method for constructing a new Column given its name and type.
+    *
+    * @param name the name of the column
+    * @param type the data type of the column
+    * @return the column
+    */
+   public static Column column(String name, String type) {
+      return new Column(name, type);
+   }
+
+
+   public static Table table(String name,
+                             @NonNull Consumer<TableDef> definition) {
+      return table(name, null, definition);
+   }
+
+   public static Table table(String name,
+                             SQLElement type,
+                             @NonNull Consumer<TableDef> definition) {
+      TableDef builder = new TableDef();
+      definition.accept(builder);
+      return new Table(name, type, builder.columns, builder.constraints);
    }
 
    /**
@@ -69,11 +106,16 @@ public final class SQL {
       Validation.notNullOrBlank(column);
       column = column.strip();
       column = Strings.prependIfNotPresent(Strings.appendIfNotPresent(SQLDialect.escape(column.strip()), "\""), "\"");
-      if(Strings.isNullOrBlank(table)) {
+      if (Strings.isNullOrBlank(table)) {
          return new SimpleExpression(column);
       }
       return new SimpleExpression(table + "." + column);
    }
+
+   public static SQLOperable C(@NonNull Table table, String column) {
+      return C(table.getName(), column);
+   }
+
 
    /**
     * An {@link SQLOperable} defining a literal expression, which will automatically be placed in single quotes.
@@ -95,16 +137,6 @@ public final class SQL {
       return new Numeric(value);
    }
 
-   /**
-    * Defines an alias over a column, table, or subquery.
-    *
-    * @param object the object being aliased
-    * @param name   the name of the alias
-    * @return the SQLElement
-    */
-   public static SQLElement alias(@NonNull SQLElement object, String name) {
-      return new Alias(object, Validation.notNullOrBlank(name));
-   }
 
    /**
     * Combines one or more SQLElements via an <code>AND</code>
@@ -122,8 +154,8 @@ public final class SQL {
     * @param query the sub query
     * @return the SQLOperable
     */
-   public static SQLOperable exists(@NonNull SQLQueryStatement query) {
-      return new SQLPrefixUnaryOperator(SQLOperator.EXISTS, query, true);
+   public static SQLOperable exists(@NonNull QueryStatement query) {
+      return new PrefixUnaryOperator(SQLConstants.EXISTS, query, true);
    }
 
    /**
@@ -133,7 +165,7 @@ public final class SQL {
     * @return the SQLOperable
     */
    public static SQLOperable group(@NonNull SQLElement... elements) {
-      if(elements.length == 1) {
+      if (elements.length == 1) {
          return new Grouped(elements[0]);
       }
       return new Grouped(new ComplexExpression(Arrays.asList(elements)));
@@ -184,7 +216,7 @@ public final class SQL {
     * @param statement the statement
     * @return the SQLQueryStatement
     */
-   public static SQLQueryStatement query(String statement) {
+   public static QueryStatement query(String statement) {
       return new SQLQueryStatementImpl(Validation.notNullOrBlank(statement));
    }
 
@@ -195,7 +227,7 @@ public final class SQL {
     * @return the sql element
     */
    public static SQLElement sql(@NonNull String... components) {
-      if(components.length == 1) {
+      if (components.length == 1) {
          return new SimpleExpression(components[0]);
       }
       return new ComplexExpression(Stream.of(components).map(SimpleExpression::new).collect(Collectors.toList()));
@@ -207,18 +239,23 @@ public final class SQL {
     * @param statement the statement
     * @return the SQLUpdateStatement
     */
-   public static SQLUpdateStatement update(String statement) {
-      return new SQLUpdateStatementImpl(Validation.notNullOrBlank(statement));
+   public static UpdateStatement update(String statement) {
+      return new UpdateStatementImpl(Validation.notNullOrBlank(statement));
    }
 
-   private SQL() {
-      throw new IllegalAccessError();
+   public static boolean columnNamesEqual(String c1, String c2) {
+      if (c1 == null || c2 == null) {
+         return false;
+      }
+      c1 = Strings.prependIfNotPresent(Strings.appendIfNotPresent(c1, "\""), "\"");
+      c2 = Strings.prependIfNotPresent(Strings.appendIfNotPresent(c2, "\""), "\"");
+      return c1.equalsIgnoreCase(c2);
    }
 
    @Value
    @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
    @AllArgsConstructor
-   private static class Literal implements SQLOperable {
+   private static class Literal implements PreRenderedSQL {
       private static final long serialVersionUID = 1L;
       @NonNull String value;
 
@@ -232,7 +269,7 @@ public final class SQL {
    @Value
    @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
    @AllArgsConstructor
-   private static class Numeric implements SQLOperable {
+   private static class Numeric implements PreRenderedSQL {
       private static final long serialVersionUID = 1L;
       @NonNull Number value;
 
@@ -245,7 +282,7 @@ public final class SQL {
 
    @Value
    @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-   private static class SimpleExpression implements SQLOperable {
+   private static class SimpleExpression implements PreRenderedSQL {
       String expression;
 
       /**
@@ -266,7 +303,7 @@ public final class SQL {
 
    @Value
    @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-   private static class SQLUpdateStatementImpl implements SQLUpdateStatement {
+   private static class UpdateStatementImpl implements UpdateStatement, PreRenderedSQL {
       String expression;
 
       /**
@@ -274,13 +311,8 @@ public final class SQL {
        *
        * @param expression the expression
        */
-      public SQLUpdateStatementImpl(String expression) {
+      public UpdateStatementImpl(String expression) {
          this.expression = Validation.notNullOrBlank(expression);
-      }
-
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return expression;
       }
 
       @Override
@@ -292,7 +324,8 @@ public final class SQL {
 
    @Value
    @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-   private static class SQLQueryStatementImpl implements SQLQueryStatement {
+   @EqualsAndHashCode(callSuper = true)
+   private static class SQLQueryStatementImpl extends QueryStatement implements PreRenderedSQL {
       String expression;
 
       /**
@@ -305,11 +338,6 @@ public final class SQL {
       }
 
       @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return expression;
-      }
-
-      @Override
       public String toString() {
          return expression;
       }
@@ -319,18 +347,18 @@ public final class SQL {
    @Value
    @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
    @AllArgsConstructor(access = AccessLevel.PUBLIC)
-   private static class Grouped implements SQLFormattable, SQLOperable {
+   private static class Grouped implements CompositeSQLElement {
       @NonNull SQLElement expression;
 
       @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return "( " + dialect.toSQL(expression) + " )";
+      public String render(@NonNull SQLDialect dialect) {
+         return "( " + dialect.render(expression) + " )";
       }
    }//END OF SQLUpdateStatementImpl
 
    @Value
    @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-   private static class ComplexExpression implements SQLFormattable, SQLOperable {
+   private static class ComplexExpression implements CompositeSQLElement {
       private static final long serialVersionUID = 1L;
       @NonNull Collection<? extends SQLElement> values;
       String delimiter;
@@ -357,59 +385,35 @@ public final class SQL {
       }
 
       @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
+      public String render(@NonNull SQLDialect dialect) {
          return dialect.join(delimiter, values);
       }
 
    }//END OF ComplexExpression
 
    @Value
-   private static class NULL implements SQLFormattable {
+   private static class NULL implements NamedSQLElement, SQLOperable {
       private static final long serialVersionUID = 1L;
 
       @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         return dialect.nullValue();
+      public String getName() {
+         return "NULL";
       }
+
 
    }//END OF NULL
 
-   @Value
-   @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-   @AllArgsConstructor(access = AccessLevel.PUBLIC)
-   private static class Alias implements SQLFormattable {
-      private static final long serialVersionUID = 1L;
-      SQLElement object;
-      String aliasName;
-
-      @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         if(object instanceof Table) {
-            return ((Table) object).getName() + " " + aliasName;
-         }
-         return dialect.toSQL(object) + " AS " + aliasName;
-      }
-
-   }//END OF Alias
 
    @Value
    @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
    @AllArgsConstructor
-   private static class NamedArgument implements SQLFormattable, SQLOperable {
+   private static class NamedArgument implements CompositeSQLElement {
       private static final long serialVersionUID = 1L;
       @NonNull SQLElement argument;
 
       @Override
-      public String toSQL(@NonNull SQLDialect dialect) {
-         String name;
-         if(argument instanceof SQLObject) {
-            name = ((SQLObject) argument).getName();
-         } else if(argument instanceof Column) {
-            name = ((Column) argument).getName();
-         } else {
-            name = dialect.toSQL(argument);
-         }
-         return "[:" + NamedPreparedStatement.sanitize(name) + ":]";
+      public String render(@NonNull SQLDialect dialect) {
+         return "[:" + NamedPreparedStatement.sanitize(dialect.render(argument)) + ":]";
       }
 
    }//END OF NamedArgument
@@ -418,114 +422,32 @@ public final class SQL {
     * Set of commonly used SQL functions
     */
    public static final class F {
+
+      private F() {
+         throw new IllegalAccessError();
+      }
+
       /**
-       * The constant ABS.
+       * Generates an {@link SQLOperable} representing a regular expression matching operating
+       *
+       * @param arg1 the value to check the regular expression against.
+       * @param arg2 the regular expression
+       * @return the SQLOperable
        */
-      public static final String ABS = "ABS";
+      public static SQLOperable regexp(@NonNull SQLElement arg1, @NonNull SQLElement arg2) {
+         return SQLFunction.function(SQLConstants.REGEXP, arg1, arg2);
+      }
+
       /**
-       * The constant AVERAGE.
+       * Generates an {@link SQLOperable} representing a regular expression matching operating
+       *
+       * @param arg1 the value to check the regular expression against.
+       * @param arg2 the regular expression
+       * @return the SQLOperable
        */
-      public static final String AVERAGE = "AVG";
-      /**
-       * The constant COALESCE.
-       */
-      public static final String COALESCE = "COALESCE";
-      /**
-       * The constant COUNT.
-       */
-      public static final String COUNT = "COUNT";
-      /**
-       * The constant COUNT_DISTINCT.
-       */
-      public static final String COUNT_DISTINCT = "COUNT DISTINCT";
-      /**
-       * The constant DATE.
-       */
-      public static final String DATE = "DATE";
-      /**
-       * The constant DATETIME.
-       */
-      public static final String DATETIME = "DATETIME";
-      /**
-       * The constant GROUP_CONCAT.
-       */
-      public static final String GROUP_CONCAT = "GROUP_CONCAT";
-      /**
-       * The constant IFNULL.
-       */
-      public static final String IFNULL = "IFNULL";
-      /**
-       * The constant INSTR.
-       */
-      public static final String INSTR = "INSTR";
-      /**
-       * The constant JSON_EXTRACT.
-       */
-      public static final String JSON_EXTRACT = "JSON_EXTRACT";
-      /**
-       * The constant LENGTH.
-       */
-      public static final String LENGTH = "LENGTH";
-      /**
-       * The constant LOWER.
-       */
-      public static final String LOWER = "LOWER";
-      /**
-       * The constant LTRIM.
-       */
-      public static final String LTRIM = "LTRIM";
-      /**
-       * The constant MAX.
-       */
-      public static final String MAX = "MAX";
-      /**
-       * The constant MIN.
-       */
-      public static final String MIN = "MIN";
-      /**
-       * The constant NULLIF.
-       */
-      public static final String NULLIF = "NULLIF";
-      /**
-       * The constant RANDOM.
-       */
-      public static final String RANDOM = "RANDOM";
-      /**
-       * The constant REPLACE.
-       */
-      public static final String REPLACE = "REPLACE";
-      /**
-       * The constant ROUND.
-       */
-      public static final String ROUND = "ROUND";
-      /**
-       * The constant RTRIM.
-       */
-      public static final String RTRIM = "RTRIM";
-      /**
-       * The constant STRFTIME.
-       */
-      public static final String STRFTIME = "STRFTIME";
-      /**
-       * The constant SUBSTR.
-       */
-      public static final String SUBSTR = "SUBSTR";
-      /**
-       * The constant SUM.
-       */
-      public static final String SUM = "SUM";
-      /**
-       * The constant TIME.
-       */
-      public static final String TIME = "TIME";
-      /**
-       * The constant TRIM.
-       */
-      public static final String TRIM = "TRIM";
-      /**
-       * The constant UPPER.
-       */
-      public static final String UPPER = "UPPER";
+      public static SQLOperable regexp(@NonNull SQLElement arg1, @NonNull String arg2) {
+         return SQLFunction.function(SQLConstants.REGEXP, arg1, SQL.L(arg2));
+      }
 
       /**
        * Generates an {@link SQLOperable} representing the absolute value of the given argument.
@@ -534,7 +456,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable abs(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(ABS, arg);
+         return SQLFunction.function(SQLConstants.ABS, arg);
       }
 
       /**
@@ -544,7 +466,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable abs(@NonNull String arg) {
-         return SQLFunction.unaryFunction(ABS, C(arg));
+         return SQLFunction.function(SQLConstants.ABS, C(arg));
       }
 
       /**
@@ -554,7 +476,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable average(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(AVERAGE, arg);
+         return SQLFunction.function(SQLConstants.AVERAGE, arg);
       }
 
       /**
@@ -564,7 +486,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable average(@NonNull String arg) {
-         return SQLFunction.unaryFunction(AVERAGE, C(arg));
+         return SQLFunction.function(SQLConstants.AVERAGE, C(arg));
       }
 
       /**
@@ -574,7 +496,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable coalesce(@NonNull SQLElement... args) {
-         return SQLFunction.nAryFunction(COALESCE, args);
+         return SQLFunction.function(SQLConstants.COALESCE, Arrays.asList(args));
       }
 
       /**
@@ -584,7 +506,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable count(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(COUNT, arg);
+         return SQLFunction.function(SQLConstants.COUNT, arg);
       }
 
       /**
@@ -594,7 +516,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable count(@NonNull String arg) {
-         return SQLFunction.unaryFunction(COUNT, C(arg));
+         return SQLFunction.function(SQLConstants.COUNT, C(arg));
       }
 
       /**
@@ -604,7 +526,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable countDistinct(@NonNull SQLOperable arg) {
-         return SQLFunction.unaryFunction(COUNT_DISTINCT, arg);
+         return SQLFunction.function(SQLConstants.COUNT_DISTINCT, arg);
       }
 
       /**
@@ -614,7 +536,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable countDistinct(@NonNull String arg) {
-         return SQLFunction.unaryFunction(COUNT_DISTINCT, C(arg));
+         return SQLFunction.function(SQLConstants.COUNT_DISTINCT, C(arg));
       }
 
       /**
@@ -627,7 +549,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable date(@NonNull SQLElement timeString, @NonNull SQLElement... args) {
-         return SQLFunction.nAryFunction(DATE, timeString, args);
+         return SQLFunction.function(SQLConstants.DATE, timeString, args);
       }
 
       /**
@@ -640,7 +562,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable date(@NonNull String timeString, @NonNull SQLElement... args) {
-         return SQLFunction.nAryFunction(DATE, L(timeString), args);
+         return SQLFunction.function(SQLConstants.DATE, L(timeString), args);
       }
 
       /**
@@ -653,7 +575,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable dateTime(@NonNull SQLElement timeString, @NonNull SQLElement... args) {
-         return SQLFunction.nAryFunction(DATETIME, timeString, args);
+         return SQLFunction.function(SQLConstants.DATETIME, timeString, args);
       }
 
       /**
@@ -666,7 +588,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable dateTime(@NonNull String timeString, @NonNull SQLElement... args) {
-         return SQLFunction.nAryFunction(DATETIME, L(timeString), args);
+         return SQLFunction.function(SQLConstants.DATETIME, L(timeString), args);
       }
 
       /**
@@ -678,7 +600,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable groupConcat(@NonNull SQLElement arg, @NonNull String delimiter) {
-         return SQLFunction.binaryFunction(GROUP_CONCAT, arg, L(delimiter));
+         return SQLFunction.function(SQLConstants.GROUP_CONCAT, arg, L(delimiter));
       }
 
       /**
@@ -690,7 +612,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable groupConcat(@NonNull Collection<? extends SQLElement> args, @NonNull String delimiter) {
-         return SQLFunction.binaryFunction(GROUP_CONCAT, new ComplexExpression(args, ", "), L(delimiter));
+         return SQLFunction.function(SQLConstants.GROUP_CONCAT, new ComplexExpression(args, ", "), L(delimiter));
       }
 
       /**
@@ -702,7 +624,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable groupConcat(@NonNull String arg, @NonNull String delimiter) {
-         return SQLFunction.binaryFunction(GROUP_CONCAT, C(arg), L(delimiter));
+         return SQLFunction.function(SQLConstants.GROUP_CONCAT, C(arg), L(delimiter));
       }
 
       /**
@@ -714,7 +636,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable ifNull(@NonNull SQLElement expression, @NonNull SQLElement value) {
-         return SQLFunction.binaryFunction(IFNULL, expression, value);
+         return SQLFunction.function(SQLConstants.IFNULL, expression, value);
       }
 
       /**
@@ -726,7 +648,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable instr(@NonNull SQLElement string, @NonNull SQLElement substring) {
-         return SQLFunction.binaryFunction(INSTR, string, substring);
+         return SQLFunction.function(SQLConstants.INSTR, string, substring);
       }
 
       /**
@@ -738,7 +660,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable instr(@NonNull SQLElement string, @NonNull String substring) {
-         return SQLFunction.binaryFunction(INSTR, string, L(substring));
+         return SQLFunction.function(SQLConstants.INSTR, string, L(substring));
       }
 
       /**
@@ -750,7 +672,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable json_extract(@NonNull String column, @NonNull String jsonPath) {
-         return SQLFunction.binaryFunction(JSON_EXTRACT, C(column), L(jsonPath));
+         return SQLFunction.function(SQLConstants.JSON_EXTRACT, C(column), L(jsonPath));
       }
 
       /**
@@ -762,7 +684,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable json_extract(@NonNull SQLElement json, @NonNull SQLElement jsonPath) {
-         return SQLFunction.binaryFunction(JSON_EXTRACT, json, jsonPath);
+         return SQLFunction.function(SQLConstants.JSON_EXTRACT, json, jsonPath);
       }
 
       /**
@@ -773,7 +695,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable length(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(LENGTH, arg);
+         return SQLFunction.function(SQLConstants.LENGTH, arg);
       }
 
       /**
@@ -783,7 +705,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable length(@NonNull String arg) {
-         return SQLFunction.unaryFunction(LENGTH, C(arg));
+         return SQLFunction.function(SQLConstants.LENGTH, C(arg));
       }
 
       /**
@@ -793,7 +715,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable lower(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(LOWER, arg);
+         return SQLFunction.function(SQLConstants.LOWER, arg);
       }
 
       /**
@@ -803,7 +725,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable lower(@NonNull String arg) {
-         return SQLFunction.unaryFunction(LOWER, C(arg));
+         return SQLFunction.function(SQLConstants.LOWER, C(arg));
       }
 
       /**
@@ -813,7 +735,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable ltrim(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(LTRIM, arg);
+         return SQLFunction.function(SQLConstants.LTRIM, arg);
       }
 
       /**
@@ -823,7 +745,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable ltrim(@NonNull String arg) {
-         return SQLFunction.unaryFunction(LTRIM, C(arg));
+         return SQLFunction.function(SQLConstants.LTRIM, C(arg));
       }
 
       /**
@@ -833,7 +755,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable max(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(MAX, arg);
+         return SQLFunction.function(SQLConstants.MAX, arg);
       }
 
       /**
@@ -843,7 +765,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable max(@NonNull String arg) {
-         return SQLFunction.unaryFunction(MAX, C(arg));
+         return SQLFunction.function(SQLConstants.MAX, C(arg));
       }
 
       /**
@@ -853,7 +775,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable min(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(MIN, arg);
+         return SQLFunction.function(SQLConstants.MIN, arg);
       }
 
       /**
@@ -863,7 +785,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable min(@NonNull String arg) {
-         return SQLFunction.unaryFunction(MIN, C(arg));
+         return SQLFunction.function(SQLConstants.MIN, C(arg));
       }
 
       /**
@@ -875,7 +797,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable nullIf(@NonNull SQLElement arg1, @NonNull SQLElement arg2) {
-         return SQLFunction.binaryFunction(NULLIF, arg1, arg2);
+         return SQLFunction.function(SQLConstants.NULLIF, arg1, arg2);
       }
 
       /**
@@ -884,7 +806,7 @@ public final class SQL {
        * @return the {@link SQLOperable}
        */
       public static SQLOperable random() {
-         return SQLFunction.nAryFunction(RANDOM);
+         return SQLFunction.function(SQLConstants.RANDOM);
       }
 
       /**
@@ -897,7 +819,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable replace(@NonNull SQLElement arg, String pattern, String replacement) {
-         return SQLFunction.ternaryFunction(REPLACE, arg, L(pattern), L(replacement));
+         return SQLFunction.function(SQLConstants.REPLACE, arg, L(pattern), L(replacement));
       }
 
       /**
@@ -910,7 +832,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable replace(@NonNull String column, String pattern, String replacement) {
-         return SQLFunction.ternaryFunction(REPLACE, SQL.C(column), L(pattern), L(replacement));
+         return SQLFunction.function(SQLConstants.REPLACE, SQL.C(column), L(pattern), L(replacement));
       }
 
       /**
@@ -921,7 +843,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable round(@NonNull SQLElement arg, int precision) {
-         return SQLFunction.binaryFunction(ROUND, arg, N(precision));
+         return SQLFunction.function(SQLConstants.ROUND, arg, N(precision));
       }
 
       /**
@@ -932,7 +854,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable round(@NonNull String column, int precision) {
-         return SQLFunction.binaryFunction(ROUND, C(column), N(precision));
+         return SQLFunction.function(SQLConstants.ROUND, C(column), N(precision));
       }
 
       /**
@@ -942,7 +864,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable rtrim(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(RTRIM, arg);
+         return SQLFunction.function(SQLConstants.RTRIM, arg);
       }
 
       /**
@@ -952,7 +874,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable rtrim(@NonNull String arg) {
-         return SQLFunction.unaryFunction(RTRIM, C(arg));
+         return SQLFunction.function(SQLConstants.RTRIM, C(arg));
       }
 
       /**
@@ -966,8 +888,9 @@ public final class SQL {
       public static SQLOperable strftime(@NonNull SQLElement format,
                                          @NonNull SQLElement timeString,
                                          @NonNull SQLElement... args) {
-         return SQLFunction.nAryFunction(STRFTIME, format, Stream.concat(Stream.of(timeString), Arrays.stream(args))
-                                                                 .toArray(SQLElement[]::new));
+         return SQLFunction
+               .function(SQLConstants.STRFTIME, format, Stream.concat(Stream.of(timeString), Arrays.stream(args))
+                                                              .toArray(SQLElement[]::new));
       }
 
       /**
@@ -980,7 +903,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable substr(@NonNull SQLElement arg, int start, int length) {
-         return SQLFunction.ternaryFunction(SUBSTR, arg, N(start), N(length));
+         return SQLFunction.function(SQLConstants.SUBSTR, arg, N(start), N(length));
       }
 
       /**
@@ -993,7 +916,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable substr(@NonNull SQLElement arg, @NonNull SQLElement start, @NonNull SQLElement length) {
-         return SQLFunction.ternaryFunction(SUBSTR, arg, start, length);
+         return SQLFunction.function(SQLConstants.SUBSTR, arg, start, length);
       }
 
       /**
@@ -1006,7 +929,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable substr(@NonNull String column, int start, int length) {
-         return SQLFunction.ternaryFunction(SUBSTR, SQL.C(column), N(start), N(length));
+         return SQLFunction.function(SQLConstants.SUBSTR, SQL.C(column), N(start), N(length));
       }
 
       /**
@@ -1019,7 +942,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable substr(@NonNull String column, @NonNull SQLElement start, @NonNull SQLElement length) {
-         return SQLFunction.ternaryFunction(SUBSTR, SQL.C(column), start, length);
+         return SQLFunction.function(SQLConstants.SUBSTR, SQL.C(column), start, length);
       }
 
       /**
@@ -1029,7 +952,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable sum(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(SUM, arg);
+         return SQLFunction.function(SQLConstants.SUM, arg);
       }
 
       /**
@@ -1039,7 +962,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable sum(@NonNull String column) {
-         return SQLFunction.unaryFunction(SUM, C(column));
+         return SQLFunction.function(SQLConstants.SUM, C(column));
       }
 
       /**
@@ -1052,7 +975,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable time(@NonNull SQLOperable timeString, @NonNull SQLElement... args) {
-         return SQLFunction.nAryFunction(TIME, timeString, args);
+         return SQLFunction.function(SQLConstants.TIME, timeString, args);
       }
 
       /**
@@ -1065,7 +988,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable time(@NonNull String timeString, @NonNull SQLElement... args) {
-         return SQLFunction.nAryFunction(TIME, L(timeString), args);
+         return SQLFunction.function(SQLConstants.TIME, L(timeString), args);
       }
 
       /**
@@ -1076,7 +999,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable trim(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(TRIM, arg);
+         return SQLFunction.function(SQLConstants.TRIM, arg);
       }
 
       /**
@@ -1087,7 +1010,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable trim(@NonNull String arg) {
-         return SQLFunction.unaryFunction(TRIM, C(arg));
+         return SQLFunction.function(SQLConstants.TRIM, C(arg));
       }
 
       /**
@@ -1097,7 +1020,7 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable upper(@NonNull SQLElement arg) {
-         return SQLFunction.unaryFunction(UPPER, arg);
+         return SQLFunction.function(SQLConstants.UPPER, arg);
       }
 
       /**
@@ -1107,12 +1030,46 @@ public final class SQL {
        * @return the SQLOperable
        */
       public static SQLOperable upper(@NonNull String arg) {
-         return SQLFunction.unaryFunction(UPPER, C(arg));
-      }
-
-      private F() {
-         throw new IllegalAccessError();
+         return SQLFunction.function(SQLConstants.UPPER, C(arg));
       }
 
    }//END OF F
+
+
+   public static class TableDef {
+      private final List<Column> columns = new ArrayList<>();
+      private final List<Constraint> constraints = new ArrayList<>();
+
+      public Column column(String name, String type) {
+         Column column = new Column(name, type);
+         columns.add(column);
+         return column;
+      }
+
+      public ConstraintBuilder constraint(String name) {
+         return Cast.as(Proxy.newProxyInstance(Constraint.class.getClassLoader(),
+                                               new Class[]{ConstraintBuilder.class},
+                                               new ConstraintHandler(Constraint.constraint(name))));
+      }
+
+
+      private class ConstraintHandler implements InvocationHandler {
+         final ConstraintBuilder backing;
+
+         private ConstraintHandler(ConstraintBuilder backing) {
+            this.backing = backing;
+         }
+
+         @Override
+         public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+            Object r = method.invoke(backing, objects);
+            if (r instanceof Constraint) {
+               constraints.add(Cast.as(r));
+            }
+            return r;
+         }
+      }
+
+
+   }
 }//END OF SQL

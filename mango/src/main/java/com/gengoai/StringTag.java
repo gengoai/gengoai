@@ -23,7 +23,6 @@
 package com.gengoai;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.gengoai.string.Strings;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -51,8 +50,7 @@ public class StringTag implements Tag, Serializable {
     * @param tag The tag name
     */
    public StringTag(String tag) {
-      Validation.checkArgument(!Strings.isNullOrBlank(tag), "Tag must not be null or blank.");
-      this.tag = tag;
+      this.tag = Validation.notNullOrBlank(tag, "Tag must not be null or blank.");
    }
 
    @Override

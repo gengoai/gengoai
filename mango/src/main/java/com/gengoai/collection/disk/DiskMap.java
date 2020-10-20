@@ -20,22 +20,39 @@
 package com.gengoai.collection.disk;
 
 import com.gengoai.Validation;
-import com.gengoai.collection.tree.Span;
 import com.gengoai.io.MonitoredObject;
 import com.gengoai.io.ResourceMonitor;
 import com.gengoai.io.resource.Resource;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-import org.mapdb.BTreeMap;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * <p>A Map implementation that stores its data in a file. Each map file can contain multiple maps where each map is
+ * stored in a namespace represented by a unique String name. DiskMaps are monitored to ensure that their file handle is
+ * properly closed if the it is no longer in use. However, one can use the <code>commit</code> and <code>close</code>
+ * methods to explicitly commit changes and close the map.</p>
+ * <p>DiskMaps are created using a builder in the following way:</p>
+ * <pre>
+ * {@code
+ *  var map = DiskMap.builder()
+ *                   .file(Resources.from("/data/map.db")
+ *                   .namespace("people")
+ *                   .compressed(true)
+ *                   .build();
+ * }
+ * </pre>
+ * <p>Once an DiskMap instance is constructed it acts like regular Java Map.</p>
+ *
+ * @param <K> the key type parameter
+ * @param <V> the value type parameter
+ */
 public class DiskMap<K, V> implements Map<K, V>, AutoCloseable, Serializable {
    private static final long serialVersionUID = 1L;
    private final MonitoredObject<MapDBHandle> handle;
@@ -63,6 +80,9 @@ public class DiskMap<K, V> implements Map<K, V>, AutoCloseable, Serializable {
       handle.object.close();
    }
 
+   /**
+    * Commits any changes made to disk.
+    */
    public void commit() {
       handle.object.commit();
    }
@@ -101,6 +121,11 @@ public class DiskMap<K, V> implements Map<K, V>, AutoCloseable, Serializable {
       return delegate().get(o);
    }
 
+   /**
+    * Gets the {@link MapDBHandle} that manages the map database
+    *
+    * @return the handle
+    */
    public MapDBHandle getHandle() {
       return handle.object;
    }

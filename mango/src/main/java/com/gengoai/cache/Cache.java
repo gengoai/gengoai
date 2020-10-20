@@ -23,10 +23,10 @@ package com.gengoai.cache;
 
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.function.SerializableSupplier;
+import lombok.NonNull;
 
 /**
- * <p>A generic cache interface that allows multiple implementations, definition through specification, management, and
- * auto cached interfaces.</p>
+ * <p>A generic cache interface. A cache represents a memorized key-value pair.</p>
  *
  * @param <K> the Key parameter
  * @param <V> the Value parameter
@@ -55,7 +55,7 @@ public interface Cache<K, V> {
     * @param valueCalculator the value calculator to use when getting the value for a key
     * @return the cache
     */
-   static <K, V> Cache<K, V> create(int maxSize, SerializableFunction<K, V> valueCalculator) {
+   static <K, V> Cache<K, V> create(int maxSize, @NonNull SerializableFunction<K, V> valueCalculator) {
       return new AutoCalculatingLRUCache<>(maxSize, valueCalculator);
    }
 
@@ -76,11 +76,26 @@ public interface Cache<K, V> {
    V get(K key);
 
    /**
+    * Gets the value associated with the given key when available and if not available calculates and stores the value
+    * using the given supplier.
+    *
+    * @param key      The key
+    * @param supplier The supplier to use to generate the value
+    * @return The old value if put, null if not
+    */
+   V get(K key, SerializableSupplier<? extends V> supplier);
+
+   /**
     * Removes a single key
     *
     * @param key The key to remove
     */
    void invalidate(K key);
+
+   /**
+    * Clears the cache
+    */
+   void invalidateAll();
 
    /**
     * Clears the cache of all given keys
@@ -92,9 +107,13 @@ public interface Cache<K, V> {
    }
 
    /**
-    * Clears the cache
+    * Determines if the cache is empty or not
+    *
+    * @return True if empty, False if not
     */
-   void invalidateAll();
+   default boolean isEmpty() {
+      return size() == 0;
+   }
 
    /**
     * Adds a key value pair to the cache overwriting any value that is there
@@ -105,30 +124,11 @@ public interface Cache<K, V> {
    void put(K key, V value);
 
    /**
-    * Gets the value associated with the given key when available and if not available calculates and stores the value
-    * using the given supplier.
-    *
-    * @param key      The key
-    * @param supplier The supplier to use to generate the value
-    * @return The old value if put, null if not
-    */
-   V get(K key, SerializableSupplier<? extends V> supplier);
-
-   /**
     * The number of items cached.
     *
     * @return The current size of the cache
     */
    long size();
-
-   /**
-    * Determines if the cache is empty or not
-    *
-    * @return True if empty, False if not
-    */
-   default boolean isEmpty() {
-      return size() == 0;
-   }
 
 
 }//END OF Cache

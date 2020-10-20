@@ -40,47 +40,47 @@ import static com.gengoai.reflection.TypeUtils.parameterizedType;
 
 @Preload
 public class ENWordSenseAnnotator extends SentenceLevelAnnotator {
-   private static final long serialVersionUID = 1L;
    public static final AttributeType<List<Sense>> SENSE = AttributeType.make("SENSE",
                                                                              parameterizedType(List.class,
                                                                                                Sense.class));
+   private static final long serialVersionUID = 1L;
 
    @Override
    public void annotate(Annotation sentence) {
       List<Annotation> tokens = sentence.tokens();
       Document document = sentence.document();
       Lemmatizer lemmatizer = Lemmatizers.getLemmatizer(sentence.getLanguage());
-      for(int i = 0; i < tokens.size(); ) {
+      for (int i = 0; i < tokens.size(); ) {
          Annotation token = tokens.get(i);
          final Trie<String> lemmas = lemmatizer.allPossibleLemmasAndPrefixes(tokens.get(i).toString(),
                                                                              PartOfSpeech.ANY);
 
-         if(lemmas.size() > 0) {
+         if (lemmas.size() > 0) {
             HString bestMatch = null;
-            if(lemmas.size() == 1 && lemmatizer.canLemmatize(token.toString(), token.pos())) {
+            if (lemmas.size() == 1 && lemmatizer.canLemmatize(token.toString(), token.pos())) {
                bestMatch = token;
-            } else if(lemmas.size() > 1) {
+            } else if (lemmas.size() > 1) {
                Set<String> working = getAllLemmas(token, lemmatizer).stream()
                                                                     .filter(s -> lemmas.containsKey(s) || lemmas
                                                                           .prefix(s + " ")
                                                                           .size() > 0)
                                                                     .collect(Collectors.toSet());
-               if(lemmatizer.canLemmatize(token.toString(), token.pos())) {
+               if (lemmatizer.canLemmatize(token.toString(), token.pos())) {
                   bestMatch = token;
                }
                int startChar = token.start();
                int end = i + 1;
-               while(end < tokens.size()) {
+               while (end < tokens.size()) {
                   boolean matched = false;
                   token = tokens.get(end);
                   Set<String> nextSet = new HashSet<>();
-                  for(String previous : working) {
-                     for(String next : getAllLemmas(token, lemmatizer)) {
+                  for (String previous : working) {
+                     for (String next : getAllLemmas(token, lemmatizer)) {
                         String phrase = previous + " " + next;
-                        if(lemmas.containsKey(phrase)) {
+                        if (lemmas.containsKey(phrase)) {
                            nextSet.add(phrase);
                            matched = true;
-                        } else if(lemmas
+                        } else if (lemmas
                               .prefix(phrase)
                               .size() > 0) {
                            nextSet.add(phrase);
@@ -89,17 +89,17 @@ public class ENWordSenseAnnotator extends SentenceLevelAnnotator {
                   }
                   working = nextSet;
                   HString span = document.substring(startChar, token.end());
-                  if(matched) {
+                  if (matched) {
                      bestMatch = span;
                   }
-                  if(nextSet.isEmpty()) {
+                  if (nextSet.isEmpty()) {
                      break;
                   }
                   end++;
                }
             }
 
-            if(bestMatch == null) {
+            if (bestMatch == null) {
                i++;
             } else {
                createAnnotation(document, bestMatch);
@@ -119,7 +119,7 @@ public class ENWordSenseAnnotator extends SentenceLevelAnnotator {
       List<Sense> senses = WordNet.getInstance().getSenses(annotation.toString(),
                                                            PartOfSpeech.forText(annotation),
                                                            document.getLanguage());
-      if(senses.isEmpty()) {
+      if (senses.isEmpty()) {
          senses = WordNet.getInstance().getSenses(annotation.toString(),
                                                   PartOfSpeech.ANY,
                                                   document.getLanguage());

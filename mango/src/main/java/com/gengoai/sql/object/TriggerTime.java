@@ -19,14 +19,12 @@
 
 package com.gengoai.sql.object;
 
-import lombok.NonNull;
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
+import com.gengoai.sql.SQLElement;
 
 /**
  * When a trigger is fired
  */
-public enum TriggerTime implements SQLFormattable {
+public enum TriggerTime implements SQLElement {
    /**
     * Before the update statement happens
     */
@@ -40,8 +38,4 @@ public enum TriggerTime implements SQLFormattable {
     */
    INSTEAD_OF;
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return name().replace('_', ' ');
-   }
 }//END OF TriggerTime

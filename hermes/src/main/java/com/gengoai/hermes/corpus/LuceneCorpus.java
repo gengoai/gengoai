@@ -459,7 +459,7 @@ class LuceneCorpus implements Corpus {
       Broker<Document> broker = Broker.<Document>builder()
             .addProducer(new IterableProducer<>(this))
             .bufferSize(10_000)
-            .addConsumer(consumer, Runtime.getRuntime().availableProcessors())
+            .addConsumer(consumer, Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
             .build();
       broker.run();
       try {

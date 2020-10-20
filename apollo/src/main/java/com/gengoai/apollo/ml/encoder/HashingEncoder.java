@@ -49,7 +49,7 @@ public class HashingEncoder implements Encoder {
 
    @Override
    public String decode(double index) {
-      if(index >= 0 && index < numberOfFeatures) {
+      if (index >= 0 && index < numberOfFeatures) {
          return "Hash(" + (int) index + ")";
       }
       return null;
@@ -59,8 +59,8 @@ public class HashingEncoder implements Encoder {
    public int encode(String variableName) {
       int out = HashingFunctions.hash32x86(variableName.getBytes()) % numberOfFeatures;
       return out >= 0
-             ? out
-             : out + numberOfFeatures;
+            ? out
+            : out + numberOfFeatures;
    }
 
    @Override

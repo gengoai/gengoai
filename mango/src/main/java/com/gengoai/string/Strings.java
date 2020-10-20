@@ -55,6 +55,29 @@ public final class Strings {
     */
    public static final String EMPTY = "";
 
+   private Strings() {
+      throw new IllegalAccessError();
+   }
+
+   public static String lineBreak(@NonNull String str, int lineWidth) {
+      StringBuilder builder = new StringBuilder();
+      for (int i = 0; i < str.length(); ) {
+         int e = i + 1;
+         while (e < str.length() && e <= i + lineWidth) {
+            if (str.charAt(e) == '\n') {
+               break;
+            }
+            e++;
+         }
+         while (e < str.length() && e > i && !Character.isWhitespace(str.charAt(e))) {
+            e--;
+         }
+         builder.append(str.substring(i, e)).append("\n");
+         i = e + 1;
+      }
+      return builder.toString();
+   }
+
    /**
     * <p>Abbreviates a string to a desired length and adds "..." at the end.</p>
     *
@@ -63,10 +86,10 @@ public final class Strings {
     * @return The abbreviated string
     */
    public static String abbreviate(CharSequence input, int length) {
-      if(input == null) {
+      if (input == null) {
          return null;
       }
-      if(input.length() <= length) {
+      if (input.length() <= length) {
          return input.toString();
       }
       return input.subSequence(0, length) + "...";
@@ -81,8 +104,8 @@ public final class Strings {
     */
    public static String appendIfNotPresent(@NonNull String string, @NonNull String suffix) {
       return string.endsWith(suffix)
-             ? string
-             : (string + suffix);
+            ? string
+            : (string + suffix);
    }
 
    /**
@@ -94,7 +117,7 @@ public final class Strings {
     */
    public static String center(String s, int length) {
       Validation.checkArgument(length > 0, "Length must be > 0");
-      if(s == null) {
+      if (s == null) {
          return null;
       }
       int start = (int) Math.floor(Math.max(0, (length - s.length()) / 2d));
@@ -110,12 +133,12 @@ public final class Strings {
     */
    public static int count(String str, String target) {
       notNullOrBlank(target, "Target string must not be null or blank,");
-      if(Strings.isNullOrBlank(str)) {
+      if (Strings.isNullOrBlank(str)) {
          return 0;
       }
       int index = -target.length();
       int count = 0;
-      while((index = str.indexOf(target, index + target.length())) != -1) {
+      while ((index = str.indexOf(target, index + target.length())) != -1) {
          count++;
       }
       return count;
@@ -129,8 +152,8 @@ public final class Strings {
     */
    public static String emptyToNull(String input) {
       return Strings.isNotNullOrBlank(input)
-             ? input
-             : null;
+            ? input
+            : null;
    }
 
    /**
@@ -174,13 +197,13 @@ public final class Strings {
                                @NonNull String escapeMarker,
                                @NonNull IntPredicate escapeChecker,
                                @NonNull IntFunction<String> conversionFunction) {
-      if(input == null) {
+      if (input == null) {
          return null;
       }
       StringBuilder builder = new StringBuilder();
       input.chars()
            .forEach(c -> {
-              if(escapeChecker.test(c)) {
+              if (escapeChecker.test(c)) {
                  builder.append(escapeMarker)
                         .append(conversionFunction.apply(c));
               } else {
@@ -213,24 +236,24 @@ public final class Strings {
     */
    public static Span expand(String txt, int start, int end) {
 
-      while(start > 0 &&
+      while (start > 0 &&
             !Character.isWhitespace(txt.charAt(start - 1)) &&
             !CharMatcher.Punctuation.test(txt.charAt(start - 1))) {
          start--;
       }
 
-      while(start < end &&
+      while (start < end &&
             Character.isWhitespace(txt.charAt(start))) {
          start++;
       }
 
-      while(end < txt.length() &&
+      while (end < txt.length() &&
             !Character.isWhitespace(txt.charAt(end)) &&
             !CharMatcher.Punctuation.test(txt.charAt(end))) {
          end++;
       }
 
-      while(end > start &&
+      while (end > start &&
             Character.isWhitespace(txt.charAt(end - 1))) {
          end--;
       }
@@ -244,7 +267,7 @@ public final class Strings {
 
    public static String firstMatch(@NonNull Pattern pattern, @NonNull String input, int group) {
       Matcher m = pattern.matcher(input);
-      if(m.find()) {
+      if (m.find()) {
          return m.group(group);
       }
       return Strings.EMPTY;
@@ -252,7 +275,7 @@ public final class Strings {
 
    public static String firstMatch(@NonNull Pattern pattern, @NonNull String input, @NonNull String group) {
       Matcher m = pattern.matcher(input);
-      if(m.find()) {
+      if (m.find()) {
          return m.group(group);
       }
       return Strings.EMPTY;
@@ -260,7 +283,7 @@ public final class Strings {
 
    public static String firstMatch(@NonNull Pattern pattern, @NonNull String input) {
       Matcher m = pattern.matcher(input);
-      if(m.find()) {
+      if (m.find()) {
          return m.group();
       }
       return Strings.EMPTY;
@@ -383,10 +406,10 @@ public final class Strings {
     * @return True if the string is title case, False if not
     */
    public static boolean isTitleCase(@NonNull CharSequence input) {
-      if(input.length() == 0) {
+      if (input.length() == 0) {
          return false;
       }
-      if(input.length() == 1) {
+      if (input.length() == 1) {
          return Character.isUpperCase(input.charAt(0));
       }
       return Character.isUpperCase(input.charAt(0)) && StringMatcher.LowerCase.test(input.subSequence(1,
@@ -488,8 +511,8 @@ public final class Strings {
     */
    public static String nullToEmpty(String input) {
       return input == null
-             ? EMPTY
-             : input;
+            ? EMPTY
+            : input;
    }
 
    /**
@@ -502,9 +525,9 @@ public final class Strings {
     * @return the string
     */
    public static String padEnd(CharSequence sequence, int desiredLength, char paddingCharacter) {
-      if(sequence == null) {
+      if (sequence == null) {
          return repeat(paddingCharacter, desiredLength);
-      } else if(sequence.length() == desiredLength) {
+      } else if (sequence.length() == desiredLength) {
          return sequence.toString();
       }
       return sequence.toString() + repeat(paddingCharacter, desiredLength - sequence.length());
@@ -520,9 +543,9 @@ public final class Strings {
     * @return the string
     */
    public static String padStart(CharSequence sequence, int desiredLength, char paddingCharacter) {
-      if(sequence == null) {
+      if (sequence == null) {
          return repeat(paddingCharacter, desiredLength);
-      } else if(sequence.length() == desiredLength) {
+      } else if (sequence.length() == desiredLength) {
          return sequence.toString();
       }
       return repeat(paddingCharacter, desiredLength - sequence.length()) + sequence.toString();
@@ -537,8 +560,8 @@ public final class Strings {
     */
    public static String prependIfNotPresent(@NonNull String string, @NonNull String prefix) {
       return string.startsWith(prefix)
-             ? string
-             : (prefix + string);
+            ? string
+            : (prefix + string);
    }
 
    /**
@@ -584,17 +607,17 @@ public final class Strings {
     * @return A string of random characters
     */
    public static String randomString(int length, int min, int max, CharMatcher validChar) {
-      if(length <= 0) {
+      if (length <= 0) {
          return EMPTY;
       }
       Random random = new Random();
       int maxRandom = max - min;
       char[] array = new char[length];
-      for(int i = 0; i < array.length; i++) {
+      for (int i = 0; i < array.length; i++) {
          char c;
          do {
             c = (char) (random.nextInt(maxRandom) + min);
-         } while(Character.isLowSurrogate(c) ||
+         } while (Character.isLowSurrogate(c) ||
                Character.isHighSurrogate(c) ||
                !validChar.test(c));
          array[i] = c;
@@ -609,7 +632,7 @@ public final class Strings {
     * @return Resulting string without diacritic marks
     */
    public static String removeDiacritics(CharSequence input) {
-      if(input == null) {
+      if (input == null) {
          return null;
       }
       return StringFunctions.DIACRITICS_NORMALIZATION.apply(input.toString());
@@ -625,9 +648,9 @@ public final class Strings {
     */
    public static String removeRepeatedChars(CharSequence sequence) {
       StringBuilder builder = new StringBuilder();
-      for(int i = 0; i < sequence.length(); i++) {
+      for (int i = 0; i < sequence.length(); i++) {
          char c = sequence.charAt(i);
-         if(builder.length() == 0 || builder.charAt(builder.length() - 1) != c) {
+         if (builder.length() == 0 || builder.charAt(builder.length() - 1) != c) {
             builder.append(c);
          }
       }
@@ -667,11 +690,11 @@ public final class Strings {
     * @return the boolean
     */
    public static boolean safeEquals(String s1, String s2, boolean caseSensitive) {
-      if(s1 == s2) {
+      if (s1 == s2) {
          return true;
-      } else if(s1 == null || s2 == null) {
+      } else if (s1 == null || s2 == null) {
          return false;
-      } else if(caseSensitive) {
+      } else if (caseSensitive) {
          return s1.equals(s2);
       }
       return s1.equalsIgnoreCase(s2);
@@ -686,18 +709,18 @@ public final class Strings {
     * @return A list of all the cells in the input
     */
    public static List<String> split(CharSequence input, char separator) {
-      if(input == null) {
+      if (input == null) {
          return new ArrayList<>();
       }
       Validation.checkArgument(separator != '"', "Separator cannot be a quote");
-      try(CSVReader reader = CSV.builder().delimiter(separator).reader(new StringReader(input.toString()))) {
+      try (CSVReader reader = CSV.builder().delimiter(separator).reader(new StringReader(input.toString()))) {
          List<String> all = new ArrayList<>();
          List<String> row;
-         while((row = reader.nextRow()) != null) {
+         while ((row = reader.nextRow()) != null) {
             all.addAll(row);
          }
          return all;
-      } catch(Exception e) {
+      } catch (Exception e) {
          throw new RuntimeException(e);
       }
    }
@@ -709,7 +732,7 @@ public final class Strings {
     * @return the normalized string
     */
    public static String toCanonicalForm(CharSequence input) {
-      if(input == null) {
+      if (input == null) {
          return null;
       }
       return StringFunctions.CANONICAL_NORMALIZATION.apply(input.toString());
@@ -722,7 +745,7 @@ public final class Strings {
     * @return The title cased version of the input
     */
    public static String toTitleCase(CharSequence input) {
-      if(input == null) {
+      if (input == null) {
          return null;
       }
       return StringFunctions.TITLE_CASE.apply(input.toString());
@@ -736,12 +759,12 @@ public final class Strings {
     * @return the string
     */
    public static String unescape(String input, char escapeCharacter) {
-      if(input == null) {
+      if (input == null) {
          return null;
       }
       StringBuilder builder = new StringBuilder();
-      for(int i = 0; i < input.length(); ) {
-         if(input.charAt(i) == escapeCharacter) {
+      for (int i = 0; i < input.length(); ) {
+         if (input.charAt(i) == escapeCharacter) {
             builder.append(input.charAt(i + 1));
             i = i + 2;
          } else {
@@ -750,10 +773,6 @@ public final class Strings {
          }
       }
       return builder.toString();
-   }
-
-   private Strings() {
-      throw new IllegalAccessError();
    }
 
    private static class FindIterator implements Iterator<IntPair> {
@@ -767,7 +786,7 @@ public final class Strings {
       }
 
       protected boolean advance() {
-         if(input.length() == 0 || start >= input.length()) {
+         if (input.length() == 0 || start >= input.length()) {
             return false;
          }
          start = input.indexOf(target);
@@ -781,7 +800,7 @@ public final class Strings {
 
       @Override
       public IntPair next() {
-         if(!advance()) {
+         if (!advance()) {
             throw new NoSuchElementException();
          }
          var retValue = IntPair.of(start, start + target.length());
@@ -799,10 +818,10 @@ public final class Strings {
       }
 
       protected boolean advance() {
-         if(next != null) {
+         if (next != null) {
             return true;
          }
-         if(matcher.find()) {
+         if (matcher.find()) {
             next = IntPair.of(matcher.start(), matcher.end());
             return true;
          }
@@ -816,7 +835,7 @@ public final class Strings {
 
       @Override
       public IntPair next() {
-         if(!advance()) {
+         if (!advance()) {
             throw new NoSuchElementException();
          }
          var retValue = IntPair.of(next.v1, next.v2);

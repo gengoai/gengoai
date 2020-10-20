@@ -19,14 +19,12 @@
 
 package com.gengoai.sql.statement;
 
-import lombok.NonNull;
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
+import java.io.Serializable;
 
 /**
  * Defines the type of Update to perform
  */
-public enum UpdateType implements SQLFormattable {
+public enum UpdateType implements Serializable {
    /**
     * Standard update
     */
@@ -51,10 +49,5 @@ public enum UpdateType implements SQLFormattable {
     * Update or ignore on primary key conflict
     */
    UPDATE_OR_IGNORE;
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return name().replace('_', ' ');
-   }
 
 }//END OF UpdateType

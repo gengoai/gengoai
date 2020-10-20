@@ -75,22 +75,22 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
 
    @Override
    public NDArray transform(Observation observation) {
-      if(observation instanceof Variable) {
+      if (observation instanceof Variable) {
          return transform(observation, null);
-      } else if(observation instanceof VariableCollection) {
+      } else if (observation instanceof VariableCollection) {
          return transform(observation, null);
-      } else if(observation instanceof Sequence) {
+      } else if (observation instanceof Sequence) {
          Sequence<? extends Observation> sequence = Cast.as(observation);
-         if(sequence instanceof VariableSequence) {
+         if (sequence instanceof VariableSequence) {
             List<NDArray> vars = new ArrayList<>();
-            for(Observation v : sequence) {
+            for (Observation v : sequence) {
                vars.add(transform(v, null));
             }
             return NDArrayFactory.ND.vstack(vars);
          }
          int maxSize = sequence.stream().mapToInt(o -> (int) o.getVariableSpace().count()).max().orElse(1);
          NDArray n = ndArrayFactory.array(sequence.size(), maxSize);
-         for(int i = 0; i < sequence.size(); i++) {
+         for (int i = 0; i < sequence.size(); i++) {
             NDArray o = transform(sequence.get(i), NDArrayFactory.ND.array(1, maxSize));
             n.setRow(i, o);
          }
@@ -100,9 +100,9 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
    }
 
    public NDArray transform(Observation observation, NDArray out) {
-      if(observation.isVariable()) {
+      if (observation.isVariable()) {
          int index = encoder.encode(((Variable) observation).getName());
-         if(index >= 0) {
+         if (index >= 0) {
             return ndArrayFactory.scalar(index);
          }
          return ndArrayFactory.scalar(0);
@@ -111,15 +111,15 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
       DoubleArrayList list = new DoubleArrayList();
       mvo.forEach(v -> {
          int index = encoder.encode(v.getName());
-         if(index >= 0) {
+         if (index >= 0) {
             list.add(index);
          }
       });
       list.sort();
-      if(out == null) {
+      if (out == null) {
          out = NDArrayFactory.ND.array(1, list.size());
       }
-      for(int i = 0; i < list.size(); i++) {
+      for (int i = 0; i < list.size(); i++) {
          out.set(i, list.get(i));
       }
       return out;

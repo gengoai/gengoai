@@ -70,7 +70,7 @@ public class ZipWriter implements AutoCloseable {
       Resource byteArray = new ByteArrayResource();
       try {
          byteArray.writeObject(entry);
-      } catch(Exception e) {
+      } catch (Exception e) {
          throw new IOException(e);
       }
       addEntry(path, byteArray);

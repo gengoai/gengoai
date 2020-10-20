@@ -31,10 +31,23 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * Navigable map stored on disk.
+ * <p>A NavigableMap implementation that stores its data in a file. NavigableDiskMap are monitored to ensure that their
+ * file handle is properly closed if the it is no longer in use. However, one can use the <code>commit</code> and
+ * <code>close</code> methods to explicitly commit changes and close the map.</p>
+ * <p>NavigableDiskMap are created using a builder in the following way:</p>
+ * <pre>
+ * {@code
+ *  var map = NavigableDiskMap.builder()
+ *                   .file(Resources.from("/data/map.db")
+ *                   .namespace("people")
+ *                   .compressed(true)
+ *                   .build();
+ * }
+ * </pre>
+ * <p>Once an NavigableDiskMap instance is constructed it acts like regular Java NavigableMap.</p>
  *
- * @param <K> the type parameter
- * @param <V> the type parameter
+ * @param <K> the key type parameter
+ * @param <V> the value type parameter
  */
 public final class NavigableDiskMap<K, V> implements NavigableMap<K, V>, Serializable, AutoCloseable {
    private static final long serialVersionUID = 1L;
@@ -96,11 +109,11 @@ public final class NavigableDiskMap<K, V> implements NavigableMap<K, V>, Seriali
    }
 
    private NavigableMap<K, V> delegate() {
-      if(map == null || handle.object.isClosed()) {
-         synchronized(this) {
-            if(map == null || handle.object.isClosed()) {
+      if (map == null || handle.object.isClosed()) {
+         synchronized (this) {
+            if (map == null || handle.object.isClosed()) {
                map = this.handle.object.getStore().getTreeMap(getNameSpace());
-               if(isReadOnly()) {
+               if (isReadOnly()) {
                   map = Collections.unmodifiableNavigableMap(map);
                }
             }
@@ -126,8 +139,8 @@ public final class NavigableDiskMap<K, V> implements NavigableMap<K, V>, Seriali
 
    @Override
    public boolean equals(Object o) {
-      if(this == o) return true;
-      if(!(o instanceof NavigableDiskMap)) return false;
+      if (this == o) return true;
+      if (!(o instanceof NavigableDiskMap)) return false;
       NavigableDiskMap<?, ?> that = (NavigableDiskMap<?, ?>) o;
       return isReadOnly() == that.isReadOnly() &&
             Objects.equals(handle, that.handle) &&

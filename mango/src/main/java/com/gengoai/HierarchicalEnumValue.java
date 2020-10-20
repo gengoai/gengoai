@@ -106,6 +106,12 @@ public abstract class HierarchicalEnumValue<T extends HierarchicalEnumValue<T>> 
     */
    public List<T> children() {
       final String target = name() + SEPARATOR;
+      if (this == registry().ROOT) {
+         return registry().values()
+                          .parallelStream()
+                          .filter(v -> v.parent() == registry().ROOT)
+                          .collect(Collectors.toList());
+      }
       return registry().values()
                        .parallelStream()
                        .filter(v -> v.depth() == (depth() + 1) && v.name().startsWith(target))
@@ -150,7 +156,7 @@ public abstract class HierarchicalEnumValue<T extends HierarchicalEnumValue<T>> 
    @Override
    public String label() {
       int index = name().lastIndexOf(SEPARATOR);
-      if(index > 0) {
+      if (index > 0) {
          return name().substring(index + 1);
       }
       return name();
@@ -158,11 +164,11 @@ public abstract class HierarchicalEnumValue<T extends HierarchicalEnumValue<T>> 
 
    @Override
    public T parent() {
-      if(this == registry().ROOT) {
+      if (this == registry().ROOT) {
          return null;
       }
       int idx = name().lastIndexOf(SEPARATOR);
-      if(idx < 0) {
+      if (idx < 0) {
          return registry().ROOT;
       }
       return registry().make(name().substring(0, idx));

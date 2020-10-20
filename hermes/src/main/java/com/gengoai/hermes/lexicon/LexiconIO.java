@@ -77,20 +77,20 @@ public final class LexiconIO {
                                "A non-negative index for the lemma position in the csv file must be defined.");
       TrieLexicon lexicon = new TrieLexicon(name, parameters.isCaseSensitive);
       final Language language = parameters.language;
-      try(CSVReader reader = parameters.csvFormat.reader(csvFile)) {
+      try (CSVReader reader = parameters.csvFormat.reader(csvFile)) {
          List<String> row;
-         while((row = reader.nextRow()) != null) {
+         while ((row = reader.nextRow()) != null) {
             String lemma = row.get(parameters.lemma);
-            if(Strings.isNullOrBlank(lemma)) {
+            if (Strings.isNullOrBlank(lemma)) {
                continue;
             }
-            double prob = parameters.probability >= 0 && row.size() >= parameters.probability
-                          ? Double.parseDouble(row.get(parameters.probability))
-                          : -1.0;
-            String tag = parameters.tag >= 0 && row.size() >= parameters.tag
-                         ? row.get(parameters.tag)
-                         : parameters.defaultTag;
-            if(parameters.constraint >= 0 && row.size() > parameters.constraint) {
+            double prob = parameters.probability >= 0 && row.size() > parameters.probability
+                  ? Double.parseDouble(row.get(parameters.probability))
+                  : -1.0;
+            String tag = parameters.tag >= 0 && row.size() > parameters.tag
+                  ? row.get(parameters.tag)
+                  : parameters.defaultTag;
+            if (parameters.constraint >= 0 && row.size() > parameters.constraint) {
                lexicon.add(LexiconEntry.of(lemma,
                                            prob,
                                            tag,
@@ -137,13 +137,13 @@ public final class LexiconIO {
       lexJson.get(ENTRIES_SECTION)
              .elementIterator()
              .forEachRemaining(e -> {
-                if(!e.hasProperty(TAG) && defaultTag != null) {
+                if (!e.hasProperty(TAG) && defaultTag != null) {
                    e.addProperty(TAG, defaultTag);
                 }
-                if(!e.hasProperty(PROBABILITY)) {
+                if (!e.hasProperty(PROBABILITY)) {
                    e.addProperty(PROBABILITY, -1.0);
                 }
-                if(!e.hasProperty("tokenLength")) {
+                if (!e.hasProperty("tokenLength")) {
                    e.addProperty("tokenLength",
                                  LexiconEntry.calculateTokenLength(e.getStringProperty("lemma"), language));
                 }
@@ -173,52 +173,34 @@ public final class LexiconIO {
     * @throws IOException Something went wrong writing the lexicon
     */
    public static void write(Lexicon lexicon, Resource lexiconResource, String defaultTag) throws IOException {
-//      try(JsonWriter writer = Json.createWriter(lexiconResource)) {
-      //         writer.spaceIndent(2);
-      //         writer.beginDocument();
-      //         {
-      //            //Write Specification
-      //            writer.beginObject(SPECIFICATION_SECTION);
-      //            {
-      //               writer.name(IS_CASE_SENSITIVE);
-      //               writer.value(lexicon.isCaseSensitive());
-      //               if(defaultTag != null) {
-      //                  writer.name(TAG);
-      //                  writer.value(defaultTag);
-      //               }
-      //            }
-      //            writer.endObject();
-      //
-      //            //Write Entries
-      //            writer.beginArray(ENTRIES_SECTION);
-      //            {
-      //               for(LexiconEntry entry : lexicon.entries()) {
-      //                  writer.beginObject();
-      //                  {
-      //                     writer.name(LEMMA);
-      //                     writer.value(entry.getLemma());
-      //                     writer.name("tokenLength");
-      //                     writer.value(entry.getTokenLength());
-      //                     if(entry.getProbability() != 1.0) {
-      //                        writer.name(PROBABILITY);
-      //                        writer.value(entry.getProbability());
-      //                     }
-      //                     if(entry.getTag() != null && !entry.getTag().equals(defaultTag)) {
-      //                        writer.name(TAG);
-      //                        writer.value(entry.getTag());
-      //                     }
-      //                     if(entry.getConstraint() != null) {
-      //                        writer.name(CONSTRAINT);
-      //                        writer.value(entry.getConstraint().getPattern());
-      //                     }
-      //                  }
-      //                  writer.endObject();
-      //               }
-      //            }
-      //            writer.endArray();
-      //         }
-      //         writer.endDocument();
-      //      }
+      JsonEntry file = JsonEntry.object();
+
+      JsonEntry spec = JsonEntry.object();
+      spec.addProperty(IS_CASE_SENSITIVE, lexicon.isCaseSensitive());
+      if (Strings.isNotNullOrBlank(defaultTag)) {
+         spec.addProperty(TAG, defaultTag);
+      }
+      file.addProperty(SPECIFICATION_SECTION, spec);
+
+      JsonEntry entries = JsonEntry.array();
+      for (LexiconEntry entry : lexicon.entries()) {
+         JsonEntry obj = JsonEntry.object();
+         obj.addProperty(LEMMA, entry.getLemma());
+         obj.addProperty("tokenLength", entry.getTokenLength());
+         if (entry.getProbability() != 1.0) {
+            obj.addProperty(PROBABILITY, entry.getProbability());
+         }
+         if (entry.getTag() != null && !entry.getTag().equals(defaultTag)) {
+            obj.addProperty(TAG, entry.getTag());
+         }
+         if (entry.getConstraint() != null) {
+            obj.addProperty(CONSTRAINT, entry.getConstraint().getPattern());
+         }
+         entries.addValue(obj);
+      }
+      file.addProperty(ENTRIES_SECTION, entries);
+
+      Json.dumpPretty(file, lexiconResource);
    }
 
    /**

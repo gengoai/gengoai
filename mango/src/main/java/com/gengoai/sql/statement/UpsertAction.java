@@ -19,14 +19,12 @@
 
 package com.gengoai.sql.statement;
 
-import lombok.NonNull;
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
+import com.gengoai.sql.SQLElement;
 
 /**
  * The action to perform for doing an upsert as part of index conflict in an {@link Insert} statement.
  */
-public enum UpsertAction implements SQLFormattable {
+public enum UpsertAction implements SQLElement {
    /**
     * Do Nothing
     */
@@ -36,8 +34,4 @@ public enum UpsertAction implements SQLFormattable {
     */
    UPDATE_SET;
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return name().replace('_', ' ');
-   }
 }//END OF UpsertAction

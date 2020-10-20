@@ -19,6 +19,7 @@
 
 package com.gengoai.swing.component;
 
+import com.gengoai.conversion.Cast;
 import com.gengoai.swing.Colors;
 import com.gengoai.swing.Fonts;
 import com.gengoai.swing.component.model.MangoTableModel;
@@ -26,11 +27,10 @@ import com.gengoai.tuple.Tuple2;
 import lombok.Getter;
 import lombok.NonNull;
 
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.*;
-import java.awt.Color;
-import java.awt.Component;
+import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -80,8 +80,6 @@ public class MangoTable extends JTable {
       super(dm);
       this.model = dm;
    }
-
-
 
 
    /**
@@ -162,21 +160,21 @@ public class MangoTable extends JTable {
    @Override
    public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
       Component comp = super.prepareRenderer(renderer, row, column);
-      if(getSelectedRow() != row &&
+      if (getSelectedRow() != row &&
             (comp.getBackground().equals(getBackground()) ||
                   comp.getBackground().equals(alternateRowColor)
             )) {
-         if(rowColor == null) {
+         if (rowColor == null) {
             rowColor = comp.getBackground();
          }
-         if(alternateRowColor == null) {
+         if (alternateRowColor == null) {
             alternateRowColor = comp.getBackground();
          }
          Color bg = row % 2 == 0
-                    ? rowColor
-                    : alternateRowColor;
+               ? rowColor
+               : alternateRowColor;
          comp.setBackground(bg);
-         if(comp.getForeground().equals(getForeground())) {
+         if (comp.getForeground().equals(getForeground())) {
             comp.setForeground(Colors.calculateBestFontColor(comp.getBackground()));
          }
          bg = null;
@@ -191,9 +189,9 @@ public class MangoTable extends JTable {
     */
    public void resizeColumnWidth(int minWidth) {
       final TableColumnModel columnModel = getColumnModel();
-      for(int column = 0; column < getColumnCount(); column++) {
+      for (int column = 0; column < getColumnCount(); column++) {
          int width = minWidth;
-         for(int row = 0; row < getRowCount(); row++) {
+         for (int row = 0; row < getRowCount(); row++) {
             TableCellRenderer renderer = getCellRenderer(row, column);
             Component comp = prepareRenderer(renderer, row, column);
             width = Math.max(comp.getPreferredSize().width + 1, width);
@@ -230,16 +228,22 @@ public class MangoTable extends JTable {
     * @param isVisible the is visible
     */
    public void setHeaderIsVisible(boolean isVisible) {
-      if(isVisible && getTableHeader() == null) {
+      if (isVisible && getTableHeader() == null) {
          setTableHeader(new JTableHeader());
-      } else if(!isVisible) {
+         for (int i = 0; i < getModel().getColumnCount(); i++) {
+            getTableHeader().getColumnModel()
+                            .getColumn(i)
+                            .setHeaderValue(getModel().getColumnName(i));
+         }
+      } else if (!isVisible) {
          setTableHeader(null);
       }
    }
 
    @Override
    public void setModel(TableModel model) {
-      if(model instanceof MangoTableModel) {
+      if (model instanceof MangoTableModel) {
+         this.model = Cast.as(model);
          super.setModel(model);
       } else {
          throw new IllegalArgumentException("Model must be an instance of MangoTableModel");
@@ -252,7 +256,7 @@ public class MangoTable extends JTable {
     * @param isReorderingAllowed the is reordering allowed
     */
    public void setReorderingAllowed(boolean isReorderingAllowed) {
-      if(getTableHeader() != null) {
+      if (getTableHeader() != null) {
          this.getTableHeader().setReorderingAllowed(isReorderingAllowed);
       }
    }

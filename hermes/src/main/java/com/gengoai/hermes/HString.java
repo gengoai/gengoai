@@ -62,10 +62,10 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the HString result
     */
    static HString toHString(Object o) {
-      if(o instanceof HString) {
+      if (o instanceof HString) {
          return Cast.as(o);
       }
-      if(o instanceof CharSequence) {
+      if (o instanceof CharSequence) {
          return Fragments.stringWrapper(o.toString());
       }
       return Fragments.orphanedAnnotation(AnnotationType.ROOT);
@@ -99,18 +99,18 @@ public interface HString extends Span, StringLike, Serializable {
       int start = Integer.MAX_VALUE;
       int end = Integer.MIN_VALUE;
       Document owner = null;
-      for(HString hString : strings) {
-         if(!hString.isEmpty()) {
-            if(owner == null && hString.document() != null) {
+      for (HString hString : strings) {
+         if (!hString.isEmpty()) {
+            if (owner == null && hString.document() != null) {
                owner = hString.document();
-            } else if(hString.document() == null || owner != hString.document()) {
+            } else if (hString.document() == null || owner != hString.document()) {
                throw new IllegalArgumentException("Cannot union strings from different documents");
             }
             start = Math.min(start, hString.start());
             end = Math.max(end, hString.end());
          }
       }
-      if(start < 0 || start >= end) {
+      if (start < 0 || start >= end) {
          return Fragments.emptyHString(owner);
       }
       return Fragments.span(owner, start, end);
@@ -149,19 +149,19 @@ public interface HString extends Span, StringLike, Serializable {
                                                   .filter(r -> r instanceof RelationType)
                                                   .map(Cast::<RelationType>as)
                                                   .collect(Collectors.toSet());
-      for(Annotation source : g.vertices()) {
-         for(Relation relation : source.outgoingRelations(true)) {
-            if(!relationTypeList.contains(relation.getType())) {
+      for (Annotation source : g.vertices()) {
+         for (Relation relation : source.outgoingRelations(true)) {
+            if (!relationTypeList.contains(relation.getType())) {
                continue;
             }
             Annotation target = relation.getTarget(this);
-            if(!g.containsVertex(target)) {
+            if (!g.containsVertex(target)) {
                target = target.annotationStream()
                               .filter(g::containsVertex)
                               .findFirst()
                               .orElse(null);
             }
-            if(target != null && !g.containsEdge(source, target)) {
+            if (target != null && !g.containsEdge(source, target)) {
                RelationEdge edge = g.addEdge(source, target);
                edge.setRelation(relation.getValue());
                edge.setRelationType(relation.getType());
@@ -196,7 +196,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @return all annotations overlapping with this HString.
     */
    default List<Annotation> annotations() {
-      if(document() == null) {
+      if (document() == null) {
          return Collections.emptyList();
       }
       return document().annotations(AnnotationType.ROOT, this);
@@ -210,7 +210,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the list of annotations of given type meeting the given filter that overlap with this HString
     */
    default List<Annotation> annotations(@NonNull AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
-      if(document() == null || type == null || filter == null) {
+      if (document() == null || type == null || filter == null) {
          return Collections.emptyList();
       }
       return document().annotations(type, this, filter);
@@ -223,7 +223,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the list of annotations of given type that overlap with this HString
     */
    default List<Annotation> annotations(@NonNull AnnotationType type) {
-      if(document() == null || type == null) {
+      if (document() == null) {
          return Collections.emptyList();
       }
       return annotations(type, annotation -> annotation.isInstance(type) && annotation.overlaps(this));
@@ -236,9 +236,9 @@ public interface HString extends Span, StringLike, Serializable {
     * @return An annotation.
     */
    default Annotation asAnnotation() {
-      if(this instanceof Annotation) {
+      if (this instanceof Annotation) {
          return Cast.as(this);
-      } else if(document() != null) {
+      } else if (document() != null) {
          return document()
                .annotationBuilder(AnnotationType.ROOT)
                .from(this)
@@ -255,9 +255,9 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the annotation
     */
    default Annotation asAnnotation(@NonNull AnnotationType type) {
-      if(isInstance(type)) {
+      if (isInstance(type)) {
          return Cast.as(this);
-      } else if(document() != null) {
+      } else if (document() != null) {
          return document()
                .annotationBuilder(type)
                .from(this)
@@ -271,7 +271,7 @@ public interface HString extends Span, StringLike, Serializable {
     */
    default boolean atBeginningOfSentence() {
       Annotation sentence = sentence();
-      if(sentence.isEmpty()) {
+      if (sentence.isEmpty()) {
          return false;
       }
       return sentence.start() == start();
@@ -282,7 +282,7 @@ public interface HString extends Span, StringLike, Serializable {
     */
    default boolean atEndOfSentence() {
       Annotation sentence = sentence();
-      if(sentence.isEmpty()) {
+      if (sentence.isEmpty()) {
          return false;
       }
       return sentence.end() == end();
@@ -335,8 +335,8 @@ public interface HString extends Span, StringLike, Serializable {
     * @return True if the HString has the attribute and it is an instance of the given target value
     */
    default <T> boolean attributeIsA(@NonNull AttributeType<T> attributeType, Object targetValue) {
-      if(hasAttribute(attributeType)) {
-         if(Tag.class.isAssignableFrom(TypeUtils.asClass(attributeType.getValueType()))) {
+      if (hasAttribute(attributeType)) {
+         if (Tag.class.isAssignableFrom(TypeUtils.asClass(attributeType.getValueType()))) {
             Tag myTag = (Tag) attribute(attributeType);
             return myTag.isInstance((Tag) attributeType.decode(targetValue));
          }
@@ -365,7 +365,7 @@ public interface HString extends Span, StringLike, Serializable {
 
    @Override
    default char charAt(int index) {
-      if(index < 0 || index > length()) {
+      if (index < 0 || index > length()) {
          throw new IndexOutOfBoundsException();
       }
       notNull(document(), getClass() + "Attempting to accessing the content of an HString that has no owner");
@@ -396,8 +396,8 @@ public interface HString extends Span, StringLike, Serializable {
                                "minimum ngram order must be less than or equal to the maximum ngram order");
       Validation.checkArgument(minOrder > 0, "minimum ngram order must be greater than 0.");
       List<HString> ngrams = new ArrayList<>();
-      for(int i = 0; i < length(); i++) {
-         for(int j = i + minOrder; j <= length() && j <= i + maxOrder; j++) {
+      for (int i = 0; i < length(); i++) {
+         for (int j = i + minOrder; j <= length() && j <= i + maxOrder; j++) {
             ngrams.add(substring(i, j));
          }
       }
@@ -466,7 +466,7 @@ public interface HString extends Span, StringLike, Serializable {
     * annotation if there is no parent.
     */
    default Tuple2<String, Annotation> dependency() {
-      if(head().isAnnotation()) {
+      if (head().isAnnotation()) {
          return head().asAnnotation().dependency();
       }
       return $(Strings.EMPTY, Fragments.orphanedAnnotation(AnnotationType.ROOT));
@@ -499,7 +499,7 @@ public interface HString extends Span, StringLike, Serializable {
     */
    default boolean dependencyIsA(String... values) {
       String rel = dependency().v1;
-      if(values == null || values.length == 0 || (values.length == 1 && values[0].equals("null"))) {
+      if (values == null || values.length == 0 || (values.length == 1 && values[0].equals("null"))) {
          return Strings.isNullOrBlank(rel);
       }
       return Arrays.asList(values).contains(rel);
@@ -511,7 +511,7 @@ public interface HString extends Span, StringLike, Serializable {
    Document document();
 
    default NDArray embedding() {
-      if(hasAttribute(Types.EMBEDDING)) {
+      if (hasAttribute(Types.EMBEDDING)) {
          return attribute(Types.EMBEDDING);
       }
       return VectorCompositions.Average.compose(tokenStream().filter(t -> t.hasAttribute(Types.EMBEDDING))
@@ -521,7 +521,7 @@ public interface HString extends Span, StringLike, Serializable {
    }
 
    default NDArray embedding(@NonNull Predicate<HString> filter) {
-      if(hasAttribute(Types.EMBEDDING)) {
+      if (hasAttribute(Types.EMBEDDING)) {
          return attribute(Types.EMBEDDING);
       }
       filter = filter.and((HString t) -> t.hasAttribute(Types.EMBEDDING));
@@ -586,12 +586,12 @@ public interface HString extends Span, StringLike, Serializable {
    default HString find(String text, int start) {
       Validation.checkElementIndex(start, length());
       int pos = indexOf(text, start);
-      if(pos == -1) {
+      if (pos == -1) {
          return Fragments.emptyHString(document());
       }
 
       //If we have tokens expand the match to the overlapping tokens.
-      if(document() != null && document().isCompleted(Types.TOKEN)) {
+      if (document() != null && document().isCompleted(Types.TOKEN)) {
          return union(substring(pos, pos + text.length()).tokens());
       }
 
@@ -610,7 +610,7 @@ public interface HString extends Span, StringLike, Serializable {
          int start = 0;
 
          private boolean advance() {
-            if(pos == null) {
+            if (pos == null) {
                pos = indexOf(text, start);
             }
             return pos != -1;
@@ -623,14 +623,14 @@ public interface HString extends Span, StringLike, Serializable {
 
          @Override
          public HString next() {
-            if(!advance()) {
+            if (!advance()) {
                throw new NoSuchElementException();
             }
             int n = pos;
             pos = null;
             start = n + 1;
             //If we have tokens expand the match to the overlaping tokens.
-            if(document() != null && document().isCompleted(Types.TOKEN)) {
+            if (document() != null && document().isCompleted(Types.TOKEN)) {
                return union(substring(n, n + text.length()).tokens());
             }
             return substring(n, n + text.length());
@@ -655,7 +655,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the forst token annotation
     */
    default Annotation firstToken() {
-      if(tokenLength() == 0) {
+      if (tokenLength() == 0) {
          return Fragments.orphanedAnnotation(Types.TOKEN);
       }
       return tokenAt(0);
@@ -673,13 +673,22 @@ public interface HString extends Span, StringLike, Serializable {
 
    @Override
    default Language getLanguage() {
-      if(hasAttribute(Types.LANGUAGE)) {
+      if (hasAttribute(Types.LANGUAGE)) {
          return attribute(Types.LANGUAGE);
       }
-      if(document() == null) {
+      if (document() == null) {
          return Hermes.defaultLanguage();
       }
       return document().getLanguage();
+   }
+
+   /**
+    * Sets the language of the HString
+    *
+    * @param language The language of the HString.
+    */
+   default void setLanguage(Language language) {
+      put(Types.LANGUAGE, language);
    }
 
    /**
@@ -688,11 +697,11 @@ public interface HString extends Span, StringLike, Serializable {
     * @return The lemmatized version of the HString.
     */
    default String getLemma() {
-      if(isInstance(Types.TOKEN)) {
-         if(hasAttribute(Types.LEMMA)) {
+      if (isInstance(Types.TOKEN)) {
+         if (hasAttribute(Types.LEMMA)) {
             return attribute(Types.LEMMA);
          }
-         if(hasAttribute(Types.SPELLING_CORRECTION)) {
+         if (hasAttribute(Types.SPELLING_CORRECTION)) {
             return attribute(Types.SPELLING_CORRECTION);
          }
          return Lemmatizers.getLemmatizer(getLanguage())
@@ -702,14 +711,14 @@ public interface HString extends Span, StringLike, Serializable {
             .stream()
             .map(HString::getLemma)
             .collect(Collectors.joining(getLanguage().usesWhitespace()
-                                        ? " "
-                                        : ""));
+                                              ? " "
+                                              : ""));
    }
 
    default UniversalFeatureSet getMorphologicalFeatures() {
-      if(tokenLength() < 1) {
+      if (tokenLength() < 1) {
          return new UniversalFeatureSet();
-      } else if(tokenLength() == 1) {
+      } else if (tokenLength() == 1) {
          return attribute(Types.MORPHOLOGICAL_FEATURES, pos().getFeatures());
       }
       return new UniversalFeatureSet(tokenStream().map(HString::getMorphologicalFeatures).collect(Collectors.toList()));
@@ -723,13 +732,13 @@ public interface HString extends Span, StringLike, Serializable {
     * @return The stemmed version of the HString.
     */
    default String getStemmedForm() {
-      if(isInstance(Types.TOKEN)) {
+      if (isInstance(Types.TOKEN)) {
          return computeIfAbsent(Types.STEM, () -> Stemmers.getStemmer(getLanguage()).stem(this));
       }
       return tokenStream().map(HString::getStemmedForm)
                           .collect(Collectors.joining(getLanguage().usesWhitespace()
-                                                      ? " "
-                                                      : ""));
+                                                            ? " "
+                                                            : ""));
    }
 
    /**
@@ -823,7 +832,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @param processor the processor to run on this HString if it is not empty.
     */
    default void ifNotEmpty(@NonNull Consumer<? super HString> processor) {
-      if(!isEmpty()) {
+      if (!isEmpty()) {
          processor.accept(this);
       }
    }
@@ -880,7 +889,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the annotations
     */
    default List<Annotation> incoming(@NonNull RelationType type, boolean includeSubAnnotations) {
-      if(type == null) {
+      if (type == null) {
          return Collections.emptyList();
       }
       return incomingRelationStream(includeSubAnnotations).filter(r -> r.getType().isInstance(type))
@@ -905,7 +914,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the stream of relations
     */
    default Stream<Relation> incomingRelationStream(boolean includeSubAnnotations) {
-      if(includeSubAnnotations) {
+      if (includeSubAnnotations) {
          return annotations().stream()
                              .filter(a -> a != this)
                              .flatMap(a -> a.incomingRelationStream(false))
@@ -967,24 +976,24 @@ public interface HString extends Span, StringLike, Serializable {
     * @return The list of interleaved annotations
     */
    default List<Annotation> interleaved(AnnotationType... types) {
-      if(types == null || types.length == 0) {
+      if (types == null || types.length == 0) {
          return Collections.emptyList();
       }
-      if(types.length == 1) {
+      if (types.length == 1) {
          return annotations(types[0]);
       }
       List<Annotation> annotations = new ArrayList<>();
-      for(int i = 0; i < tokenLength(); ) {
+      for (int i = 0; i < tokenLength(); ) {
          Annotation annotation = Fragments.orphanedAnnotation(AnnotationType.ROOT);
-         for(AnnotationType other : types) {
-            for(Annotation temp : tokenAt(i).annotations(other)) {
-               if(temp.tokenLength() > annotation.tokenLength()) {
+         for (AnnotationType other : types) {
+            for (Annotation temp : tokenAt(i).annotations(other)) {
+               if (temp.tokenLength() > annotation.tokenLength()) {
                   annotation = temp;
                }
             }
          }
 
-         if(annotation.isEmpty()) {
+         if (annotation.isEmpty()) {
             i++;
          } else {
             i += annotation.tokenLength();
@@ -1001,8 +1010,8 @@ public interface HString extends Span, StringLike, Serializable {
     * @return if this HString has a base category of one of the ones given.
     */
    default boolean isA(@NonNull BasicCategories... categories) {
-      for(BasicCategories category : categories()) {
-         if(category.isInstance(categories)) {
+      for (BasicCategories category : categories()) {
+         if (category.isInstance(categories)) {
             return true;
          }
       }
@@ -1045,8 +1054,8 @@ public interface HString extends Span, StringLike, Serializable {
    default Annotation last(@NonNull AnnotationType type) {
       List<Annotation> annotations = annotations(type);
       return annotations.isEmpty()
-             ? Fragments.orphanedAnnotation(type)
-             : annotations.get(annotations.size() - 1);
+            ? Fragments.orphanedAnnotation(type)
+            : annotations.get(annotations.size() - 1);
    }
 
    /**
@@ -1078,15 +1087,15 @@ public interface HString extends Span, StringLike, Serializable {
       windowSize = Math.abs(windowSize);
       Validation.checkArgument(windowSize >= 0, "Window size must not be 0");
       int sentenceStart = sentence().start();
-      if(windowSize == 0 || start() <= sentenceStart) {
+      if (windowSize == 0 || start() <= sentenceStart) {
          return Fragments.emptyHString(document());
       }
       HString context = firstToken().previous(type);
-      for(int i = 1; i < windowSize; i++) {
+      for (int i = 1; i < windowSize; i++) {
          HString next = context
                .firstToken()
                .previous(type);
-         if(next.end() <= sentenceStart) {
+         if (next.end() <= sentenceStart) {
             break;
          }
          context = context.union(next);
@@ -1107,8 +1116,8 @@ public interface HString extends Span, StringLike, Serializable {
     */
    default Annotation next(@NonNull AnnotationType type) {
       return document() == null
-             ? Fragments.orphanedAnnotation(type)
-             : document().next(asAnnotation(), type);
+            ? Fragments.orphanedAnnotation(type)
+            : document().next(asAnnotation(), type);
    }
 
    /**
@@ -1184,7 +1193,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the stream of relations
     */
    default Stream<Relation> outgoingRelationStream(boolean includeSubAnnotations) {
-      if(includeSubAnnotations) {
+      if (includeSubAnnotations) {
          return annotations().stream()
                              .flatMap(a -> a.outgoingRelationStream(false))
                              .filter(a -> !overlaps(this))
@@ -1273,8 +1282,8 @@ public interface HString extends Span, StringLike, Serializable {
     */
    default Annotation previous(@NonNull AnnotationType type) {
       return document() == null
-             ? Fragments.orphanedAnnotation(type)
-             : document().previous(asAnnotation(), type);
+            ? Fragments.orphanedAnnotation(type)
+            : document().previous(asAnnotation(), type);
    }
 
    /**
@@ -1301,7 +1310,7 @@ public interface HString extends Span, StringLike, Serializable {
    default <E, T extends Collection<E>> void putAdd(@NonNull AttributeType<T> attributeType,
                                                     @NonNull Iterable<E> items) {
       attributeMap().compute(attributeType, (type, collection) -> {
-         if(collection == null) {
+         if (collection == null) {
             return attributeType.decode(items);
          }
          final Collection<E> c = Cast.as(collection);
@@ -1381,15 +1390,15 @@ public interface HString extends Span, StringLike, Serializable {
    default HString rightContext(@NonNull AnnotationType type, int windowSize) {
       Validation.checkArgument(windowSize >= 0, "Window size must be > 0");
       int sentenceEnd = sentence().end();
-      if(windowSize == 0 || end() >= sentenceEnd) {
+      if (windowSize == 0 || end() >= sentenceEnd) {
          return Fragments.emptyHString(document());
       }
       HString context = lastToken().next(type);
-      for(int i = 1; i < windowSize; i++) {
+      for (int i = 1; i < windowSize; i++) {
          HString next = context
                .lastToken()
                .next(type);
-         if(next.start() >= sentenceEnd) {
+         if (next.start() >= sentenceEnd) {
             break;
          }
          context = context.union(next);
@@ -1426,15 +1435,6 @@ public interface HString extends Span, StringLike, Serializable {
    }
 
    /**
-    * Sets the language of the HString
-    *
-    * @param language The language of the HString.
-    */
-   default void setLanguage(Language language) {
-      put(Types.LANGUAGE, language);
-   }
-
-   /**
     * Splits this HString using the given predicate to apply against tokens. An example of where this might be useful is
     * when we want to split long phrases on different punctuation, e.g. commas or semicolons.
     *
@@ -1444,17 +1444,17 @@ public interface HString extends Span, StringLike, Serializable {
    default List<HString> split(Predicate<? super Annotation> delimiterPredicate) {
       List<HString> result = new ArrayList<>();
       int start = -1;
-      for(int i = 0; i < tokenLength(); i++) {
-         if(delimiterPredicate.test(tokenAt(i))) {
-            if(start != -1) {
+      for (int i = 0; i < tokenLength(); i++) {
+         if (delimiterPredicate.test(tokenAt(i))) {
+            if (start != -1) {
                result.add(tokenAt(start).union(tokenAt(i - 1)));
             }
             start = -1;
-         } else if(start == -1) {
+         } else if (start == -1) {
             start = i;
          }
       }
-      if(start != -1) {
+      if (start != -1) {
          result.add(tokenAt(start).union(tokenAt(tokenLength() - 1)));
       }
       return result;
@@ -1492,13 +1492,13 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the new document covering this HString
     */
    default Document toDocument() {
-      if(this instanceof Document) {
+      if (this instanceof Document) {
          return Cast.as(this);
       }
       DefaultDocumentImpl doc = new DefaultDocumentImpl(String.format("%s-%d:%d", document().getId(), start(), end()),
                                                         toString());
       Map<Long, Long> idMap = new HashMap<>();
-      for(Annotation annotation : enclosedAnnotations()) {
+      for (Annotation annotation : enclosedAnnotations()) {
          long id = doc.annotationBuilder(annotation.getType())
                       .start(annotation.start() - start())
                       .end(end() - annotation.end())
@@ -1507,7 +1507,7 @@ public interface HString extends Span, StringLike, Serializable {
                       .getId();
          idMap.put(annotation.getId(), id);
       }
-      for(Annotation annotation : enclosedAnnotations()) {
+      for (Annotation annotation : enclosedAnnotations()) {
          final Annotation targetAnnotation = document().annotation(annotation.getId());
          annotation.outgoingRelationStream(false)
                    .filter(r -> idMap.containsKey(r.getTarget()))
@@ -1550,7 +1550,7 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the token annotation at the relative offset
     */
    default Annotation tokenAt(int tokenIndex) {
-      if(tokenIndex < 0 || tokenIndex >= tokenLength()) {
+      if (tokenIndex < 0 || tokenIndex >= tokenLength()) {
          return Fragments.orphanedAnnotation(Types.TOKEN);
       }
       return tokens().get(tokenIndex);
@@ -1602,16 +1602,16 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the trimmed HString
     */
    default HString trimLeft(@NonNull Predicate<? super HString> toTrimPredicate) {
-      if(tokenLength() == 0) {
+      if (tokenLength() == 0) {
          return toTrimPredicate.test(this)
-                ? Fragments.emptyHString(document())
-                : this;
+               ? Fragments.emptyHString(document())
+               : this;
       }
       int start = 0;
-      while(start < tokenLength() - 1 && toTrimPredicate.test(tokenAt(start))) {
+      while (start < tokenLength() - 1 && toTrimPredicate.test(tokenAt(start))) {
          start++;
       }
-      if(start < tokenLength()) {
+      if (start < tokenLength()) {
          return union(tokens().subList(start, tokenLength()));
       }
       return Fragments.emptyHString(document());
@@ -1625,18 +1625,18 @@ public interface HString extends Span, StringLike, Serializable {
     * @return the trimmed HString
     */
    default HString trimRight(@NonNull Predicate<? super HString> toTrimPredicate) {
-      if(tokenLength() == 0) {
+      if (tokenLength() == 0) {
          return toTrimPredicate.test(this)
-                ? Fragments.emptyHString(document())
-                : this;
+               ? Fragments.emptyHString(document())
+               : this;
       }
       int end = tokenLength() - 1;
-      while(end >= 0 && toTrimPredicate.test(tokenAt(end))) {
+      while (end >= 0 && toTrimPredicate.test(tokenAt(end))) {
          end--;
       }
-      if(end > 0) {
+      if (end > 0) {
          return tokenAt(0).union(tokenAt(end));
-      } else if(end == 0) {
+      } else if (end == 0) {
          return tokenAt(0);
       }
       return Fragments.emptyHString(document());

@@ -19,20 +19,13 @@
 
 package com.gengoai.sql.constraint;
 
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
-import lombok.NonNull;
+import com.gengoai.sql.SQLElement;
 
-public enum ConflictClause implements SQLFormattable {
+public enum ConflictClause implements SQLElement {
    ROLLBACK,
    ABORT,
    FAIL,
    IGNORE,
    REPLACE;
-
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.onConflict(this);
-   }
 
 }//END OF ConflictClause

@@ -20,9 +20,7 @@
 package com.gengoai.sql.statement;
 
 import com.gengoai.sql.SQL;
-import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLElement;
-import com.gengoai.sql.SQLFormattable;
 import com.gengoai.string.Strings;
 import lombok.*;
 
@@ -39,7 +37,7 @@ import java.util.stream.Stream;
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 @ToString
-public class UpsertClause implements SQLFormattable {
+public class UpsertClause implements SQLElement {
    private static final long serialVersionUID = 1L;
    @Getter
    private final List<SQLElement> indexedColumns = new ArrayList<>();
@@ -164,7 +162,7 @@ public class UpsertClause implements SQLFormattable {
     * @return this UpsertClause object
     */
    public UpsertClause indexedWhere(String whereClause) {
-      if(Strings.isNullOrBlank(whereClause)) {
+      if (Strings.isNullOrBlank(whereClause)) {
          this.indexedWhere = null;
       } else {
          this.indexedWhere = SQL.sql(whereClause);
@@ -229,11 +227,6 @@ public class UpsertClause implements SQLFormattable {
       return set(column, SQL.namedArgument(column));
    }
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return dialect.toSQL(this);
-   }
-
    /**
     * Sets the criteria (i.e. WHERE) for the UpsertClause.
     *
@@ -241,7 +234,7 @@ public class UpsertClause implements SQLFormattable {
     * @return this UpsertClause object
     */
    public UpsertClause updateWhere(String whereClause) {
-      if(Strings.isNullOrBlank(whereClause)) {
+      if (Strings.isNullOrBlank(whereClause)) {
          this.updateWhere = null;
       } else {
          this.updateWhere = SQL.sql(whereClause);

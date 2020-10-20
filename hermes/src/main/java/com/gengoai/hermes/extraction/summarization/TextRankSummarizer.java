@@ -31,6 +31,7 @@ import com.gengoai.hermes.extraction.Extraction;
 import com.gengoai.hermes.similarity.EmbeddingSimilarity;
 import com.gengoai.hermes.similarity.HStringSimilarity;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ import java.util.List;
  * </p>
  */
 @Data
+@NoArgsConstructor
 public class TextRankSummarizer implements Summarizer {
    private static final long serialVersionUID = 1L;
    private double ratio = 0.2;
@@ -54,18 +56,22 @@ public class TextRankSummarizer implements Summarizer {
    private HStringSimilarity similarityMeasure = new EmbeddingSimilarity(Similarity.Cosine);
    private double similarityThreshold = 1e-10;
 
+   public TextRankSummarizer(@NonNull HStringSimilarity similarityMeasure) {
+      this.similarityMeasure = similarityMeasure;
+   }
+
    @Override
    public Extraction extract(@NonNull HString hString) {
       List<Annotation> sentences = hString.sentences();
       Graph<Annotation> g = Graph.undirected();
       g.addVertices(sentences);
 
-      for(int i = 0; i < sentences.size(); i++) {
+      for (int i = 0; i < sentences.size(); i++) {
          Annotation si = sentences.get(i);
-         for(int j = i + 1; j < sentences.size(); j++) {
+         for (int j = i + 1; j < sentences.size(); j++) {
             Annotation sj = sentences.get(j);
             double similarity = similarityMeasure.calculate(si, sj);
-            if(similarity >= similarityThreshold) {
+            if (similarity >= similarityThreshold) {
                g.addEdge(si, sj, similarity);
             }
          }
@@ -74,8 +80,8 @@ public class TextRankSummarizer implements Summarizer {
       PageRank<Annotation> pageRank = new PageRank<>(30, 0.85, 0.0001);
       Counter<Annotation> scores = pageRank.score(g);
       int summaryLength = numberOfSentences > 0
-                          ? numberOfSentences
-                          : (int) Math.floor(sentences.size() * ratio);
+            ? numberOfSentences
+            : (int) Math.floor(sentences.size() * ratio);
       List<HString> extraction = new ArrayList<>(scores.topN(summaryLength).items());
       extraction.sort(Comparator.comparingInt(a -> a.attribute(Types.INDEX)));
       return Extraction.fromHStringList(extraction);

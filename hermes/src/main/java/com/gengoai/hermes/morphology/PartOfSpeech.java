@@ -87,7 +87,7 @@ public final class PartOfSpeech implements Tag, Serializable {
    public static final PartOfSpeech OTHER = upos("OTHER", "X", ANY);
    public static final PartOfSpeech PARTICLE = upos("PARTICLE", "PART", ANY);
    public static final PartOfSpeech PRONOUN = upos("PRONOUN", "PRON", ANY);
-   public static final PartOfSpeech PROPER_NOUN = upos("PROPER_NOUN", "PROPN", ANY);
+   public static final PartOfSpeech PROPER_NOUN = upos("PROPER_NOUN", "PROPN", NOUN);
    public static final PartOfSpeech PUNCTUATION = upos("PUNCTUATION", "PUNCT", ANY);
    public static final PartOfSpeech SCONJ = upos("SCONJ", "SCONJ", ANY);
    public static final PartOfSpeech SYMBOL = upos("SYMBOL", "SYM", ANY);
@@ -156,6 +156,7 @@ public final class PartOfSpeech implements Tag, Serializable {
       if(text.hasAttribute(Types.PART_OF_SPEECH)) {
          return text.attribute(Types.PART_OF_SPEECH);
       }
+
       if(text.tokenLength() == 1 && text.tokenAt(0).hasAttribute(Types.PART_OF_SPEECH)) {
          return text.tokenAt(0).attribute(Types.PART_OF_SPEECH);
       }

@@ -26,14 +26,12 @@ declare -A train
 train[POS]="--df=pos_opl::/$CORPUS_DIR/$LANG/part_of_speech/penn_treebank_train.txt"
 train[PHRASE_CHUNK]="--df=conll::$CORPUS_DIR/$LANG/phrase_chunk/train.txt "
 train[ENTITY]="--df=hjson_opl::$CORPUS_DIR/$LANG/named_entity/train.json_opl"
-#train[TF_ENTITY]="--df=hjson_opl::$CORPUS_DIR/$LANG/named_entity/train.json_opl"
 train[TF_ENTITY]="--df=corpus::/data/corpora/hermes_data/ontonotes_ner --query=\$SPLIT='TRAIN'"
 
 declare -A testd
 testd[POS]="--df=pos_opl::/$CORPUS_DIR/$LANG/part_of_speech/penn_treebank_test.txt"
 testd[PHRASE_CHUNK]="--df=conll::$CORPUS_DIR/$LANG/phrase_chunk/test.txt "
 testd[ENTITY]="--df=hjson_opl::$CORPUS_DIR/$LANG/named_entity/test.json_opl"
-#testd[TF_ENTITY]="--df=hjson_opl::$CORPUS_DIR/$LANG/named_entity/test.json_opl"
 testd[TF_ENTITY]="--df=corpus::/data/corpora/hermes_data/ontonotes_ner --query=\$SPLIT='TEST'"
 
 model=$(echo $1 | tr a-z A-Z)

@@ -21,10 +21,15 @@
 
 package com.gengoai.hermes.extraction.regex;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.extraction.Extraction;
 import com.gengoai.hermes.extraction.Extractor;
 import com.gengoai.parsing.*;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -64,6 +69,8 @@ import static com.gengoai.parsing.ParserGenerator.parserGenerator;
  *
  * @author David B. Bracewell
  */
+@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
+@JsonDeserialize(as = TokenRegex.class)
 public final class TokenRegex implements Serializable, Extractor {
    private static final ParserGenerator GENERATOR = parserGenerator(new Grammar(RegexTypes.values()),
                                                                     Lexer.create(RegexTypes.values()));
@@ -83,16 +90,17 @@ public final class TokenRegex implements Serializable, Extractor {
     * @return A compiled TokenRegex
     * @throws ParseException The given pattern has a syntax error
     */
-   public static TokenRegex compile(@NonNull String pattern) throws ParseException {
+   @JsonCreator
+   public static TokenRegex compile(@JsonProperty("pattern") @NonNull String pattern) throws ParseException {
       Parser parser = GENERATOR.create(pattern);
       TransitionFunction top = null;
-      while(parser.hasNext()) {
+      while (parser.hasNext()) {
          TransitionFunction temp = parser.parseExpression().as(TransitionFunction.class);
          top = (top == null)
                ? temp
                : new SequenceTransition(top, temp);
       }
-      if(top == null) {
+      if (top == null) {
          throw new ParseException();
       }
       return new TokenRegex(top);
@@ -102,7 +110,7 @@ public final class TokenRegex implements Serializable, Extractor {
    public Extraction extract(@NonNull HString hString) {
       TokenMatcher matcher = matcher(hString);
       final List<HString> hits = new ArrayList<>();
-      while(matcher.find()) {
+      while (matcher.find()) {
          hits.add(matcher.group());
       }
       return Extraction.fromHStringList(hits);
@@ -116,7 +124,7 @@ public final class TokenRegex implements Serializable, Extractor {
     */
    public Optional<HString> matchFirst(HString text) {
       TokenMatcher matcher = new TokenMatcher(nfa, text);
-      if(matcher.find()) {
+      if (matcher.find()) {
          return Optional.of(matcher.group());
       }
       return Optional.empty();

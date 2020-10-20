@@ -76,14 +76,14 @@ import java.util.stream.Stream;
 )
 @JsonTypeName("v")
 public class Variable implements Observation, Serializable {
-   private static final Pattern POSITION_PATTERN = Pattern.compile("\\[([+-]?\\d+)]");
-   private static final Pattern DATUM_SOURCE_PATTERN = Pattern.compile("<([^>]+)>");
-   private static final StringMatcher RESERVED = StringMatcher.contains("=[]<>");
-   private static final long serialVersionUID = 1L;
    /**
     * Constant defining the separator between the prefix and suffix in the Variable name.
     */
    public static final String PREFIX_SUFFIX_SEPARATOR = "=";
+   private static final Pattern POSITION_PATTERN = Pattern.compile("\\[([+-]?\\d+)]");
+   private static final Pattern DATUM_SOURCE_PATTERN = Pattern.compile("<([^>]+)>");
+   private static final StringMatcher RESERVED = StringMatcher.contains("=[]<>");
+   private static final long serialVersionUID = 1L;
    @Getter
    @JsonProperty("p")
    private String prefix;
@@ -92,6 +92,32 @@ public class Variable implements Observation, Serializable {
    private String suffix;
    @JsonProperty("v")
    private float value;
+
+   /**
+    * Instantiates a new Feature.
+    *
+    * @param suffix the suffix
+    * @param value  the value
+    */
+   public Variable(@NonNull String suffix, double value) {
+      this(Strings.EMPTY, suffix, value);
+   }
+
+   /**
+    * Instantiates a new Feature.
+    *
+    * @param prefix the prefix
+    * @param suffix the suffix
+    * @param value  the value
+    */
+   @JsonCreator
+   public Variable(@JsonProperty("p") String prefix,
+                   @JsonProperty("s") @NonNull String suffix,
+                   @JsonProperty("v") double value) {
+      setPrefix(prefix);
+      setSuffix(suffix);
+      this.value = (float) value;
+   }
 
    /**
     * Creates a binary {@link Variable} with the given feature prefix and suffix
@@ -166,32 +192,6 @@ public class Variable implements Observation, Serializable {
    }
 
    /**
-    * Instantiates a new Feature.
-    *
-    * @param suffix the suffix
-    * @param value  the value
-    */
-   public Variable(@NonNull String suffix, double value) {
-      this(Strings.EMPTY, suffix, value);
-   }
-
-   /**
-    * Instantiates a new Feature.
-    *
-    * @param prefix the prefix
-    * @param suffix the suffix
-    * @param value  the value
-    */
-   @JsonCreator
-   public Variable(@JsonProperty("p") String prefix,
-                   @JsonProperty("s") @NonNull String suffix,
-                   @JsonProperty("v") double value) {
-      setPrefix(prefix);
-      setSuffix(suffix);
-      this.value = (float) value;
-   }
-
-   /**
     * Prepends the give source name to the front of the Variable's prefix.
     *
     * @param sourceName the source name
@@ -232,7 +232,7 @@ public class Variable implements Observation, Serializable {
     */
    public String getName() {
       String name = prefix;
-      if(name.length() > 0) {
+      if (name.length() > 0) {
          name += PREFIX_SUFFIX_SEPARATOR;
       }
       return name + suffix;
@@ -245,7 +245,7 @@ public class Variable implements Observation, Serializable {
     */
    public int getPosition() {
       String match = Strings.firstMatch(POSITION_PATTERN, prefix, 1);
-      if(Strings.isNotNullOrBlank(match)) {
+      if (Strings.isNotNullOrBlank(match)) {
          return Integer.parseInt(match);
       }
       return 0;
@@ -253,6 +253,10 @@ public class Variable implements Observation, Serializable {
 
    public double getValue() {
       return value;
+   }
+
+   public void setValue(double value) {
+      this.value = (float) value;
    }
 
    @Override
@@ -295,10 +299,6 @@ public class Variable implements Observation, Serializable {
       this.suffix = Strings.nullToEmpty(newSuffix);
    }
 
-   public void setValue(double value) {
-      this.value = (float) value;
-   }
-
    @Override
    public String toString() {
       return "(" + getName() + ", " + getValue() + ")";
@@ -317,7 +317,7 @@ public class Variable implements Observation, Serializable {
     * @return the variable
     */
    public Variable updateWithDatumSourceName(String name) {
-      if(Strings.isNotNullOrBlank(name)) {
+      if (Strings.isNotNullOrBlank(name)) {
          prefix = "<" + name + ">" + Strings.nullToEmpty(prefix);
       }
       return this;

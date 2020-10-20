@@ -19,7 +19,6 @@
 
 package com.gengoai.sql.statement;
 
-import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLElement;
 import com.gengoai.sql.object.Column;
 import lombok.AccessLevel;
@@ -29,7 +28,6 @@ import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * <p>Defines an SQL Alter Table statement to alter the definition of a table. The alter statement is made up of one or
@@ -39,10 +37,14 @@ import java.util.stream.Collectors;
  */
 @Value
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
-public class AlterTable implements SQLUpdateStatement {
+public class AlterTable implements UpdateStatement {
    private static final long serialVersionUID = 1L;
    SQLElement table;
    List<AlterTableAction> actions = new ArrayList<>();
+
+   private AlterTable(@NonNull SQLElement table) {
+      this.table = table;
+   }
 
    /**
     * Static method for constructing an AlterTable statement given the table being altered.
@@ -52,10 +54,6 @@ public class AlterTable implements SQLUpdateStatement {
     */
    public static AlterTable table(@NonNull SQLElement table) {
       return new AlterTable(table);
-   }
-
-   private AlterTable(@NonNull SQLElement table) {
-      this.table = table;
    }
 
    /**
@@ -125,15 +123,5 @@ public class AlterTable implements SQLUpdateStatement {
       return this;
    }
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return "ALTER TABLE " +
-            dialect.toSQL(table) +
-            "\n" +
-            actions.stream()
-                   .map(ata -> ata.toSQL(dialect))
-                   .collect(Collectors.joining(",\n")) +
-            ";";
-   }
 
 }//END OF AlterTable

@@ -34,7 +34,7 @@ public class MangoLogFormatter extends Formatter {
    @Override
    public String format(LogRecord record) {
       String throwable = "";
-      if(record.getThrown() != null) {
+      if (record.getThrown() != null) {
          StringWriter sw = new StringWriter();
          PrintWriter pw = new PrintWriter(sw);
          pw.println();
@@ -46,8 +46,8 @@ public class MangoLogFormatter extends Formatter {
                            ZonedDateTime.ofInstant(record.getInstant(),
                                                    ZoneId.systemDefault()),
                            Strings.isNotNullOrBlank(record.getLoggerName())
-                           ? record.getLoggerName()
-                           : record.getSourceClassName(),
+                                 ? record.getLoggerName()
+                                 : record.getSourceClassName(),
                            record.getLevel(),
                            formatMessage(record),
                            throwable);

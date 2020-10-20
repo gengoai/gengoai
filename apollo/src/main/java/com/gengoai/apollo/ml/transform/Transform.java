@@ -23,7 +23,6 @@ import com.gengoai.Copyable;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.ObservationMetadata;
-import com.gengoai.json.TypeInfo;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -44,7 +43,6 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
-@TypeInfo
 public interface Transform extends Serializable, Copyable<Transform> {
 
    @Override

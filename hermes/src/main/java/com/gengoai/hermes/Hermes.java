@@ -56,9 +56,12 @@ public final class Hermes {
                                                            e('$'),
                                                            e('.')));
 
+
+
    private Hermes() {
       throw new IllegalAccessError();
    }
+
 
    /**
     * Attempts to find and return the Class for the default implementation of the given resource for the given language
@@ -79,8 +82,8 @@ public final class Hermes {
    }
 
    /**
-    * Get the default language. The default language is specified using <code>hermes.defaultLanguage/code>.
-    * If the configuration option is not set, it will default to the language matching the system locale.
+    * Get the default language. The default language is specified using <code>hermes.defaultLanguage/code>. If the
+    * configuration option is not set, it will default to the language matching the system locale.
     *
     * @return the default language
     */

@@ -19,47 +19,46 @@
 
 package com.gengoai.sql.constraint;
 
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
-import com.gengoai.sql.SQLObject;
-import lombok.EqualsAndHashCode;
+import com.gengoai.string.Strings;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.ToString;
 
-/**
- * The type Constraint.
- */
-@EqualsAndHashCode(callSuper = true)
-@ToString
-public abstract class Constraint extends SQLObject implements SQLFormattable {
+import java.io.Serializable;
+
+
+public abstract class Constraint implements Serializable {
    private static final long serialVersionUID = 1L;
+   @Getter
+   protected final String name;
 
-   public Constraint() {
+
+   protected Constraint() {
+      this.name = Strings.EMPTY;
    }
 
-   /**
-    * Instantiates a new Constraint.
-    *
-    * @param name the name
-    */
-   public Constraint(String name) {
-      super(name);
+   protected Constraint(String name) {
+      this.name = name;
    }
 
-   @Override
-   public String getKeyword() {
-      return "CONSTRAINT";
+
+   public static ConstraintBuilder constraint(@NonNull String name) {
+      return new ConstraintBuilderImpl(name);
    }
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      StringBuilder builder = new StringBuilder();
-      if(getName() != null) {
-         builder.append("CONSTRAINT \"")
-                .append(getName())
-                .append("\" ");
+
+   private static class ConstraintBuilderImpl implements ConstraintBuilder {
+      public final String name;
+
+      public ConstraintBuilderImpl(String name) {
+         this.name = name;
       }
-      return builder.toString();
-   }
 
+
+      @Override
+      public String getName() {
+         return name;
+      }
+
+
+   }
 }//END OF Constraint

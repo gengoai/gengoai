@@ -88,8 +88,8 @@ public final class CommandLineParser {
          }
       }
       this.applicationDescription = Strings.isNullOrBlank(applicationDescription)
-                                    ? "Help"
-                                    : applicationDescription.trim();
+            ? "Help"
+            : applicationDescription.trim();
       addOption(NamedOption.HELP);
       addOption(NamedOption.CONFIG);
       addOption(NamedOption.DUMP_CONFIG);
@@ -115,24 +115,84 @@ public final class CommandLineParser {
       return this;
    }
 
-   private int processKeyValue(List<String> cleanedArgs, int i, String current, List<String> filtered) {
-      String value = "true";
-      String next = Iterables.get(cleanedArgs, i + 1, Strings.EMPTY);
-      if (next.equalsIgnoreCase(KEY_VALUE_SEPARATOR)) {
-         //If are peeked at value is our key value separator then lets set the value to what comes after.
-         value = Iterables.get(cleanedArgs, i + 2, Strings.EMPTY);
-         if (isOptionName(value)) {
-            //If the value is an option name, we have an error
-            throw new CommandLineParserException(current, null);
-         }
-         i += 2;
-      } else if (!isOptionName(next)) {
-         //If are peeked at value isn't our key value separator and isn't another option name, lets set the value to what comes after.
-         i++;
-         value = next;
+   /**
+    * Gets the value for the specified option
+    *
+    * @param <T>        the type of the value for the option
+    * @param optionName the name of the option whose value we want to retrieve
+    * @return the value of the option or null if not set
+    */
+   public <T> T get(String optionName) {
+      optionName = optionName.replaceAll("^-+", "");
+      NamedOption option = options.get(optionName);
+
+      if (option == null) {
+         return Cast.as(unnamedOptions.get(optionName));
       }
-      setValue(current, value, filtered);
-      return i;
+
+      if (option.isBoolean()) {
+         return option.getValue() == null ? Cast.as(Boolean.FALSE) : option.getValue();
+      }
+
+      return option.getValue();
+   }
+
+   /**
+    * Gets the specified options.
+    *
+    * @return the specified options
+    */
+   public Set<NamedOption> getOptions() {
+      return Collections.unmodifiableSet(optionSet);
+   }
+
+   /**
+    * Gets options and values for everything passed in to the command line including unamed options.
+    *
+    * @return An <code>Map.Entry</code> of options and values for everything passed in to the command line including
+    * unamed options.
+    */
+   public Set<Map.Entry<String, String>> getSetEntries() {
+      Set<Map.Entry<String, String>> entries = optionSet.stream()
+                                                        .filter(this::isSet)
+                                                        .map(no -> Tuple2.of(no.getName(),
+                                                                             Converter.convertSilently(no.getValue(),
+                                                                                                       String.class)))
+                                                        .collect(Collectors.toSet());
+      entries.addAll(unnamedOptions.entrySet());
+      return entries;
+   }
+
+   /**
+    * Determines if an option was set or not.
+    *
+    * @param optionName the option name
+    * @return True if it was set (boolean options must be true), False otherwise
+    */
+   public boolean isSet(String optionName) {
+      optionName = optionName.replaceAll("^-+", "");
+      NamedOption option = options.get(optionName);
+
+      if (option == null) {
+         return unnamedOptions.containsKey(optionName) &&
+               !unnamedOptions.get(optionName).equalsIgnoreCase("false");
+      }
+
+      return isSet(option);
+   }
+
+   /**
+    * Determines if an option was set or not.
+    *
+    * @param option the option to check
+    * @return True if it was set (boolean options must be true), False otherwise
+    */
+   public boolean isSet(NamedOption option) {
+      if (option.isBoolean()) {
+         return option.getValue() != null && option.<Boolean>getValue();
+      }
+
+      return option.getValue() != null;
    }
 
    /**
@@ -217,47 +277,25 @@ public final class CommandLineParser {
       return filtered.toArray(new String[0]);
    }
 
-
-   /**
-    * Prints help to standard error showing the application description, if set, and the list of valid command line
-    * arguments with those required arguments marked with an asterisk.
-    */
-   public void showHelp() {
-      System.err.println(applicationDescription);
-      System.err.println("===============================================");
-
-      Map<NamedOption, String> optionNames = new HashMap<>();
-      optionSet.forEach(option -> {
-         String out = Stream.concat(
-            Stream.of(option.getAliasSpecifications()),
-            Stream.of(option.getSpecification()))
-                            .sorted(Comparator.comparingInt(String::length))
-                            .collect(Collectors.joining(", "));
-         if (option.isRequired()) {
-            out += " *";
+   private int processKeyValue(List<String> cleanedArgs, int i, String current, List<String> filtered) {
+      String value = "true";
+      String next = Iterables.get(cleanedArgs, i + 1, Strings.EMPTY);
+      if (next.equalsIgnoreCase(KEY_VALUE_SEPARATOR)) {
+         //If are peeked at value is our key value separator then lets set the value to what comes after.
+         value = Iterables.get(cleanedArgs, i + 2, Strings.EMPTY);
+         if (isOptionName(value)) {
+            //If the value is an option name, we have an error
+            throw new CommandLineParserException(current, null);
          }
-         optionNames.put(option, out);
-      });
-
-      int maxArgName = optionNames.values().stream().mapToInt(String::length).max().orElse(10);
-
-      optionNames.entrySet().stream()
-                 .sorted(Map.Entry.comparingByValue())
-                 .forEach(entry -> {
-                    String arg = entry.getValue();
-                    boolean insertSpace = !arg.startsWith("--");
-                    if (insertSpace) {
-                       System.err.print(" ");
-                    }
-                    System.err.printf("%1$-" + maxArgName + "s\t", arg);
-                    System.err.println(entry.getKey().getDescription());
-                 });
-
-      System.err.println("===============================================");
-      System.err.println("* = Required");
-
+         i += 2;
+      } else if (!isOptionName(next)) {
+         //If are peeked at value isn't our key value separator and isn't another option name, lets set the value to what comes after.
+         i++;
+         value = next;
+      }
+      setValue(current, value, filtered);
+      return i;
    }
-
 
    private String setValue(String key, String value, List<String> filtered) {
       //look up the option
@@ -298,83 +336,43 @@ public final class CommandLineParser {
    }
 
    /**
-    * Determines if an option was set or not.
-    *
-    * @param optionName the option name
-    * @return True if it was set (boolean options must be true), False otherwise
+    * Prints help to standard error showing the application description, if set, and the list of valid command line
+    * arguments with those required arguments marked with an asterisk.
     */
-   public boolean isSet(String optionName) {
-      optionName = optionName.replaceAll("^-+", "");
-      NamedOption option = options.get(optionName);
+   public void showHelp() {
+      System.err.println(applicationDescription);
+      System.err.println("===============================================");
 
-      if (option == null) {
-         return unnamedOptions.containsKey(optionName) &&
-            !unnamedOptions.get(optionName).equalsIgnoreCase("false");
-      }
+      Map<NamedOption, String> optionNames = new HashMap<>();
+      optionSet.forEach(option -> {
+         String out = Stream.concat(
+               Stream.of(option.getAliasSpecifications()),
+               Stream.of(option.getSpecification()))
+                            .sorted(Comparator.comparingInt(String::length))
+                            .collect(Collectors.joining(", "));
+         if (option.isRequired()) {
+            out += " *";
+         }
+         optionNames.put(option, out);
+      });
 
-      return isSet(option);
-   }
+      int maxArgName = optionNames.values().stream().mapToInt(String::length).max().orElse(10);
 
-   /**
-    * Determines if an option was set or not.
-    *
-    * @param option the option to check
-    * @return True if it was set (boolean options must be true), False otherwise
-    */
-   public boolean isSet(NamedOption option) {
-      if (option.isBoolean()) {
-         return option.getValue() != null && option.<Boolean>getValue();
-      }
+      optionNames.entrySet().stream()
+                 .sorted(Map.Entry.comparingByValue())
+                 .forEach(entry -> {
+                    String arg = entry.getValue();
+                    boolean insertSpace = !arg.startsWith("--");
+                    if (insertSpace) {
+                       System.err.print(" ");
+                    }
+                    System.err.printf("%1$-" + maxArgName + "s\t", arg);
+                    System.err.println(entry.getKey().getDescription());
+                 });
 
-      return option.getValue() != null;
-   }
+      System.err.println("===============================================");
+      System.err.println("* = Required");
 
-   /**
-    * Gets the value for the specified option
-    *
-    * @param <T>        the type of the value for the option
-    * @param optionName the name of the option whose value we want to retrieve
-    * @return the value of the option or null if not set
-    */
-   public <T> T get(String optionName) {
-      optionName = optionName.replaceAll("^-+", "");
-      NamedOption option = options.get(optionName);
-
-      if (option == null) {
-         return Cast.as(unnamedOptions.get(optionName));
-      }
-
-      if (option.isBoolean()) {
-         return option.getValue() == null ? Cast.as(Boolean.FALSE) : option.getValue();
-      }
-
-      return option.getValue();
-   }
-
-   /**
-    * Gets the specified options.
-    *
-    * @return the specified options
-    */
-   public Set<NamedOption> getOptions() {
-      return Collections.unmodifiableSet(optionSet);
-   }
-
-   /**
-    * Gets options and values for everything passed in to the command line including unamed options.
-    *
-    * @return An <code>Map.Entry</code> of options and values for everything passed in to the command line including
-    * unamed options.
-    */
-   public Set<Map.Entry<String, String>> getSetEntries() {
-      Set<Map.Entry<String, String>> entries = optionSet.stream()
-                                                        .filter(this::isSet)
-                                                        .map(no -> Tuple2.of(no.getName(),
-                                                                             Converter.convertSilently(no.getValue(),
-                                                                                                       String.class)))
-                                                        .collect(Collectors.toSet());
-      entries.addAll(unnamedOptions.entrySet());
-      return entries;
    }
 
 }//END OF CLI

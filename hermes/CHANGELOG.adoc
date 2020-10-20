@@ -6,6 +6,7 @@ Release Date:
 
 === Machine Learning
 
+* Added ElmoNER model for English, which is a lot better than the CRF model but also a lot slower.
 * Added HStringMLModel and BaseHStringMLModel for easing the creation of ml models that work over HString
 * SequenceTaggers are now HStringMLModels
 * EN Models updated to correspond to new HStringMLModel format and the new model io from Apollo

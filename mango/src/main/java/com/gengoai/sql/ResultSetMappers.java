@@ -40,7 +40,7 @@ public final class ResultSetMappers {
     */
    public static final ResultSetMapper<Map<String, Object>> MAP_RESULT_SET_MAPPER = resultSet -> {
       Map<String, Object> m = new HashMap<>();
-      for(int i = 0; i < resultSet.getMetaData().getColumnCount(); i++) {
+      for (int i = 0; i < resultSet.getMetaData().getColumnCount(); i++) {
          m.put(resultSet.getMetaData().getColumnName(i + 1),
                resultSet.getObject(i + 1));
       }
@@ -71,7 +71,7 @@ public final class ResultSetMappers {
       @Override
       public T map(@NonNull ResultSet resultSet) throws Exception {
          BeanMap beanMap = new BeanMap(Reflect.onClass(tClass).create());
-         for(int i = 0; i < resultSet.getMetaData().getColumnCount(); i++) {
+         for (int i = 0; i < resultSet.getMetaData().getColumnCount(); i++) {
             beanMap.put(resultSet.getMetaData().getColumnName(i + 1),
                         resultSet.getObject(i + 1));
          }

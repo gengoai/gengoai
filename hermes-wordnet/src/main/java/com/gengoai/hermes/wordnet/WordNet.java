@@ -63,8 +63,20 @@ public class WordNet {
    private final Cache<Synset, ArrayListMultimap<Synset, Synset>> shortestPathCache =
          new AutoCalculatingLRUCache<>(25_000,
                                        input -> input == null
-                                                ? null
-                                                : dijkstra_path(input));
+                                             ? null
+                                             : dijkstra_path(input));
+
+   private WordNet() {
+      db = Config.get("WordNet.db").as(WordNetDB.class);
+      for (WordNetLoader loader : Config.get("WordNet.loaders").asList(WordNetLoader.class)) {
+         loader.load(db);
+      }
+      if (Config.hasProperty("WordNet.properties")) {
+         for (WordNetPropertyLoader loader : Config.get("WordNet.properties").asList(WordNetPropertyLoader.class)) {
+            loader.load(db);
+         }
+      }
+   }
 
    /**
     * Gets instance.
@@ -72,28 +84,14 @@ public class WordNet {
     * @return the instance
     */
    public static WordNet getInstance() {
-      if(INSTANCE == null) {
-         synchronized(WordNet.class) {
-            if(INSTANCE == null) {
+      if (INSTANCE == null) {
+         synchronized (WordNet.class) {
+            if (INSTANCE == null) {
                INSTANCE = new WordNet();
             }
          }
       }
       return INSTANCE;
-   }
-
-   private WordNet() {
-      db = Config.get("WordNet.db").as(WordNetDB.class);
-      for(WordNetLoader loader : Config.get("WordNet.loaders").asList(WordNetLoader.class)) {
-         loader.load(db);
-      }
-      if(Config.hasProperty("WordNet.properties")) {
-         for(WordNetPropertyLoader loader : Config
-               .get("WordNet.properties")
-               .asList(WordNetPropertyLoader.class)) {
-            loader.load(db);
-         }
-      }
    }
 
    /**
@@ -111,8 +109,8 @@ public class WordNet {
       Map<Synset, Synset> previous = new HashMap<>();
       Set<Synset> visited = Sets.hashSetOf(source);
 
-      for(Synset other : getSynsets()) {
-         if(!other.equals(source)) {
+      for (Synset other : getSynsets()) {
+         if (!other.equals(source)) {
             dist.set(other, Integer.MAX_VALUE);
             previous.put(other, null);
          }
@@ -121,7 +119,7 @@ public class WordNet {
       PriorityQueue<Tuple2<Synset, Double>> queue = new PriorityQueue<>(Map.Entry.comparingByValue());
       queue.add(Tuple2.of(source, 0d));
 
-      while(!queue.isEmpty()) {
+      while (!queue.isEmpty()) {
          Tuple2<Synset, Double> next = queue.remove();
 
          Synset synset = next.getV1();
@@ -132,29 +130,29 @@ public class WordNet {
                                                        synset.getRelatedSynsets(WordNetRelation.HYPONYM),
                                                        synset.getRelatedSynsets(WordNetRelation.HYPONYM_INSTANCE));
 
-         for(Synset neighbor : neighbors) {
+         for (Synset neighbor : neighbors) {
             double alt = dist.get(synset);
-            if(alt != Integer.MAX_VALUE && (alt + 1) < dist.get(neighbor)) {
+            if (alt != Integer.MAX_VALUE && (alt + 1) < dist.get(neighbor)) {
                dist.set(neighbor, alt + 1);
                previous.put(neighbor, synset);
             }
-            if(!visited.contains(neighbor)) {
+            if (!visited.contains(neighbor)) {
                queue.add(Tuple2.of(neighbor, alt));
             }
          }
       }
 
       ArrayListMultimap<Synset, Synset> path = new ArrayListMultimap<>();
-      for(Synset other : getSynsets()) {
-         if(other.equals(source) || dist.get(other) == Integer.MAX_VALUE) continue;
+      for (Synset other : getSynsets()) {
+         if (other.equals(source) || dist.get(other) == Integer.MAX_VALUE) continue;
 
          Deque<Synset> stack = new LinkedList<>();
          Synset u = other;
-         while(u != null && previous.containsKey(u)) {
+         while (u != null && previous.containsKey(u)) {
             stack.push(u);
             u = previous.get(u);
          }
-         while(!stack.isEmpty()) {
+         while (!stack.isEmpty()) {
             Synset to = stack.pop();
             path.put(other, to);
          }
@@ -173,13 +171,13 @@ public class WordNet {
    public double distance(Synset synset1, Synset synset2) {
       Validation.notNull(synset1);
       Validation.notNull(synset2);
-      if(synset1.equals(synset2)) {
+      if (synset1.equals(synset2)) {
          return 0d;
       }
       List<Synset> path = shortestPath(synset1, synset2);
       return path.isEmpty()
-             ? Double.POSITIVE_INFINITY
-             : path.size() - 1;
+            ? Double.POSITIVE_INFINITY
+            : path.size() - 1;
    }
 
    /**
@@ -259,12 +257,12 @@ public class WordNet {
       Validation.notNull(synset1);
       Validation.notNull(synset2);
 
-      if(synset1.equals(synset2)) {
+      if (synset1.equals(synset2)) {
          return synset1;
       }
 
       List<Synset> path = shortestPath(synset1, synset2);
-      if(path.isEmpty()) {
+      if (path.isEmpty()) {
          return null;
       }
 
@@ -273,18 +271,18 @@ public class WordNet {
       int minHeight = Math.min(node1Height, node2Height);
       int maxHeight = Integer.MIN_VALUE;
       Synset lcs = null;
-      for(Synset s : path) {
-         if(s.equals(synset1) || s.equals(synset2)) {
+      for (Synset s : path) {
+         if (s.equals(synset1) || s.equals(synset2)) {
             continue;
          }
          int height = s.depth();
-         if(height < minHeight && height > maxHeight) {
+         if (height < minHeight && height > maxHeight) {
             maxHeight = height;
             lcs = s;
          }
       }
-      if(lcs == null) {
-         if(node1Height < node2Height) {
+      if (lcs == null) {
+         if (node1Height < node2Height) {
             return synset1;
          }
          return synset2;
@@ -309,12 +307,12 @@ public class WordNet {
     */
    public double getMaxDepth(@NonNull PartOfSpeech partOfSpeech) {
       WordNetPOS pos = WordNetPOS.fromHermesPOS(partOfSpeech);
-      if(maxDepths[pos.ordinal()] == -1) {
-         synchronized(maxDepths) {
-            if(maxDepths[pos.ordinal()] == -1) {
+      if (maxDepths[pos.ordinal()] == -1) {
+         synchronized (maxDepths) {
+            if (maxDepths[pos.ordinal()] == -1) {
                double max = 0d;
-               for(Synset synset : getSynsets()) {
-                  if(synset.getPOS() == partOfSpeech) {
+               for (Synset synset : getSynsets()) {
+                  if (synset.getPOS() == partOfSpeech) {
                      max = Math.max(max, synset.depth() - 1);
                   }
                }
@@ -350,7 +348,7 @@ public class WordNet {
     */
    public SetMultimap<WordNetRelation, Sense> getRelatedSenses(@NonNull Sense sense) {
       SetMultimap<WordNetRelation, Sense> map = new HashSetMultimap<>();
-      for(Map.Entry<Sense, WordNetRelation> entry : db
+      for (Map.Entry<Sense, WordNetRelation> entry : db
             .getRelations(sense)
             .entrySet()) {
          map.put(entry.getValue(), entry.getKey());
@@ -383,7 +381,7 @@ public class WordNet {
     */
    public SetMultimap<WordNetRelation, Synset> getRelatedSynsets(@NonNull Synset synset) {
       SetMultimap<WordNetRelation, Synset> map = new HashSetMultimap<>();
-      for(Map.Entry<String, WordNetRelation> entry : db
+      for (Map.Entry<String, WordNetRelation> entry : db
             .getRelations(synset)
             .entrySet()) {
          map.put(entry.getValue(), getSynsetFromId(entry.getKey()));
@@ -399,7 +397,7 @@ public class WordNet {
     * @return the relation
     */
    public WordNetRelation getRelation(Sense from, Sense to) {
-      if(from == null || to == null) {
+      if (from == null || to == null) {
          return null;
       }
       return db.getRelation(from, to);
@@ -427,11 +425,12 @@ public class WordNet {
                                    @NonNull PartOfSpeech pos,
                                    int senseNum,
                                    @NonNull Language language) {
-      for(String lemma : Lemmatizers
+      for (String lemma : Lemmatizers
             .getLemmatizer(language)
             .allPossibleLemmas(word, pos)) {
-         for(Sense sense : db.getSenses(lemma.toLowerCase())) {
-            if((pos == PartOfSpeech.ANY || pos.isInstance(sense.getPOS())) && sense.getSenseNumber() == senseNum && sense
+         for (Sense sense : db.getSenses(lemma.toLowerCase())) {
+            if ((pos == PartOfSpeech.ANY || pos.isInstance(sense.getPOS())) && sense
+                  .getSenseNumber() == senseNum && sense
                   .getLanguage() == language) {
                return Optional.of(sense);
             }
@@ -445,7 +444,7 @@ public class WordNet {
    }
 
    public List<Sense> getSenses(HString hstring) {
-      if(hstring.isInstance(Types.WORD_SENSE)) {
+      if (hstring.isInstance(Types.WORD_SENSE)) {
          return getSenses(hstring.toString(), hstring.pos(), hstring.getLanguage());
       }
       return hstring
@@ -487,21 +486,21 @@ public class WordNet {
 
    private List<Sense> getSenses(Predicate<Sense> predicate, Collection<String> lemmas) {
       List<Sense> senses = new ArrayList<>();
-      for(String lemma : lemmas) {
+      for (String lemma : lemmas) {
          lemma = lemma.toLowerCase();
          senses.addAll(db
                              .getSenses(lemma)
                              .stream()
                              .filter(predicate)
                              .collect(Collectors.toList()));
-         if(lemma.contains(" ")) {
+         if (lemma.contains(" ")) {
             senses.addAll(db
                                 .getSenses(lemma.replace(' ', '-'))
                                 .stream()
                                 .filter(predicate)
                                 .collect(Collectors.toList()));
          }
-         if(lemma.contains("-")) {
+         if (lemma.contains("-")) {
             senses.addAll(db
                                 .getSenses(lemma.replace('-', ' '))
                                 .stream()
@@ -609,18 +608,18 @@ public class WordNet {
 
       @Override
       public boolean test(Sense sense) {
-         if(sense == null) {
+         if (sense == null) {
             return false;
          }
-         if(senseNum != -1 && sense.getLexicalId() != senseNum) {
+         if (senseNum != -1 && sense.getLexicalId() != senseNum) {
             return false;
          }
-         if(pos != null && !sense
+         if (pos != null && !sense
                .getPOS()
                .isInstance(pos)) {
             return false;
          }
-         if(language != null && sense.getLanguage() != language) {
+         if (language != null && sense.getLanguage() != language) {
             return false;
          }
          return true;

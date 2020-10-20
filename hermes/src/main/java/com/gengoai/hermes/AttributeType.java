@@ -63,14 +63,18 @@ import java.util.Collection;
 @JsonSerialize(using = AnnotatableType.Serializer.class)
 @JsonDeserialize(using = AnnotatableType.Deserializer.class)
 public final class AttributeType<T> extends EnumValue<AttributeType<T>> implements AnnotatableType {
-   private static final Registry<AttributeType<?>> registry = new Registry<AttributeType<?>>(AttributeType::new,
-                                                                                             Cast.as(AttributeType.class));
-   private static final long serialVersionUID = 1L;
    /**
     * Type information for AttributeType
     */
    public static final String TYPE = "Attribute";
+   private static final Registry<AttributeType<?>> registry = new Registry<AttributeType<?>>(AttributeType::new, Cast
+         .as(AttributeType.class));
+   private static final long serialVersionUID = 1L;
    private volatile Type valueType;
+
+   private AttributeType(String name) {
+      super(name);
+   }
 
    /**
     * checks if an attribute with the given name is defined
@@ -103,12 +107,12 @@ public final class AttributeType<T> extends EnumValue<AttributeType<T>> implemen
     */
    public static <T> AttributeType<T> make(String name, Type valueType) {
       AttributeType<T> attributeType = Cast.as(registry.make(name));
-      if(valueType == null && attributeType.valueType == null) {
+      if (valueType == null && attributeType.valueType == null) {
          attributeType.valueType = Config.get(TYPE, attributeType.name(), "type").as(Type.class, Object.class);
-      } else if(valueType != null && attributeType.valueType == null) {
+      } else if (valueType != null && attributeType.valueType == null) {
          attributeType.valueType = valueType;
          Config.setProperty(TYPE + "." + attributeType.name() + ".type", valueType.getTypeName());
-      } else if(valueType != null && !valueType.equals(attributeType.valueType)) {
+      } else if (valueType != null && !valueType.equals(attributeType.valueType)) {
          throw new IllegalArgumentException(
                "Attempting to change value type of " + name + " from " + attributeType.getValueType());
       }
@@ -145,10 +149,6 @@ public final class AttributeType<T> extends EnumValue<AttributeType<T>> implemen
       return registry.values();
    }
 
-   private AttributeType(String name) {
-      super(name);
-   }
-
    /**
     * Decodes an object into the correct value type for this Attribute
     *
@@ -158,7 +158,7 @@ public final class AttributeType<T> extends EnumValue<AttributeType<T>> implemen
    public T decode(Object o) {
       try {
          return Converter.convert(o, valueType);
-      } catch(TypeConversionException e) {
+      } catch (TypeConversionException e) {
          throw new RuntimeException(e);
       }
    }
@@ -187,7 +187,7 @@ public final class AttributeType<T> extends EnumValue<AttributeType<T>> implemen
    public JsonEntry toJson(Object o) {
       try {
          return JsonEntry.from(Converter.convert(o, valueType));
-      } catch(TypeConversionException e) {
+      } catch (TypeConversionException e) {
          throw new RuntimeException(e);
       }
    }

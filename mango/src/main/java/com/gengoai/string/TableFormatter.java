@@ -34,9 +34,9 @@ public class TableFormatter implements Serializable {
    private static final int RIGHT_BOTTOM_SEPARATOR = 8;
    private static final int MIN_CELL_WIDTH = 5;
    private static final String[][] PATTERNS = {
-      {"+", "|", "-", "+", "+", "+", "+", "+", "+"},
-      {"+", "|", "=", "+", "+", "+", "+", "+", "+"},
-      {"+", "|", "=", "+", "+", "+", "+", "+", "+"}
+         {"+", "|", "-", "+", "+", "+", "+", "+", "+"},
+         {"+", "|", "=", "+", "+", "+", "+", "+", "+"},
+         {"+", "|", "=", "+", "+", "+", "+", "+", "+"}
    };
 
    private static final DecimalFormat longNumberFormatter = new DecimalFormat("0.0E0");
@@ -66,7 +66,7 @@ public class TableFormatter implements Serializable {
           PATTERNS[type][HORIZONTAL],
           PATTERNS[type][MIDDLE_BOTTOM_SEPARATOR],
           PATTERNS[type][LEFT_BOTTOM_SEPARATOR]
-         );
+      );
    }
 
    /**
@@ -92,14 +92,14 @@ public class TableFormatter implements Serializable {
                                                           .mapToDouble(o -> {
                                                                           if (o instanceof Number) {
                                                                              return Math.max(MIN_CELL_WIDTH, length(Cast
-                                                                                                                       .as(o)));
+                                                                                                                          .as(o)));
                                                                           } else {
                                                                              return Math.max(MIN_CELL_WIDTH,
                                                                                              o.toString().length() + 2);
                                                                           }
                                                                        }
-                                                                      ).max().orElse(0)
-                                  );
+                                                          ).max().orElse(0)
+      );
       longestRow = Math.max(longestRow, collection.size());
       return this;
    }
@@ -129,8 +129,8 @@ public class TableFormatter implements Serializable {
                                                                                              o.toString().length() + 2);
                                                                           }
                                                                        }
-                                                                      ).max().orElse(0)
-                                  );
+                                                          ).max().orElse(0)
+      );
       longestRow = Math.max(longestRow, collection.size());
       return this;
    }
@@ -165,7 +165,7 @@ public class TableFormatter implements Serializable {
           PATTERNS[type][HORIZONTAL],
           PATTERNS[type][FOUR_CORNER],
           PATTERNS[type][VERTICAL]
-         );
+      );
    }
 
    /**
@@ -257,7 +257,7 @@ public class TableFormatter implements Serializable {
           PATTERNS[type][HORIZONTAL],
           PATTERNS[type][MIDDLE_TOP_SEPARATOR],
           PATTERNS[type][LEFT_TOP_SEPARATOR]
-         );
+      );
    }
 
    /**

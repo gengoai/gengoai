@@ -28,12 +28,29 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Queue;
 
+/**
+ * <p>A Queue implementation that stores its data in a file. DiskQueue are monitored to ensure that their file handle
+ * is properly closed if the it is no longer in use. However, one can use the <code>commit</code> and <code>close</code>
+ * methods to explicitly commit changes and close the queue.</p>
+ * <p>DiskQueue are created using a builder in the following way:</p>
+ * <pre>
+ * {@code
+ *  var map = DiskQueue.builder()
+ *                   .file(Resources.from("/data/map.db")
+ *                   .namespace("people")
+ *                   .compressed(true)
+ *                   .build();
+ * }
+ * </pre>
+ * <p>Once an DiskQueue instance is constructed it acts like regular Java Queue.</p>
+ *
+ * @param <E> the element type parameter
+ */
 public class DiskQueue<E> implements Queue<E>, Serializable, AutoCloseable {
    private static final long serialVersionUID = 1L;
    private final MonitoredObject<MapDBHandle> handle;
@@ -79,6 +96,9 @@ public class DiskQueue<E> implements Queue<E>, Serializable, AutoCloseable {
       handle.object.close();
    }
 
+   /**
+    * Commit.
+    */
    public void commit() {
       handle.object.commit();
    }

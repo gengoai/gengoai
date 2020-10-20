@@ -1,0 +1,9 @@
+/python/embeddings/
+/python/data/
+/python/.bash_history
+/python/.python_history
+/python/glove.6B/
+/python/glove.6B.zip
+/python/models/
+/python/.keras
+**/__pycache__/**

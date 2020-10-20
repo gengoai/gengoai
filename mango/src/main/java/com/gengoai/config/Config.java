@@ -71,25 +71,25 @@ import static com.gengoai.LogUtils.*;
  */
 @Log
 public final class Config implements Serializable {
+   /**
+    * File extensions for config files.
+    */
+   public static final String CONF_EXTENSION = ".conf";
    private static final String BEAN_PROPERTY = "@{";
    private static final Pattern BEAN_SUBSTITUTION = Pattern.compile(Pattern.quote(BEAN_PROPERTY) + "(.+?)\\}");
    private static final String DEFAULT_CONFIG_FILE_NAME = "default.conf";
    private static final Pattern STRING_SUBSTITUTION = Pattern.compile("\\$\\{(.+?)}");
    private static final String SYSTEM_PROPERTY = "system.";
    private static final long serialVersionUID = 6875819132224789761L;
-   /**
-    * File extensions for config files.
-    */
-   public static final String CONF_EXTENSION = ".conf";
    private volatile static Config INSTANCE;
    private static ClassLoader defaultClassLoader = Config.class.getClassLoader();
    private static Resource localConfigDirectory = Resources.fromFile(SystemInfo.USER_HOME + "/config/");
 
    static {
-      if(System.getProperty("java.util.logging.config.file") == null) {
+      if (System.getProperty("java.util.logging.config.file") == null) {
          try {
             ROOT.setLevel(Level.INFO);
-            for(Handler handler : ROOT.getHandlers()) {
+            for (Handler handler : ROOT.getHandlers()) {
                ROOT.removeHandler(handler);
             }
             final ConsoleHandler consoleHandler = new ConsoleHandler();
@@ -97,7 +97,7 @@ public final class Config implements Serializable {
             consoleHandler.setLevel(Level.ALL);
             consoleHandler.setFormatter(FORMATTER);
             ROOT.addHandler(consoleHandler);
-         } catch(Exception e) {
+         } catch (Exception e) {
             throw new RuntimeException(e);
          }
       }
@@ -139,31 +139,32 @@ public final class Config implements Serializable {
     * @return the best matching key or null
     */
    public static String findKey(String root, Object... path) {
-      if(path == null || path.length == 0) {
+      if (path == null || path.length == 0) {
          return hasProperty(root)
-                ? root
-                : null;
+               ? root
+               : null;
       }
       Language language = path[0] instanceof Language
-                          ? Cast.as(path[0])
-                          : null;
+            ? Cast.as(path[0])
+            : null;
 
-      if(language == null) {
+      if (language == null) {
          String key = root + "." + Strings.join(path, ".");
          return hasProperty(key)
-                ? key
-                : null;
+               ? key
+               : null;
       }
 
-      if(path.length == 1) {
-         for(String key : new String[]{
+      if (path.length == 1) {
+         for (String key : new String[]{
                root + "." + language,
                root + "." + language.toString().toLowerCase(),
                root + "." + language.getCode(),
-               root + "." + language.getCode().toLowerCase()
+               root + "." + language.getCode().toLowerCase(),
+               root
          }
          ) {
-            if(hasProperty(key)) {
+            if (hasProperty(key)) {
                return key;
             }
          }
@@ -171,7 +172,7 @@ public final class Config implements Serializable {
       }
 
       String components = Strings.join(Arrays.copyOfRange(path, 1, path.length), ".");
-      for(String key : new String[]{
+      for (String key : new String[]{
             root + "." + language + "." + components,
             root + "." + language.toString().toLowerCase() + "." + components,
             root + "." + language.getCode() + "." + components,
@@ -182,7 +183,7 @@ public final class Config implements Serializable {
             root + "." + components + "." + language.getCode().toLowerCase(),
             root + "." + components
       }) {
-         if(hasProperty(key)) {
+         if (hasProperty(key)) {
             return key;
          }
       }
@@ -224,33 +225,33 @@ public final class Config implements Serializable {
     */
    public static Val get(String propertyPrefix, Object... propertyComponents) {
       String key = findKey(propertyPrefix, propertyComponents);
-      if(key == null) {
+      if (key == null) {
          return Val.NULL;
       }
 
       String value;
-      if(getInstance().properties.containsKey(key)) {
+      if (getInstance().properties.containsKey(key)) {
          value = getInstance().properties.get(key);
-      } else if(System.getProperty(key) != null) {
+      } else if (System.getProperty(key) != null) {
          value = System.getProperty(key);
       } else {
          value = System.getenv(key);
       }
 
-      if(value == null) {
+      if (value == null) {
          return Val.NULL;
       }
 
       //resolve variables
-      if(STRING_SUBSTITUTION.matcher(value).find()) {
+      if (STRING_SUBSTITUTION.matcher(value).find()) {
          value = resolveVariables(getInstance().properties.get(key));
       }
 
-      if(value == null) {
+      if (value == null) {
          return Val.NULL;
       }
 
-      if(value.contains(BEAN_PROPERTY)) {
+      if (value.contains(BEAN_PROPERTY)) {
          return getBean(value);
       }
 
@@ -259,10 +260,10 @@ public final class Config implements Serializable {
 
    private static Val getBean(String value) {
       Matcher m = BEAN_SUBSTITUTION.matcher(value);
-      if(m.find()) {
+      if (m.find()) {
          try {
             return Val.of(BeanUtils.getNamedBean(m.group(1), Object.class));
-         } catch(ReflectionException e) {
+         } catch (ReflectionException e) {
             throw new RuntimeException(e);
          }
       }
@@ -272,10 +273,10 @@ public final class Config implements Serializable {
    private static String getCallingClass() {
       // Auto-discover the package of the calling class.
       StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-      for(int i = 1; i < stackTrace.length; i++) {
+      for (int i = 1; i < stackTrace.length; i++) {
          StackTraceElement ste = stackTrace[i];
          // ignore the config class
-         if(!ste.getClassName().equals(Config.class.getName()) &&
+         if (!ste.getClassName().equals(Config.class.getName()) &&
                !ste.getClassName().equals(CommandLineApplication.class.getName())
                && !ste.getClassName().equals(Application.class.getName())
          ) {
@@ -295,17 +296,40 @@ public final class Config implements Serializable {
    }
 
    /**
+    * Sets the default <code>ClassLoader</code> to use with Classpath resources
+    *
+    * @param newDefaultClassLoader The new ClassLoader
+    */
+   public static void setDefaultClassLoader(ClassLoader newDefaultClassLoader) {
+      defaultClassLoader = newDefaultClassLoader;
+   }
+
+   /**
     * Gets the singleton instance of the config. This should not normally be used by api consumers
     *
     * @return the singleton instance of the config.
     */
    public static Config getInstance() {
-      if(INSTANCE == null) {
-         synchronized(Config.class) {
-            if(INSTANCE == null) {
+      if (INSTANCE == null) {
+         synchronized (Config.class) {
+            if (INSTANCE == null) {
                INSTANCE = new Config();
             }
          }
+      }
+      return INSTANCE;
+   }
+
+   /**
+    * Sets the singleton instance of the config. This is mainly useful in distributed environments where we are passing
+    * configurations around.
+    *
+    * @param config the config that will become the single instance
+    * @return the singleton instance of the config
+    */
+   public static Config setInstance(Config config) {
+      synchronized (Config.class) {
+         INSTANCE = config;
       }
       return INSTANCE;
    }
@@ -318,7 +342,7 @@ public final class Config implements Serializable {
     * @return A <code>List</code> of properties matched using the <code>StringMatcher</code>.
     */
    public static List<String> getPropertiesMatching(Predicate<? super String> matcher) {
-      if(matcher != null) {
+      if (matcher != null) {
          return getInstance().properties
                .keySet()
                .parallelStream()
@@ -337,7 +361,7 @@ public final class Config implements Serializable {
     * @return True if the property is known, false if not.
     */
    public static boolean hasProperty(String root, Object... path) {
-      if(path != null && path.length > 0) {
+      if (path != null && path.length > 0) {
          return findKey(root, path) != null;
       }
       return getInstance().properties.containsKey(root) || System.getProperties().contains(root);
@@ -373,21 +397,21 @@ public final class Config implements Serializable {
       Preloader.preload();
 
       String rval[];
-      if(args != null) {
+      if (args != null) {
          rval = parser.parse(args);
       } else {
          rval = new String[0];
       }
 
       //Check if we should only explain the config
-      if(NamedOption.DUMP_CONFIG.<Boolean>getValue()) {
+      if (parser.isSet(NamedOption.DUMP_CONFIG)) {
          getInstance().setterFunction = ConfigExplainSettingFunction.INSTANCE;
       } else {
          getInstance().setterFunction = ConfigSettingFunction.INSTANCE;
       }
 
-      if(otherPackages != null) {
-         for(String otherPackage : otherPackages) {
+      if (otherPackages != null) {
+         for (String otherPackage : otherPackages) {
             loadPackageConfig(otherPackage);
          }
       }
@@ -395,14 +419,14 @@ public final class Config implements Serializable {
       // Auto-discover the package of the calling class.
       String className = getCallingClass();
 
-      if(className != null) {
+      if (className != null) {
          loadDefaultConfig(className);
       }
 
       loadApplicationConfig(programName);
 
       // Store the command line arguments as a config settings.
-      if(args != null) {
+      if (args != null) {
          parser.getSetEntries()
                .forEach(
                      entry -> ConfigSettingFunction.INSTANCE.setProperty(entry.getKey(),
@@ -410,23 +434,23 @@ public final class Config implements Serializable {
                                                                          "CommandLine"));
       }
 
-      if(parser.isSet(NamedOption.CONFIG)) {
+      if (parser.isSet(NamedOption.CONFIG)) {
          loadConfig(NamedOption.CONFIG.getValue());
       }
 
       setAllCommandLine(parser);
 
       // If config-explain was set then output the config recording and then quit
-      if(parser.isSet(NamedOption.DUMP_CONFIG)) {
+      if (parser.isSet(NamedOption.DUMP_CONFIG)) {
          ConfigExplainSettingFunction settings = (ConfigExplainSettingFunction) getInstance().setterFunction;
-         for(String key : new TreeSet<>(settings.properties.keySet())) {
+         for (String key : new TreeSet<>(settings.properties.keySet())) {
             System.err.println(key);
             int max = settings.properties.get(key).size();
             int i = 1;
-            for(String prop : settings.properties.get(key)) {
+            for (String prop : settings.properties.get(key)) {
                System.err.println("\t" + (i == max
-                                          ? "*"
-                                          : "") + prop.replaceAll("\r?\n", "  "));
+                     ? "*"
+                     : "") + prop.replaceAll("\r?\n", "  "));
                i++;
             }
             System.err.println("--------------------------------------------------");
@@ -435,16 +459,6 @@ public final class Config implements Serializable {
       }
 
       return rval;
-   }
-
-   /**
-    * Initializes the config file without specifying any command line arguments
-    *
-    * @param programName The program name
-    * @return An empty array
-    */
-   public static String[] initialize(String programName) {
-      return initialize(programName, new String[0], new CommandLineParser());
    }
 
    /**
@@ -466,7 +480,7 @@ public final class Config implements Serializable {
     */
    public static void initializeTest() {
       clear();
-      initialize("Test");
+      initialize("Test", new String[0], new CommandLineParser());
    }
 
    /**
@@ -476,7 +490,7 @@ public final class Config implements Serializable {
     * @return the boolean
     */
    public static boolean isBean(String property) {
-      if(Strings.isNullOrBlank(getInstance().properties.get(property))) {
+      if (Strings.isNullOrBlank(getInstance().properties.get(property))) {
          return false;
       }
       return BEAN_SUBSTITUTION.matcher(getInstance().properties.get(property)).find();
@@ -493,8 +507,7 @@ public final class Config implements Serializable {
    }
 
    public static void loadApplicationConfig(String applicationName) {
-      if(!Strings.isNullOrBlank(applicationName)) {
-         getInstance().setterFunction = ConfigSettingFunction.INSTANCE;
+      if (!Strings.isNullOrBlank(applicationName)) {
          final String appConfName = applicationName.replaceAll("\\s+", "_").toLowerCase() + CONF_EXTENSION;
          //Look for application specific properties
          Stream.of(
@@ -502,7 +515,7 @@ public final class Config implements Serializable {
                Resources.fromFile(new File(SystemInfo.USER_HOME, appConfName)),
                localConfigDirectory.getChild(appConfName),
                Resources.fromFile(new File(appConfName))
-                  )
+         )
                .filter(Resource::exists)
                .forEach(resource -> {
                   logFine(log, "Loading Application Configuration from {0}", resource.path());
@@ -517,19 +530,19 @@ public final class Config implements Serializable {
     * @param resource The config file
     */
    public static void loadConfig(Resource resource) {
-      if(resource == null || !resource.exists()) {
+      if (resource == null || !resource.exists()) {
          //throw new RuntimeException("Unable to Load Config: " + resource);
          return;
       }
-      if(resource.path() != null && getInstance().loaded.contains(resource.path())) {
+      if (resource.path() != null && getInstance().loaded.contains(resource.path())) {
          return; //Only load once!
       }
       try {
          MsonConfigParser.parseResource(resource);
-      } catch(ParseException | IOException e) {
+      } catch (ParseException | IOException e) {
          throw new RuntimeException(e);
       }
-      if(resource.path() != null) {
+      if (resource.path() != null) {
          getInstance().loaded.add(resource.path());
       }
    }
@@ -538,15 +551,15 @@ public final class Config implements Serializable {
       Resource defaultConf = new ClasspathResource(packageToDefaultConfig(packageName), Config.getDefaultClassLoader());
       // Go through each level of the package until we find one that
       // has a default properties file or we cannot go any further.
-      while(!defaultConf.exists()) {
+      while (!defaultConf.exists()) {
          int idx = packageName.lastIndexOf('.');
-         if(idx == -1) {
+         if (idx == -1) {
             break;
          }
          packageName = packageName.substring(0, idx);
          defaultConf = new ClasspathResource(packageToDefaultConfig(packageName), Config.getDefaultClassLoader());
       }
-      if(defaultConf.exists()) {
+      if (defaultConf.exists()) {
          loadConfig(defaultConf);
       }
    }
@@ -571,18 +584,18 @@ public final class Config implements Serializable {
     * @return the string
     */
    public static String resolveVariables(String string) {
-      if(string == null) {
+      if (string == null) {
          return null;
       }
 
       String rval = string;
       Matcher m = STRING_SUBSTITUTION.matcher(string);
-      while(m.find()) {
-         if(getInstance().properties.containsKey(m.group(1))) {
+      while (m.find()) {
+         if (getInstance().properties.containsKey(m.group(1))) {
             rval = rval.replaceAll(Pattern.quote(m.group(0)), get(m.group(1)).asString());
-         } else if(System.getProperties().contains(m.group(1))) {
+         } else if (System.getProperties().contains(m.group(1))) {
             rval = rval.replaceAll(Pattern.quote(m.group(0)), System.getProperties().get(m.group(1)).toString());
-         } else if(System.getenv().containsKey(m.group(1))) {
+         } else if (System.getenv().containsKey(m.group(1))) {
             rval = rval.replaceAll(Pattern.quote(m.group(0)), System.getenv().get(m.group(1)));
          }
       }
@@ -595,7 +608,7 @@ public final class Config implements Serializable {
     * @param args the args
     */
    public static void setAllCommandLine(String[] args) {
-      if(args != null) {
+      if (args != null) {
          CommandLineParser parser = new CommandLineParser();
          parser.parse(args);
          setAllCommandLine(parser);
@@ -608,7 +621,7 @@ public final class Config implements Serializable {
     * @param parser the parser
     */
    public static void setAllCommandLine(CommandLineParser parser) {
-      if(parser != null) {
+      if (parser != null) {
          parser.getSetEntries()
                .forEach(entry -> getInstance().setterFunction.setProperty(entry.getKey(),
                                                                           entry.getValue(),
@@ -616,34 +629,11 @@ public final class Config implements Serializable {
       }
    }
 
-   /**
-    * Sets the default <code>ClassLoader</code> to use with Classpath resources
-    *
-    * @param newDefaultClassLoader The new ClassLoader
-    */
-   public static void setDefaultClassLoader(ClassLoader newDefaultClassLoader) {
-      defaultClassLoader = newDefaultClassLoader;
-   }
-
-   /**
-    * Sets the singleton instance of the config. This is mainly useful in distributed environments where we are passing
-    * configurations around.
-    *
-    * @param config the config that will become the single instance
-    * @return the singleton instance of the config
-    */
-   public static Config setInstance(Config config) {
-      synchronized(Config.class) {
-         INSTANCE = config;
-      }
-      return INSTANCE;
-   }
-
    public static void setProperty(@NonNull String name, Object value) {
-      if(value == null) {
+      if (value == null) {
          getInstance().properties.remove(name);
       }
-      if(value instanceof String) {
+      if (value instanceof String) {
          setProperty(name, value.toString());
          return;
       }
@@ -658,18 +648,18 @@ public final class Config implements Serializable {
     */
    public static void setProperty(@NonNull String name, String value) {
       getInstance().properties.put(name, value);
-      if(name.toLowerCase().endsWith(".level")) {
+      if (name.toLowerCase().endsWith(".level")) {
          String className = name.substring(0, name.length() - ".level".length());
          LogUtils.setLevel(className, Level.parse(value.trim().toUpperCase()));
       }
-      if(name.equals("com.gengoai.logging.logfile")) {
+      if (name.equals("com.gengoai.logging.logfile")) {
          try {
             LogUtils.addFileHandler(value);
-         } catch(IOException e) {
+         } catch (IOException e) {
             throw new RuntimeException(e);
          }
       }
-      if(name.toLowerCase().startsWith(SYSTEM_PROPERTY)) {
+      if (name.toLowerCase().startsWith(SYSTEM_PROPERTY)) {
          String systemSetting = name.substring(SYSTEM_PROPERTY.length());
          System.setProperty(systemSetting, value);
       }
@@ -711,7 +701,7 @@ public final class Config implements Serializable {
       @Override
       public void setProperty(String name, String value, String resourceName) {
          Config.setProperty(name, value);
-         if(!properties.containsKey(name)) {
+         if (!properties.containsKey(name)) {
             properties.put(name, new LinkedHashSet<>());
          }
          properties.get(name).add(resourceName + "::" + value);

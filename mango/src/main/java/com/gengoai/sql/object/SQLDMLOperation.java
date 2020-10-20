@@ -19,20 +19,14 @@
 
 package com.gengoai.sql.object;
 
-import com.gengoai.sql.SQLDialect;
-import com.gengoai.sql.SQLFormattable;
-import lombok.NonNull;
+import com.gengoai.sql.SQLElement;
 
 /**
  * Enumeration of data manipulation statements in SQL.
  */
-public enum SQLDMLOperation implements SQLFormattable {
+public enum SQLDMLOperation implements SQLElement {
    INSERT,
    UPDATE,
    DELETE;
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return name();
-   }
 }//END OF SQLDMLOperation

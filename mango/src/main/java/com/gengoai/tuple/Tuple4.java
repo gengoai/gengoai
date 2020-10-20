@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gengoai.conversion.Cast;
+import lombok.Getter;
 
 /**
  * The type Tuple 4.
@@ -37,6 +38,7 @@ import com.gengoai.conversion.Cast;
  * @author David B. Bracewell
  */
 @JsonDeserialize(as = Tuple4.class)
+@Getter
 public class Tuple4<A, B, C, D> extends Tuple {
    private static final long serialVersionUID = 1L;
    /**
@@ -56,8 +58,23 @@ public class Tuple4<A, B, C, D> extends Tuple {
     */
    public final D v4;
 
+   private Tuple4(A a, B b, C c, D d) {
+      this.v1 = a;
+      this.v2 = b;
+      this.v3 = c;
+      this.v4 = d;
+   }
+
+   @JsonCreator
+   protected Tuple4(@JsonProperty Object[] array) {
+      this.v1 = Cast.as(array[0]);
+      this.v2 = Cast.as(array[1]);
+      this.v3 = Cast.as(array[2]);
+      this.v4 = Cast.as(array[3]);
+   }
+
    /**
-    * Of tuple 4.
+    * Static constructor
     *
     * @param <A> the type parameter
     * @param <B> the type parameter
@@ -71,29 +88,6 @@ public class Tuple4<A, B, C, D> extends Tuple {
     */
    public static <A, B, C, D> Tuple4<A, B, C, D> of(A a, B b, C c, D d) {
       return new Tuple4<>(a, b, c, d);
-   }
-
-   /**
-    * Instantiates a new Tuple 4.
-    *
-    * @param a the first value
-    * @param b the second value
-    * @param c the third value
-    * @param d the fourth value
-    */
-   public Tuple4(A a, B b, C c, D d) {
-      this.v1 = a;
-      this.v2 = b;
-      this.v3 = c;
-      this.v4 = d;
-   }
-
-   @JsonCreator
-   protected Tuple4(@JsonProperty Object[] array) {
-      this.v1 = Cast.as(array[0]);
-      this.v2 = Cast.as(array[1]);
-      this.v3 = Cast.as(array[2]);
-      this.v4 = Cast.as(array[3]);
    }
 
    @Override
@@ -114,7 +108,7 @@ public class Tuple4<A, B, C, D> extends Tuple {
 
    @Override
    public <T> T get(int i) {
-      switch(i) {
+      switch (i) {
          case 0:
             return Cast.as(v1);
          case 1:
@@ -126,22 +120,6 @@ public class Tuple4<A, B, C, D> extends Tuple {
          default:
             throw new ArrayIndexOutOfBoundsException();
       }
-   }
-
-   public A getV1() {
-      return this.v1;
-   }
-
-   public B getV2() {
-      return this.v2;
-   }
-
-   public C getV3() {
-      return this.v3;
-   }
-
-   public D getV4() {
-      return this.v4;
    }
 
    @Override
@@ -156,7 +134,7 @@ public class Tuple4<A, B, C, D> extends Tuple {
 
    @Override
    public String toString() {
-      return "(" + v1 + ", " + v2 + "," + v3 + "," + v4 + ")";
+      return "(" + v1 + ", " + v2 + ", " + v3 + ", " + v4 + ")";
    }
 
 }//END OF Tuple2

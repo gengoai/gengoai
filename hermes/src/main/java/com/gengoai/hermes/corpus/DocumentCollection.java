@@ -135,7 +135,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
    static DocumentCollection create(@NonNull String specification) {
       try {
          return create(Specification.parse(specification));
-      } catch(IllegalArgumentException e) {
+      } catch (IllegalArgumentException e) {
          return Corpus.open(specification);
       }
    }
@@ -148,7 +148,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
     * @return the document collection
     */
    static DocumentCollection create(@NonNull Specification specification) {
-      if(specification.getSchema().equalsIgnoreCase("corpus")) {
+      if (specification.getSchema().equalsIgnoreCase("corpus")) {
          return Corpus.open(specification.getPath());
       }
       return create(DocFormatService.create(specification)
@@ -164,7 +164,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
     */
    default DocumentCollection annotate(@NonNull AnnotatableType... annotatableTypes) {
       AnnotationPipeline pipeline = new AnnotationPipeline(annotatableTypes);
-      if(pipeline.requiresUpdate()) {
+      if (pipeline.requiresUpdate()) {
          return update("Annotate", pipeline::annotate);
       }
       return this;
@@ -181,6 +181,10 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
       return update("ApplyLexicon", doc -> lexicon.extract(doc).forEach(onMatch));
    }
 
+   default DocumentCollection apply(@NonNull SerializableFunction<HString, HString> function) {
+      return update(function.getClass().getSimpleName(), function::apply);
+   }
+
    /**
     * Applies token regular expression to the corpus creating annotations of the given type for matches.
     *
@@ -191,7 +195,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
    default DocumentCollection apply(@NonNull TokenRegex pattern, @NonNull SerializableConsumer<TokenMatch> onMatch) {
       return update("ApplyTokenRegex", doc -> {
          TokenMatcher matcher = pattern.matcher(doc);
-         while(matcher.find()) {
+         while (matcher.find()) {
             onMatch.accept(matcher.asTokenMatch());
          }
       });
@@ -362,14 +366,14 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
     * @return the sampled corpus
     */
    default DocumentCollection sample(int count, @NonNull Random random) {
-      if(count <= 0) {
+      if (count <= 0) {
          return new MStreamDocumentCollection(StreamingContext.local().empty());
       }
       List<Document> sample = stream().limit(count).collect();
       AtomicInteger k = new AtomicInteger(count + 1);
       stream().skip(count).forEach(document -> {
          int rndIndex = random.nextInt(k.getAndIncrement());
-         if(rndIndex < count) {
+         if (rndIndex < count) {
             sample.set(rndIndex, document);
          }
       });
@@ -401,7 +405,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
                                              int minCount,
                                              double minScore,
                                              @NonNull ContingencyTableCalculator calculator
-                                            ) {
+   ) {
       NGramExtractor temp = nGramExtractor.toBuilder().minOrder(1).maxOrder(2).build();
       Counter<Tuple> ngrams = nGramCount(temp).filterByValue(v -> v >= minCount);
       Counter<Tuple> unigrams = ngrams.filterByKey(t -> t.degree() == 1);
@@ -413,7 +417,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
                                                                         unigrams.get(bigram.slice(0, 1)),
                                                                         unigrams.get(bigram.slice(1, 2)),
                                                                         unigrams.sum()));
-         if(score >= minScore) {
+         if (score >= minScore) {
             filtered.set(bigram, score);
          }
       });
@@ -445,8 +449,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
    default Counter<String> termCount(@NonNull Extractor extractor) {
       ProgressLogger progressLogger = ProgressLogger.create(this, "termCount");
       MCounterAccumulator<String> termCounts = getStreamingContext().counterAccumulator();
-      parallelStream().parallel()
-                      .forEach(doc -> {
+      parallelStream().forEach(doc -> {
                          progressLogger.start();
                          termCounts.merge(extractor.extract(doc).count());
                          progressLogger.stop(doc.tokenLength());

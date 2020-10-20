@@ -38,6 +38,11 @@ public class LRUCache<K, V> implements Cache<K, V> {
    }
 
    @Override
+   public V get(K key, SerializableSupplier<? extends V> supplier) {
+      return cache.computeIfAbsent(key, k -> supplier.get());
+   }
+
+   @Override
    public void invalidate(K key) {
       cache.remove(key);
    }
@@ -53,11 +58,6 @@ public class LRUCache<K, V> implements Cache<K, V> {
    }
 
    @Override
-   public V get(K key, SerializableSupplier<? extends V> supplier) {
-      return cache.computeIfAbsent(key, k -> supplier.get());
-   }
-
-   @Override
    public long size() {
       return cache.size();
    }
@@ -65,7 +65,7 @@ public class LRUCache<K, V> implements Cache<K, V> {
    @Override
    public String toString() {
       return "LRUCache{" +
-                "size=" + size() +
-                '}';
+            "size=" + size() +
+            '}';
    }
 }//END OF LRUCache

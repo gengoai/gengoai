@@ -56,22 +56,22 @@ public class PrincetonWordNetLoader implements WordNetLoader {
          Resource base = Config.get("PrincetonWordNetLoader.dictionary").asResource();
          processFiles(base, "index", new IndexParser());
          processFiles(base, "data", new DataParser());
-         for(Tuple3<String, String, WordNetRelation> cell : senseRelations) {
+         for (Tuple3<String, String, WordNetRelation> cell : senseRelations) {
             db.putRelation(senseMap.get(cell.getV1()), senseMap.get(cell.getV2()), cell.getV3());
          }
-      } catch(IOException e) {
+      } catch (IOException e) {
          throw new RuntimeException(e);
       }
    }
 
    private void processFiles(Resource root, String prefix, Function<String, Object> parser) throws IOException {
-      for(WordNetPOS posFILE : WordNetPOS.values()) {
-         if(posFILE == WordNetPOS.ANY) continue;
+      for (WordNetPOS posFILE : WordNetPOS.values()) {
+         if (posFILE == WordNetPOS.ANY) continue;
          Resource file = root.getChild(prefix + "." + posFILE.getShortForm().toLowerCase());
          file.setCharset(StandardCharsets.ISO_8859_1);
-         try(BufferedReader reader = new BufferedReader(file.reader())) {
+         try (BufferedReader reader = new BufferedReader(file.reader())) {
             String line;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                parser.apply(line);
             }
          }
@@ -82,7 +82,7 @@ public class PrincetonWordNetLoader implements WordNetLoader {
 
       @Override
       public Object apply(String line) {
-         if(Character.isWhitespace(line.charAt(0))) return null; //Header
+         if (Character.isWhitespace(line.charAt(0))) return null; //Header
 
          StringTokenizer tokenizer = new StringTokenizer(line, " ");
 
@@ -91,14 +91,14 @@ public class PrincetonWordNetLoader implements WordNetLoader {
          int synset_cnt = Integer.parseInt(tokenizer.nextToken());
 
          int p_cnt = Integer.parseInt(tokenizer.nextToken());
-         for(int i = 0; i < p_cnt; i++) {
+         for (int i = 0; i < p_cnt; i++) {
             tokenizer.nextToken();
          }
 
          Integer.parseInt(tokenizer.nextToken());
          Integer.parseInt(tokenizer.nextToken());
 
-         for(int i = 0; i < synset_cnt; i++) {
+         for (int i = 0; i < synset_cnt; i++) {
             String synset_offset = tokenizer.nextToken();
             synsetSenseToSenseNumber.put(Tuple2.of(synset_offset + pos.getTag(), lemma), i + 1);
          }
@@ -109,7 +109,7 @@ public class PrincetonWordNetLoader implements WordNetLoader {
    private class DataParser implements Function<String, Object> {
       @Override
       public Object apply(String line) {
-         if(Character.isWhitespace(line.charAt(0))) return null;
+         if (Character.isWhitespace(line.charAt(0))) return null;
 
          StringTokenizer tokenizer = new StringTokenizer(line, " ");
 
@@ -132,13 +132,13 @@ public class PrincetonWordNetLoader implements WordNetLoader {
 
          SenseImpl[] senses = new SenseImpl[w_cnt];
          //Process the senses and add them
-         for(int i = 0; i < w_cnt; i++) {
+         for (int i = 0; i < w_cnt; i++) {
             String lemma = tokenizer.nextToken();
 
             AdjectiveMarker marker = null;
-            if(synsetPOS == WordNetPOS.ADJECTIVE) {
-               for(AdjectiveMarker adjMarker : AdjectiveMarker.values()) {
-                  if(lemma.endsWith(adjMarker.getTag())) {
+            if (synsetPOS == WordNetPOS.ADJECTIVE) {
+               for (AdjectiveMarker adjMarker : AdjectiveMarker.values()) {
+                  if (lemma.endsWith(adjMarker.getTag())) {
                      marker = adjMarker;
                      lemma = lemma.substring(0, lemma.length() - adjMarker.getTag().length());
                      break;
@@ -168,15 +168,15 @@ public class PrincetonWordNetLoader implements WordNetLoader {
          //Process the synsetRelations
          int p_cnt = Integer.parseInt(tokenizer.nextToken());
          boolean hasHypernym = false;
-         for(int i = 0; i < p_cnt; i++) {
+         for (int i = 0; i < p_cnt; i++) {
             WordNetRelation relation = WordNetRelation.forCode(synsetPOS, tokenizer.nextToken());
             int targetOffset = Integer.parseInt(tokenizer.nextToken());
             WordNetPOS targetPOS = WordNetPOS.fromString(tokenizer.nextToken());
             String sn = tokenizer.nextToken();
             int source_target = Integer.parseInt(sn, 16);
-            if(source_target == 0) { //synset relation
+            if (source_target == 0) { //synset relation
                db.putRelation(synsetId, toSynsetId(targetOffset, targetPOS), relation);
-               if(relation == WordNetRelation.HYPERNYM || relation == WordNetRelation.HYPERNYM_INSTANCE) {
+               if (relation == WordNetRelation.HYPERNYM || relation == WordNetRelation.HYPERNYM_INSTANCE) {
                   hasHypernym = true;
                }
             } else { //sense relation
@@ -187,23 +187,23 @@ public class PrincetonWordNetLoader implements WordNetLoader {
                            toSenseIndex(synsetId, source_num),
                            toSenseIndex(toSynsetId(targetOffset, targetPOS), target_num),
                            relation
-                              )
-                                 );
+                     )
+               );
             }
          }
 
-         if(!hasHypernym) {
+         if (!hasHypernym) {
             db.addRoot(synset);
          }
 
-         if(synsetPOS == WordNetPOS.VERB) {
+         if (synsetPOS == WordNetPOS.VERB) {
             int numFrames = Integer.parseInt(tokenizer.nextToken());
-            for(int i = 0; i < numFrames; i++) {
+            for (int i = 0; i < numFrames; i++) {
                tokenizer.nextToken(); // consume the +
                VerbFrame frame = VerbFrame.forId(Integer.parseInt(tokenizer.nextToken()) - 1);
                int lemma_num = Integer.parseInt(tokenizer.nextToken(), 16);
-               if(lemma_num == 0) {
-                  for(SenseImpl s : senses) {
+               if (lemma_num == 0) {
+                  for (SenseImpl s : senses) {
                      s.addVerbFrame(frame);
                   }
                } else {
@@ -214,7 +214,7 @@ public class PrincetonWordNetLoader implements WordNetLoader {
 
          tokenizer.nextToken(); //start of gloss
          String gloss = "";
-         while(tokenizer.hasMoreTokens()) {
+         while (tokenizer.hasMoreTokens()) {
             gloss += " " + tokenizer.nextToken();
          }
          synset.setGloss(gloss.trim());

@@ -19,10 +19,8 @@
 
 package com.gengoai.sql.statement;
 
-import lombok.*;
-import com.gengoai.sql.SQLDialect;
 import com.gengoai.sql.SQLElement;
-import com.gengoai.sql.SQLFormattable;
+import lombok.*;
 
 /**
  * <p>
@@ -32,14 +30,10 @@ import com.gengoai.sql.SQLFormattable;
 @Value
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public class Join implements SQLFormattable {
+public class Join implements SQLElement {
    private static final long serialVersionUID = 1L;
    @NonNull JoinType type;
    @NonNull SQLElement with;
    @NonNull SQLElement on;
 
-   @Override
-   public String toSQL(@NonNull SQLDialect dialect) {
-      return type.toSQL(dialect) + " JOIN " + dialect.toSQL(with) + " ON " + dialect.toSQL(on);
-   }
 }//END OF Join

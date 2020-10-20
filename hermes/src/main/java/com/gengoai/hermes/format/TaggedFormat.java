@@ -47,7 +47,7 @@ import static com.gengoai.tuple.Tuples.$;
  */
 public class TaggedFormat extends WholeFileTextFormat implements OneDocPerFileFormat, Serializable {
    private static final long serialVersionUID = 1L;
-   private static final Pattern TAG_PATTERN = Pattern.compile("<([a-z_]+)>([^<>]+)</\\1>", Pattern.CASE_INSENSITIVE);
+   private static final Pattern TAG_PATTERN = Pattern.compile("<([a-z_:\\$]+)>([^<>]+)</\\1>", Pattern.CASE_INSENSITIVE);
    private static final Pattern WORD_PATTERN = Pattern.compile("\\S+");
 
    /**
