@@ -36,9 +36,9 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git@github.com:gengoai/mono-repo.git</connection>
-        <developerConnection>scm:git:git@github.com:gengoai/mono-repo.git</developerConnection>
-        <url>git@github.com:gengoai/mono-repo.git</url>
+        <connection>scm:git:git@gengoai.github.com:gengoai/mono-repo.git</connection>
+        <developerConnection>scm:git:git@gengoai.github.com:gengoai/mono-repo.git</developerConnection>
+        <url>git@gengoai.github.com:gengoai/mono-repo.git</url>
         <tag>HEAD</tag>
     </scm>
 
