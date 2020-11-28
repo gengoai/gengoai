@@ -95,14 +95,14 @@ public class OnlineLDA extends BaseVectorTopicModel {
       var expELogTheta = eLogTheta.map(Math::exp);
       m.stats = m.lambda.zeroLike();
 
-      for(int i = 0; i < batch.size(); i++) {
+      for (int i = 0; i < batch.size(); i++) {
          NDArray n = batch.get(i);
          int[] ids = n.sparseIndices();
-         if(ids.length == 0) {
+         if (ids.length == 0) {
             continue;
          }
          NDArray nv = NDArrayFactory.DENSE.array(ids.length);
-         for(int i1 = 0, i2 = 0; i1 < ids.length; i1++, i2++) {
+         for (int i1 = 0, i2 = 0; i1 < ids.length; i1++, i2++) {
             nv.set(i2, n.get(ids[i1]));
          }
          var gammaD = m.gamma.getRow(i);
@@ -111,20 +111,20 @@ public class OnlineLDA extends BaseVectorTopicModel {
          var phiNorm = expELogThetaD.mmul(expELogBetaD).addi(1E-100);
 
          NDArray lastGamma;
-         for(int iteration = 0; iteration < parameters.inferenceSamples.value(); iteration++) {
+         for (int iteration = 0; iteration < parameters.inferenceSamples.value(); iteration++) {
             lastGamma = gammaD;
             var v1 = nv.div(phiNorm).mmul(expELogBetaD.T());
             gammaD = expELogThetaD.mul(v1).addi(m.alpha);
             var eLogThetaD = dirichletExpectation(gammaD);
             expELogThetaD = eLogThetaD.map(Math::exp);
             phiNorm = expELogThetaD.mmul(expELogBetaD).addi(1E-100);
-            if(gammaD.map(lastGamma, (d1, d2) -> Math.abs(d1 - d2)).mean() < 0.001) {
+            if (gammaD.map(lastGamma, (d1, d2) -> Math.abs(d1 - d2)).mean() < 0.001) {
                break;
             }
          }
          m.gamma.setRow(i, gammaD);
          var o = outer(expELogThetaD, nv.div(phiNorm));
-         for(int k = 0; k < ids.length; k++) {
+         for (int k = 0; k < ids.length; k++) {
             m.stats.incrementiColumn(ids[k], o.getColumn(k));
          }
       }
@@ -132,7 +132,7 @@ public class OnlineLDA extends BaseVectorTopicModel {
    }
 
    private Stream<NDArray> encode(Datum d) {
-      if(parameters.combineInputs.value()) {
+      if (parameters.combineInputs.value()) {
          return mergeVariableSpace(d.stream(getInputs()))
                .getVariableSpace()
                .map(o -> toCountVector(o, parameters.namingPattern.value()));
@@ -148,7 +148,7 @@ public class OnlineLDA extends BaseVectorTopicModel {
       final double D = dataset.size();
       int batchSize = parameters.batchSize.value();
       int batchCount = 0;
-      for(DataSet docs : Iterables.asIterable(dataset.batchIterator(batchSize))) {
+      for (DataSet docs : Iterables.asIterable(dataset.batchIterator(batchSize))) {
          List<NDArray> batch = docs.parallelStream()
                                    .flatMap(this::encode)
                                    .collect();
@@ -157,7 +157,7 @@ public class OnlineLDA extends BaseVectorTopicModel {
          batchCount++;
       }
       model.lambda.diviColumnVector(model.lambda.rowSums());
-      for(int i = 0; i < model.lambda.rows(); i++) {
+      for (int i = 0; i < model.lambda.rows(); i++) {
          NDArray topic = model.lambda.getRow(i);
          Counter<String> cntr = Counters.newCounter();
          topic.forEachSparse((fi, v) -> {
@@ -180,7 +180,7 @@ public class OnlineLDA extends BaseVectorTopicModel {
    @Override
    public NDArray getTopicDistribution(String feature) {
       NDArray n = NDArrayFactory.ND.array(getNumberOfTopics());
-      for(Topic topic : topics) {
+      for (Topic topic : topics) {
          n.set(topic.getId(), topic.getFeatureDistribution().get(feature));
       }
       return n;
@@ -204,8 +204,8 @@ public class OnlineLDA extends BaseVectorTopicModel {
 
    private NDArray outer(NDArray vector, NDArray matrix) {
       NDArray out = NDArrayFactory.DENSE.array((int) vector.length(), (int) matrix.length());
-      for(long i = 0; i < vector.length(); i++) {
-         for(long j = 0; j < matrix.length(); j++) {
+      for (long i = 0; i < vector.length(); i++) {
+         for (long j = 0; j < matrix.length(); j++) {
             out.set((int) i, (int) j, vector.get(i) * matrix.get(j));
          }
       }
