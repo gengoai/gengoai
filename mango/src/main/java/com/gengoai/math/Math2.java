@@ -38,6 +38,16 @@ import static com.gengoai.Validation.checkArgument;
  * @author David B. Bracewell
  */
 public final class Math2 {
+   private static final int EXP_TABLE_SIZE = 2000;
+   private static final int MAX_EXP = 12;
+   private static final double[] EXP_TABLE = new double[EXP_TABLE_SIZE];
+
+   static {
+      for (int i = 0; i < EXP_TABLE_SIZE; i++) {
+         EXP_TABLE[i] = Math.exp((2.0 * i / (double) EXP_TABLE_SIZE - 1) * MAX_EXP);
+         EXP_TABLE[i] /= EXP_TABLE[i] + 1;
+      }
+   }
 
    /**
     * The constant LOG_2.
@@ -46,6 +56,17 @@ public final class Math2 {
 
    private Math2() {
       throw new IllegalAccessError();
+   }
+
+   public static double exp(double value) {
+      if (value < -MAX_EXP) {
+         return 0d;
+      }
+      if (value > MAX_EXP) {
+         return 1.0;
+      }
+      int index = (int) ((value + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2.0));
+      return EXP_TABLE[index];
    }
 
    /**
