@@ -19,50 +19,62 @@
 
 package com.gengoai.swing;
 
+import com.formdev.flatlaf.FlatLightLaf;
+
 import javax.swing.UIManager;
-import java.awt.Color;
+import java.awt.*;
 
 public enum FlatLafColors {
-   inactiveCaption("inactiveCaption"),
-   activeCaption("activeCaption"),
-   inactiveCaptionText("inactiveCaptionText"),
-   activeCaptionText("activeCaptionText"),
-   Button_background("Button.background"),
-   Button_borderColor("Button.borderColor"),
-   Button_darkShadow("Button.darkShadow"),
-   Button_default_background("Button.default.background"),
-   Button_default_borderColor("Button.default.borderColor"),
-   Button_default_focusColor("Button.default.focusColor"),
-   Button_default_focusedBorderColor("Button.default.focusedBorderColor"),
+   inactiveCaption("inactiveCaption", SystemColor.inactiveCaption),
+   activeCaption("activeCaption", SystemColor.activeCaption),
+   inactiveCaptionText("inactiveCaptionText", SystemColor.inactiveCaptionText),
+   activeCaptionText("activeCaptionText", SystemColor.activeCaptionText),
+   Button_background("Button.background", SystemColor.control),
+   Button_borderColor("Button.borderColor", SystemColor.windowBorder),
+   Button_darkShadow("Button.darkShadow", SystemColor.controlDkShadow),
+   Button_default_background("Button.default.background", SystemColor.control),
+   Button_default_borderColor("Button.default.borderColor", SystemColor.windowBorder),
+   Button_default_focusColor("Button.default.focusColor", SystemColor.windowBorder),
+   Button_default_focusedBorderColor("Button.default.focusedBorderColor", SystemColor.windowBorder),
    Button_default_foreground("Button.default.foreground"),
    Button_default_hoverBackground("Button.default.hoverBackground"),
    Button_default_hoverBorderColor("Button.default.hoverBorderColor"),
    Button_default_pressedBackground("Button.default.pressedBackground"),
    Button_disabledBorderColor("Button.disabledBorderColor"),
-   Button_disabledText("Button.disabledText"),
+   Button_disabledText("Button.disabledText", SystemColor.inactiveCaptionText),
    Button_disabledToolBarBorderBackground("Button.disabledToolBarBorderBackground"),
    Button_focusedBorderColor("Button.focusedBorderColor"),
-   Button_focus("Button.focus"),
-   Button_foreground("Button.foreground"),
+   Button_focus("Button.focus", Color.BLACK),
+   Button_foreground("Button.foreground", Color.BLACK),
    Button_highlight("Button.highlight"),
    Button_hoverBackground("Button.hoverBackground"),
    Button_hoverBorderColor("Button.hoverBorderColor"),
    Button_light("Button.light"),
    Button_pressedBackground("Button.pressedBackground"),
    Button_select("Button.select"),
-   Button_shadow("Button.shadow"),
+   Button_shadow("Button.shadow", Color.GRAY),
    Button_toolBarBorderBackground("Button.toolBarBorderBackground"),
    Button_toolbar_hoverBackground("Button.toolbar.hoverBackground"),
    Button_toolbar_pressedBackground("Button.toolbar.pressedBackground");
 
    private final String key;
+   private final Color defaultColor;
 
    FlatLafColors(String key) {
+      this(key, Color.BLACK);
+   }
+
+   FlatLafColors(String key, Color defaultColor) {
       this.key = key;
+      this.defaultColor = defaultColor;
    }
 
    public Color color() {
-      return UIManager.getColor(key);
+      Color clr = UIManager.getColor(key);
+      if (clr == null) {
+         return Color.BLACK;
+      }
+      return clr;
    }
 
    public String getUIManagerKey() {

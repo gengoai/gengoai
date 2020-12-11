@@ -418,8 +418,7 @@ public class CoNLLEditor extends HermesGUI {
    }
 
    private void openFolder(ActionEvent e) {
-      if (openDialog.showDialog(null, "OK") == JFileChooser.APPROVE_OPTION) {
-//         save(e);
+      if (openDialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
          faPreviousDocument.setEnabled(false);
          faNextDocument.setEnabled(false);
          faSave.setEnabled(false);

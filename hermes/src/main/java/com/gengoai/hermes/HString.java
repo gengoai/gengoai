@@ -116,6 +116,11 @@ public interface HString extends Span, StringLike, Serializable {
       return Fragments.span(owner, start, end);
    }
 
+   @Override
+   default boolean isEmpty() {
+      return Span.super.isEmpty();
+   }
+
    /**
     * Adds an outgoing relation to the HString.
     *

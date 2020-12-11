@@ -1049,8 +1049,8 @@ public enum FontAwesome {
    public final Icon createFocusedIcon(float size) {
       Validation.checkArgument(size > 0);
       Color fg = Colors.isDark(Button_background.color())
-                 ? Button_foreground.color().brighter()
-                 : Button_focus.color().darker();
+            ? Button_foreground.color().brighter()
+            : Button_focus.color().darker();
       return fontIcon.createIcon(Character.toString(icon),
                                  size,
                                  fg);
@@ -1104,8 +1104,8 @@ public enum FontAwesome {
    public final Icon createSelectedIcon(float size) {
       Validation.checkArgument(size > 0);
       Color fg = Colors.isDark(Button_foreground.color())
-                 ? Button_foreground.color()
-                 : Button_foreground.color().brighter();
+            ? Button_foreground.color()
+            : Button_foreground.color().brighter();
       return fontIcon.createIcon(Character.toString(icon),
                                  size,
                                  fg);

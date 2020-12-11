@@ -19,6 +19,10 @@
 
 package com.gengoai.swing;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.gengoai.application.Application;
 import com.gengoai.conversion.Cast;
 import com.gengoai.io.Resources;
@@ -108,8 +112,17 @@ public abstract class SwingApplication extends Application {
          final String lookAndFeel = config.get("lookAndFeel").asString("light");
          try {
             switch (lookAndFeel.toLowerCase()) {
+               case "vaqua":
+                  UIManager.setLookAndFeel("org.violetlib.aqua.AquaLookAndFeel");
+                  break;
                case "system":
                   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                  break;
+               case "nimbus":
+                  UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+                  break;
+               case "metal":
+                  UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
                   break;
                case "dark":
                   UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
