@@ -37,6 +37,7 @@ class ApolloModel:
                                y=self.outputs.get_output_data(data),
                                epochs=epochs,
                                batch_size=batch_size,
+                               shuffle=True,
                                **kwargs)
 
     def save(self, location: str, overwrite: bool = False):

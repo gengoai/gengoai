@@ -69,6 +69,7 @@
         <module>hermes-tools</module>
         <module>hermes-wordnet</module>
         <module>installer</module>
+        <module>hermes-chinese</module>
     </modules>
 
     <dependencyManagement>
@@ -94,6 +95,11 @@
             </dependency>
             <dependency>
                 <groupId>com.gengoai</groupId>
+                <artifactId>hermes-com.gengoai.hermes.zh</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.gengoai</groupId>
                 <artifactId>mango</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -113,6 +119,11 @@
             <!-- Runtime 3rd Party Dependencies -->
             <!-- ======================================================================== -->
 
+            <dependency>
+                <groupId>com.huaban</groupId>
+                <artifactId>jieba-analysis</artifactId>
+                <version>1.0.2</version>
+            </dependency>
             <dependency>
                 <groupId>com.ibm.icu</groupId>
                 <artifactId>icu4j</artifactId>

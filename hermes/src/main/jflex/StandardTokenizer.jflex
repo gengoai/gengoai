@@ -102,7 +102,7 @@ AMPM = ([AaPp]"."?[mM]"."?)
 EMAIL={ALPHANUM}(("."|"-"|"_"){ALPHANUM})*"@"{ALPHANUM}(("."|"-"){ALPHANUM})+
 
 // Absolute URI (Partial BNF from RFC3986) https://github.com/rdelbru/lucene-uri-preserving-standard-tokenizer
-URI=(("http" "s"?|{ALPHA}+)"://"?({USERINFO}"@")?)?{AUTHORITY}{PATH}("?"{QUERY})?("#"{FRAGMENT})?
+URI=(("http" "s"?|{ALPHA}+)"://"({USERINFO}"@")?)?{AUTHORITY}{PATH}("?"{QUERY})?("#"{FRAGMENT})?
 AUTHORITY={HOST}(":"{PORT})?
 QUERY=({SEGMENT}|"/"|"?")*
 FRAGMENT=({SEGMENT}|"/"|"?")*
@@ -134,6 +134,7 @@ EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue46
 
 %%
 <YYINITIAL>{
+ {EMAIL}                {return attachToken(TokenType.EMAIL);}
  {HASHTAG}              {return attachToken(TokenType.HASH_TAG);}
  {REPLY}                {return attachToken(TokenType.REPLY);}
  {TIME}                {return attachToken(TokenType.TIME);}
@@ -149,7 +150,6 @@ EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue46
  {ALPHANUM}             {return attachToken(TokenType.ALPHA_NUMERIC);}
  {PUNCTUATION}          {return attachToken(TokenType.PUNCTUATION);}
  {CJ}                   {return attachToken(TokenType.CHINESE_JAPANESE);}
- {EMAIL}                {return attachToken(TokenType.EMAIL);}
  {PERSON_TITLE}         {return attachToken(TokenType.PERSON_TITLE);}
  {ALPHANUM}/{PUNCTUATION}{PERSON_TITLE} {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}/{WHITESPACE}|{PUNCTUATION}  {return attachToken(TokenType.URL);}

@@ -59,7 +59,7 @@ public class LanguageTest {
   @Test
   public void testGetCode() throws Exception {
     assertEquals(Language.ENGLISH.getCode().toLowerCase(), "en");
-    assertEquals(Language.CHINESE.getCode().toLowerCase(), "zh");
+    assertEquals(Language.CHINESE.getCode().toLowerCase(), "com.gengoai.hermes.zh");
   }
 
   @Test

@@ -704,13 +704,15 @@ public interface HString extends Span, StringLike, Serializable {
    default String getLemma() {
       if (isInstance(Types.TOKEN)) {
          if (hasAttribute(Types.LEMMA)) {
-            return attribute(Types.LEMMA);
+            String lemma = attribute(Types.LEMMA);
+            return Strings.isNullOrBlank(lemma)
+                  ? toString()
+                  : lemma;
          }
          if (hasAttribute(Types.SPELLING_CORRECTION)) {
             return attribute(Types.SPELLING_CORRECTION);
          }
-         return Lemmatizers.getLemmatizer(getLanguage())
-                           .lemmatize(this);
+         return Lemmatizers.getLemmatizer(getLanguage()).lemmatize(this);
       }
       return tokens()
             .stream()

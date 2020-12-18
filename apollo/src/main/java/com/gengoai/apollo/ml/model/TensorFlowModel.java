@@ -184,7 +184,7 @@ public abstract class TensorFlowModel implements Model {
       dataset = createTransformer().fitAndTransform(dataset);
       dataset.getMetadata().forEach((k, v) -> setEncoder(k, v.getEncoder()));
       Resource tmp = Resources.temporaryFile();
-      dataset.persist(tmp);
+      dataset.shuffle().persist(tmp);
       System.out.println("DataSet saved to: " + tmp.descriptor());
    }
 

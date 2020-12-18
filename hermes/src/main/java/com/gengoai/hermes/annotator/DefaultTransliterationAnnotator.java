@@ -41,15 +41,16 @@ public class DefaultTransliterationAnnotator extends Annotator {
    @Override
    protected void annotateImpl(Document document) {
       String id = getId(document.getLanguage());
-      if(id != null) {
+      if (id != null) {
          Transliterator transliterator = Transliterator.getInstance(id);
          document.tokens()
-                 .forEach(token -> token.put(Types.TRANSLITERATION, transliterator.transform(token.toString())));
+                 .forEach(token -> token.put(Types.TRANSLITERATION,
+                                             transliterator.transform(token.toString()).replaceAll("\\s+", "")));
       }
    }
 
    private String getId(Language language) {
-      switch(language) {
+      switch (language) {
          case CHINESE:
             return "Han-Latin";
          case ARABIC:
