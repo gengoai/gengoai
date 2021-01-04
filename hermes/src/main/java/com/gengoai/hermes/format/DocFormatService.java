@@ -19,6 +19,8 @@
 
 package com.gengoai.hermes.format;
 
+import com.gengoai.ParameterDef;
+import com.gengoai.conversion.Converter;
 import com.gengoai.specification.Specification;
 import lombok.NonNull;
 
@@ -65,7 +67,7 @@ public final class DocFormatService {
       DocFormatProvider provider = getProvider(formatName);
       DocFormatParameters formatParameters = provider.getDefaultFormatParameters();
       for(Map.Entry<String, String> e : specification.getQueryParameters()) {
-         formatParameters.set(e.getKey(), e.getValue());
+         formatParameters.set(e.getKey(), Converter.convertSilently(e.getValue(), formatParameters.getParam(e.getKey()).type));
       }
       DocFormat format = provider.create(formatParameters);
       if(isOPL) {

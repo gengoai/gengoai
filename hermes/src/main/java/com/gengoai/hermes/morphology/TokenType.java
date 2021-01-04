@@ -78,6 +78,7 @@ public final class TokenType extends EnumValue<TokenType> {
     * The constant NUMBER.
     */
    public static final TokenType NUMBER = make("NUMBER");
+   public static final TokenType QUANTITY = make("QUANTITY");
    /**
     * The constant PERSON_TITLE.
     */

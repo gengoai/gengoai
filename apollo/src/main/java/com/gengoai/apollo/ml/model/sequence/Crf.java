@@ -194,7 +194,6 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
       for(Pair<String, Double> pair : tagger.tag(itemSequence)) {
          labeling.add(new Variable(pair.first, pair.second));
       }
-      //      deleteItemSequence(itemSequence);
       return labeling;
    }
 

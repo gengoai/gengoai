@@ -19,6 +19,7 @@
 
 package com.gengoai.hermes.format;
 
+import com.gengoai.Language;
 import com.gengoai.ParameterDef;
 import com.gengoai.conversion.Cast;
 import com.gengoai.hermes.Annotation;
@@ -130,7 +131,7 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
          document.setCompleted(Types.SENTENCE, "PROVIDED");
       }
       document.setCompleted(Types.TOKEN, "PROVIDED");
-      if (document.isCompleted(Types.PART_OF_SPEECH)) {
+      if (document.isCompleted(Types.PART_OF_SPEECH) && parameters.defaultLanguage.value() == Language.ENGLISH) {
          document.annotate(Types.CATEGORY);
       }
       return document;
@@ -181,8 +182,14 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
                processors.get(i).updateRow(row, parts.get(i));
             }
             row.setStart(content.length());
-            content.append(row.getWord()).append(" ");
-            row.setEnd(content.length() - 1);
+            content.append(row.getWord());
+            if (parameters.defaultLanguage.value().usesWhitespace()) {
+               content.append(" ");
+               row.setEnd(content.length() - 1);
+            } else {
+               row.setEnd(content.length());
+            }
+
             list.add(row);
          }
       }

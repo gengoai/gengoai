@@ -74,6 +74,17 @@ public interface Observation extends Copyable<Observation>, Serializable {
    }
 
    /**
+    * Casts this Observation as a {@link Classification} throwing  {@link IllegalArgumentException} if the cast is
+    * invalid.
+    *
+    * @return the classification
+    */
+   default VariableSequence asVariableSequence(){
+      throw new IllegalArgumentException(getClass().getSimpleName() + " is not a VariableSequence.");
+   }
+
+
+   /**
     * Casts this Observation as a {@link NDArray} throwing  {@link IllegalArgumentException} if the cast is invalid.
     *
     * @return the nd array

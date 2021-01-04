@@ -55,6 +55,11 @@ public class VariableSequence extends ArrayList<Variable> implements Sequence<Va
    public VariableSequence() {
    }
 
+   @Override
+   public VariableSequence asVariableSequence() {
+      return this;
+   }
+
    /**
     * Instantiates a new VariableSequence.
     *

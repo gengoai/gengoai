@@ -19,6 +19,7 @@
 
 package com.gengoai.apollo.ml.model.embedding;
 
+import com.gengoai.SystemInfo;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
 import com.gengoai.apollo.math.statistics.measure.Similarity;
@@ -32,12 +33,15 @@ import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.apollo.ml.observation.Variable;
 import com.gengoai.apollo.ml.observation.VariableSequence;
 import com.gengoai.collection.Lists;
+import com.gengoai.concurrent.Threads;
 import com.gengoai.math.Math2;
 import com.gengoai.stream.StreamingContext;
 import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static com.gengoai.function.Functional.with;
@@ -58,13 +62,13 @@ public class LocalWord2Vec extends TrainableWordEmbedding<LocalWord2Vec.Paramete
    public static void main(String[] args) {
       String[] text = StreamingContext.local()
                                       .textFile("/data/corpora/en/Raw/news_1m_sentences.txt")
-                                      .limit(10000)
+                                      .limit(50000)
                                       .map(s -> s.replaceAll("\\p{P}+", "").toLowerCase())
                                       .javaStream().toArray(String[]::new);
       DataSetGenerator<String> generator = DataSetGenerator.<String>builder()
             .defaultInput(s -> VariableSequence.from(s.toString().split("\\s+")))
             .build();
-      DataSet data = generator.generate(Arrays.asList(text));
+      DataSet data = generator.generate(Arrays.asList(text)).cache();
       LocalWord2Vec word2Vec = new LocalWord2Vec();
       word2Vec.getFitParameters().dimension.set(50);
       word2Vec.getFitParameters().maxIterations.set(10);
@@ -97,14 +101,21 @@ public class LocalWord2Vec extends TrainableWordEmbedding<LocalWord2Vec.Paramete
          syn1.get(i).setLabel(huffmanEncoder.decode(i));
       }
 
+      int batchSize = (int) Math.min(dataset.size() / SystemInfo.NUMBER_OF_PROCESSORS, 1000);
       //Train
-      WorkerThread wt = new WorkerThread(huffmanEncoder, dataset, syn0, syn1);
-      wt.run();
+      ExecutorService executorService = Executors.newFixedThreadPool(SystemInfo.NUMBER_OF_PROCESSORS);
+      dataset.batchIterator(batchSize)
+             .forEachRemaining(d -> executorService.submit(new WorkerThread(huffmanEncoder, d, syn0, syn1)));
+      executorService.shutdown();
+      while (!executorService.isTerminated()) {
+         Threads.sleep(3000);
+      }
 
       var src = "villain";
       var srcid = huffmanEncoder.encode(src);
       var a = syn0.get(huffmanEncoder.encode("villain"));
-      PriorityQueue<Tuple2<String, Double>> scores = new PriorityQueue<>(Comparator.comparing(Tuple2::getValue));
+      PriorityQueue<Tuple2<String, Double>> scores = new PriorityQueue<>(Map.Entry.comparingByValue());
+
       syn0.forEach((key, value) -> {
          if (!key.equals(srcid)) {
             double sim = Similarity.Cosine.calculate(value, a);
@@ -195,6 +206,7 @@ public class LocalWord2Vec extends TrainableWordEmbedding<LocalWord2Vec.Paramete
                wordCount++;
                trainOne(filtered);
             });
+            System.out.println(Thread.currentThread().getId() + " : iteration=" + (i + 1));
          }
          super.run();
       }

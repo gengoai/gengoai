@@ -27,7 +27,9 @@ import com.gengoai.hermes.Hermes;
 import com.gengoai.hermes.preprocessing.TextNormalization;
 import com.gengoai.hermes.preprocessing.TextNormalizer;
 import com.gengoai.io.SaveMode;
+import scala.xml.PrettyPrinter;
 
+import java.nio.charset.Charset;
 import java.util.List;
 
 import static com.gengoai.reflection.TypeUtils.parameterizedType;
@@ -36,6 +38,7 @@ import static com.gengoai.reflection.TypeUtils.parameterizedType;
  * The type Doc format parameters.
  */
 public class DocFormatParameters extends ParamMap<DocFormatParameters> {
+   public static final ParameterDef<String> ENCODING = ParameterDef.param("encoding", String.class);
    /**
     * Defines the default language for new documents
     */
@@ -55,6 +58,7 @@ public class DocFormatParameters extends ParamMap<DocFormatParameters> {
     */
    public static final ParameterDef<SaveMode> SAVE_MODE = ParameterDef.param("saveMode", SaveMode.class);
 
+   public final Parameter<String> encoding = parameter(ENCODING, null);
    /**
     * Whether to overwrite, ignore, or throw an error when writing a corpus to an existing file/directory (default
     * ERROR).

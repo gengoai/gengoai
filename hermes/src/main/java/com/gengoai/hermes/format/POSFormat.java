@@ -19,6 +19,7 @@
 
 package com.gengoai.hermes.format;
 
+import com.gengoai.Language;
 import com.gengoai.Validation;
 import com.gengoai.hermes.Document;
 import com.gengoai.hermes.DocumentFactory;
@@ -62,22 +63,32 @@ public class POSFormat extends WholeFileTextFormat implements OneDocPerFileForma
       List<String> tokens = new LinkedList<>();
       List<String> pos = new ArrayList<>();
       String[] parts = content.split("\\s+");
-      for(String part : parts) {
+      for (String part : parts) {
+         if (part.equals("_-NONE-")) {
+            continue;
+         }
          int lpos = part.lastIndexOf('_');
+         if( lpos <0 ) {
+            System.out.println(part + " :" + lpos + " : " );
+         }
          String w = part.substring(0, lpos);
          String p = part.substring(lpos + 1);
          w = POSCorrection.word(w, p);
          p = POSCorrection.pos(w, p);
-         if(!Strings.isNullOrBlank(w)) {
+         if (getParameters().defaultLanguage.value() == Language.CHINESE && p.equals("NP")) {
+            p = "NN";
+         }
+         if (!Strings.isNullOrBlank(w)) {
             tokens.add(w);
             pos.add(p);
          }
       }
       Document document = documentFactory.fromTokens(tokens);
-      for(int i = 0; i < tokens.size(); i++) {
+      for (int i = 0; i < tokens.size(); i++) {
          PartOfSpeech p = PartOfSpeech.valueOf(pos.get(i));
          Validation.notNull(p);
-         Validation.checkArgument(!p.isPhraseTag() && !p.equals(PartOfSpeech.ANY));
+         Validation.checkArgument(!p.isPhraseTag() && !p.equals(PartOfSpeech.ANY),
+                                  () -> p + ": " + p.isPhraseTag());
          document.tokenAt(i).put(Types.PART_OF_SPEECH, p);
       }
       document.createAnnotation(Types.SENTENCE, 0, document.length(), Collections.emptyMap());

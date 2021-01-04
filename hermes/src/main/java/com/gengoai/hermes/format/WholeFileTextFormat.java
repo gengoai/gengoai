@@ -24,6 +24,7 @@ import com.gengoai.io.resource.Resource;
 import com.gengoai.stream.MStream;
 import com.gengoai.stream.StreamingContext;
 
+import java.nio.charset.Charset;
 import java.util.stream.Stream;
 
 /**
@@ -34,10 +35,13 @@ public abstract class WholeFileTextFormat implements DocFormat {
 
    @Override
    public final MStream<Document> read(Resource inputResource) {
+      if (getParameters().encoding.value() != null) {
+         inputResource.setCharset(Charset.forName(getParameters().encoding.value()));
+      }
       MStream<Document> stream = StreamingContext.get(getParameters().distributed.value())
                                                  .textFile(inputResource, true)
                                                  .flatMap(this::readSingleFile);
-      if(getParameters().distributed.value()) {
+      if (getParameters().distributed.value()) {
          stream = stream.cache();
       }
       return stream;
