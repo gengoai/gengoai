@@ -41,22 +41,22 @@ ACTION=$(echo "${2:-PRODUCTION}" | tr a-z A-Z)
 case $ACTION in
 
 PRODUCTION)
-  cd tools && jexec TaggerApp TRAIN ${production[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
+  cd hermes/tools && jexec TaggerApp TRAIN ${production[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
   ;;
 
 EVALUATE)
-  cd tools || exit
+  cd hermes/tools || exit
   jexec TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
   jexec TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
   ;;
 
 TEST)
-  cd tools || exit
+  cd hermes/tools || exit
   jexec TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
   ;;
 
 TRAIN)
-  cd tools || exit
+  cd hermes/tools || exit
   jexec TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
   ;;
 

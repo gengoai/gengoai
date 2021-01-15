@@ -21,6 +21,8 @@
 
 package com.gengoai;
 
+import java.util.Locale;
+
 /**
  * <p>Common system properties accessed via the runtime or system classes.</p>
  *
@@ -34,7 +36,7 @@ public interface SystemInfo {
     * @return True if unix, False otherwise
     */
    static boolean isUnix() {
-      return !OS_NAME.startsWith("Windows");
+      return OS_NAME.toLowerCase().contains("nux");
    }
 
    /**
@@ -43,7 +45,11 @@ public interface SystemInfo {
     * @return True if windows, False otherwise
     */
    static boolean isWindows() {
-      return OS_NAME.startsWith("Windows");
+      return OS_NAME.toLowerCase().contains("win") && !OS_NAME.toLowerCase().contains("darwin");
+   }
+
+   static boolean isMacOs(){
+      return OS_NAME.toLowerCase().contains("mac") || OS_NAME.toLowerCase().contains("darwin");
    }
 
    /**

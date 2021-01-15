@@ -61,15 +61,15 @@
     </licenses>
 
     <modules>
-        <module>mango</module>
-        <module>mango-swing</module>
+        <module>mango/mango</module>
+        <module>mango/swing</module>
         <module>apollo</module>
-        <module>hermes</module>
-        <module>hermes-examples</module>
-        <module>hermes-tools</module>
-        <module>hermes-wordnet</module>
+        <module>hermes/hermes</module>
+        <module>hermes/examples</module>
+        <module>hermes/tools</module>
+        <module>hermes/wordnet</module>
         <module>installer</module>
-        <module>lang/hermes-chinese</module>
+        <module>hermes/lang/hermes-chinese</module>
     </modules>
 
     <dependencyManagement>

@@ -7,3 +7,4 @@
 /python/models/
 /python/.keras
 **/__pycache__/**
+/python/.vscode/

@@ -87,13 +87,7 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
     */
    public GraphViz(VertexEncoder<V> vertexEncoder, EdgeEncoder<V> edgeEncoder) {
       this(vertexEncoder, edgeEncoder, Format.PNG);
-      if( SystemInfo.isUnix() ){
-         DOT = "/usr/bin/dot";
-      } else if ( SystemInfo.isWindows()){
-         DOT = "c:\\Program Files\\Graphviz\\";
-      } else {
-         DOT = "/usr/local/bin/dot";
-      }
+      setDOT();
    }
 
    /**
@@ -107,12 +101,7 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
       setEdgeEncoder(edgeEncoder);
       setVertexEncoder(vertexEncoder);
       setFormat(format);
-      String configName = "graphviz.dot." + SystemInfo.OS_NAME;
-      logFine(log, "Looking for dot in config {0}", configName);
-      if(Config.hasProperty(configName)) {
-         DOT = Config.get(configName).asString();
-         logFine(log, "Setting DOT location to {0} from config {1}", DOT, configName);
-      }
+      setDOT();
    }
 
    public static <V> GraphVizBuilder<V> builder() {
@@ -120,13 +109,13 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
    }
 
    private String escape(String input) {
-      if(input == null || input.length() == 0) {
+      if (input == null || input.length() == 0) {
          return "\"" + Strings.EMPTY + "\"";
       }
-      if(input.length() == 1) {
+      if (input.length() == 1) {
          return "\"" + input + "\"";
       }
-      if(input.charAt(0) == '"' && input.charAt(input.length() - 1) == '"') {
+      if (input.charAt(0) == '"' && input.charAt(input.length() - 1) == '"') {
          return input;
       }
       return "\"" + input + "\"";
@@ -147,14 +136,29 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
 
       try {
          p.waitFor();
-      } catch(InterruptedException e) {
+      } catch (InterruptedException e) {
          throw new RuntimeException(e);
+      }
+   }
+
+   private void setDOT() {
+      String configName = "graphviz.dot." + SystemInfo.OS_NAME;
+      logFine(log, "Looking for dot in config {0}", configName);
+      if (Config.hasProperty(configName)) {
+         DOT = Config.get(configName).asString();
+         logFine(log, "Setting DOT location to {0} from config {1}", DOT, configName);
+      } else if (SystemInfo.isUnix()) {
+         DOT = "/usr/bin/dot";
+      } else if (SystemInfo.isWindows()) {
+         DOT = "c:\\Program Files\\Graphviz\\";
+      } else {
+         DOT = "/usr/local/bin/dot";
       }
    }
 
    @Override
    public void setEdgeEncoder(EdgeEncoder<V> edgeEncoder) {
-      if(edgeEncoder == null) {
+      if (edgeEncoder == null) {
          this.edgeEncoder = DefaultEncodersDecoders.defaultEdgeEncoder();
       } else {
          this.edgeEncoder = edgeEncoder;
@@ -168,13 +172,13 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
     */
    public void setFormat(Format format) {
       this.format = format == null
-                    ? Format.PNG
-                    : format;
+            ? Format.PNG
+            : format;
    }
 
    @Override
    public void setVertexEncoder(VertexEncoder<V> vertexEncoder) {
-      if(vertexEncoder == null) {
+      if (vertexEncoder == null) {
          this.vertexEncoder = DefaultEncodersDecoders.defaultVertexEncoder();
       } else {
          this.vertexEncoder = vertexEncoder;
@@ -184,10 +188,10 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
    @Override
    public void write(Graph<V> graph, Resource location, Multimap<String, String> parameters) throws IOException {
       location.setCharset(StandardCharsets.UTF_8);
-      try(BufferedWriter writer = new BufferedWriter(location.writer())) {
+      try (BufferedWriter writer = new BufferedWriter(location.writer())) {
 
          //Write the header
-         if(graph.isDirected()) {
+         if (graph.isDirected()) {
             writer.write("digraph G {");
          } else {
             writer.write("graph G {");
@@ -195,9 +199,9 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
          writer.newLine();
 
          writer.write("rankdir = BT;\n");
-         if(parameters.containsKey("graph")) {
+         if (parameters.containsKey("graph")) {
             writer.write("graph [");
-            for(String property : parameters.get("graph")) {
+            for (String property : parameters.get("graph")) {
                writer.write(property);
             }
             writer.write("];");
@@ -206,21 +210,21 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
 
          Index<V> vertexIndex = Indexes.indexOf(graph.vertices());
 
-         for(V vertex : graph.vertices()) {
+         for (V vertex : graph.vertices()) {
             Vertex vertexProps = vertexEncoder.encode(vertex);
             writer.write(Integer.toString(vertexIndex.getId(vertex)));
             writer.write(" [");
             writer.write("label=" + escape(vertexProps.getLabel()) + " ");
-            for(Map.Entry<String, String> entry : vertexProps.getProperties().entrySet()) {
+            for (Map.Entry<String, String> entry : vertexProps.getProperties().entrySet()) {
                writer.write(entry.getKey() + "=" + escape(entry.getValue()) + " ");
             }
             writer.write("];");
             writer.newLine();
          }
 
-         for(Edge<V> edge : graph.edges()) {
+         for (Edge<V> edge : graph.edges()) {
             writer.write(Integer.toString(vertexIndex.getId(edge.getFirstVertex())));
-            if(graph.isDirected()) {
+            if (graph.isDirected()) {
                writer.write(" -> ");
             } else {
                writer.write(" -- ");
@@ -228,9 +232,9 @@ public class GraphViz<V> implements GraphWriter<V>, GraphRenderer<V> {
             writer.write(Integer.toString(vertexIndex.getId(edge.getSecondVertex())));
 
             Map<String, String> edgeProps = edgeEncoder.encode(edge);
-            if(edgeProps != null && !edgeProps.isEmpty()) {
+            if (edgeProps != null && !edgeProps.isEmpty()) {
                writer.write(" [");
-               for(Map.Entry<String, String> entry : edgeProps.entrySet()) {
+               for (Map.Entry<String, String> entry : edgeProps.entrySet()) {
                   writer.write(entry.getKey() + "=" + escape(entry.getValue()) + " ");
                }
                writer.write("];");
