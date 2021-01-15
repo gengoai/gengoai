@@ -58,6 +58,8 @@ public interface POSCorrection {
       switch(pos) {
          case "HYPH":
             return ":";
+         case "O":
+            return "UNKNOWN";
       }
 
       if(StringMatcher.HasLetterOrDigit.negate().test(word) && pos.startsWith("NN")) {
