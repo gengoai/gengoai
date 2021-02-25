@@ -296,11 +296,26 @@ public abstract class SQLDialect implements Serializable {
     */
    protected String createTable(Create statement) {
       Table table = Cast.as(statement.getObject());
-      StringBuilder builder = new StringBuilder("CREATE TABLE ");
+      StringBuilder builder = new StringBuilder("CREATE ");
+      if (table.getType() != null) {
+         builder.append(renderer.apply(table.getType()))
+                .append(" ");
+      }
+      builder.append("TABLE ");
+
       if (statement.isIfNotExists()) {
          builder.append("IF NOT EXISTS ");
       }
-      builder.append(table.getName()).append(" (");
+
+      builder.append(table.getName()).append(" ");
+
+      if (table.getUsing() != null) {
+         builder.append("USING ")
+                .append(renderer.apply(table.getUsing()))
+                .append(" ");
+      }
+
+      builder.append(" (");
       for (int i = 0; i < table.getColumns().size(); i++) {
          Column column = table.getColumns().get(i);
          if (i > 0) {

@@ -92,7 +92,7 @@ public final class SQL {
                              @NonNull Consumer<TableDef> definition) {
       TableDef builder = new TableDef();
       definition.accept(builder);
-      return new Table(name, type, builder.columns, builder.constraints);
+      return new Table(name, type, null, builder.columns, builder.constraints);
    }
 
    /**

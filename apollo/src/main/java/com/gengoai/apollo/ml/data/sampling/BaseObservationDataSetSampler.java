@@ -45,9 +45,11 @@ public abstract class BaseObservationDataSetSampler implements DataSetSampler, S
     */
    protected Counter<String> calculateClassDistribution(@NonNull DataSet dataSet) {
       MCounterAccumulator<String> accumulator = dataSet.getStreamingContext().counterAccumulator();
-      dataSet.stream().flatMap(e -> e.get(observationName)
-                                     .getVariableSpace()
-                                     .map(Variable::getName)).forEach(accumulator::add);
+      dataSet.stream()
+             .flatMap(e -> e.get(observationName)
+                            .getVariableSpace()
+                            .map(Variable::getName))
+             .forEach(accumulator::add);
       return accumulator.value();
    }
 

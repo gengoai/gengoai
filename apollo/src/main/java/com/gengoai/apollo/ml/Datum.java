@@ -21,8 +21,14 @@ package com.gengoai.apollo.ml;
 
 import com.gengoai.Copyable;
 import com.gengoai.apollo.ml.observation.Observation;
+import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.ml.observation.VariableCollection;
+import com.gengoai.apollo.ml.observation.VariableList;
+import com.gengoai.conversion.Cast;
 import com.gengoai.string.Strings;
+import com.gengoai.tuple.Tuple;
 import com.gengoai.tuple.Tuple2;
+import com.univocity.parsers.annotations.Convert;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
@@ -63,10 +69,37 @@ public final class Datum extends HashMap<String, Observation> implements Seriali
     * @return the datum
     */
    @SafeVarargs
-   public static Datum of(@NonNull Tuple2<String, ? extends Observation>... observations) {
+   public static Datum of(@NonNull Tuple2<String, Object>... observations) {
       Datum datum = new Datum(observations.length);
-      for(Tuple2<String, ? extends Observation> observation : observations) {
-         datum.put(observation.v1, observation.v2);
+      for (Tuple2<String, Object> tuple : observations) {
+         Observation obs = null;
+         if( tuple.v2 instanceof Observation ){
+            obs = Cast.as(tuple.v2);
+         } else if( tuple.v2 instanceof CharSequence ){
+            obs = new Variable(tuple.v2.toString(),1);
+         } else if( tuple.v2 instanceof Tuple ){
+            Tuple vTuple = Cast.as(tuple.v2);
+            if( vTuple.degree() == 2) {
+               Object o1 = vTuple.get(0);
+               Object o2 = vTuple.get(1);
+               if (o2 instanceof Number ){
+                  obs = new Variable(o1.toString(), Cast.<Number>as(o2).floatValue());
+               } 
+            }
+         } else if( tuple.v2 instanceof Number){
+            obs = new Variable(tuple.v1, Cast.<Number>as(tuple.v2).doubleValue());
+         } else if ( tuple.v2 instanceof Collection){
+            Collection<String> c = Cast.as(tuple.v2);
+            VariableCollection vc = new VariableList();
+            for (String s : c) {
+               vc.add(new Variable(s,1.0));
+            }
+            obs =vc;
+         }
+         if( obs == null ){
+            throw new IllegalArgumentException("Cannot create observation from '" + obs + "'");
+         }
+         datum.put(tuple.v1,obs);
       }
       return datum;
    }

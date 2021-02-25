@@ -35,7 +35,7 @@ import java.util.Random;
  *
  * @author David B. Bracewell
  */
-public class StreamingDataSet extends DataSet {
+public final class StreamingDataSet extends DataSet {
    private MStream<Datum> stream;
 
    /**
@@ -75,7 +75,7 @@ public class StreamingDataSet extends DataSet {
 
    @Override
    public DataSetType getType() {
-      if(stream.getContext().isDistributed()) {
+      if (stream.getContext().isDistributed()) {
          return DataSetType.Distributed;
       }
       return DataSetType.LocalStreaming;
@@ -100,7 +100,7 @@ public class StreamingDataSet extends DataSet {
 
    @Override
    public DataSet persist() {
-      if(stream.isDistributed()) {
+      if (stream.isDistributed()) {
          stream.persist(StorageLevel.OnDisk);
          return this;
       }

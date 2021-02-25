@@ -86,7 +86,7 @@ public class SparseMatrix extends Matrix {
       setLabel(label);
       setPredicted(predicted);
       setWeight(weight);
-      for(int i = 0; i < indices.length; i++) {
+      for (int i = 0; i < indices.length; i++) {
          set(indices[i], values[i]);
       }
    }
@@ -94,7 +94,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public NDArray T() {
       SparseMatrix t;
-      if(shape.isVector()) {
+      if (shape.isVector()) {
          t = new SparseMatrix(this);
          t.shape.reshape(shape.columns(), shape.rows());
       } else {
@@ -114,7 +114,7 @@ public class SparseMatrix extends Matrix {
 
    @Override
    public NDArray addi(@NonNull NDArray rhs) {
-      if(!rhs.isDense()) {
+      if (!rhs.isDense()) {
          checkLength(rhs.shape);
          SparseMatrix sm = Cast.as(rhs);
          sm.map.forEachPair((i, v) -> {
@@ -169,7 +169,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public NDArray getColumn(int column) {
       SparseMatrix sm = new SparseMatrix(shape.rows(), 1);
-      for(int i = 0; i < shape.rows(); i++) {
+      for (int i = 0; i < shape.rows(); i++) {
          sm.set(i, get(i, column));
       }
       return sm;
@@ -178,7 +178,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public NDArray getRow(int row) {
       SparseMatrix sm = new SparseMatrix(1, shape.columns());
-      for(int i = 0; i < shape.columns(); i++) {
+      for (int i = 0; i < shape.columns(); i++) {
          sm.set(row, i, get(row, i));
       }
       return sm;
@@ -190,7 +190,7 @@ public class SparseMatrix extends Matrix {
       map.forEachPair((i, v) -> {
          int row = shape.toRow(i);
          int col = shape.toColumn(i);
-         if(row >= fromRow && row < toRow
+         if (row >= fromRow && row < toRow
                && col >= fromCol && col < toCol) {
             sm.set(row - fromRow, col - fromCol, v);
          }
@@ -207,7 +207,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public NDArray map(@NonNull DoubleUnaryOperator operator) {
       NDArray out = zeroLike();
-      for(int i = 0; i < shape.matrixLength; i++) {
+      for (int i = 0; i < shape.matrixLength; i++) {
          out.set(i, operator.applyAsDouble(get(i)));
       }
       return out;
@@ -215,7 +215,7 @@ public class SparseMatrix extends Matrix {
 
    @Override
    public NDArray mapi(@NonNull DoubleUnaryOperator operator) {
-      for(int i = 0; i < shape.matrixLength; i++) {
+      for (int i = 0; i < shape.matrixLength; i++) {
          set(i, operator.applyAsDouble(get(i)));
       }
       return this;
@@ -224,7 +224,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public double max() {
       double max = Optimum.MAXIMUM.optimumValue(map.values().elements());
-      if(map.size() == shape.matrixLength) {
+      if (map.size() == shape.matrixLength) {
          return max;
       }
       return Math.max(0, max);
@@ -233,7 +233,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public double min() {
       double min = Optimum.MINIMUM.optimumValue(map.values().elements());
-      if(map.size() == shape.matrixLength) {
+      if (map.size() == shape.matrixLength) {
          return min;
       }
       return Math.min(0, min);
@@ -241,14 +241,14 @@ public class SparseMatrix extends Matrix {
 
    @Override
    public NDArray mmul(@NonNull NDArray rhs) {
-      if(rhs.isDense() || (sparsity() < 0.5 && length() > 10_000)) {
+      if (rhs.isDense() || (sparsity() < 0.5 && length() > 10_000)) {
          return super.mmul(rhs);
       }
       SparseMatrix product = new SparseMatrix(rows(), rhs.columns());
       map.forEachPair((i, v) -> {
          int row = shape.toRow(i);
          int colLHS = shape.toColumn(i);
-         for(int colRHS = 0; colRHS < rhs.columns(); colRHS++) {
+         for (int colRHS = 0; colRHS < rhs.columns(); colRHS++) {
             double prod = v * rhs.get(colLHS, colRHS);
             product.map.adjustOrPutValue(product.shape.matrixIndex(row, colRHS), (float) prod, (float) prod);
          }
@@ -275,7 +275,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public double norm1() {
       double sum = 0;
-      for(double element : map.values().elements()) {
+      for (double element : map.values().elements()) {
          sum += Math.abs(element);
       }
       return sum;
@@ -289,7 +289,7 @@ public class SparseMatrix extends Matrix {
 
    @Override
    public NDArray set(long i, double value) {
-      if(value == 0) {
+      if (value == 0) {
          map.removeKey((int) i);
       } else {
          map.put((int) i, (float) value);
@@ -306,7 +306,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public NDArray setColumn(int column, @NonNull NDArray array) {
       checkLength(shape.rows(), array.shape());
-      for(int i = 0; i < array.shape().matrixLength; i++) {
+      for (int i = 0; i < array.shape().matrixLength; i++) {
          set(i, column, array.get(i));
       }
       return this;
@@ -315,7 +315,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public NDArray setRow(int row, @NonNull NDArray array) {
       checkLength(shape.columns(), array.shape());
-      for(int i = 0; i < array.shape().matrixLength; i++) {
+      for (int i = 0; i < array.shape().matrixLength; i++) {
          set(row, i, array.get(i));
       }
       return this;
@@ -349,7 +349,7 @@ public class SparseMatrix extends Matrix {
 
    @Override
    public NDArray subi(@NonNull NDArray rhs) {
-      if(!rhs.isDense()) {
+      if (!rhs.isDense()) {
          checkLength(rhs.shape());
          SparseMatrix sm = Cast.as(rhs);
          sm.map.forEachPair((i, v) -> {
@@ -364,7 +364,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public double sum() {
       double sum = 0;
-      for(float element : map.values().elements()) {
+      for (float element : map.values().elements()) {
          sum += element;
       }
       return sum;
@@ -373,7 +373,7 @@ public class SparseMatrix extends Matrix {
    @Override
    public double sumOfSquares() {
       double sum = 0;
-      for(double element : map.values().elements()) {
+      for (double element : map.values().elements()) {
          sum += element * element;
       }
       return sum;

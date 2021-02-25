@@ -73,12 +73,12 @@ public class NeuralNERModel extends TensorFlowSequenceLabeler implements HString
          ner.estimate(ontonotes);
          ModelIO.save(ner, Resources.from("/data/hermes/en/models/ner-tmp"));
       } else {
-//         NeuralNERModel ner = ModelIO.load(Resources.from("/data/hermes/en/models/ner"));
-//      DocumentCollection ontonotes = Corpus.open("/data/corpora/hermes_data/ontonotes_ner")
-//                                           .query("$SPLIT='TEST'");
-//      CoNLLEvaluation evaluation = new CoNLLEvaluation("label");
-//      evaluation.evaluate(ner.delegate(), ner.transform(ontonotes));
-//      evaluation.report();
+         NeuralNERModel ner = ModelIO.load(Resources.from("/Volumes/ikdata-1/hermes/en/models/ner-reslstm"));
+      DocumentCollection ontonotes = Corpus.open("/Users/ik/hermes_data/ontonotes_ner")
+                                           .query("$SPLIT='TEST'");
+      CoNLLEvaluation evaluation = new CoNLLEvaluation("label");
+      evaluation.evaluate(ner.delegate(), ner.transform(ontonotes));
+      evaluation.report();
 
          Document document = Document.create("John Bowman sailed to the Virgin Islands last Saturday");
          document.annotate(Types.ENTITY);

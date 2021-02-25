@@ -23,6 +23,7 @@ import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
 import com.gengoai.apollo.math.statistics.measure.Measure;
+import com.gengoai.apollo.ml.evaluation.SilhouetteEvaluation;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.mahout.math.list.DoubleArrayList;
@@ -51,17 +52,43 @@ public class HierarchicalClustering implements Clustering {
     * @param threshold the threshold to determine how to flatten clusters
     * @return the flat clustering
     */
-   public Clustering asFlat(double threshold) {
+   public FlatClustering asFlat(double threshold) {
       FlatClustering clustering = new FlatClustering();
       clustering.setMeasure(measure);
       process(root, clustering, threshold);
-      for(int i = 0; i < clustering.size(); i++) {
+      for (int i = 0; i < clustering.size(); i++) {
          NDArray centroid = NDArrayFactory.ND.array(clustering.get(i).getPoints().get(0).shape());
          clustering.get(i).getPoints().forEach(centroid::addi);
          centroid.divi(clustering.get(i).size());
          clustering.get(i).setCentroid(centroid);
       }
       return clustering;
+   }
+
+   /**
+    * <p>Converts this hierarchical clustering into a flat clustering by determining the optimal threshold from the
+    * given values. The optimal threshold is determined as the threshold that results in the highest average Silhouette.
+    * </p>
+    *
+    * @param min       the minimum threshold
+    * @param max       the maximum threshold
+    * @param increment the amount to increment the threshold
+    * @return the flat clustering
+    */
+   public FlatClustering asFlat(double min, double max, double increment) {
+      Validation.checkArgument(min < max, "Minimum threshold (" + min + ") greater than the maximum (" + max + ").");
+      Validation.checkArgument(increment > 0, "Increment must be > 0");
+      var eval = new SilhouetteEvaluation(measure);
+      double maxScore = 0;
+      double bestThreshold = min;
+      for (double t = min; t <= max; t += increment) {
+         eval.evaluate(this.asFlat(t));
+         if (eval.getAvgSilhouette() >= maxScore) {
+            maxScore = eval.getAvgSilhouette();
+            bestThreshold = t;
+         }
+      }
+      return asFlat(bestThreshold);
    }
 
    /**
@@ -75,24 +102,26 @@ public class HierarchicalClustering implements Clustering {
       DoubleArrayList distances = new DoubleArrayList();
       Queue<Cluster> queue = new LinkedList<>();
       queue.add(root);
-      while(queue.size() > 0) {
+      while (queue.size() > 0) {
          Cluster c = queue.remove();
-         if(c != null) {
-            distances.add(c.getScore());
-            queue.add(c.getLeft());
-            queue.add(c.getRight());
+         if (c != null) {
+            if (!c.isLeaf()) {
+               distances.add(c.getScore());
+               queue.add(c.getLeft());
+               queue.add(c.getRight());
+            }
          }
       }
       distances.sort();
       int index = (int) Math.floor(distances.size() * percentile);
       return distances.size() > 0
-             ? distances.get(index)
-             : root.getScore();
+            ? distances.get(index)
+            : root.getScore();
    }
 
    @Override
    public Cluster get(int index) {
-      if(index == 0) {
+      if (index == 0) {
          return root;
       }
       throw new IndexOutOfBoundsException();
@@ -119,10 +148,10 @@ public class HierarchicalClustering implements Clustering {
    }
 
    private void process(Cluster c, FlatClustering flat, double threshold) {
-      if(c == null) {
+      if (c == null) {
          return;
       }
-      if(measure.getOptimum().test(c.getScore(), threshold)) {
+      if (measure.getOptimum().test(c.getScore(), threshold)) {
          flat.add(c);
       } else {
          process(c.getLeft(), flat, threshold);

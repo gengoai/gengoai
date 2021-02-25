@@ -61,7 +61,7 @@ public class Merge implements Transform {
     * @param keepInputs        True - keep the input sources, False - remove the input sources from the Datum.
     * @param nameSpace         the {@link VariableNameSpace} to use when merging.
     */
-   public Merge(@NonNull List<String> inputs,
+   private Merge(@NonNull Collection<String> inputs,
                 @NonNull String output,
                 boolean prependSourceName,
                 boolean keepInputs, VariableNameSpace nameSpace) {

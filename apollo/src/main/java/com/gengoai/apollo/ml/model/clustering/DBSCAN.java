@@ -25,6 +25,7 @@ package com.gengoai.apollo.ml.model.clustering;
 import com.gengoai.ParameterDef;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.ml.DataSet;
+import com.gengoai.apollo.ml.Datum;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;

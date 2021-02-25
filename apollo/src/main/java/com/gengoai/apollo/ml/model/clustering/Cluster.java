@@ -125,6 +125,10 @@ public class Cluster implements Serializable, Iterable<NDArray> {
       return score;
    }
 
+   public boolean isLeaf(){
+      return getLeft() == null && getRight() == null;
+   }
+
    @Override
    public Iterator<NDArray> iterator() {
       return points.iterator();

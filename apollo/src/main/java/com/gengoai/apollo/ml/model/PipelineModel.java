@@ -89,12 +89,18 @@ public class PipelineModel implements Model {
 
    @Override
    public void estimate(@NonNull DataSet dataset) {
-      model.estimate(transformer.fitAndTransform(dataset));
+      pipeline(dataset);
+   }
+
+   private DataSet pipeline(DataSet dataset){
+      dataset = transformer.fitAndTransform(dataset);
+      model.estimate(dataset);
+      return dataset;
    }
 
    @Override
    public DataSet fitAndTransform(@NonNull DataSet dataset) {
-      estimate(dataset);
+      dataset = pipeline(dataset);
       return model.transform(dataset);
    }
 

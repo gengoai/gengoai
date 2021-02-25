@@ -51,6 +51,7 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
    @NonNull
    private final List<Constraint> constraints = new ArrayList<>();
    private final SQLElement type;
+   private final SQLElement using;
 
 
    /**
@@ -60,7 +61,17 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
     * @param tableType RDMS specific string defining type of table
     */
    public Table(String name, SQLElement tableType) {
-      this(name, tableType, Collections.emptyList(), Collections.emptyList());
+      this(name, tableType, null,Collections.emptyList(), Collections.emptyList());
+   }
+
+   /**
+    * Instantiates a new Table.
+    *
+    * @param name      the name of the Table
+    * @param tableType RDMS specific string defining type of table
+    */
+   public Table(String name, SQLElement tableType, SQLElement using) {
+      this(name, tableType,using, Collections.emptyList(), Collections.emptyList());
    }
 
    /**
@@ -69,7 +80,7 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
     * @param name the name of the Table
     */
    public Table(String name) {
-      this(name, null, Collections.emptyList(), Collections.emptyList());
+      this(name, null, null, Collections.emptyList(), Collections.emptyList());
    }
 
    /**
@@ -82,12 +93,14 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
     */
    public Table(String name,
                 SQLElement tableType,
+                SQLElement using,
                 @NonNull List<Column> columns,
                 @NonNull List<Constraint> constraints) {
       super(Validation.notNullOrBlank(name));
       this.type = tableType;
       this.columns.addAll(columns);
       this.constraints.addAll(constraints);
+      this.using = using;
    }
 
 

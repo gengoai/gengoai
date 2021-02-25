@@ -61,7 +61,7 @@ public class LocalWord2Vec extends TrainableWordEmbedding<LocalWord2Vec.Paramete
 
    public static void main(String[] args) {
       String[] text = StreamingContext.local()
-                                      .textFile("/data/corpora/en/Raw/news_1m_sentences.txt")
+                                      .textFile("/Volumes/ikdata/corpora/en/Raw/news_1m_sentences.txt")
                                       .limit(50000)
                                       .map(s -> s.replaceAll("\\p{P}+", "").toLowerCase())
                                       .javaStream().toArray(String[]::new);

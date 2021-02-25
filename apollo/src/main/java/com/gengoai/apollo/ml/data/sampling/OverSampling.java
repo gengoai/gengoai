@@ -21,14 +21,11 @@ package com.gengoai.apollo.ml.data.sampling;
 
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.InMemoryDataSet;
 import com.gengoai.apollo.ml.observation.Variable;
 import com.gengoai.collection.counter.Counter;
-import com.gengoai.stream.MStream;
 import lombok.NonNull;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 public class OverSampling extends BaseObservationDataSetSampler implements Serializable {
@@ -41,32 +38,22 @@ public class OverSampling extends BaseObservationDataSetSampler implements Seria
    @Override
    public DataSet sample(@NonNull DataSet dataSet) {
       Counter<String> fCount = calculateClassDistribution(dataSet);
-      int targetCount = (int) fCount.minimumCount();
-      List<Datum> outputData = new ArrayList<>();
-      for(Object label : fCount.items()) {
-         MStream<Datum> fStream = dataSet.stream()
-                                         .filter(e -> e.get(getObservationName())
-                                                       .getVariableSpace()
-                                                       .map(Variable::getName)
-                                                       .anyMatch(label::equals))
-                                         .map(Datum::copy)
-                                         .cache();
-
-         int count = (int) fStream.count();
-         int curCount = 0;
-
-         while(curCount + count < targetCount) {
-            fStream.forEach(outputData::add);
-            curCount += count;
-         }
-
-         if(curCount < targetCount) {
-            fStream.sample(false, targetCount - curCount)
-                   .forEach(outputData::add);
-         } else if(count == targetCount) {
-            fStream.forEach(outputData::add);
+      int targetCount = (int) fCount.maximumCount();
+      List<Datum> outputData = dataSet.collect();
+      for (String label : fCount.items()) {
+         if (fCount.get(label) < targetCount) {
+            dataSet.stream()
+                   .filter(e -> e.get(getObservationName())
+                                 .getVariableSpace()
+                                 .map(Variable::getName)
+                                 .anyMatch(label::equals))
+                   .map(Datum::copy)
+                   .take((int) (targetCount - fCount.get(label)))
+                   .forEach(d -> outputData.add(d.copy()));
          }
       }
-      return new InMemoryDataSet(outputData, dataSet.getMetadata(), dataSet.getNDArrayFactory());
+      return DataSet.of(outputData)
+                    .setNDArrayFactory(dataSet.getNDArrayFactory())
+                    .putAllMetadata(dataSet.getMetadata());
    }
 }//END OF OverSampling

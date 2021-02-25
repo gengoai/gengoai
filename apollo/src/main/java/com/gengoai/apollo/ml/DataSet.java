@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
 import com.gengoai.apollo.ml.transform.Transform;
+import com.gengoai.collection.Lists;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.function.Unchecked;
 import com.gengoai.io.MultiFileWriter;
@@ -36,12 +37,10 @@ import lombok.experimental.Accessors;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static com.gengoai.tuple.Tuples.$;
 
@@ -68,7 +67,7 @@ import static com.gengoai.tuple.Tuples.$;
  *      DataSet dataset = new InMemoryDataset(data);
  *      dataset.updateMetadata("input", m -> m.setDimension(100));
  *      dataset.updateMetadata("output", m -> m.setDimension(20));
- * }
+ * }*
  * </pre>
  *
  * @author David B. Bracewell
@@ -77,10 +76,60 @@ import static com.gengoai.tuple.Tuples.$;
 @Accessors(fluent = true)
 public abstract class DataSet implements Iterable<Datum>, Serializable {
    private static final long serialVersionUID = 1L;
+   /**
+    * The number of items needed to probe the DataSet for Metadata.
+    */
    public static int PROBE_LIMIT = 500;
+   /**
+    * Metadata about the observations in the DataSet including the type of observation and dimension.
+    */
    protected final Map<String, ObservationMetadata> metadata = new ConcurrentHashMap<>();
+   /**
+    * The factory used for constructing NDArray
+    */
    @NonNull
    protected NDArrayFactory ndArrayFactory = NDArrayFactory.ND;
+
+   /**
+    * <p>Constructs an in-memory DataSet from the given array of examples</p>
+    *
+    * @param examples the examples
+    * @return the DataSet
+    */
+   public static DataSet of(@NonNull Datum... examples) {
+      return new InMemoryDataSet(Lists.arrayListOf(examples));
+   }
+
+   /**
+    * <p>Constructs an in-memory DataSet from the given collection of examples</p>
+    *
+    * @param examples the examples
+    * @return the DataSet
+    */
+   public static DataSet of(@NonNull Collection<Datum> examples) {
+      return new InMemoryDataSet(Lists.asArrayList(examples));
+   }
+
+   /**
+    * <p>Constructs an in-memory DataSet from the given stream of examples</p>
+    *
+    * @param examples the examples
+    * @return the DataSet
+    */
+   public static DataSet of(@NonNull Stream<Datum> examples) {
+      return new InMemoryDataSet(Lists.asArrayList(examples));
+   }
+
+   /**
+    * <p>Constructs a streaming DataSet from the given stream of examples</p>
+    *
+    * @param examples the examples
+    * @return the DataSet
+    */
+   public static DataSet of(@NonNull MStream<Datum> examples) {
+      return new StreamingDataSet(examples);
+   }
+
 
    /**
     * Generates an iterator of "batches" by partitioning the datum into groups of given batch size.
@@ -250,6 +299,14 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
       return this;
    }
 
+   /**
+    * Save.
+    *
+    * @param resource   the resource
+    * @param partitions the partitions
+    * @param saveMode   the save mode
+    * @throws IOException the io exception
+    */
    public void save(@NonNull Resource resource,
                     int partitions,
                     @NonNull SaveMode saveMode) throws IOException {

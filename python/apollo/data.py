@@ -17,7 +17,7 @@ class DataSet:
         :param n: the number of items to limit the dataset to
         :return: this dataset
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def observations(self) -> Set[str]:
         """

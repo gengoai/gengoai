@@ -33,10 +33,10 @@ import java.util.List;
 /**
  * Creates a balanced dataset by undersampling the items
  */
-public class Undersampling extends BaseObservationDataSetSampler implements Serializable {
+public class UnderSampling extends BaseObservationDataSetSampler implements Serializable {
    private static final long serialVersionUID = 1L;
 
-   public Undersampling(@NonNull String observationName) {
+   public UnderSampling(@NonNull String observationName) {
       super(observationName);
    }
 

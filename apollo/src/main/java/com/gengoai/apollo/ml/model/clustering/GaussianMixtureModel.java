@@ -100,6 +100,20 @@ public class GaussianMixtureModel extends FlatCentroidClusterer {
          cluster.setCentroid(NDArrayFactory.ND.columnVector(components.get(i).sample()));
          clustering.add(cluster);
       }
+
+      vectors.forEach(n -> {
+         int index = -1;
+         double score = p.measure.value().getOptimum().startingValue();
+         for (int ci = 0; ci < clustering.size(); ci++) {
+            Cluster c = clustering.get(ci);
+            double s = p.measure.value().calculate(n, c.getCentroid());
+            if (p.measure.value().getOptimum().test(s, score)) {
+               index = ci;
+               score = s;
+            }
+         }
+         clustering.get(index).addPoint(n);
+      });
    }
 
    @Override

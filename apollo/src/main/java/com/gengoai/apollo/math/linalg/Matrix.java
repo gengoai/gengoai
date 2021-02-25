@@ -26,6 +26,7 @@ import com.gengoai.Validation;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.apache.mahout.math.list.IntArrayList;
+import org.jblas.DoubleMatrix;
 
 import java.util.Arrays;
 import java.util.function.DoubleBinaryOperator;
@@ -503,6 +504,13 @@ public abstract class Matrix extends NDArray {
          }
       }
       return out;
+   }
+
+   public static void main(String[] args) {
+      Matrix m = new DenseMatrix(new DoubleMatrix(4,4, 2,4,6,5,3,5,5,7,7,7,9,1,2,3,9,2));
+      System.out.println(m);
+      System.out.println();
+      System.out.println(m.pivot());
    }
 
    @Override

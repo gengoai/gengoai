@@ -335,7 +335,7 @@ public class Tensor extends NDArray {
    }
 
    private NDArray mapSlices(NDArray o, BiFunction<NDArray, NDArray, NDArray> operator) {
-      check(o.shape);
+//      check(o.shape);
       NDArray[] out = new NDArray[shape.sliceLength];
       for(int i = 0; i < slices.length; i++) {
          out[i] = operator.apply(slices[i], o.slice(i));

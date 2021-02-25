@@ -138,7 +138,7 @@ public class SQLProber {
       List<Column> columns = new ArrayList<>();
       columns.addAll(getStoredColumns(name));
       columns.addAll(getVirtualColumns(name));
-      return new Table(name, null, columns, getConstraints(name));
+      return new Table(name, null, null, columns, getConstraints(name));
    }
 
    /**

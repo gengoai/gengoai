@@ -50,14 +50,14 @@ import java.util.stream.Stream;
 
 import static com.gengoai.tuple.Tuples.$;
 
-public class SQLiteDataSet extends DataSet {
+public final class SQLiteDataSet extends DataSet {
    private static final long serialVersionUID = 1L;
    private static final String SIZE_NAME = "__size__";
    private static final Column json = new Column("json", "JSON");
    private static final Column name = new Column("name", "TEXT").primaryKey();
    private static final Column value = new Column("value", "BLOB");
-   private static final Table dataTable = new Table("data", null, List.of(json), Collections.emptyList());
-   private static final Table metadataTable = new Table("metadata", null, List.of(name, value), Collections
+   private static final Table dataTable = new Table("data", null, null, List.of(json), Collections.emptyList());
+   private static final Table metadataTable = new Table("metadata", null, null, List.of(name, value), Collections
          .emptyList());
    private final SQLContext executor;
    private boolean isShuffled = false;

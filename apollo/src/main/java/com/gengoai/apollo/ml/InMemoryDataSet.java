@@ -37,7 +37,7 @@ import java.util.stream.IntStream;
  * datum.
  * </p>
  */
-public class InMemoryDataSet extends DataSet {
+public final class InMemoryDataSet extends DataSet {
    private static final long serialVersionUID = 1L;
    @JsonProperty("data")
    private final List<Datum> data = new ArrayList<>();

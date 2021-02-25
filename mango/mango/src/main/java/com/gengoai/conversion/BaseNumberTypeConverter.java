@@ -45,6 +45,12 @@ public abstract class BaseNumberTypeConverter implements TypeConverter {
       }
 
       try {
+         return convertNumber(Long.parseLong(object.toString(),16));
+      } catch(Exception e) {
+         //ignore this and try a double parse
+      }
+
+      try {
          return convertNumber(Double.parseDouble(object.toString()));
       } catch(Exception e) {
          //ignore this and try biginteger
@@ -61,6 +67,8 @@ public abstract class BaseNumberTypeConverter implements TypeConverter {
       } catch(Exception e) {
          throw new TypeConversionException(object, Number.class, e);
       }
+
+
 
    }
 
