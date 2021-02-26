@@ -19,9 +19,9 @@
 
 package com.gengoai.apollo.math.linalg.nd3.dense;
 
-import com.gengoai.apollo.math.linalg.nd3.NDArray;
-import com.gengoai.apollo.math.linalg.nd3.NDArrayFactory;
-import com.gengoai.apollo.math.linalg.nd3.Shape;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
 import lombok.NonNull;
 
 public class DenseStringNDArrayFactory extends NDArrayFactory<String> {

@@ -23,6 +23,7 @@ import com.gengoai.Copyable;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.model.Model;
 import com.gengoai.collection.counter.Counter;
@@ -58,17 +59,17 @@ public final class Classification implements Serializable, Observation {
     */
    public Classification(@NonNull NDArray distribution, Encoder encoder) {
       if(distribution.shape().isScalar()) {
-         this.distribution = NDArrayFactory.DENSE.array(1, 2);
-         this.distribution.set(0, 1d - distribution.scalar());
-         this.distribution.set(1, distribution.scalar());
+         this.distribution = nd.DFLOAT32.zeros(1, 2);
+         this.distribution.set(0, 1d - distribution.scalarDouble());
+         this.distribution.set(1, distribution.scalarDouble());
       } else {
          this.distribution = distribution.shape().isColumnVector()
                              ? distribution.T()
                              : distribution.copy();
       }
       this.argMax = encoder != null
-                    ? encoder.decode(this.distribution.argmax())
-                    : Long.toString(this.distribution.argmax());
+                    ? encoder.decode(this.distribution.argMaxOffset())
+                    : Long.toString(this.distribution.argMaxOffset());
       this.encoder = encoder;
    }
 
@@ -87,7 +88,7 @@ public final class Classification implements Serializable, Observation {
       Validation.notNull(encoder, "No Encoder was provided");
       Counter<String> counter = Counters.newCounter();
       for(long i = 0; i < distribution.length(); i++) {
-         counter.set(encoder.decode(i), distribution.get((int) i));
+         counter.set(encoder.decode(i), distribution.getDouble((int) i));
       }
       return counter;
    }
@@ -129,7 +130,7 @@ public final class Classification implements Serializable, Observation {
     */
    public double getScore(@NonNull String label) {
       Validation.notNull(encoder, "No Encoder was provided");
-      return distribution.get(encoder.encode(label));
+      return distribution.getDouble(encoder.encode(label));
    }
 
    @Override

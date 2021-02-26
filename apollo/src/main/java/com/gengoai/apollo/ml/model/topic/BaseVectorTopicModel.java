@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml.model.topic;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.Encoder;
@@ -65,7 +66,7 @@ public abstract class BaseVectorTopicModel extends TopicModel {
     * @param n the document
     * @return the topic distribution
     */
-   protected abstract NDArray inference(NDArray n);
+   protected abstract NDArray<Float>  inference(NDArray<Float>  n);
 
    /**
     * Encodes the variable space of the given {@link Observation} into an {@link NDArray} using the given encoder where
@@ -76,14 +77,14 @@ public abstract class BaseVectorTopicModel extends TopicModel {
     * @param nameSpace   the {@link VariableNameSpace} to use when encoding.
     * @return the NDArray
     */
-   protected NDArray toCountVector(@NonNull Observation observation,
+   protected NDArray<Float> toCountVector(@NonNull Observation observation,
                                    @NonNull VariableNameSpace nameSpace) {
-      NDArray n = NDArrayFactory.ND.array(encoder.size());
+      NDArray<Float>  n = nd.DFLOAT32.zeros(encoder.size());
       observation.getVariableSpace()
                  .forEach(v -> {
                     int index = encoder.encode(nameSpace.getName(v));
                     if(index >= 0) {
-                       n.set(index, n.get(index) + v.getValue());
+                       n.set(index, n.getDouble(index) + v.getValue());
                     }
                  });
       return n;

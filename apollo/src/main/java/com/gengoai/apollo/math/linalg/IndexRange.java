@@ -17,19 +17,25 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3;
+package com.gengoai.apollo.math.linalg;
 
-public enum Broadcast {
-   EMPTY,
-   SCALAR,
-   VECTOR,
-   MATRIX,
-   TENSOR,
-   MATRIX_ROW,
-   MATRIX_COLUMN,
-   TENSOR_ROW,
-   TENSOR_COLUMN,
-   TENSOR_CHANNEL,
-   TENSOR_KERNEL,
-   ERROR;
+import com.gengoai.stream.Streams;
+import lombok.NonNull;
+
+import java.util.stream.Stream;
+
+public interface IndexRange extends Iterable<Index> {
+
+   boolean contains(@NonNull Coordinate o);
+
+   Index lower();
+
+   Index upper();
+
+   Shape shape();
+
+   default Stream<Index> stream(){
+      return Streams.asStream(this);
+   }
+
 }

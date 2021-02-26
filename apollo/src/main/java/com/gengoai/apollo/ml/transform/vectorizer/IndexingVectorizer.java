@@ -21,6 +21,8 @@ package com.gengoai.apollo.ml.transform.vectorizer;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.encoder.IndexEncoder;
 import com.gengoai.apollo.ml.observation.*;
@@ -74,7 +76,7 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
    }
 
    @Override
-   public NDArray transform(Observation observation) {
+   public NDArray<? extends Number> transform(Observation observation) {
       if (observation instanceof Variable) {
          return transform(observation, null);
       } else if (observation instanceof VariableCollection) {
@@ -82,24 +84,24 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
       } else if (observation instanceof Sequence) {
          Sequence<? extends Observation> sequence = Cast.as(observation);
          if (sequence instanceof VariableSequence) {
-            List<NDArray> vars = new ArrayList<>();
+            List<NDArray<? extends Number>> vars = new ArrayList<>();
             for (Observation v : sequence) {
                vars.add(transform(v, null));
             }
-            return NDArrayFactory.ND.vstack(vars);
+            return nd.vstack(Cast.cast(vars));
          }
          int maxSize = sequence.stream().mapToInt(o -> (int) o.getVariableSpace().count()).max().orElse(1);
-         NDArray n = ndArrayFactory.array(sequence.size(), maxSize);
+         NDArray<? extends Number> n = ndArrayFactory.zeros(sequence.size(), maxSize);
          for (int i = 0; i < sequence.size(); i++) {
-            NDArray o = transform(sequence.get(i), NDArrayFactory.ND.array(1, maxSize));
-            n.setRow(i, o);
+            NDArray<Number> o = Cast.as(transform(sequence.get(i), ndArrayFactory.zeros(1, maxSize)));
+            n.setAxisDouble(Shape.ROW, i, o);
          }
          return n;
       }
       throw new IllegalArgumentException("Unsupported Observation: " + observation.getClass());
    }
 
-   public NDArray transform(Observation observation, NDArray out) {
+   public NDArray<? extends Number> transform(Observation observation, NDArray<? extends Number> out) {
       if (observation.isVariable()) {
          int index = encoder.encode(((Variable) observation).getName());
          if (index >= 0) {
@@ -117,7 +119,7 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
       });
       list.sort();
       if (out == null) {
-         out = NDArrayFactory.ND.array(1, list.size());
+         out = ndArrayFactory.zeros(1, list.size());
       }
       for (int i = 0; i < list.size(); i++) {
          out.set(i, list.get(i));

@@ -17,22 +17,19 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3;
+package com.gengoai.apollo.math.linalg;
 
-import com.gengoai.apollo.math.linalg.nd;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-
-public class DenseInt32NDArrayTest extends BaseNDArrayTest{
-
-   public DenseInt32NDArrayTest(){
-      super(nd.DINT32);
-   }
-
-   @Test
-   public void toStringTest(){
-      assertEquals("array({0}, shape=(1), dType='Integer', weight=1.000000)", factory.zeros(1).toString());
-   }
-
+public enum Broadcast {
+   EMPTY,
+   SCALAR,
+   VECTOR,
+   MATRIX,
+   TENSOR,
+   MATRIX_ROW,
+   MATRIX_COLUMN,
+   TENSOR_ROW,
+   TENSOR_COLUMN,
+   TENSOR_CHANNEL,
+   TENSOR_KERNEL,
+   ERROR;
 }

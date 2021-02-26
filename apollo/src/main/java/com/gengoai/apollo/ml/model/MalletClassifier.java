@@ -28,6 +28,8 @@ import cc.mallet.types.InstanceList;
 import cc.mallet.types.Labeling;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.MalletEncoder;
@@ -107,7 +109,7 @@ public abstract class MalletClassifier<T extends SingleSourceFitParameters<T>> e
       for(int i = 0; i < labelAlphabet.size(); i++) {
          result[i] = labeling.value(i);
       }
-      return new Classification(NDArrayFactory.ND.rowVector(result), new MalletEncoder(labelAlphabet));
+      return new Classification(nd.DFLOAT32.array(result), new MalletEncoder(labelAlphabet));
    }
 
    @Override

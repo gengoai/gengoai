@@ -66,7 +66,7 @@ public class CountVectorizer extends AbstractVariableVectorizer<CountVectorizer>
    protected void encodeVariableInto(Variable v, NDArray ndArray) {
       int index = encoder.encode(v.getName());
       if(index >= 0) {
-         ndArray.set(index, ndArray.get(index) + v.getValue());
+         ndArray.set(index, ndArray.getDouble(index) + v.getValue());
       }
    }
 

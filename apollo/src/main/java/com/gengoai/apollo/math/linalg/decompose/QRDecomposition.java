@@ -1,7 +1,7 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
-import com.gengoai.apollo.math.linalg.DenseMatrix;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.nd3.dense.DenseFloat32NDArray;
 import org.jblas.Decompose;
 import org.jblas.FloatMatrix;
 
@@ -22,9 +22,12 @@ public class QRDecomposition extends Decomposition {
    }
 
    @Override
-   protected NDArray[] onMatrix(NDArray m) {
-      Decompose.QRDecomposition<FloatMatrix> r = Decompose.qr(m.toFloatMatrix()[0]);
-      return new NDArray[]{new DenseMatrix(r.q), new DenseMatrix(r.r)};
+   protected NDArray<Float>[] onMatrix(NDArray<? extends Number> input) {
+      Decompose.QRDecomposition<FloatMatrix> r = Decompose.qr(input.toFloatMatrix()[0]);
+      return new DenseFloat32NDArray[]{
+            new DenseFloat32NDArray(r.q),
+            new DenseFloat32NDArray(r.r)
+      };
    }
 
 }// END OF QRDecomposition

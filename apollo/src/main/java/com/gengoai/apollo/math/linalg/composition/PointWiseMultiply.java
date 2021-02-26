@@ -17,22 +17,30 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3;
+package com.gengoai.apollo.math.linalg.composition;
 
-import com.gengoai.apollo.math.linalg.nd;
-import org.junit.Test;
+import com.gengoai.Validation;
+import com.gengoai.apollo.math.linalg.NDArray;
+import lombok.NonNull;
 
-import static org.junit.Assert.assertEquals;
+import java.util.Collection;
+import java.util.List;
 
-public class DenseInt32NDArrayTest extends BaseNDArrayTest{
+public class PointWiseMultiply<T extends Number> implements VectorComposition<T, T> {
+   private static final long serialVersionUID = 1L;
 
-   public DenseInt32NDArrayTest(){
-      super(nd.DINT32);
+   @Override
+   public NDArray<T> compose(@NonNull List<NDArray<T>> vectors) {
+      Validation.checkArgument(vectors.size() > 0, "Must supply at least one vector");
+      NDArray<T> toReturn = null;
+      for (NDArray<T> v : vectors) {
+         if (toReturn == null) {
+            toReturn = v.copy();
+         } else {
+            toReturn.muli(v);
+         }
+      }
+      return toReturn;
    }
 
-   @Test
-   public void toStringTest(){
-      assertEquals("array({0}, shape=(1), dType='Integer', weight=1.000000)", factory.zeros(1).toString());
-   }
-
-}
+}//END OF Average

@@ -73,13 +73,13 @@ public enum LabelType {
             return observation;
          } else if(observation.isNDArray()) {
             VariableSequence sequence = new VariableSequence();
-            com.gengoai.apollo.math.linalg.NDArray ndArray = observation.asNDArray();
-            for(int i = 0; i < ndArray.rows(); i++) {
-               if(ndArray.columns() == 1) {
-                  sequence.add(Variable.binary(encoder.decode(ndArray.get(0))));
+            com.gengoai.apollo.math.linalg.NDArray<?> ndArray = observation.asNDArray();
+            for(int i = 0; i < ndArray.shape().rows(); i++) {
+               if(ndArray.shape().columns() == 1) {
+                  sequence.add(Variable.binary(encoder.decode(ndArray.getDouble(0))));
                } else {
-                  long argmax = ndArray.argmax();
-                  sequence.add(Variable.real(encoder.decode(argmax), ndArray.get(argmax)));
+                  long argmax = ndArray.shape().calculateOffset(ndArray.argMax());
+                  sequence.add(Variable.real(encoder.decode(argmax), ndArray.getDouble(argmax)));
                }
             }
             return sequence;

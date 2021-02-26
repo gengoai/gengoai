@@ -130,8 +130,8 @@ public class BinaryEvaluation extends ClassifierEvaluation {
    @Override
    public void entry(double gold, @NonNull NDArray predicted) {
       int goldClass = (int) gold;
-      int predictedClass = (int) predicted.argmax();
-      prob[goldClass].add(predicted.get(1));
+      int predictedClass = (int) predicted.argMaxOffset();
+      prob[goldClass].add(predicted.getDouble(1));
       if(goldClass == 1) {
          positive++;
          if(predictedClass == 1) {

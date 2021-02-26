@@ -24,6 +24,8 @@ package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.model.Params;
 import com.gengoai.conversion.Cast;
@@ -97,7 +99,8 @@ public class GaussianMixtureModel extends FlatCentroidClusterer {
       for (i = 0; i < components.size(); i++) {
          Cluster cluster = new Cluster();
          cluster.setId(i);
-         cluster.setCentroid(NDArrayFactory.ND.columnVector(components.get(i).sample()));
+         double[] sample = components.get(i).sample();
+         cluster.setCentroid(nd.DFLOAT32.array(Shape.shape(sample.length,1), sample));
          clustering.add(cluster);
       }
 

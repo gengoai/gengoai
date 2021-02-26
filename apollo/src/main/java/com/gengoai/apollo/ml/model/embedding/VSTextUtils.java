@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.string.Strings;
 
@@ -36,8 +37,8 @@ final class VSTextUtils {
     * @param dimension the dimension
     * @return the nd array
     */
-   public static NDArray convertLineToVector(String line, int dimension) {
-      NDArray vector = NDArrayFactory.DENSE.array(1, dimension);
+   public static NDArray<Float> convertLineToVector(String line, int dimension) {
+      NDArray<Float>  vector = nd.DFLOAT32.zeros(1, dimension);
       String[] parts = line.split("[ \t]+");
       if(parts.length < dimension + 1) {
          throw new IllegalStateException("Invalid Line: " + line);
@@ -99,7 +100,7 @@ final class VSTextUtils {
     * @param vec the vec
     * @return the string
     */
-   public static String vectorToLine(NDArray vec) {
+   public static String vectorToLine( NDArray<Float>  vec) {
       double[] array = vec.toDoubleArray();
       StringBuilder builder = new StringBuilder();
       builder.append(String.format("%.3f", array[0]));

@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.string.StringMatcher;
 import com.gengoai.string.Strings;
 import lombok.Getter;
@@ -201,8 +202,8 @@ public class Variable implements Observation, Serializable {
    }
 
    @Override
-   public NDArray asNDArray() {
-      return NDArrayFactory.ND.scalar(value);
+   public NDArray<?> asNDArray() {
+      return nd.DFLOAT32.scalar(value);
    }
 
    @Override

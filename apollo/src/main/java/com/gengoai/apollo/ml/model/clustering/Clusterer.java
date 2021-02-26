@@ -66,8 +66,8 @@ public abstract class Clusterer extends SingleSourceModel<ClusterFitParameters, 
       throw new IllegalArgumentException("'" + name + "' is not a valid output for this model.");
    }
 
-   protected NDArray getNDArray(Datum datum) {
-      NDArray n = datum.get(parameters.input.value()).asNDArray();
+   protected NDArray<Float> getNDArray(Datum datum) {
+      NDArray<Float> n = datum.get(parameters.input.value()).asNDArray().asType(Float.class);
       if (Strings.isNotNullOrBlank(parameters.output.value()) &&
             datum.containsKey(parameters.output.value())) {
          n.setLabel(datum.get(parameters.output.value()));

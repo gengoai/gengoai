@@ -133,10 +133,10 @@ public class MultiClassEvaluation extends ClassifierEvaluation {
       String predictedStr;
       if(encoder == null) {
          goldStr = Integer.toString((int) gold);
-         predictedStr = Long.toString(predicted.argmax());
+         predictedStr = Long.toString(predicted.argMaxOffset());
       } else {
          goldStr = encoder.decode(gold);
-         predictedStr = encoder.decode(predicted.argmax());
+         predictedStr = encoder.decode(predicted.argMaxOffset());
       }
       confusionMatrix.increment(goldStr, predictedStr);
    }

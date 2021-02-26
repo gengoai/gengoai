@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3;
+package com.gengoai.apollo.math.linalg;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.nd3.dense.*;
@@ -32,7 +32,7 @@ import org.tensorflow.Tensor;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-import static com.gengoai.apollo.math.linalg.nd3.NDArrayFactory.probe;
+import static com.gengoai.apollo.math.linalg.NDArrayFactory.probe;
 
 public final class nd {
    public static final DenseInt32Factory DINT32 = new DenseInt32Factory();
@@ -49,6 +49,7 @@ public final class nd {
    public static <T extends Number> NDArray<T> abs(@NonNull NDArray<T> n) {
       return n.mapDouble(Math::abs);
    }
+
 
    public static <T> NDArray<T> array(Object data, @NonNull Class<T> dType) {
       return NDArrayFactory.forType(dType).array(data);
@@ -70,7 +71,7 @@ public final class nd {
       return n.mapDouble(Math::ceil);
    }
 
-   public static NDArray<?> convertTensor(@NonNull Tensor<?> tensor) {
+   public static <T> NDArray<T> convertTensor(@NonNull Tensor<T> tensor) {
       switch (tensor.dataType()) {
          case FLOAT:
             return Cast.as(DenseFloat32NDArray.fromTensor(tensor));

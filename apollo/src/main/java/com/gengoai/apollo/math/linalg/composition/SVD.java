@@ -17,25 +17,26 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3;
+package com.gengoai.apollo.math.linalg.composition;
 
-import com.gengoai.stream.Streams;
+import com.gengoai.Validation;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.decompose.SingularValueDecomposition;
+import com.gengoai.apollo.math.linalg.nd;
 import lombok.NonNull;
 
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
-public interface IndexRange extends Iterable<Index> {
+public class SVD<T extends Number> implements VectorComposition<T, Float> {
+   private final SingularValueDecomposition svd = new SingularValueDecomposition(1);
 
-   boolean contains(@NonNull Coordinate o);
-
-   Index lower();
-
-   Index upper();
-
-   Shape shape();
-
-   default Stream<Index> stream(){
-      return Streams.asStream(this);
+   @Override
+   public NDArray<Float> compose(@NonNull List<NDArray<T>> vectors) {
+      Validation.checkArgument(vectors.size() > 0, "Must supply at least one vector");
+      return svd.decompose(nd.vstack(new ArrayList<>(vectors)))[2].getAxis(Shape.ROW, 0);
    }
 
-}
+}//END OF SVD

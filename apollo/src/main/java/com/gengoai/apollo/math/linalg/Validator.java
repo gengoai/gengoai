@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3;
+package com.gengoai.apollo.math.linalg;
 
 
 public final class Validator {

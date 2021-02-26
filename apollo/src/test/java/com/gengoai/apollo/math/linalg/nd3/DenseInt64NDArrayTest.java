@@ -19,6 +19,7 @@
 
 package com.gengoai.apollo.math.linalg.nd3;
 
+import com.gengoai.apollo.math.linalg.nd;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

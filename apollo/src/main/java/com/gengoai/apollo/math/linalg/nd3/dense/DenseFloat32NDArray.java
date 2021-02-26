@@ -19,9 +19,9 @@
 
 package com.gengoai.apollo.math.linalg.nd3.dense;
 
-import com.gengoai.apollo.math.linalg.nd3.Index;
-import com.gengoai.apollo.math.linalg.nd3.NDArray;
-import com.gengoai.apollo.math.linalg.nd3.Shape;
+import com.gengoai.apollo.math.linalg.Index;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.jblas.DoubleMatrix;
@@ -81,15 +81,20 @@ public class DenseFloat32NDArray extends NDArray<Float> {
       }
    }
 
-   protected DenseFloat32NDArray(FloatMatrix fm) {
+   public DenseFloat32NDArray(@NonNull FloatMatrix fm) {
       super(Shape.shape(fm.rows, fm.columns));
       this.matrices = new FloatMatrix[]{fm};
    }
 
-   protected DenseFloat32NDArray(Shape shape, FloatMatrix[] fm) {
+   public DenseFloat32NDArray(@NonNull Shape shape, @NonNull FloatMatrix[] fm) {
       super(shape);
       this.matrices = fm;
    }
+
+   public DenseFloat32NDArray(@NonNull int kernels, int channels, @NonNull FloatMatrix[] fm) {
+      this(Shape.shape(kernels,channels,fm[0].rows, fm[0].columns),fm);
+   }
+
 
    public static NDArray<Float> fromTensor(@NonNull Tensor<?> tensor) {
       if (tensor.dataType() == DataType.FLOAT) {
@@ -285,7 +290,7 @@ public class DenseFloat32NDArray extends NDArray<Float> {
    }
 
    @Override
-   public NDArray<Float> setAxis(int axis, int position, @NonNull NDArray<? extends Float> rhs) {
+   public NDArray<Float> setAxis(int axis, int position, @NonNull NDArray<Float> rhs) {
       return super.setAxisDouble(axis, position, rhs);
    }
 

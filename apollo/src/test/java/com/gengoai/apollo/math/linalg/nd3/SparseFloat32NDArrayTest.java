@@ -19,6 +19,8 @@
 
 package com.gengoai.apollo.math.linalg.nd3;
 
+import com.gengoai.apollo.math.linalg.nd;
+
 public class SparseFloat32NDArrayTest extends BaseNDArrayTest{
 
    public SparseFloat32NDArrayTest(){

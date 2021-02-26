@@ -1,9 +1,13 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.Tensor;
+import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.linalg.nd3.dense.DenseFloat32NDArray;
+import com.gengoai.conversion.Cast;
+import org.jblas.FloatMatrix;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 
 /**
  * <p>Encapsulates an algorithm to decompose (factorize) a given {@link NDArray} into a product of matrices.</p>
@@ -29,20 +33,27 @@ public abstract class Decomposition implements Serializable {
     * @param input the input NDArray
     * @return Array of NDArray representing the factors of the product.
     */
-   public final NDArray[] decompose(NDArray input) {
-      if (input.shape().order() < 3) {
+   public final NDArray<Float>[] decompose(NDArray<? extends Number> input) {
+      if (input.rank() < 3) {
          return onMatrix(input);
       }
-      NDArray[][] results = new NDArray[components][input.shape().sliceLength];
-      for (int i = 0; i < input.shape().sliceLength; i++) {
-         NDArray[] slice = onMatrix(input.slice(i));
+
+      FloatMatrix[][] results = new FloatMatrix[components][input.shape().sliceLength()];
+      for (int i = 0; i < input.shape().sliceLength(); i++) {
+         NDArray<Float>[] slice = onMatrix(input.slice(i));
          for (int j = 0; j < components; j++) {
-            results[j][i] = slice[j];
+            results[j][i] = slice[j].toFloatMatrix()[0];
          }
       }
-      NDArray[] out = new NDArray[components];
+
+      NDArray<Float>[] out = Cast.as(Array.newInstance(DenseFloat32NDArray.class, components));
       for (int j = 0; j < components; j++) {
-         out[j] = new Tensor(input.kernels(), input.channels(), results[j]);
+         out[j] = new DenseFloat32NDArray(input.shape().kernels(),
+                                          input.shape().channels(),
+                                          results[j]);
+         for (int i = 0; i < results[j].length; i++) {
+            out[j].setSlice(i, nd.DFLOAT32.array(results[j][i]));
+         }
       }
       return out;
    }
@@ -62,6 +73,6 @@ public abstract class Decomposition implements Serializable {
     * @param matrix the matrix
     * @return the components of the decomposition
     */
-   protected abstract NDArray[] onMatrix(NDArray matrix);
+   protected abstract NDArray<Float>[] onMatrix(NDArray<? extends Number> matrix);
 
 }//END OF Decomposition

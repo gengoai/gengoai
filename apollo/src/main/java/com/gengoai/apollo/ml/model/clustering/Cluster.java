@@ -36,10 +36,10 @@ import java.util.List;
  *
  * @author David B. Bracewell
  */
-public class Cluster implements Serializable, Iterable<NDArray> {
+public class Cluster implements Serializable, Iterable<NDArray<Float>> {
    private static final long serialVersionUID = 1L;
-   private final List<NDArray> points = new ArrayList<>();
-   private NDArray centroid;
+   private final List<NDArray<Float>> points = new ArrayList<>();
+   private NDArray<Float> centroid;
    private int id;
    private Cluster left;
    private Cluster parent;
@@ -51,7 +51,7 @@ public class Cluster implements Serializable, Iterable<NDArray> {
     *
     * @param point the point
     */
-   public void addPoint(NDArray point) {
+   public void addPoint(NDArray<Float> point) {
       this.points.add(point);
    }
 
@@ -67,7 +67,7 @@ public class Cluster implements Serializable, Iterable<NDArray> {
     *
     * @return the centroid
     */
-   public NDArray getCentroid() {
+   public NDArray<Float> getCentroid() {
       return centroid;
    }
 
@@ -103,7 +103,7 @@ public class Cluster implements Serializable, Iterable<NDArray> {
     *
     * @return the points in the cluster
     */
-   public List<NDArray> getPoints() {
+   public List<NDArray<Float>> getPoints() {
       return points;
    }
 
@@ -130,7 +130,7 @@ public class Cluster implements Serializable, Iterable<NDArray> {
    }
 
    @Override
-   public Iterator<NDArray> iterator() {
+   public Iterator<NDArray<Float>> iterator() {
       return points.iterator();
    }
 
@@ -139,7 +139,7 @@ public class Cluster implements Serializable, Iterable<NDArray> {
     *
     * @param centroid the centroid
     */
-   public void setCentroid(NDArray centroid) {
+   public void setCentroid(NDArray<Float> centroid) {
       this.centroid = centroid;
    }
 

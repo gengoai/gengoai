@@ -20,6 +20,7 @@
 package com.gengoai.apollo.math.linalg.nd3;
 
 import com.gengoai.Primitives;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.encoder.FixedEncoder;
 import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
@@ -31,8 +32,8 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static com.gengoai.apollo.math.linalg.nd3.nd.DINT32;
-import static com.gengoai.apollo.math.linalg.nd3.Shape.*;
+import static com.gengoai.apollo.math.linalg.Shape.*;
+import static com.gengoai.apollo.math.linalg.nd.DINT32;
 import static org.junit.Assert.*;
 
 public abstract class BaseNDArrayTest {
@@ -868,7 +869,7 @@ public abstract class BaseNDArrayTest {
    public void predicted() {
       NDArray<?> n = factory.zeros(3, 4);
       assertNull(n.getPredicted());
-      NDArray<?> p = factory.rand(2, 2, 2);
+      NDArray<?> p = factory.create(2, 2, 2, NDArrayInitializer.random());
       n.setPredicted(p);
       assertEquals(p, n.getPredicted());
       n.setPredicted(23d);
@@ -1070,7 +1071,7 @@ public abstract class BaseNDArrayTest {
    @Test
    public void slice() {
       NDArray<?> s = tensor2234.copy();
-      s.setSlice(1, 0, Cast.as(factory.rand(3, 4)));
+      s.setSlice(1, 0, Cast.as(factory.create(3, 4, NDArrayInitializer.random())));
       assertNotEquals(tensor2234, s);
    }
 
@@ -1271,7 +1272,7 @@ public abstract class BaseNDArrayTest {
 
    @Test
    public void unitize() {
-      NDArray<?> n = factory.rand(1, 10);
+      NDArray<?> n = factory.create(1, 10, NDArrayInitializer.random());
       assertEquals(1, n.unitize().norm2(), 0.001d);
    }
 
@@ -1284,14 +1285,14 @@ public abstract class BaseNDArrayTest {
 
    @Test
    public void zero() {
-      NDArray<?> n = factory.rand(5, 4, 23, 4);
+      NDArray<?> n = factory.create(5, 4, 23, 4, NDArrayInitializer.random());
       n.zero();
       assertEquals(factory.zeros(5, 4, 23, 4), n);
    }
 
    @Test
    public void zeroLike() {
-      NDArray<?> n = factory.rand(5, 4, 23, 4);
+      NDArray<?> n = factory.create(5, 4, 23, 4, NDArrayInitializer.random());
       NDArray<?> z = n.zeroLike();
       assertEquals(factory.zeros(5, 4, 23, 4), z);
       assertEquals(n.shape(), z.shape());

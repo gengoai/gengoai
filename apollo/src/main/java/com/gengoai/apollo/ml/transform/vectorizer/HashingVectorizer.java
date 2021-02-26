@@ -54,7 +54,7 @@ public class HashingVectorizer extends AbstractVariableVectorizer<HashingVectori
          if(isBinary) {
             ndArray.set(index, 1.0);
          } else {
-            ndArray.set(index, ndArray.get(index) + v.getValue());
+            ndArray.set(index, ndArray.getDouble(index) + v.getValue());
          }
       }
    }

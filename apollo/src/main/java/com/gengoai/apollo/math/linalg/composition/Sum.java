@@ -17,27 +17,32 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3.initializer;
+package com.gengoai.apollo.math.linalg.composition;
 
-import com.gengoai.apollo.math.linalg.nd3.Shape;
-import lombok.Getter;
+import com.gengoai.Validation;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import lombok.NonNull;
 
-import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
 
-public abstract class NDArrayInitializer implements Serializable {
+public class Sum<T extends Number> implements VectorComposition<T, T> {
    private static final long serialVersionUID = 1L;
-   @Getter
-   @NonNull
-   protected final Shape shape;
 
 
-   protected NDArrayInitializer(Shape shape) {
-      this.shape = shape;
+   @Override
+   public NDArray<T> compose(@NonNull List<NDArray<T>> vectors) {
+      Validation.checkArgument(vectors.size() > 0, "Must supply at least one vector");
+      NDArray<T> toReturn = null;
+      for (NDArray<T> v : vectors) {
+         if (toReturn == null) {
+            toReturn = v.copy();
+         } else {
+            toReturn.addi(v);
+         }
+      }
+      return toReturn;
    }
-
-   public abstract Object get();
-
-   public abstract double getAsDouble();
-
-}//END OF NDArrayInitializer
+}//END OF Sum

@@ -1,13 +1,13 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
-import com.gengoai.apollo.math.linalg.DenseMatrix;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.RealMatrixWrapper;
+import com.gengoai.apollo.math.linalg.nd;
 import org.jblas.ComplexFloatMatrix;
 import org.jblas.Eigen;
 import org.jblas.FloatMatrix;
 
-import static com.gengoai.apollo.math.linalg.NDArrayFactory.ND;
+import static com.gengoai.collection.Arrays2.arrayOf;
 
 /**
  * <p>Performs <a href="https://en.wikipedia.org/wiki/Eigendecomposition_of_a_matrix">Eigen Decomposition</a> on the
@@ -23,21 +23,21 @@ public class EigenDecomposition extends Decomposition {
    }
 
    @Override
-   protected NDArray[] onMatrix(NDArray input) {
-      if(input.isDense()) {
+   protected NDArray<Float>[] onMatrix(NDArray<? extends Number> input) {
+      if (input.isDense()) {
          FloatMatrix slice = input.toFloatMatrix()[0];
          ComplexFloatMatrix[] result = Eigen.eigenvectors(slice);
-         return new NDArray[]{
-               new DenseMatrix(result[0].getReal()),
-               new DenseMatrix(result[1].getReal())
-         };
+         return arrayOf(
+               nd.DFLOAT32.array(result[0].getReal()),
+               nd.DFLOAT32.array(result[1].getReal())
+         );
       } else {
          org.apache.commons.math3.linear.EigenDecomposition decomposition =
                new org.apache.commons.math3.linear.EigenDecomposition(new RealMatrixWrapper(input));
-         return new NDArray[]{
-               ND.array(decomposition.getV().getData()),
-               ND.array(decomposition.getD().getData())
-         };
+         return arrayOf(
+               nd.DFLOAT32.array(decomposition.getV().getData()),
+               nd.DFLOAT32.array(decomposition.getD().getData())
+         );
       }
    }
 

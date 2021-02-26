@@ -22,6 +22,7 @@ package com.gengoai.apollo.ml.model.clustering;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 import com.gengoai.apollo.ml.evaluation.SilhouetteEvaluation;
 import lombok.Getter;
@@ -57,7 +58,7 @@ public class HierarchicalClustering implements Clustering {
       clustering.setMeasure(measure);
       process(root, clustering, threshold);
       for (int i = 0; i < clustering.size(); i++) {
-         NDArray centroid = NDArrayFactory.ND.array(clustering.get(i).getPoints().get(0).shape());
+         NDArray<Float> centroid = nd.DFLOAT32.array(clustering.get(i).getPoints().get(0).shape());
          clustering.get(i).getPoints().forEach(centroid::addi);
          centroid.divi(clustering.get(i).size());
          clustering.get(i).setCentroid(centroid);

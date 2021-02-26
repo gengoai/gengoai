@@ -19,10 +19,8 @@
 
 package com.gengoai.apollo.math.linalg.nd3.dense;
 
-import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.nd3.Index;
-import com.gengoai.apollo.math.linalg.nd3.NDArray;
-import com.gengoai.apollo.math.linalg.nd3.Shape;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.tensorflow.DataType;

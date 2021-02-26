@@ -60,10 +60,10 @@ public abstract class AbstractSingleSourceTransform<T extends AbstractSingleSour
     */
    @NonNull
    protected String output = Datum.DEFAULT_INPUT;
-   protected NDArrayFactory ndArrayFactory;
+   protected NDArrayFactory<? extends Number> ndArrayFactory;
 
    public AbstractSingleSourceTransform() {
-      this.ndArrayFactory = NDArrayFactory.ND;
+      this.ndArrayFactory = NDArrayFactory.forType(Float.class);
    }
 
    @Override
@@ -98,7 +98,7 @@ public abstract class AbstractSingleSourceTransform<T extends AbstractSingleSour
    @Override
    public T input(@NonNull String name) {
       this.input = name;
-      if(Strings.isNotNullOrBlank(output)) {
+      if (Strings.isNotNullOrBlank(output)) {
          this.output = name;
       }
       return Cast.as(this);

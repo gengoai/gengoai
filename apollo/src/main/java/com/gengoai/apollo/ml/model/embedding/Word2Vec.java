@@ -19,13 +19,12 @@
 
 package com.gengoai.apollo.ml.model.embedding;
 
-import com.gengoai.apollo.math.linalg.DenseMatrix;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.model.Params;
 import lombok.NonNull;
 import org.apache.spark.mllib.feature.Word2VecModel;
 import org.jblas.FloatMatrix;
-import org.jblas.MatrixFunctions;
 
 import java.util.Date;
 import java.util.function.Consumer;
@@ -78,8 +77,8 @@ public class Word2Vec extends TrainableWordEmbedding<Word2Vec.Parameters, Word2V
       mapAsJavaMap(model.getVectors()).forEach((k, v) -> {
          int index = vectorStore.addOrGetIndex(k);
          vectorStore.updateVector(index,
-                                  new DenseMatrix(MatrixFunctions.floatToDouble(new FloatMatrix(1, v.length, v)))
-                                        .setLabel(k));
+                                  nd.DFLOAT32.array(new FloatMatrix(1, v.length, v))
+                                             .setLabel(k));
       });
    }
 

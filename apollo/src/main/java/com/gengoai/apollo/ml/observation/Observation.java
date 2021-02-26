@@ -22,10 +22,7 @@ package com.gengoai.apollo.ml.observation;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.gengoai.Copyable;
-import com.gengoai.apollo.math.linalg.DenseMatrix;
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.SparseMatrix;
-import com.gengoai.apollo.math.linalg.Tensor;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -56,9 +53,9 @@ import java.util.stream.Stream;
             @JsonSubTypes.Type(value = VariableList.class, name = "vl"),
             @JsonSubTypes.Type(value = VariableCollectionSequence.class, name = "vcs"),
             @JsonSubTypes.Type(value = VariableSequence.class, name = "vs"),
-            @JsonSubTypes.Type(value = DenseMatrix.class, name = "dm"),
-            @JsonSubTypes.Type(value = SparseMatrix.class, name = "sm"),
-            @JsonSubTypes.Type(value = Tensor.class, name = "tensor"),
+//            @JsonSubTypes.Type(value = DenseMatrix.class, name = "dm"),
+//            @JsonSubTypes.Type(value = SparseMatrix.class, name = "sm"),
+//            @JsonSubTypes.Type(value = Tensor.class, name = "tensor"),
       }
 )
 public interface Observation extends Copyable<Observation>, Serializable {
@@ -74,22 +71,11 @@ public interface Observation extends Copyable<Observation>, Serializable {
    }
 
    /**
-    * Casts this Observation as a {@link Classification} throwing  {@link IllegalArgumentException} if the cast is
-    * invalid.
-    *
-    * @return the classification
-    */
-   default VariableSequence asVariableSequence(){
-      throw new IllegalArgumentException(getClass().getSimpleName() + " is not a VariableSequence.");
-   }
-
-
-   /**
     * Casts this Observation as a {@link NDArray} throwing  {@link IllegalArgumentException} if the cast is invalid.
     *
     * @return the nd array
     */
-   default NDArray asNDArray() {
+   default NDArray<?> asNDArray() {
       throw new IllegalArgumentException(getClass().getSimpleName() + " is not an NDArray.");
    }
 
@@ -119,6 +105,16 @@ public interface Observation extends Copyable<Observation>, Serializable {
     */
    default VariableCollection asVariableCollection() {
       throw new IllegalArgumentException(getClass().getSimpleName() + " is not a VariableCollection.");
+   }
+
+   /**
+    * Casts this Observation as a {@link Classification} throwing  {@link IllegalArgumentException} if the cast is
+    * invalid.
+    *
+    * @return the classification
+    */
+   default VariableSequence asVariableSequence() {
+      throw new IllegalArgumentException(getClass().getSimpleName() + " is not a VariableSequence.");
    }
 
    /**

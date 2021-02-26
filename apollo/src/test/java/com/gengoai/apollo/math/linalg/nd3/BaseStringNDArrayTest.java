@@ -19,6 +19,9 @@
 
 package com.gengoai.apollo.math.linalg.nd3;
 
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
 import org.junit.Test;
 
 import java.util.Objects;
@@ -52,8 +55,8 @@ public abstract class BaseStringNDArrayTest {
       });
       this.rowVector = factory.array(new String[]{"1", "2", "3", "4"});
       this.colVector = factory.arange(Shape.shape(4, 1));
-      this.tensor234 = factory.rand(Shape.shape(2, 3, 4), supplier());
-      this.tensor2234 = factory.rand(Shape.shape(2, 3, 4), supplier());
+      this.tensor234 = factory.create(Shape.shape(2, 3, 4), supplier());
+      this.tensor2234 = factory.create(Shape.shape(2, 3, 4), supplier());
       this.scalar = factory.scalar("TEST");
    }
 

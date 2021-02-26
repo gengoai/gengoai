@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3;
+package com.gengoai.apollo.math.linalg;
 
 import com.gengoai.Copyable;
 import com.gengoai.Validation;
@@ -27,7 +27,6 @@ import org.apache.mahout.math.list.IntArrayList;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * <p>A coordinate that indicates a particular position in a coordinate space.</p>

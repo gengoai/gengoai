@@ -21,7 +21,8 @@ package com.gengoai.apollo.ml.model.topic;
 
 import com.gengoai.ParameterDef;
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.model.Params;
@@ -48,13 +49,13 @@ import static com.gengoai.function.Functional.with;
  * @author David B. Bracewell
  */
 public class OnlineLDA extends BaseVectorTopicModel {
-   private static final GammaDistribution GAMMA_DISTRIBUTION = new GammaDistribution(100d, 0.01d);
-   private static final long serialVersionUID = 1L;
    public static final ParameterDef<Double> alpha = ParameterDef.doubleParam("alpha");
    public static final ParameterDef<Double> eta = ParameterDef.doubleParam("eta");
    public static final ParameterDef<Integer> inferenceSamples = ParameterDef.intParam("inferenceSamples");
    public static final ParameterDef<Double> kappa = ParameterDef.doubleParam("kappa");
    public static final ParameterDef<Double> tau0 = ParameterDef.doubleParam("tau0");
+   private static final GammaDistribution GAMMA_DISTRIBUTION = new GammaDistribution(100d, 0.01d);
+   private static final long serialVersionUID = 1L;
    private final OnlineLDAFitParameters parameters;
    private NDArray lambda;
 
@@ -83,31 +84,31 @@ public class OnlineLDA extends BaseVectorTopicModel {
       this.parameters = with(new OnlineLDAFitParameters(), updater);
    }
 
-   private NDArray dirichletExpectation(NDArray array) {
-      NDArray vector = array.rowSums().mapi(Gamma::digamma);
-      return array.map(Gamma::digamma)
-                  .subiColumnVector(vector);
+   private NDArray<Float> dirichletExpectation(NDArray<Float> array) {
+      NDArray<Float> vector = array.sum(Shape.COLUMN).mapiDouble(Gamma::digamma);
+      return array.mapDouble(Gamma::digamma)
+                  .subi(Shape.COLUMN, vector);
    }
 
-   private void eStep(ModelP m, List<NDArray> batch) {
+   private void eStep(ModelP m, List<NDArray<Float>> batch) {
       m.gamma = gammaSample(batch.size(), m.K);
       var eLogTheta = dirichletExpectation(m.gamma);
-      var expELogTheta = eLogTheta.map(Math::exp);
+      var expELogTheta = eLogTheta.mapDouble(Math::exp);
       m.stats = m.lambda.zeroLike();
 
       for (int i = 0; i < batch.size(); i++) {
-         NDArray n = batch.get(i);
-         int[] ids = n.sparseIndices();
+         NDArray<Float> n = batch.get(i);
+         long[] ids = n.sparseIndices();
          if (ids.length == 0) {
             continue;
          }
-         NDArray nv = NDArrayFactory.DENSE.array(ids.length);
+         NDArray<Float> nv = nd.DFLOAT32.zeros(ids.length);
          for (int i1 = 0, i2 = 0; i1 < ids.length; i1++, i2++) {
             nv.set(i2, n.get(ids[i1]));
          }
-         var gammaD = m.gamma.getRow(i);
-         var expELogThetaD = expELogTheta.getRow(i);
-         var expELogBetaD = m.expELogBeta.getColumns(ids);
+         var gammaD = m.gamma.getAxis(Shape.ROW, i);
+         var expELogThetaD = expELogTheta.getAxis(Shape.ROW, i);
+         var expELogBetaD = m.expELogBeta.getAxis(Shape.COLUMN, ids);
          var phiNorm = expELogThetaD.mmul(expELogBetaD).addi(1E-100);
 
          NDArray lastGamma;
@@ -116,22 +117,23 @@ public class OnlineLDA extends BaseVectorTopicModel {
             var v1 = nv.div(phiNorm).mmul(expELogBetaD.T());
             gammaD = expELogThetaD.mul(v1).addi(m.alpha);
             var eLogThetaD = dirichletExpectation(gammaD);
-            expELogThetaD = eLogThetaD.map(Math::exp);
+            expELogThetaD = eLogThetaD.mapDouble(Math::exp);
             phiNorm = expELogThetaD.mmul(expELogBetaD).addi(1E-100);
             if (gammaD.map(lastGamma, (d1, d2) -> Math.abs(d1 - d2)).mean() < 0.001) {
                break;
             }
          }
-         m.gamma.setRow(i, gammaD);
+         m.gamma.setAxisDouble(Shape.ROW, i, gammaD);
          var o = outer(expELogThetaD, nv.div(phiNorm));
          for (int k = 0; k < ids.length; k++) {
-            m.stats.incrementiColumn(ids[k], o.getColumn(k));
+            m.stats.addi(Shape.COLUMN, (int) ids[k], o.getAxis(Shape.COLUMN, k));
          }
       }
       m.stats.muli(m.expELogBeta);
    }
 
-   private Stream<NDArray> encode(Datum d) {
+
+   private Stream<NDArray<Float>> encode(Datum d) {
       if (parameters.combineInputs.value()) {
          return mergeVariableSpace(d.stream(getInputs()))
                .getVariableSpace()
@@ -149,16 +151,16 @@ public class OnlineLDA extends BaseVectorTopicModel {
       int batchSize = parameters.batchSize.value();
       int batchCount = 0;
       for (DataSet docs : Iterables.asIterable(dataset.batchIterator(batchSize))) {
-         List<NDArray> batch = docs.parallelStream()
-                                   .flatMap(this::encode)
-                                   .collect();
+         List<NDArray<Float>> batch = docs.parallelStream()
+                                          .flatMap(this::encode)
+                                          .collect();
          eStep(model, batch);
          mStep(model, D, batchCount, batch.size());
          batchCount++;
       }
-      model.lambda.diviColumnVector(model.lambda.rowSums());
-      for (int i = 0; i < model.lambda.rows(); i++) {
-         NDArray topic = model.lambda.getRow(i);
+      model.lambda.divi(Shape.COLUMN, model.lambda.sum(Shape.COLUMN));
+      for (int i = 0; i < model.lambda.shape().rows(); i++) {
+         NDArray<Float> topic = model.lambda.getAxis(Shape.ROW, i);
          Counter<String> cntr = Counters.newCounter();
          topic.forEachSparse((fi, v) -> {
             cntr.set(encoder.decode(fi), v);
@@ -168,8 +170,8 @@ public class OnlineLDA extends BaseVectorTopicModel {
       this.lambda = model.lambda;
    }
 
-   private NDArray gammaSample(int r, int c) {
-      return NDArrayFactory.DENSE.array(r, c).mapi(d -> GAMMA_DISTRIBUTION.sample());
+   private NDArray<Float> gammaSample(int r, int c) {
+      return nd.DFLOAT32.zeros(r, c).mapiDouble(d -> GAMMA_DISTRIBUTION.sample());
    }
 
    @Override
@@ -178,8 +180,8 @@ public class OnlineLDA extends BaseVectorTopicModel {
    }
 
    @Override
-   public NDArray getTopicDistribution(String feature) {
-      NDArray n = NDArrayFactory.ND.array(getNumberOfTopics());
+   public NDArray<Float> getTopicDistribution(String feature) {
+      NDArray<Float> n = nd.DFLOAT32.zeros(getNumberOfTopics());
       for (Topic topic : topics) {
          n.set(topic.getId(), topic.getFeatureDistribution().get(feature));
       }
@@ -187,7 +189,7 @@ public class OnlineLDA extends BaseVectorTopicModel {
    }
 
    @Override
-   protected NDArray inference(NDArray n) {
+   protected NDArray<Float> inference(NDArray<Float> n) {
       final ModelP model = new ModelP(lambda);
       eStep(model, Collections.singletonList(n));
       return model.gamma.divi(model.gamma.sum());
@@ -195,18 +197,18 @@ public class OnlineLDA extends BaseVectorTopicModel {
 
    private void mStep(ModelP model, double dataSetSize, int batchCount, int batchSize) {
       double rho = Math.pow(parameters.tau0.value() + batchCount, -parameters.kappa.value());
-      NDArray a = model.lambda.mul(1 - rho);
-      NDArray b = model.stats.mul(dataSetSize / batchSize).addi(parameters.eta.value());
+      NDArray<Float> a = model.lambda.mul(1 - rho);
+      NDArray<Float> b = model.stats.mul(dataSetSize / batchSize).addi(parameters.eta.value());
       model.lambda = a.add(b);
       model.eLogBeta = dirichletExpectation(model.lambda);
-      model.expELogBeta = model.eLogBeta.map(Math::exp);
+      model.expELogBeta = model.eLogBeta.mapDouble(Math::exp);
    }
 
-   private NDArray outer(NDArray vector, NDArray matrix) {
-      NDArray out = NDArrayFactory.DENSE.array((int) vector.length(), (int) matrix.length());
+   private NDArray<Float> outer(NDArray<Float> vector, NDArray<Float> matrix) {
+      NDArray<Float> out = nd.DFLOAT32.zeros((int) vector.length(), (int) matrix.length());
       for (long i = 0; i < vector.length(); i++) {
          for (long j = 0; j < matrix.length(); j++) {
-            out.set((int) i, (int) j, vector.get(i) * matrix.get(j));
+            out.set((int) i, (int) j, vector.getDouble(i) * matrix.getDouble(j));
          }
       }
       return out;
@@ -244,11 +246,11 @@ public class OnlineLDA extends BaseVectorTopicModel {
    }
 
    private class ModelP {
-      NDArray lambda;
-      NDArray eLogBeta;
-      NDArray expELogBeta;
-      NDArray stats;
-      NDArray gamma;
+      NDArray<Float> lambda;
+      NDArray<Float> eLogBeta;
+      NDArray<Float> expELogBeta;
+      NDArray<Float> stats;
+      NDArray<Float> gamma;
       int K;
       double alpha;
 
@@ -256,16 +258,16 @@ public class OnlineLDA extends BaseVectorTopicModel {
          K = parameters.K.value();
          lambda = gammaSample(K, encoder.size());
          eLogBeta = dirichletExpectation(lambda);
-         expELogBeta = eLogBeta.map(Math::exp);
+         expELogBeta = eLogBeta.mapDouble(Math::exp);
          stats = lambda.zeroLike();
          alpha = parameters.alpha.value();
       }
 
-      public ModelP(NDArray pLambda) {
+      public ModelP(NDArray<Float> pLambda) {
          K = parameters.K.value();
          lambda = pLambda;
          eLogBeta = dirichletExpectation(lambda);
-         expELogBeta = eLogBeta.map(Math::exp);
+         expELogBeta = eLogBeta.mapDouble(Math::exp);
          stats = lambda.zeroLike();
          alpha = parameters.alpha.value();
       }

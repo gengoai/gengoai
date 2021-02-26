@@ -19,7 +19,7 @@
 
 package com.gengoai.apollo.math.linalg.nd3.sparse;
 
-import com.gengoai.apollo.math.linalg.nd3.*;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.apache.mahout.math.list.LongArrayList;
@@ -232,7 +232,7 @@ public class SparseStringNDArray extends NDArray<String> {
    }
 
    @Override
-   public Tensor<?> toTensor() {
+   public Tensor<String> toTensor() {
       return nd.DSTRING.array(shape(), arrayForTensor()).toTensor();
    }
 

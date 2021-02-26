@@ -21,9 +21,8 @@ package com.gengoai.apollo.ml.model.tf;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
 import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.ml.DataSet;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import lombok.*;
@@ -65,22 +64,22 @@ public abstract class TFVar implements Serializable {
          if (shape[i] < 0) {
             if (i == 0) {
                dimensions[i] = (int) dataSet.stream()
-                                            .mapToDouble(d -> d.get(getName()).asNDArray().rows())
+                                            .mapToDouble(d -> d.get(getName()).asNDArray().shape().rows())
                                             .max()
                                             .orElse(0d);
             } else if (i == 1) {
                dimensions[i] = (int) dataSet.stream()
-                                            .mapToDouble(d -> d.get(getName()).asNDArray().columns())
+                                            .mapToDouble(d -> d.get(getName()).asNDArray().shape().columns())
                                             .max()
                                             .orElse(0d);
             } else if (i == 2) {
                dimensions[i] = (int) dataSet.stream()
-                                            .mapToDouble(d -> d.get(getName()).asNDArray().channels())
+                                            .mapToDouble(d -> d.get(getName()).asNDArray().shape().channels())
                                             .max()
                                             .orElse(0d);
             } else {
                dimensions[i] = (int) dataSet.stream()
-                                            .mapToDouble(d -> d.get(getName()).asNDArray().kernels())
+                                            .mapToDouble(d -> d.get(getName()).asNDArray().shape().kernels())
                                             .max()
                                             .orElse(0d);
             }
@@ -95,22 +94,19 @@ public abstract class TFVar implements Serializable {
       int[] batch_shape = new int[shape.length + 1];
       batch_shape[0] = data.size();
       System.arraycopy(dimensionsOf(data), 0, batch_shape, 1, shape.length);
-      NDArray batch = NDArrayFactory.ND.array(batch_shape);
+      NDArray<Float> batch = nd.DFLOAT32.zeros(batch_shape);
       Shape batchShape = batch.shape();
 
       for (int i = 0; i < data.size(); i++) {
-         NDArray ni = data.get(i).get(name).asNDArray();
+         NDArray<Float> ni = data.get(i).get(name).asNDArray().asType(Float.class);
          if (batchShape.channels() > 0) {
             batch.setSlice(i, ni.padPost(batchShape.rows(), batchShape.columns()));
          } else {
-            batch.setRow(i, ni.padRowPost(batchShape.columns()).T());
+            batch.setAxisDouble(Shape.ROW, i, ni.padPost(Shape.ROW, batchShape.columns()).T());
          }
       }
 
-      if (shape.length == 1) {
-         return Tensor.create(batch.toFloatArray2());
-      }
-      return Tensor.create(batch.toFloatArray3());
+      return batch.toTensor();
    }
 
 

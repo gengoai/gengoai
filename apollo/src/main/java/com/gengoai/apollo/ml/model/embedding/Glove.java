@@ -21,7 +21,7 @@ package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.ParameterDef;
 import com.gengoai.Stopwatch;
-import com.gengoai.apollo.math.linalg.DenseMatrix;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.model.Params;
 import com.gengoai.apollo.ml.observation.Observation;
@@ -223,7 +223,7 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
       for(int i = 0; i < vocabLength; i++) {
          W[i].addi(W[i + vocabLength]);
          String k = vectorStore.decode(i);
-         vectorStore.updateVector(i, new DenseMatrix(W[i]).T().setLabel(k));
+         vectorStore.updateVector(i, nd.DFLOAT32.array(W[i]).T().setLabel(k));
       }
 
    }

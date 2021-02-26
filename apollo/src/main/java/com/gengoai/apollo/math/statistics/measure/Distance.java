@@ -25,6 +25,7 @@ package com.gengoai.apollo.math.statistics.measure;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.math.Math2;
+import lombok.NonNull;
 
 /**
  * <p>Commonly used distance measures.</p>
@@ -37,7 +38,7 @@ public enum Distance implements DistanceMeasure {
     */
    Euclidean {
       @Override
-      public double calculate(NDArray v1, NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          return Math.sqrt((v1.dot(v1) + v2.dot(v2)) - (2.0 * v1.dot(v2)));
       }
    },
@@ -46,7 +47,7 @@ public enum Distance implements DistanceMeasure {
     */
    SquaredEuclidean {
       @Override
-      public double calculate(NDArray v1, NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          return (v1.dot(v1) + v2.dot(v2)) - (2.0 * v1.dot(v2));
       }
 
@@ -56,7 +57,7 @@ public enum Distance implements DistanceMeasure {
     */
    Manhattan {
       @Override
-      public double calculate(NDArray v1, NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          return v1.sub(v2).norm1();
       }
 
@@ -67,8 +68,8 @@ public enum Distance implements DistanceMeasure {
     */
    Hamming {
       @Override
-      public double calculate(NDArray v1, NDArray v2) {
-         return v1.map(v2, (d1, d2) -> d1 != d2 ? 1 : 0).sum();
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+         return v1.mapDouble(v2, (d1, d2) -> d1 != d2 ? 1 : 0).sum();
       }
    },
    /**
@@ -76,12 +77,12 @@ public enum Distance implements DistanceMeasure {
     */
    EarthMovers {
       @Override
-      public double calculate(NDArray v1, NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          double last = 0;
          double sum = 0;
          for (int i = 0; i < v1.length(); i++) {
-            double d1 = v1.get(i);
-            double d2 = v2.get(i);
+            double d1 = v1.getDouble(i);
+            double d2 = v2.getDouble(i);
             double dist = (d1 + last) - d2;
             sum += Math.abs(dist);
             last = dist;
@@ -94,8 +95,8 @@ public enum Distance implements DistanceMeasure {
     */
    Chebyshev {
       @Override
-      public double calculate(NDArray v1, NDArray v2) {
-         return v1.map(v2, (d1, d2) -> Math.abs(d1 - d2)).max();
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+         return v1.mapDouble(v2, (d1, d2) -> Math.abs(d1 - d2)).max().doubleValue();
       }
    },
    /**
@@ -103,8 +104,8 @@ public enum Distance implements DistanceMeasure {
     */
    KLDivergence {
       @Override
-      public double calculate(NDArray v1, NDArray v2) {
-         return v1.map(v2, (d1, d2) -> d1 * Math2.safeLog(d1 / d2)).sum();
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+         return v1.mapDouble(v2, (d1, d2) -> d1 * Math2.safeLog(d1 / d2)).sum();
       }
    },
    /**
@@ -112,7 +113,7 @@ public enum Distance implements DistanceMeasure {
     */
    Angular {
       @Override
-      public double calculate(NDArray v1, NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          return Math.acos(Similarity.Cosine.calculate(v1, v2)) / Math.PI;
       }
    }

@@ -48,7 +48,7 @@ class NegativeDistanceSimilarity implements SimilarityMeasure {
    }
 
    @Override
-   public double calculate(NDArray v1, NDArray v2) {
+   public double calculate(NDArray<? extends Number> v1, NDArray<? extends Number> v2) {
       return -distanceMeasure.calculate(v1, v2);
    }
 

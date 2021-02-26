@@ -1,6 +1,4 @@
 /*
- * (c) 2005 David B. Bracewell
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,68 +15,50 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
  */
 
 package com.gengoai.apollo.math.linalg;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.gengoai.Copyable;
-import com.gengoai.Validation;
+import com.gengoai.collection.Arrays2;
+import lombok.NonNull;
 
-import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.gengoai.Validation.checkArgument;
+import static com.gengoai.apollo.math.linalg.Index.zero;
 
 /**
  * Encapsulates the dimensions, i.e. shape, of an {@link NDArray}.
  *
  * @author David B. Bracewell
  */
-public class Shape implements Serializable, Copyable<Shape> {
+public class Shape extends Coordinate implements Copyable<Shape> {
+   /**
+    * The constant KERNEL representing the axis index of a kernel.
+    */
+   public static final int KERNEL = MAX_DIMENSIONS - 4;
+   /**
+    * The constant CHANNEL representing the axis index of a channel.
+    */
+   public static final int CHANNEL = MAX_DIMENSIONS - 3;
+   /**
+    * The constant ROW representing the axis index of a row.
+    */
+   public static final int ROW = MAX_DIMENSIONS - 2;
+   /**
+    * The constant COLUMN representing the axis index of a column.
+    */
+   public static final int COLUMN = MAX_DIMENSIONS - 1;
+
    private static final long serialVersionUID = 1L;
-   /**
-    * The total length (rows * columns) of the matrix elements
-    */
-   public final int matrixLength;
-   /**
-    * The total number of slices (kernels * channels)
-    */
-   public final int sliceLength;
-   /**
-    * The Shape.
-    */
-   @JsonValue
-   final int[] shape;
+   private int matrixLength;
+   private int sliceLength;
 
-   /**
-    * Creates a shape for an empty NDArray
-    *
-    * @return the shape
-    */
-   public static Shape empty() {
-      return new Shape();
-   }
-
-   /**
-    * Static constructor for shapes from a variable list of dimensions
-    *
-    * @param dims the dimensions
-    * @return the shape
-    */
-   public static Shape shape(int... dims) {
-      return new Shape(dims);
-   }
-
-   private Shape() {
-      this.shape = new int[4];
-      this.matrixLength = 0;
-      this.sliceLength = 0;
-   }
 
    /**
     * Instantiates a new Shape.
@@ -86,264 +66,521 @@ public class Shape implements Serializable, Copyable<Shape> {
     * @param dimensions the dimensions
     */
    @JsonCreator
-   public Shape(@JsonProperty int... dimensions) {
-      this.shape = new int[4];
-      if(dimensions != null && dimensions.length > 0) {
-         System.arraycopy(dimensions, 0, shape, shape.length - dimensions.length, dimensions.length);
-         this.shape[2] = Math.max(1, this.shape[2]);
-         this.shape[3] = Math.max(1, this.shape[3]);
-         this.sliceLength = Math.max(1, shape[0]) * Math.max(1, shape[1]);
-         this.matrixLength = shape[2] * shape[3];
-      } else {
-         this.shape[2] = 1;
-         this.shape[3] = 1;
-         this.sliceLength = 1;
-         this.matrixLength = 1;
-      }
-      Validation.checkArgument(shape[0] >= 0, "Invalid Kernel: " + shape[0]);
-      Validation.checkArgument(shape[1] >= 0, "Invalid Channel: " + shape[1]);
-      Validation.checkArgument(shape[2] >= 0, "Invalid Row: " + shape[2]);
-      Validation.checkArgument(shape[3] >= 0, "Invalid Column: " + shape[3]);
+   protected Shape(@JsonProperty int... dimensions) {
+      super(dimensions);
+      validateAndCalculateLengths();
    }
 
    /**
-    * Gets the number of channels
+    * <p>Static constructor for shapes from a variable list of dimensions</p>
     *
-    * @return the number of channels
+    * @param dimensions the dimensions
+    * @return the shape
+    */
+   public static Shape shape(@NonNull int... dimensions) {
+      return new Shape(dimensions);
+   }
+
+
+   /**
+    * <p>Static constructor for shapes from a variable list of dimensions</p>
+    *
+    * @param dimensions the dimensions
+    * @return the shape
+    */
+   public static Shape shape(@NonNull long... dimensions) {
+      int[] intD = new int[dimensions.length];
+      for (int i = 0; i < dimensions.length; i++) {
+         intD[i] = (int) dimensions[i];
+      }
+      return new Shape(intD);
+   }
+
+   /**
+    * <p>Determines if and how an NDArray with the given <code>rhs</code> shape cab be broadcasted onto an NDArray of
+    * this shape.</p>
+    *
+    * @param rhs the right-hand NDArray shape
+    * @return the Broadcast type
+    */
+   public Broadcast accepts(@NonNull Shape rhs) {
+      if (isEmpty() && rhs.isEmpty()) {
+         return Broadcast.EMPTY;
+      }
+      if (!isEmpty() && rhs.isScalar()) {
+         return Broadcast.SCALAR;
+      }
+      if (isScalar()) {
+         return Broadcast.ERROR;
+      }
+      if (isVector() && rhs.isVector() && rhs.length() == length()) {
+         return Broadcast.VECTOR;
+      }
+      if (isMatrix() && equals(rhs)) {
+         return Broadcast.MATRIX;
+      }
+      if (isTensor() && equals(rhs)) {
+         return Broadcast.TENSOR;
+      }
+      if ((rhs.kernels() > 1 && rhs.kernels() != kernels())
+            || (rhs.channels() > 1 && rhs.channels() != channels())
+      ) {
+         return Broadcast.ERROR;
+      }
+      if (isMatrix() && rhs.rows() == rows() && rhs.columns() <= 1) {
+         return Broadcast.MATRIX_COLUMN;
+      }
+      if (isMatrix() && rhs.columns() == columns() && rhs.rows() <= 1) {
+         return Broadcast.MATRIX_ROW;
+      }
+      if (isTensor() && rhs.matrixShape().equals(matrixShape())) {
+
+         if (channels() != rhs.channels()) {
+            return Broadcast.TENSOR_CHANNEL;
+         }
+
+         if (kernels() != rhs.kernels()) {
+            return Broadcast.TENSOR_KERNEL;
+         }
+
+         return Broadcast.TENSOR;
+      }
+      if (isTensor() && rhs.rows() == rows() && rhs.columns() <= 1) {
+         return Broadcast.TENSOR_COLUMN;
+      }
+      if (isTensor() && rhs.columns() == columns() && rhs.rows() <= 1) {
+         return Broadcast.TENSOR_ROW;
+      }
+      return Broadcast.ERROR;
+   }
+
+
+   /**
+    * <p>Constructs an Index from this shape modifying the given axis and position pairs. Invocation is done as
+    * follows: <code>asIndex(Shape.ROW, 4, Shape.COLUMN, 10)</code> will create a new Index with this shape's kernels
+    * and channels and have 4 rows and 10 columns.</p>
+    *
+    * @param axisValuePairs the axis value pairs
+    * @return the index
+    */
+   public Index asIndex(int... axisValuePairs) {
+      if (axisValuePairs == null || axisValuePairs.length == 0) {
+         return new Index(this);
+      }
+      checkArgument(axisValuePairs.length % 2 == 0, "Usage error: must provide an axis and its value, e.g. asIndex(axis,value,...)");
+      Index ii = new Index(this);
+      for (int i = 0; i < axisValuePairs.length; i += 2) {
+         ii.set(axisValuePairs[i], axisValuePairs[i + 1]);
+      }
+      return ii;
+   }
+
+   /**
+    * <p>Takes the given coordinate and modifies it so that an NDArray of this shape can be broadcasted to i.</p>
+    *
+    * @param coordinate the coordinate
+    * @return the broadcasted index
+    */
+   public Index broadcast(@NonNull Coordinate coordinate) {
+      Index ii = new Index(coordinate);
+      for (int i = 0; i < Coordinate.MAX_DIMENSIONS; i++) {
+         if (this.point[i] <= 1) {
+            ii.point[i] = 0;
+         }
+      }
+      return ii;
+   }
+
+   /**
+    * <p>Creates an {@link Index} from the given offset.</p>
+    *
+    * @param offset the offset
+    * @return the Index
+    */
+   public Index calculateIndex(long offset) {
+      int slice = toSliceIndex(offset);
+      int matrix = toMatrixIndex(offset);
+      return Index.index(slice % Math.max(1, point[KERNEL]),
+                         slice / Math.max(1, point[KERNEL]),
+                         matrix % Math.max(1, point[ROW]),
+                         matrix / Math.max(1, point[ROW]));
+   }
+
+   public long calculateOffset(@NonNull Coordinate c){
+      return (long)calculateSliceIndex(c) * sliceLength + calculateMatrixIndex(c);
+   }
+
+   /**
+    * <p>Calculates the index of the matrix associated with the given coordinate.</p>
+    *
+    * @param coordinate the coordinate
+    * @return the matrix index
+    */
+   public int calculateMatrixIndex(@NonNull Coordinate coordinate) {
+      return calculateMatrixIndex(coordinate.get(Shape.ROW), coordinate.get(Shape.COLUMN));
+   }
+
+   /**
+    * <p>Calculates the index of the matrix associated with the given row and column.</p>
+    *
+    * @param row    the row
+    * @param column the column
+    * @return the matrix index
+    */
+   public int calculateMatrixIndex(int row, int column) {
+      return row + (Math.max(rows(), 1) * column);
+   }
+
+
+   /**
+    * <p>Calculates the index of the slice associated with the given coordinate.</p>
+    *
+    * @param coordinate the coordinate
+    * @return the slice index
+    */
+   public int calculateSliceIndex(@NonNull Coordinate coordinate) {
+      return calculateSliceIndex(coordinate.get(Shape.KERNEL), coordinate.get(Shape.CHANNEL));
+   }
+
+   /**
+    * <p>Calculates the index of the slice associated with the given kernel and channel.</p>
+    *
+    * @param kernel  the kernel
+    * @param channel the channel
+    * @return the slice index
+    */
+   public int calculateSliceIndex(int kernel, int channel) {
+      return (kernel * Math.max(1, channels())) + channel;
+   }
+
+   /**
+    * <p>The number of channels in the shape</p>
+    *
+    * @return the number of channels in the shape
     */
    public int channels() {
-      return shape[1];
+      return get(Shape.CHANNEL);
    }
 
    /**
-    * Gets the number of columns
+    * <p>The number of columns in the shape</p>
     *
-    * @return the number of columns
+    * @return the number of columns in the shape
     */
    public int columns() {
-      return shape[3];
+      return get(Shape.COLUMN);
+   }
+
+   /**
+    * <p>Checks if the given Coordinate is contained within this shape</p>
+    *
+    * @param o the coordinate to check
+    * @return True if the given coordinate is contained within this shape
+    */
+   @NonNull
+   public boolean contains(@NonNull Coordinate o) {
+      for (int i = 0; i < point.length; i++) {
+         if (o.point[i] > 0 && o.point[i] >= point[i]) {
+            return false;
+         }
+      }
+      return true;
    }
 
    @Override
    public Shape copy() {
-      return new Shape(this.shape);
-   }
-
-   @Override
-   public boolean equals(Object obj) {
-      if(this == obj) {
-         return true;
-      }
-      if(obj == null || getClass() != obj.getClass()) {
-         return false;
-      }
-      final Shape other = (Shape) obj;
-      return Objects.deepEquals(this.shape, other.shape);
-   }
-
-   @Override
-   public int hashCode() {
-      return Arrays.hashCode(shape);
+      return new Shape(point);
    }
 
    /**
-    * Checks if the shape represents a column vector
+    * <p>Checks if the shape has no axes</p>
     *
-    * @return True if a column vector
+    * @return True if the shape is empty
     */
-   public boolean isColumnVector() {
-      return (shape[0] == 0 && shape[1] == 0)
-            && (shape[2] > 1 && shape[3] == 1);
+   public boolean isEmpty() {
+      return point[0] == 0 && point[1] == 0 && point[2] == 0 && point[3] == 0;
    }
 
    /**
-    * Checks if the shape represents a row vector
+    * <p>Checks if the shape represents a matrix</p>
     *
-    * @return True if a row vector
+    * @return True if a tensor
     */
-   public boolean isRowVector() {
-      return (shape[0] == 0 && shape[1] == 0)
-            && (shape[2] == 1 && shape[3] > 1);
+   public boolean isMatrix() {
+      return point[0] == 0 && point[1] == 0 && point[2] > 0 && point[3] > 0;
    }
 
    /**
-    * Checks if the shape represents a scalar
+    * <p>Checks if the shape represents a scalar</p>
     *
     * @return True if a scalar
     */
    public boolean isScalar() {
-      return shape[0] == 0 && shape[1] == 0 && shape[2] == 1 && shape[3] == 1;
+      return point[0] == 0 && point[1] == 0 && point[2] == 0 && point[3] == 1;
    }
 
    /**
-    * Checks if the shape represents a square matrix
+    * <p>Checks if the shape represents a square matrix</p>
     *
     * @return True if a square matrix
     */
    public boolean isSquare() {
-      return shape[0] == 0 && shape[1] == 0 && shape[2] == shape[3];
+      return point[0] == 0 && point[1] == 0 && point[2] == point[3];
    }
 
    /**
-    * Checks if the shape represents a tensor
+    * <p>Checks if the shape represents a tensor</p>
     *
     * @return True if a tensor
     */
    public boolean isTensor() {
-      return shape[0] > 0 || shape[1] > 0;
+      return point[0] > 0 || point[1] > 0;
    }
 
    /**
-    * Checks if the shape represents a vector
+    * <p>Checks if the shape represents a vector</p>
     *
     * @return True if a vector
     */
    public boolean isVector() {
-      return (shape[0] == 0 && shape[1] == 0)
-            && (shape[2] > 0 ^ shape[3] > 0);
+      if (point[0] > 0 || point[1] > 0) {
+         return false;
+      }
+      return (point[2] <= 1 && point[3] > 0) || (point[2] > 0 && point[3] <= 1);
    }
 
-   public int get(int axis){
-      return shape[axis];
+   public boolean isColumnVector(){
+      if (point[0] > 0 || point[1] > 0) {
+         return false;
+      }
+      return (point[2] > 0 && point[3] <= 1);
+   }
+
+
+   /**
+    * <p>Creates an {@link IndexRange} that iterates along the given axis at the given position.</p>
+    *
+    * @param axis     the axis to iterate along
+    * @param position the position on the axis to iterate along
+    * @return the IndexRange
+    */
+   public IndexRange iterateAlong(int axis, int position) {
+      return Index.zero()
+                  .set(axis, position)
+                  .boundedIteratorTo(asIndex(axis, position + 1));
    }
 
    /**
-    * Gets the number of kernels
+    * <p>The number of kernels in the shape</p>
     *
-    * @return the number of kernels
+    * @return the number of kernels in the shape
     */
    public int kernels() {
-      return shape[0];
+      return get(Shape.KERNEL);
    }
 
    /**
-    * Encodes the row and column into a column-major index
+    * <p>The total number of elements needed to represent this Shape</p>
     *
-    * @param row    the row index
-    * @param column the column index
-    * @return the column major index
+    * @return the total number of elements needed to represent this Shape
     */
-   public int matrixIndex(int row, int column) {
-      return row + (shape[2] * column);
+   public long length() {
+      return Math.max(1L, sliceLength) * Math.max(1L, matrixLength);
    }
 
    /**
-    * The order of the NDArray (number of dimensions with size &gt; 1)
+    * <p>The total number of elements needed to represent a matrix in this Shape</p>
     *
-    * @return the order
+    * @return the total number of elements needed to represent a matrix in this Shape
     */
-   public int order() {
-      int order = 0;
-      for(int i1 : shape) {
-         order += i1 >= 1
-                  ? 1
-                  : 0;
-      }
-      return order;
+   public int matrixLength() {
+      return matrixLength;
    }
 
    /**
-    * Adjusts the shape to the new dimensions.
+    * <p>Creates a shape covering just the rows and columns of this Shape</p>
     *
-    * @param dimensions the dimensions
+    * @return A shape covering the rows and columns of this shape
     */
-   public void reshape(int... dimensions) {
-      Shape out = new Shape(dimensions);
-      if(sliceLength != out.sliceLength) {
-         throw new IllegalArgumentException("Invalid slice length: " + sliceLength + " != " + out.sliceLength);
-      }
-      if(matrixLength != out.matrixLength) {
-         throw new IllegalArgumentException("Invalid matrix length: " + matrixLength + " != " + out.matrixLength);
-      }
-      System.arraycopy(out.shape, 0, shape, 0, shape.length);
+   public Shape matrixShape() {
+      return Shape.shape(rows(), columns());
    }
 
    /**
-    * Gets the number of rows
+    * <p>Creates an {@link IndexRange} that covers all coordinates covered by this shape.</p>
     *
-    * @return the number of rows.
+    * @return the IndexRange
+    */
+   public IndexRange range() {
+      return new IntervalRange(Index.zero(),
+                               copy(),
+                               false);
+   }
+
+   /**
+    * <p>The rank of the shape, i.e. number of axes that are greater than zero.</p>
+    *
+    * @return the rank of the shape
+    */
+   public int rank() {
+      return (int) Arrays.stream(point).filter(i -> i > 0).count();
+   }
+
+   /**
+    * <p>Collapses the shape by removing the given axes.</p>
+    *
+    * @param axis  the first axis to remove
+    * @param other the other axes to remove
+    * @return the new shape with the axes removed
+    */
+   public Shape remove(int axis, @NonNull int... other) {
+      return remove(Arrays2.concat(new int[]{axis}, other));
+   }
+
+   /**
+    * <p>Collapses the shape by removing the given axes.</p>
+    *
+    * @param axes the axes to remove
+    * @return the new shape with the axes removed
+    */
+   public Shape remove(@NonNull int[] axes) {
+      if (isEmpty() || isScalar()) {
+         return copy();
+      }
+      int[] point = copy().point;
+      for (int i : axes) {
+         point[toAbsolute(i)] = 0;
+      }
+      Shape out = shape(IntStream.of(point).filter(i -> i > 1).toArray());
+      out.point[Coordinate.MAX_DIMENSIONS - 1] = Math.max(1, out.point[Coordinate.MAX_DIMENSIONS - 1]);
+      return out;
+   }
+
+   /**
+    * <p>Updates the axes in this shape to the new shape given that the new shape has the same total length.</p>
+    *
+    * @param shape the new shape to take on
+    */
+   public void reshape(@NonNull Shape shape) {
+      checkArgument(length() == shape.length(),
+                    () -> "Cannot change the length from " + length() + " to " + shape.length());
+      System.arraycopy(shape.point, 0, this.point, 0, shape.point.length);
+   }
+
+   /**
+    * <p>The number of rows in the shape</p>
+    *
+    * @return the number of rows in the shape
     */
    public int rows() {
-      return shape[2];
+      return get(Shape.ROW);
    }
 
    /**
-    * Encodes the kernel and channel into a channel-major index
+    * <p>Creates an {@link IndexRange} to that iterates over the slices of this shape.</p>
     *
-    * @param kernel  the kernel index
-    * @param channel the channel index
-    * @return the channel major index
+    * @return the IndexRange
     */
-   public int sliceIndex(int kernel, int channel) {
-      return kernel + (shape[0] * channel);
+   public IndexRange sliceIterator() {
+      return zero().iteratorTo(this, Index.index(1, 1, 0, 0));
    }
 
    /**
-    * Decodes the channel index from  channel-major index
+    * <p>Creates an {@link IndexRange} to that iterates over the slices of this shape along the given axis and at the
+    * given position.</p>
     *
-    * @param sliceIndex the slice index
-    * @return the channel index
+    * @param axis     the axis to iterate along (KERNEL or CHANNEL)
+    * @param position the position on the axis to iterate along
+    * @return the IndexRange
     */
-   public int toChannel(int sliceIndex) {
-      return sliceIndex / shape[0];
+   public IndexRange sliceIterator(int axis, int position) {
+      int absAxis = toAbsolute(axis);
+      if (absAxis == Shape.KERNEL || absAxis == Shape.CHANNEL) {
+         return zero().set(absAxis, position)
+                      .boundedIteratorTo(asIndex(absAxis, position + 1), Index.index(1, 1, 0, 0));
+      }
+      throw new IllegalArgumentException("Axis (" + axis + " ) is not one of KERNEL or CHANNEl");
    }
 
    /**
-    * Decodes the column index from  column-major index
+    * <p>The number of slices required to represent this shape.</p>
     *
-    * @param matrixIndex the matrix index
-    * @return the column index
+    * @return the number of slices required to represent this shape.
     */
-   public int toColumn(int matrixIndex) {
-      return matrixIndex / shape[2];
+   public int sliceLength() {
+      return sliceLength;
    }
 
+
    /**
-    * Decodes the kernel index from  channel-major index
+    * <p>This shape as an array of long</p>
     *
-    * @param sliceIndex the slice index
-    * @return the kernel index
+    * @return the long array representing this shape
     */
-   public int toKernel(int sliceIndex) {
-      return sliceIndex % shape[0];
+   public long[] toLongArray() {
+      return Arrays.stream(point).filter(i -> i > 0).mapToLong(i -> i).toArray();
    }
 
    /**
-    * Decodes a slice/matrix combined index into a matrix index
+    * <p>Decodes a slice/matrix combined index into a matrix index</p>
     *
     * @param index the index
     * @return the matrix index
     */
    public int toMatrixIndex(long index) {
-      return (int) (index / sliceLength);
+      int slice = toSliceIndex(index);
+      return (int) index - (slice * matrixLength);
    }
 
-   /**
-    * Decodes the row index from  column-major index
-    *
-    * @param matrixIndex the matrix index
-    * @return the row index
-    */
-   public int toRow(int matrixIndex) {
-      return matrixIndex % shape[2];
-   }
 
    /**
-    * Decodes a slice/matrix combined index into a slice index
+    * <p>Decodes a slice/matrix combined index into a slice index</p>
     *
     * @param index the index
     * @return the slice index
     */
    public int toSliceIndex(long index) {
-      return (int) (index % sliceLength);
+      return (int) index / matrixLength;
    }
 
-   @Override
+   @NonNull
    public String toString() {
-      return "(" + IntStream.of(shape)
-                            .filter(i -> i > 0)
-                            .mapToObj(Integer::toString)
-                            .collect(Collectors.joining(", ")) + ")";
+      return "(" + Arrays.stream(point)
+                         .filter(l -> l > 0)
+                         .mapToObj(Long::toString)
+                         .collect(Collectors.joining(", ")) + ")";
    }
+
+
+   private void validateAndCalculateLengths() {
+      for (int length = point.length - 1; length >= 0; length--) {
+         if (point[length] == 0 && length - 1 >= 0 && point[length - 1] > 0) {
+            point[length] = 1;
+         }
+      }
+      this.sliceLength = Math.max(1, get(Shape.KERNEL)) * Math.max(1, get(Shape.CHANNEL));
+      this.matrixLength = Math.max(1, get(Shape.ROW)) * Math.max(1, get(Shape.COLUMN));
+   }
+
+   /**
+    * <p>Constructs a new Shape from this one modifying the given axis and position pairs. Invocation is done as
+    * follows: <code>with(Shape.ROW, 4, Shape.COLUMN, 10)</code> will create a new shape with this shape's kernels and
+    * channels and have 4 rows and 10 columns.</p>
+    *
+    * @param axisValuePairs the axis value pairs
+    * @return the shape
+    */
+   public Shape with(@NonNull int... axisValuePairs) {
+      checkArgument(axisValuePairs.length % 2 == 0,
+                    "Usage error: must provide an axis and its value, e.g. with(axis,value,...)");
+      Shape copy = copy();
+      for (int i = 0; i < axisValuePairs.length; i += 2) {
+         copy.point[toAbsolute(axisValuePairs[i])] = axisValuePairs[i + 1];
+      }
+      copy.validateAndCalculateLengths();
+      return copy;
+   }
+
 
 }//END OF Shape
+

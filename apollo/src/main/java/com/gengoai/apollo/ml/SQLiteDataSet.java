@@ -21,11 +21,13 @@ package com.gengoai.apollo.ml;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.conversion.Cast;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.function.Unchecked;
 import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.json.Json;
+import com.gengoai.reflection.Reflect;
 import com.gengoai.sql.NamedPreparedStatement;
 import com.gengoai.sql.SQL;
 import com.gengoai.sql.SQLContext;
@@ -118,7 +120,7 @@ public final class SQLiteDataSet extends DataSet {
                                                                                    r.getObject(value.getName())));
          stream.forEach(m -> m.forEach(Unchecked.biConsumer((source, metadata) -> {
             if (source.equals("ndArrayFactory")) {
-               super.ndArrayFactory = NDArrayFactory.valueOf(metadata.toString());
+               super.ndArrayFactory = Cast.as(NDArrayFactory.forType(Reflect.getClassForNameQuietly(metadata.toString())));
             } else {
                super.metadata.put(source, Json.parse(metadata.toString(), ObservationMetadata.class));
             }
@@ -268,10 +270,10 @@ public final class SQLiteDataSet extends DataSet {
 
    @Override
    @SneakyThrows
-   public DataSet setNDArrayFactory(@NonNull NDArrayFactory ndArrayFactory) {
+   public DataSet setNDArrayFactory(@NonNull NDArrayFactory<? extends Number> ndArrayFactory) {
       super.setNDArrayFactory(ndArrayFactory);
       metadataTable.insert(InsertType.INSERT_OR_REPLACE)
-                   .values(SQL.L("ndArrayFactory"), SQL.L(ndArrayFactory.name()))
+                   .values(SQL.L("ndArrayFactory"), SQL.L(ndArrayFactory.getType().getName()))
                    .update(executor);
       return this;
    }

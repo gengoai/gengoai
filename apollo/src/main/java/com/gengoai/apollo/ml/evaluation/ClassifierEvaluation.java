@@ -73,7 +73,7 @@ public abstract class ClassifierEvaluation implements Evaluation, Serializable {
     * @param gold      the gold value
     * @param predicted the predicted value
     */
-   public abstract void entry(double gold, @NonNull NDArray predicted);
+   public abstract void entry(double gold, @NonNull NDArray<? extends Number> predicted);
 
    /**
     * Calculates the false negative rate, which is calculated as <code>False Positives / (True Positives + False
@@ -136,11 +136,11 @@ public abstract class ClassifierEvaluation implements Evaluation, Serializable {
 
    protected int getIntegerLabelFor(Observation output, DataSet dataset) {
       if(output.isNDArray() || output.isClassification()) {
-         NDArray y = output.asNDArray();
+         NDArray<?> y = output.asNDArray();
          if(y.shape().isScalar()) {
             return (int) y.get(0);
          } else {
-            return (int) y.argmax();
+            return (int) y.shape().calculateOffset(y.argMax());
          }
       }
       if(output.isVariable()) {

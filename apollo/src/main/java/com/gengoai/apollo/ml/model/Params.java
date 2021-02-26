@@ -20,7 +20,7 @@
 package com.gengoai.apollo.ml.model;
 
 import com.gengoai.ParameterDef;
-import com.gengoai.apollo.math.linalg.VectorComposition;
+import com.gengoai.apollo.math.linalg.composition.VectorComposition;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 import com.gengoai.apollo.ml.model.clustering.Linkage;
 import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
@@ -173,8 +173,9 @@ public final class Params {
       /**
        * The constant aggregationFunction.
        */
-      public static final ParameterDef<VectorComposition> aggregationFunction = ParameterDef.param("aggregationFunction",
-                                                                                                   VectorComposition.class);
+      public static final ParameterDef<VectorComposition<Float, Float>> aggregationFunction = ParameterDef
+            .param("aggregationFunction",
+                   parameterizedType(VectorComposition.class, Float.class, Float.class));
       /**
        * The constant dimension.
        */

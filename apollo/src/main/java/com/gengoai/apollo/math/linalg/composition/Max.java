@@ -17,28 +17,28 @@
  * under the License.
  */
 
-package com.gengoai.apollo.math.linalg.nd3.initializer;
+package com.gengoai.apollo.math.linalg.composition;
 
-import com.gengoai.apollo.math.linalg.nd3.Shape;
-import org.apache.commons.math3.random.RandomDataGenerator;
+import com.gengoai.Validation;
+import com.gengoai.apollo.math.linalg.NDArray;
+import lombok.NonNull;
 
-public class Xaiver extends NDArrayInitializer {
-   private final double limit;
-   private final RandomDataGenerator rnd = new RandomDataGenerator();
+import java.util.Collection;
+import java.util.List;
 
-   public Xaiver(Shape shape) {
-      super(shape);
-      limit = Math.sqrt(6) / Math.sqrt(shape.rows() + shape.columns());
-   }
-
+public class Max<T extends Number> implements VectorComposition<T, T> {
+   private static final long serialVersionUID = 1L;
    @Override
-   public Float get() {
-      return (float) getAsDouble();
+   public NDArray<T> compose(@NonNull List<NDArray<T>> vectors) {
+      Validation.checkArgument(vectors.size() > 0, "Must supply at least one vector");
+      NDArray<T> toReturn = null;
+      for (NDArray<T> v : vectors) {
+         if (toReturn == null) {
+            toReturn = v.copy();
+         } else {
+            toReturn.mapiDouble(v, Math::max);
+         }
+      }
+      return toReturn;
    }
-
-   @Override
-   public double getAsDouble() {
-      return rnd.nextUniform(-limit, limit);
-   }
-
-}//Xaiver
+}//END OF Max

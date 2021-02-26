@@ -20,9 +20,9 @@
 package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
-import com.gengoai.apollo.math.linalg.VectorComposition;
-import com.gengoai.apollo.math.linalg.VectorCompositions;
+import com.gengoai.apollo.math.linalg.composition.Average;
+import com.gengoai.apollo.math.linalg.composition.VectorComposition;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.NoOptEncoder;
@@ -58,10 +58,10 @@ public abstract class WordEmbedding implements Transform {
     * @param words       the words whose vectors we want to compose
     * @return a composite vector consisting of the given words and calculated using the given vector composition
     */
-   public final NDArray compose(@NonNull VectorComposition composition, @NonNull String... words) {
-      if(words == null) {
-         return NDArrayFactory.ND.array(dimension());
-      } else if(words.length == 1) {
+   public final NDArray<Float> compose(@NonNull VectorComposition<Float, Float> composition, @NonNull String... words) {
+      if (words == null) {
+         return nd.DFLOAT32.zeros(dimension());
+      } else if (words.length == 1) {
          return embed(words[0]);
       }
       return composition.compose(Arrays.stream(words)
@@ -88,7 +88,7 @@ public abstract class WordEmbedding implements Transform {
     * @param feature the feature name whose NDArray we want
     * @return the NDArray for the given feature, zero vector or unknown vector if feature is not valid.
     */
-   public final NDArray embed(@NonNull String feature) {
+   public final NDArray<Float> embed(@NonNull String feature) {
       return vectorStore.getVector(feature);
    }
 
@@ -140,31 +140,30 @@ public abstract class WordEmbedding implements Transform {
 
    @Override
    public Datum transform(@NonNull Datum datum) {
-      for(String source : getInputs()) {
+      for (String source : getInputs()) {
          datum.put(source, transform(datum.get(source)));
       }
       return datum;
    }
 
-   protected NDArray transform(Observation o) {
-      if(o.isVariable()) {
+   protected NDArray<Float> transform(Observation o) {
+      if (o.isVariable()) {
          return embed(getVariableName(o.asVariable()));
-      } else if(o.isVariableCollection()) {
-         if(o.getVariableSpace().count() == 0) {
-            return NDArrayFactory.ND.array(1, dimension());
+      } else if (o.isVariableCollection()) {
+         if (o.getVariableSpace().count() == 0) {
+            return nd.DFLOAT32.zeros(1, dimension());
          }
-         return VectorCompositions.Average.compose(o.asVariableCollection()
-                                                    .getVariableSpace()
-                                                    .map(v -> embed(getVariableName(v)))
-                                                    .collect(Collectors.toList()));
-      } else if(o.isSequence()) {
+         return new Average<Float>().compose(o.asVariableCollection()
+                                              .getVariableSpace()
+                                              .map(v -> embed(getVariableName(v)))
+                                              .collect(Collectors.toList()));
+      } else if (o.isSequence()) {
          Sequence<?> sequence = o.asSequence();
-         List<NDArray> vectors = new ArrayList<>();
-         for(Observation observation : sequence) {
-            //            System.out.println(observation + " : " + transform(observation));
+         List<NDArray<Float>> vectors = new ArrayList<>();
+         for (Observation observation : sequence) {
             vectors.add(transform(observation));
          }
-         return NDArrayFactory.ND.vstack(vectors);
+         return nd.vstack(vectors);
       }
       throw new IllegalArgumentException("Cannot transform Observations of type " + o.getClass());
    }
@@ -172,7 +171,7 @@ public abstract class WordEmbedding implements Transform {
    @Override
    public DataSet transform(@NonNull DataSet dataset) {
       dataset = dataset.map(this::transform);
-      for(String output : getOutputs()) {
+      for (String output : getOutputs()) {
          dataset.updateMetadata(output, m -> {
             m.setDimension(dimension());
             m.setType(NDArray.class);

@@ -121,9 +121,9 @@ public class RegressionEvaluation implements Evaluation, Serializable {
     * @param gold      the gold value
     * @param predicted the predicted value
     */
-   public void entry(double gold, @NonNull NDArray predicted) {
+   public void entry(double gold, @NonNull NDArray<? extends Number> predicted) {
       this.gold.add(gold);
-      this.predicted.add(predicted.scalar());
+      this.predicted.add(predicted.scalarDouble());
    }
 
    /**
@@ -135,8 +135,8 @@ public class RegressionEvaluation implements Evaluation, Serializable {
    public void evaluate(@NonNull Model model, @NonNull DataSet dataset) {
       for(Datum ii : dataset) {
          p = Math.max(p, ii.get(inputSource).asNDArray().length());
-         gold.add(ii.get(predictedSource).asNDArray().scalar());
-         predicted.add(model.transform(ii).get(predictedSource).asNDArray().scalar());
+         gold.add(ii.get(predictedSource).asNDArray().scalarDouble());
+         predicted.add(model.transform(ii).get(predictedSource).asNDArray().scalarDouble());
       }
    }
 

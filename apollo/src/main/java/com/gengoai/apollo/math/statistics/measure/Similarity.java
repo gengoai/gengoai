@@ -38,7 +38,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    DotProduct {
       @Override
-      public double calculate(@NonNull NDArray v1, @NonNull NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          return v1.dot(v2);
       }
 
@@ -52,7 +52,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    Dice {
       @Override
-      public double calculate(@NonNull NDArray v1, @NonNull NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          return (2 * v1.dot(v2)) / (v1.sum() + v2.sum());
       }
 
@@ -69,7 +69,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    DiceGen2 {
       @Override
-      public double calculate(@NonNull NDArray v1, @NonNull NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          return v1.dot(v2) / (v1.sum() + v2.sum());
       }
 
@@ -85,7 +85,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    Cosine {
       @Override
-      public double calculate(@NonNull NDArray v1, @NonNull NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          double v1Norm = v1.norm2();
          double v2Norm = v2.norm2();
          if(v1Norm == 0 && v2Norm == 0) {
@@ -111,17 +111,17 @@ public enum Similarity implements SimilarityMeasure {
     */
    Jaccard {
       @Override
-      public double calculate(@NonNull NDArray v1, @NonNull NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          if(v1.size() == 0 && v2.size() == 0) {
             return 1.0;
          }
-         double norm = v1.map(v2, Math::max).sum();
+         double norm = v1.mapDouble(v2, Math::max).sum();
          if(norm == 0) {
             return v1.sumOfSquares() == 0 && v2.sumOfSquares() == 0
                    ? 1.0
                    : 0.0;
          }
-         return v1.map(v2, Math::min).sum() / norm;
+         return v1.mapDouble(v2, Math::min).sum() / norm;
       }
 
       @Override
@@ -136,7 +136,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    Overlap {
       @Override
-      public double calculate(@NonNull NDArray v1, @NonNull NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          if(v1.size() == 0 && v2.size() == 0) {
             return 1.0;
          }
@@ -169,7 +169,7 @@ public enum Similarity implements SimilarityMeasure {
       }
 
       @Override
-      public double calculate(@NonNull NDArray v1, @NonNull NDArray v2) {
+      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
          return 1.0 - Math.acos(Cosine.calculate(v1, v2)) / Math.PI;
       }
 

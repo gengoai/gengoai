@@ -21,7 +21,7 @@ package com.gengoai.apollo.ml.transform;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.VectorCompositions;
+import com.gengoai.apollo.math.linalg.composition.Sum;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.observation.Observation;
@@ -62,9 +62,9 @@ public class Merge implements Transform {
     * @param nameSpace         the {@link VariableNameSpace} to use when merging.
     */
    private Merge(@NonNull Collection<String> inputs,
-                @NonNull String output,
-                boolean prependSourceName,
-                boolean keepInputs, VariableNameSpace nameSpace) {
+                 @NonNull String output,
+                 boolean prependSourceName,
+                 boolean keepInputs, VariableNameSpace nameSpace) {
       this.nameSpace = nameSpace;
       Validation.checkArgument(inputs.size() >= 2, "Must specify two or more sources to merge.");
       this.output = output;
@@ -150,7 +150,7 @@ public class Merge implements Transform {
       assertCanMerge(observations);
       Observation out;
       if (observations.get(0).isNDArray()) {
-         out = VectorCompositions.Sum.compose(Cast.cast(observations));
+         out = new Sum<>().compose(Cast.cast(observations));
       } else if (observations.get(0).isSequence()) {
          out = Sequence.merge(Cast.cast(observations), nameSpace);
       } else {

@@ -19,11 +19,13 @@
 
 package com.gengoai.apollo.math.linalg.nd3.dense;
 
-import com.gengoai.apollo.math.linalg.nd3.NDArray;
-import com.gengoai.apollo.math.linalg.nd3.NDArrayFactory;
-import com.gengoai.apollo.math.linalg.nd3.Shape;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
 import lombok.NonNull;
+import org.jblas.DoubleMatrix;
 import org.jblas.FloatMatrix;
+import org.jblas.MatrixFunctions;
 
 public final class DenseFloat32Factory extends NDArrayFactory<Float> {
    private static final long serialVersionUID = 1L;
@@ -39,6 +41,13 @@ public final class DenseFloat32Factory extends NDArrayFactory<Float> {
       return new DenseFloat32NDArray(a);
    }
 
+   public NDArray<Float> array(@NonNull FloatMatrix floatMatrix){
+      return new DenseFloat32NDArray(floatMatrix);
+   }
+
+   public NDArray<Float> array(@NonNull DoubleMatrix doubleMatrix){
+      return new DenseFloat32NDArray(MatrixFunctions.doubleToFloat(doubleMatrix));
+   }
 
    public NDArray<Float> array(@NonNull Shape shape, float[] a) {
       if (shape.length() != a.length) {

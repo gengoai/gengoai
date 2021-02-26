@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml.model.tf;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.encoder.IndexEncoder;
 import com.gengoai.apollo.ml.model.LabelType;
@@ -38,9 +39,8 @@ public abstract class TFOutputVar extends TFVar {
       super(name, servingName, encoder, shape);
    }
 
-   public static TFOutputVar sequence(String name, String servingName, String defaultSymbol) {
-      Validation.notNullOrBlank(defaultSymbol, "Default symbol must not be null or blank");
-      return new TFSequenceOutputVar(name, servingName, new IndexEncoder(defaultSymbol), SequenceValidator.ALWAYS_TRUE);
+   public static TFOutputVar classification(String name, String servingName) {
+      return new TFClassificationOutput(name, servingName, new IndexEncoder());
    }
 
    public static TFOutputVar sequence(String name, String servingName, Encoder encoder) {
@@ -56,17 +56,19 @@ public abstract class TFOutputVar extends TFVar {
       return new TFSequenceOutputVar(name, servingName, encoder, validator);
    }
 
-   public static TFOutputVar classification(String name, String servingName){
-      return new TFClassificationOutput(name,servingName,new IndexEncoder());
+   public static TFOutputVar sequence(String name, String servingName, String defaultSymbol) {
+      Validation.notNullOrBlank(defaultSymbol, "Default symbol must not be null or blank");
+      return new TFSequenceOutputVar(name, servingName, new IndexEncoder(defaultSymbol), SequenceValidator.ALWAYS_TRUE);
    }
 
-   public NDArray extractSingleDatumResult(@NonNull NDArray yHat, int index){
-      if (yHat.shape().order() > 2) {
+   public abstract Observation decode(@NonNull NDArray<Float> ndArray);
+
+   public NDArray<Float> extractSingleDatumResult(@NonNull NDArray<Float> yHat, int index) {
+      if (yHat.shape().rank() > 2) {
          return yHat.slice(index);
       }
-      return yHat.getRow(index);
+      return yHat.getAxis(Shape.ROW, index);
    }
-   public abstract Observation decode(@NonNull NDArray ndArray);
 
    public abstract LabelType getLabelType();
 

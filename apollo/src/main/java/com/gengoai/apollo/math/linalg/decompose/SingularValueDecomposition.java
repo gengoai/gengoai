@@ -1,10 +1,13 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
-import com.gengoai.apollo.math.linalg.DenseMatrix;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.math.linalg.SparkLinearAlgebra;
+import com.gengoai.apollo.math.linalg.nd;
 import org.jblas.FloatMatrix;
 import org.jblas.Singular;
+
+import static com.gengoai.collection.Arrays2.arrayOf;
 
 /**
  * <p>Performs <a href="https://en.wikipedia.org/wiki/Singular_value_decomposition">Singular Value Decomposition</a> on
@@ -60,31 +63,30 @@ public class SingularValueDecomposition extends Decomposition {
    }
 
    @Override
-   protected NDArray[] onMatrix(NDArray input) {
-      if(distributed) {
+   protected NDArray<Float>[] onMatrix(NDArray<? extends Number> input) {
+      if (distributed) {
          return SparkLinearAlgebra.svd(input,
                                        K <= 0
-                                       ? input.columns()
-                                       : K);
+                                             ? input.shape().columns()
+                                             : K);
       }
 
-      NDArray[] result;
-      FloatMatrix[] r;
-      if(sparse) {
-         r = Singular.sparseSVD(input.toFloatMatrix()[0]);
+      FloatMatrix[] usvT;
+      if (sparse) {
+         usvT = Singular.sparseSVD(input.toFloatMatrix()[0]);
       } else {
-         r = Singular.fullSVD(input.toFloatMatrix()[0]);
+         usvT = Singular.fullSVD(input.toFloatMatrix()[0]);
       }
-      result = new NDArray[]{
-            new DenseMatrix(r[0]),
-            new DenseMatrix(FloatMatrix.diag(r[1])),
-            new DenseMatrix(r[2]),
-      };
+      var result = arrayOf(
+            nd.DFLOAT32.array(usvT[0]),
+            nd.DFLOAT32.array(FloatMatrix.diag(usvT[1])),
+            nd.DFLOAT32.array(usvT[2])
+      );
 
-      if(K > 0) {
-         result[0] = result[0].getSubMatrix(0, result[0].rows(), 0, K);
-         result[1] = result[1].getSubMatrix(0, K, 0, K);
-         result[2] = result[2].getSubMatrix(0, result[2].rows(), 0, K);
+      if (K > 0) {
+         result[0] = result[0].get(result[0].shape().with(Shape.COLUMN, K).range());
+         result[1] = result[1].get(result[1].shape().with(Shape.ROW, K, Shape.COLUMN, K).range());
+         result[2] = result[2].get(result[2].shape().with(Shape.COLUMN, K).range());
       }
 
       return result;

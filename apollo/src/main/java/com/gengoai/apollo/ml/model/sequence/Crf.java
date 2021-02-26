@@ -22,6 +22,7 @@ package com.gengoai.apollo.ml.model.sequence;
 import com.gengoai.ParameterDef;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.model.LabelType;
@@ -104,9 +105,9 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
       return item;
    }
 
-   private Item createItem(NDArray row) {
+   private Item createItem(NDArray<? extends Number> row) {
       Item item = new Item();
-      row.forEachSparse((i, v) -> item.add(new Attribute(Long.toString(i), v)));
+      row.forEachSparse((i, v) -> item.add(new Attribute(Long.toString(i), v.doubleValue())));
       return item;
    }
 
@@ -166,9 +167,9 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
          Sequence<? extends Observation> sequence = Cast.as(in);
          sequence.forEach(o -> seq.add(createItem(o)));
       } else if(in instanceof NDArray) {
-         NDArray ndArray = Cast.as(in);
-         for(int i = 0; i < ndArray.rows(); i++) {
-            seq.add(createItem(ndArray.getRow(i)));
+         NDArray<? extends Number> ndArray = Cast.as(in);
+         for(int i = 0; i < ndArray.shape().rows(); i++) {
+            seq.add(createItem(ndArray.getAxis(Shape.ROW, i)));
          }
       } else {
          throw new IllegalArgumentException("Observations of type '" + in.getClass() + "' are not supported as input");

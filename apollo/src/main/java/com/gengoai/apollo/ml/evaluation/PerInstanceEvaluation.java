@@ -83,9 +83,9 @@ public class PerInstanceEvaluation implements SequenceLabelerEvaluation, Seriali
          for(int i = 0; i < ndArray.rows(); i++) {
             NDArray row = ndArray.getRow(i);
             if(ndArray.columns() == 1) {
-               vs.add(Variable.binary(Double.toString(row.get(0))));
+               vs.add(Variable.binary(Double.toString(row.getDouble(0))));
             } else {
-               vs.add(Variable.binary(Double.toString(row.argmax())));
+               vs.add(Variable.binary(Double.toString(row.argMaxOffset())));
             }
          }
          return vs;

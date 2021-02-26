@@ -110,14 +110,14 @@ public enum Linkage {
     * @param c the cluster
     * @return the list of vectors
     */
-   protected List<NDArray> flatten(Cluster c) {
+   protected List<NDArray<Float>> flatten(Cluster c) {
       if (c == null) {
          return Collections.emptyList();
       }
       if (!c.getPoints().isEmpty()) {
          return c.getPoints();
       }
-      List<NDArray> list = new ArrayList<>();
+      List<NDArray<Float>> list = new ArrayList<>();
       list.addAll(flatten(c.getLeft()));
       list.addAll(flatten(c.getRight()));
       return list;

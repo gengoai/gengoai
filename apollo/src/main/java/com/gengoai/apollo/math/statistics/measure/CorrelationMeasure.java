@@ -24,6 +24,7 @@ package com.gengoai.apollo.math.statistics.measure;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import lombok.NonNull;
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.util.FastMath;
 
@@ -35,13 +36,13 @@ import org.apache.commons.math3.util.FastMath;
 public interface CorrelationMeasure extends SimilarityMeasure {
 
    @Override
-   default double calculate(NDArray v1, NDArray v2) {
+   default double calculate(NDArray<? extends Number> v1, NDArray<? extends Number> v2) {
       Validation.checkArgument(v1.shape().isVector() && v2.shape().isVector(), "v1 and v2 must be bectors");
       return calculate(v1.toDoubleArray(), v2.toDoubleArray());
    }
 
    @Override
-   default double calculate(ContingencyTable table) {
+   default double calculate(@NonNull ContingencyTable table) {
       throw new UnsupportedOperationException();
    }
 
@@ -60,7 +61,7 @@ public interface CorrelationMeasure extends SimilarityMeasure {
       Validation.checkArgument(N >= 6, "N must be >= 6.");
       double t = (r * FastMath.sqrt(N - 2.0)) / FastMath.sqrt(1.0 - r * r);
       return 1.0 - new TDistribution(N - 2, 1)
-                      .cumulativeProbability(t);
+            .cumulativeProbability(t);
    }
 
 

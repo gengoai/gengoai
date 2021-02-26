@@ -19,10 +19,10 @@
 
 package com.gengoai.apollo.math.linalg.nd3.sparse;
 
-import com.gengoai.apollo.math.linalg.nd3.NDArray;
-import com.gengoai.apollo.math.linalg.nd3.NDArrayFactory;
-import com.gengoai.apollo.math.linalg.nd3.Shape;
-import com.gengoai.apollo.math.linalg.nd3.nd;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import lombok.NonNull;
 import org.apache.mahout.math.list.LongArrayList;
 import org.apache.mahout.math.map.OpenIntFloatHashMap;
@@ -211,7 +211,7 @@ public class SparseFloat32NDArray extends NDArray<Float> {
    }
 
    @Override
-   public Tensor<?> toTensor() {
+   public Tensor<Float> toTensor() {
       return nd.DFLOAT32.array(shape(), arrayForTensor()).toTensor();
    }
 

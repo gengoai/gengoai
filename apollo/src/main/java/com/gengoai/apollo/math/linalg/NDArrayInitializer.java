@@ -1,6 +1,4 @@
 /*
- * (c) 2005 David B. Bracewell
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,131 +15,126 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
  */
 
 package com.gengoai.apollo.math.linalg;
 
+import com.gengoai.Primitives;
+import com.gengoai.conversion.Cast;
 import com.gengoai.function.SerializableConsumer;
+import com.gengoai.string.Strings;
+import lombok.NonNull;
+import org.apache.commons.math3.distribution.IntegerDistribution;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.random.RandomDataGenerator;
 
 import java.util.Random;
+import java.util.function.DoubleSupplier;
+import java.util.function.IntSupplier;
+import java.util.function.LongSupplier;
 
-/**
- * Encapsulates logic for initializing an {@link NDArray} with initial values.
- *
- * @author David B. Bracewell
- */
-public interface NDArrayInitializer extends SerializableConsumer<NDArray> {
-
-   /**
-    * Glorot and Bengio (2010) for sigmoid units
-    */
-   NDArrayInitializer glorotAndBengioSigmoid = (m) -> {
-      double max = 4 * Math.sqrt(6.0) / Math.sqrt(m.rows() + m.columns());
-      double min = -max;
-      m.mapi(x -> min + (max - min) * Math.random());
-   };
+public interface NDArrayInitializer<T> extends SerializableConsumer<NDArray<T>> {
 
    /**
     * Glorot and Bengio (2010) for hyperbolic tangent units
     */
-   NDArrayInitializer glorotAndBengioTanH = (m) -> {
-      double max = Math.sqrt(6.0) / Math.sqrt(m.rows() + m.columns());
-      double min = -max;
-      m.mapi(x -> min + (max - min) * Math.random());
+   NDArrayInitializer<Number> xavier = (m) -> {
+      var limit = Math.sqrt(6.0) / Math.sqrt(m.shape().rows() + m.shape().columns());
+      var rnd = new RandomDataGenerator();
+      m.mapiDouble(x -> rnd.nextUniform(-limit, limit));
    };
 
-   /**
-    * Initializes the values in an NDArray to random values with on average <code>sparsity</code> percentage zero
-    * entries.
-    *
-    * @param sparsity the sparsity factor (the desired percentage of elements that should have a zero value).
-    * @param rnd      the Random number generator
-    * @return the NDArrayInitializer
-    */
-   static NDArrayInitializer sparseRandom(double sparsity, Random rnd) {
-      return n -> n.mapi(v -> {
-         if (rnd.nextDouble() >= sparsity) {
-            return rnd.nextDouble();
+   NDArrayInitializer<Number> gaussian = gaussian(0, 1);
+
+   static <T extends Number> NDArrayInitializer<T> binomial(int numberOfTrials, double probabilityOfSuccess) {
+      return (m) -> {
+         var rnd = new RandomDataGenerator();
+         m.mapiDouble(x -> rnd.nextBinomial(numberOfTrials, probabilityOfSuccess));
+      };
+   }
+
+   static <T> NDArrayInitializer<T> constant(T constantValue) {
+      return (m) -> m.fill(constantValue);
+   }
+
+   static <T extends Number> NDArrayInitializer<T> constant(double constantValue) {
+      return (m) -> m.fill(constantValue);
+   }
+
+   static <T extends Number> NDArrayInitializer<T> gaussian(double mu, double sigma) {
+      return (m) -> {
+         var rnd = new RandomDataGenerator();
+         m.mapiDouble(x -> rnd.nextGaussian(mu, sigma));
+      };
+   }
+
+   static <T> NDArrayInitializer<T> random() {
+      return (m) -> {
+         var rnd = new Random();
+         Class<?> c = Primitives.wrap(m.getType());
+         if (c == Integer.class) {
+            Cast.<NDArray<Integer>>as(m).mapi(d -> rnd.nextInt());
+         } else if (c == Long.class) {
+            Cast.<NDArray<Long>>as(m).mapi(d -> rnd.nextLong());
+         } else if (c == Boolean.class) {
+            Cast.<NDArray<Boolean>>as(m).mapi(d -> rnd.nextBoolean());
+         } else if (c == String.class) {
+            Cast.<NDArray<String>>as(m).mapi(d -> Strings.randomHexString(rnd.nextInt(8) + 1));
+         } else {
+            m.mapiDouble(n -> rnd.nextDouble());
          }
-         return 0;
-      });
+      };
    }
 
-   /**
-    * Initializes the values in an NDArray to random values with on average <code>sparsity</code> percentage zero
-    * entries.
-    *
-    * @param sparsity the sparsity factor (the desired percentage of elements that should have a zero value).
-    * @return the NDArrayInitializer
-    */
-   static NDArrayInitializer sparseRandom(double sparsity) {
-      return sparseRandom(sparsity, rnd);
+   static NDArrayInitializer<String> randomHexString(int length) {
+      return (m) -> {
+         var rnd = new RandomDataGenerator();
+         m.mapi(x -> rnd.nextHexString(length));
+      };
    }
 
-   /**
-    * Initializes the values to <code>1.0</code>
-    */
-   NDArrayInitializer ones = (m) -> m.mapi(x -> 1d);
-   /**
-    * Random gaussian initializer
-    */
-   NDArrayInitializer randn = randn(new Random());
-   /**
-    * Default Random object to use
-    */
-   Random rnd = new Random(123);
-   /**
-    * Random initializer using <code>Random#nextDouble()</code>
-    */
-   NDArrayInitializer rand = (m) -> m.mapi(d -> rnd.nextDouble());
-   /**
-    * Zero-Value Initializer
-    */
-   NDArrayInitializer zeroes = (m) -> m.mapi(x -> 0d);
-
-   /**
-    * Random initializer using <code>Random#nextDouble()</code> that takes a Random object to use
-    *
-    * @param rnd the Random to use for generating values
-    * @return the NDArrayInitializer
-    */
-   static NDArrayInitializer rand(Random rnd) {
-      return (m) -> m.mapi(d -> rnd.nextDouble());
+   static <T extends Number> NDArrayInitializer<T> sample(@NonNull RealDistribution distribution) {
+      return (m) -> {
+         m.mapiDouble(d -> distribution.sample());
+      };
    }
 
-   /**
-    * Uniform random initializer
-    *
-    * @param rnd the Random object to use for generating random values
-    * @param min the minimum or lower bound of the numbers to generate
-    * @param max the maximum or upper bound of the numbers to generate
-    * @return the NDArrayInitializer
-    */
-   static NDArrayInitializer rand(Random rnd, int min, int max) {
-      return (m) -> m.mapi(d -> min + rnd.nextDouble() * max);
+   static <T extends Number> NDArrayInitializer<T> sample(@NonNull IntegerDistribution distribution) {
+      return (m) -> {
+         m.mapiDouble(d -> distribution.sample());
+      };
    }
 
-   /**
-    * Uniform random initializer
-    *
-    * @param min the minimum or lower bound of the numbers to generate
-    * @param max the maximum or upper bound of the numbers to generate
-    * @return the NDArrayInitializer
-    */
-   static NDArrayInitializer rand(int min, int max) {
-      return rand(new Random(), min, max);
+   static <T extends Number> NDArrayInitializer<T> sample(@NonNull IntSupplier distribution) {
+      return (m) -> {
+         m.mapiDouble(d -> distribution.getAsInt());
+      };
    }
 
-   /**
-    * Random gaussian initializer
-    *
-    * @param rnd the Random object to use for generating random values
-    * @return the NDArrayInitializer
-    */
-   static NDArrayInitializer randn(Random rnd) {
-      return (m) -> m.mapi(d -> rnd.nextGaussian());
+   static <T extends Number> NDArrayInitializer<T> sample(@NonNull DoubleSupplier distribution) {
+      return (m) -> {
+         m.mapiDouble(d -> distribution.getAsDouble());
+      };
    }
 
+   static <T extends Number> NDArrayInitializer<T> sample(@NonNull LongSupplier distribution) {
+      return (m) -> {
+         m.mapiDouble(d -> distribution.getAsLong());
+      };
+   }
+
+   static <T extends Number> NDArrayInitializer<T> uniform(@NonNull Number low, @NonNull Number high) {
+      return (m) -> {
+         var rnd = new RandomDataGenerator();
+         Class<?> c = Primitives.wrap(m.getType());
+         if (c == Integer.class) {
+            Cast.<NDArray<Integer>>as(m).mapi(d -> rnd.nextInt(low.intValue(), high.intValue()));
+         } else if (c == Long.class) {
+            Cast.<NDArray<Long>>as(m).mapi(d -> rnd.nextLong(low.longValue(), high.longValue()));
+         } else {
+            m.mapiDouble(n -> rnd.nextUniform(low.doubleValue(), high.doubleValue(), true));
+         }
+      };
+   }
 
 }//END OF NDArrayInitializer

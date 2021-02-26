@@ -19,10 +19,10 @@
 
 package com.gengoai.apollo.math.linalg.nd3.dense;
 
-import com.gengoai.apollo.math.linalg.nd3.Index;
-import com.gengoai.apollo.math.linalg.nd3.NDArray;
-import com.gengoai.apollo.math.linalg.nd3.Shape;
-import com.gengoai.apollo.math.linalg.nd3.Validator;
+import com.gengoai.apollo.math.linalg.Index;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.Validator;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.tensorflow.DataType;
@@ -266,10 +266,10 @@ public class DenseStringNDArray extends NDArray<String> {
    }
 
    @Override
-   public Tensor<?> toTensor() {
+   public Tensor<String> toTensor() {
 
       if (shape().rank() == 0) {
-         return Tensor.create(new byte[0][0]);
+         return Cast.as(Tensor.create(new byte[0][0]));
       }
 
       if (shape().rank() == 1) {
@@ -277,7 +277,7 @@ public class DenseStringNDArray extends NDArray<String> {
          for (int i = 0; i < data[0].length; i++) {
             b[i] = data[0][i].getBytes();
          }
-         return Tensor.create(b);
+         return Cast.as(Tensor.create(b));
       }
 
       if (shape().rank() == 2) {
@@ -287,7 +287,7 @@ public class DenseStringNDArray extends NDArray<String> {
                b[row][col] = get(row, col).getBytes();
             }
          }
-         return Tensor.create(b);
+         return Cast.as(Tensor.create(b));
       }
 
       if (shape().rank() == 3) {
@@ -299,7 +299,7 @@ public class DenseStringNDArray extends NDArray<String> {
                }
             }
          }
-         return Tensor.create(b);
+         return Cast.as(Tensor.create(b));
       }
 
       if (shape().rank() == 4) {
@@ -315,7 +315,7 @@ public class DenseStringNDArray extends NDArray<String> {
                }
             }
          }
-         return Tensor.create(b);
+         return Cast.as(Tensor.create(b));
       }
 
       throw new IllegalStateException();
