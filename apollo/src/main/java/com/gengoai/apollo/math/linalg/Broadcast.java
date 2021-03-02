@@ -19,17 +19,56 @@
 
 package com.gengoai.apollo.math.linalg;
 
+/**
+ * <p>Describes the type of broadcasting required to complete a mapping operation</p>
+ */
 public enum Broadcast {
+   /**
+    * Empty LHS and Empty RHS
+    */
    EMPTY,
+   /**
+    * Scalar RHS
+    */
    SCALAR,
+   /**
+    * Vector LHS and Vector RHS with same total length.
+    */
    VECTOR,
+   /**
+    * Matrix LHS and Matrix RHS with same shape.
+    */
    MATRIX,
+   /**
+    * Tensor LHS and Tensor RHS with same shape.
+    */
    TENSOR,
+   /**
+    * Matrix LHS and Vector RHS with same number of columns
+    */
    MATRIX_ROW,
+   /**
+    * Matrix LHS and Vector RHS with same number of rows
+    */
    MATRIX_COLUMN,
+   /**
+    * Tensor LHS and Vector RHS with same number of columns
+    */
    TENSOR_ROW,
+   /**
+    * Tensor LHS and Vector RHS with same number of rows
+    */
    TENSOR_COLUMN,
+   /**
+    * Tensor LHS and Tensor RHS with same number of kernels but differing number of channels
+    */
    TENSOR_CHANNEL,
+   /**
+    * Tensor LHS and Tensor RHS with same number of channels but differing number of kernels
+    */
    TENSOR_KERNEL,
+   /**
+    * Cannot Broadcast
+    */
    ERROR;
-}
+}//END OF Broadcast

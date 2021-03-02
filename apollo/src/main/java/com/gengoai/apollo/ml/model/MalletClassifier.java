@@ -40,6 +40,7 @@ import com.gengoai.string.Strings;
 import lombok.NonNull;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * <p>Abstract base class implementation of a {@link SingleSourceModel} that wraps a Mallet Classifier.</p>

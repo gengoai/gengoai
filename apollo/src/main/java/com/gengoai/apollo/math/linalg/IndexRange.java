@@ -24,18 +24,47 @@ import lombok.NonNull;
 
 import java.util.stream.Stream;
 
+/**
+ * <p>An contiguous range of {@link Index}.</p>
+ */
 public interface IndexRange extends Iterable<Index> {
 
+   /**
+    * Is the given coordinate contained within this range
+    *
+    * @param o the coordinate
+    * @return True - if the coordinate is contained within this range.
+    */
    boolean contains(@NonNull Coordinate o);
 
+   /**
+    * The lower index of the range.
+    *
+    * @return the lower index of the range.
+    */
    Index lower();
 
+   /**
+    * The upper index of the range.
+    *
+    * @return the upper index of the range.
+    */
    Index upper();
 
+   /**
+    * The Shape of the IndexRange
+    *
+    * @return the Shape of the IndexRange
+    */
    Shape shape();
 
+   /**
+    * Creates a Stream of the Index in this range
+    *
+    * @return the stream of the Index in this range
+    */
    default Stream<Index> stream(){
       return Streams.asStream(this);
    }
 
-}
+}//END OF IndexRange

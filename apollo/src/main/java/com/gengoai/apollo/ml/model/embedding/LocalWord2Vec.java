@@ -20,8 +20,7 @@
 package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.SystemInfo;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.math.statistics.measure.Similarity;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.DataSetGenerator;
@@ -91,13 +90,13 @@ public class LocalWord2Vec extends TrainableWordEmbedding<LocalWord2Vec.Paramete
       //Need to fit the huffman encoder to the dataset to learn the tree
 
       //Setup the Neural Network
-      Map<Integer, NDArray> syn0 = new HashMap<>();
-      Map<Integer, NDArray> syn1 = new HashMap<>();
+      Map<Integer, NumericNDArray> syn0 = new HashMap<>();
+      Map<Integer, NumericNDArray> syn1 = new HashMap<>();
 
       for (int i = 0; i < huffmanEncoder.size(); i++) {
-         syn0.put(i, NDArrayFactory.ND.rand(1, parameters.dimension.value()));
+         syn0.put(i, nd.DFLOAT32.create(1, parameters.dimension.value(), NDArrayInitializer.gaussian));
          syn0.get(i).setLabel(huffmanEncoder.decode(i));
-         syn1.put(i, NDArrayFactory.ND.rand(1, parameters.dimension.value()));
+         syn1.put(i, nd.DFLOAT32.create(1, parameters.dimension.value(), NDArrayInitializer.gaussian));
          syn1.get(i).setLabel(huffmanEncoder.decode(i));
       }
 
@@ -142,13 +141,13 @@ public class LocalWord2Vec extends TrainableWordEmbedding<LocalWord2Vec.Paramete
    private class WorkerThread extends Thread {
       private final HuffmanEncoder huffmanEncoder;
       private final DataSet batch;
-      private NDArray tempNeu = NDArrayFactory.ND.array(1, parameters.dimension.value());
+      private NumericNDArray tempNeu = nd.DFLOAT32.zeros(parameters.dimension.value());
       private final Random random = new Random();
-      private final Map<Integer, NDArray> syn0;
-      private final Map<Integer, NDArray> syn1;
+      private final Map<Integer, NumericNDArray> syn0;
+      private final Map<Integer, NumericNDArray> syn1;
       int wordCount = 0;
 
-      private WorkerThread(HuffmanEncoder huffmanEncoder, DataSet batch, Map<Integer, NDArray> syn0, Map<Integer, NDArray> syn1) {
+      private WorkerThread(HuffmanEncoder huffmanEncoder, DataSet batch, Map<Integer, NumericNDArray> syn0, Map<Integer, NumericNDArray> syn1) {
          this.huffmanEncoder = huffmanEncoder;
          this.batch = batch;
          this.syn0 = syn0;
@@ -171,7 +170,7 @@ public class LocalWord2Vec extends TrainableWordEmbedding<LocalWord2Vec.Paramete
                   HuffmanEncoder.HuffmanNode lastWord = huffmanEncoder.getNode(sentence.get(c));
                   if (lastWord == null) continue;
                   var l1 = lastWord.getIndex();
-                  var neu1e = NDArrayFactory.DENSE.array(1, parameters.dimension.value());
+                  var neu1e = nd.DFLOAT32.zeros(parameters.dimension.value());
 
                   for (int d = 0; d < word.getCode().length; d++) {
                      int l2 = word.getPoint()[d];

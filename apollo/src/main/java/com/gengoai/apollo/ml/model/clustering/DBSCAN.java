@@ -24,6 +24,7 @@ package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.ParameterDef;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.conversion.Cast;
@@ -96,7 +97,7 @@ public class DBSCAN extends FlatCentroidClusterer {
       }
 
       apacheClusterables.forEach(a -> {
-         NDArray n = a.getVector();
+         NumericNDArray n = a.getVector();
          int index = -1;
          double score = fitParameters.measure.value().getOptimum().startingValue();
          for (int i = 0; i < clustering.size(); i++) {

@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml.evaluation;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.Split;
@@ -128,7 +129,7 @@ public class MultiClassEvaluation extends ClassifierEvaluation {
    }
 
    @Override
-   public void entry(double gold, @NonNull NDArray predicted) {
+   public void entry(double gold, @NonNull NumericNDArray predicted) {
       String goldStr;
       String predictedStr;
       if(encoder == null) {
@@ -160,7 +161,7 @@ public class MultiClassEvaluation extends ClassifierEvaluation {
          if(predicted.isClassification()) {
             entry(gold.asVariable().getName(), predicted.asClassification().getResult());
          } else {
-            entry(getIntegerLabelFor(gold, dataset), predicted.asNDArray());
+            entry(getIntegerLabelFor(gold, dataset), predicted.asNumericNDArray());
          }
       }
    }

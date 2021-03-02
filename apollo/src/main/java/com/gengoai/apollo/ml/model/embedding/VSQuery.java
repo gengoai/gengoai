@@ -21,10 +21,12 @@ package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 import com.gengoai.apollo.math.statistics.measure.Similarity;
 import com.gengoai.collection.Sets;
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,9 +43,9 @@ public final class VSQuery {
    private int K = Integer.MAX_VALUE;
    private Measure measure = Similarity.Cosine;
    private List<String> negativeTerms = new ArrayList<>();
-   private List<NDArray<Float>> negativeVectors = new ArrayList<>();
+   private List<NumericNDArray> negativeVectors = new ArrayList<>();
    private List<String> positiveTerms = new ArrayList<>();
-   private List<NDArray<Float>> positiveVectors = new ArrayList<>();
+   private List<NumericNDArray> positiveVectors = new ArrayList<>();
    private double threshold = Double.NEGATIVE_INFINITY;
 
    /**
@@ -71,7 +73,7 @@ public final class VSQuery {
     * @param negative the negative vectors to query
     * @return A new VSQuery object
     */
-   public static VSQuery compositeVectorQuery(Iterable<NDArray<Float>> positive, Iterable<NDArray<Float>> negative) {
+   public static VSQuery compositeVectorQuery(Iterable<NumericNDArray> positive, Iterable<NumericNDArray> negative) {
       return new VSQuery().positiveVectors(positive)
                           .negativeVectors(negative);
    }
@@ -92,7 +94,7 @@ public final class VSQuery {
     * @param vector the vector to query
     * @return A new VSQuery object
     */
-   public static VSQuery vectorQuery(NDArray vector) {
+   public static VSQuery vectorQuery(@NonNull NumericNDArray vector) {
       return new VSQuery().query(vector);
    }
 
@@ -102,7 +104,7 @@ public final class VSQuery {
     * @param stream the stream
     * @return the stream
     */
-   public Stream<NDArray<Float>> applyFilters(Stream<NDArray<Float>> stream) {
+   public Stream<NumericNDArray> applyFilters(@NonNull Stream<NumericNDArray> stream) {
       if(Double.isFinite(threshold())) {
          stream = stream.filter(v -> measure().getOptimum().test(v.getWeight(), threshold()));
       }
@@ -136,14 +138,14 @@ public final class VSQuery {
       return Sets.union(positiveTerms, negativeTerms);
    }
 
-   private NDArray<Float> getVector(List<NDArray<Float>> vectors, List<String> terms, WordEmbedding store) {
-      Stream<NDArray<Float>> stream;
+   private NumericNDArray getVector(List<NumericNDArray> vectors, List<String> terms, WordEmbedding store) {
+      Stream<NumericNDArray> stream;
       if(vectors.size() > 0) {
          stream = vectors.stream();
       } else {
          stream = terms.stream().map(store::embed);
       }
-      return stream.reduce(nd.DFLOAT32.zeros(store.dimension()), NDArray::addi);
+      return stream.reduce(nd.DFLOAT32.zeros(store.dimension()), NumericNDArray::addi);
    }
 
    /**
@@ -192,7 +194,7 @@ public final class VSQuery {
     * @param terms the terms
     * @return This VSQuery
     */
-   public VSQuery negativeTerms(String... terms) {
+   public VSQuery negativeTerms(@NonNull String... terms) {
       negativeVectors.clear();
       negativeTerms.clear();
       Collections.addAll(negativeTerms, terms);
@@ -205,7 +207,7 @@ public final class VSQuery {
     * @param terms the terms
     * @return This VSQuery
     */
-   public VSQuery negativeTerms(Iterable<String> terms) {
+   public VSQuery negativeTerms(@NonNull Iterable<String> terms) {
       negativeVectors.clear();
       negativeTerms.clear();
       terms.forEach(negativeTerms::add);
@@ -218,8 +220,7 @@ public final class VSQuery {
     * @param vectors the vectors
     * @return This VSQuery
     */
-   @SafeVarargs
-   public final VSQuery negativeVectors(NDArray<Float>... vectors) {
+   public final VSQuery negativeVectors(@NonNull NumericNDArray... vectors) {
       negativeVectors.clear();
       negativeTerms.clear();
       Collections.addAll(negativeVectors, vectors);
@@ -232,7 +233,7 @@ public final class VSQuery {
     * @param terms the terms
     * @return This VSQuery
     */
-   public VSQuery negativeVectors(Iterable<NDArray<Float>> terms) {
+   public VSQuery negativeVectors(@NonNull Iterable<NumericNDArray> terms) {
       negativeVectors.clear();
       negativeTerms.clear();
       terms.forEach(negativeVectors::add);
@@ -245,7 +246,7 @@ public final class VSQuery {
     * @param terms the terms
     * @return This VSQuery
     */
-   public VSQuery positiveTerms(String... terms) {
+   public VSQuery positiveTerms(@NonNull String... terms) {
       positiveVectors.clear();
       positiveTerms.clear();
       Collections.addAll(positiveTerms, terms);
@@ -258,7 +259,7 @@ public final class VSQuery {
     * @param terms the terms
     * @return This VSQuery
     */
-   public VSQuery positiveTerms(Iterable<String> terms) {
+   public VSQuery positiveTerms(@NonNull Iterable<String> terms) {
       positiveVectors.clear();
       positiveTerms.clear();
       terms.forEach(positiveTerms::add);
@@ -271,8 +272,7 @@ public final class VSQuery {
     * @param vectors the vectors
     * @return This VSQuery
     */
-   @SafeVarargs
-   public final VSQuery positiveVectors(NDArray<Float>... vectors) {
+   public final VSQuery positiveVectors(@NonNull NumericNDArray... vectors) {
       positiveVectors.clear();
       positiveTerms.clear();
       Collections.addAll(positiveVectors, vectors);
@@ -285,7 +285,7 @@ public final class VSQuery {
     * @param terms the terms
     * @return This VSQuery
     */
-   public VSQuery positiveVectors(Iterable<NDArray<Float>> terms) {
+   public VSQuery positiveVectors(@NonNull Iterable<NumericNDArray> terms) {
       positiveVectors.clear();
       positiveTerms.clear();
       terms.forEach(positiveVectors::add);
@@ -298,8 +298,7 @@ public final class VSQuery {
     * @param vectors the vectors
     * @return This VSQuery
     */
-   @SafeVarargs
-   public final VSQuery query(NDArray<Float>... vectors) {
+   public final VSQuery query(@NonNull NumericNDArray... vectors) {
       clearQuery();
       Collections.addAll(positiveVectors, vectors);
       return this;
@@ -311,7 +310,7 @@ public final class VSQuery {
     * @param terms the terms
     * @return This VSQuery
     */
-   public VSQuery query(String... terms) {
+   public VSQuery query(@NonNull String... terms) {
       clearQuery();
       Collections.addAll(positiveTerms, terms);
       return this;
@@ -323,9 +322,9 @@ public final class VSQuery {
     * @param store the vector store that the final query vector will be for.
     * @return the query vector
     */
-   public NDArray queryVector(WordEmbedding store) {
-      NDArray pos = getVector(positiveVectors, positiveTerms, store);
-      NDArray neg = getVector(negativeVectors, negativeTerms, store);
+   public NumericNDArray queryVector(@NonNull WordEmbedding store) {
+      NumericNDArray pos = getVector(positiveVectors, positiveTerms, store);
+      NumericNDArray neg = getVector(negativeVectors, negativeTerms, store);
       return pos.subi(neg);
    }
 

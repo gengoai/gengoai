@@ -32,105 +32,205 @@ import java.util.Random;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 
-public interface NDArrayInitializer<T> extends SerializableConsumer<NDArray<T>> {
+/**
+ * <p>Functional Interface that initializes the values of a given NDArray.</p>
+ *
+ * @param <T> the type of NDArray
+ */
+public interface NDArrayInitializer<T extends NDArray> extends SerializableConsumer<T> {
 
    /**
-    * Glorot and Bengio (2010) for hyperbolic tangent units
+    * Xavier initialization for Neural Networks
     */
-   NDArrayInitializer<Number> xavier = (m) -> {
+   NDArrayInitializer<NumericNDArray> xavier = (m) -> {
       var limit = Math.sqrt(6.0) / Math.sqrt(m.shape().rows() + m.shape().columns());
       var rnd = new RandomDataGenerator();
       m.mapiDouble(x -> rnd.nextUniform(-limit, limit));
    };
 
-   NDArrayInitializer<Number> gaussian = gaussian(0, 1);
+   /**
+    * <p>Generates  random values using a Gaussian distribution with mean 0 and standard deviation of 1</p>
+    */
+   NDArrayInitializer<NumericNDArray> gaussian = gaussian(0, 1);
 
-   static <T extends Number> NDArrayInitializer<T> binomial(int numberOfTrials, double probabilityOfSuccess) {
+   /**
+    * <p>Generates random values using a binomial distribution with <code>numberOfTrials</code> and
+    * <code>probabilityOfSuccess</code></p>
+    *
+    * @param numberOfTrials       the number of trials
+    * @param probabilityOfSuccess the probability of success
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> binomial(int numberOfTrials, double probabilityOfSuccess) {
       return (m) -> {
          var rnd = new RandomDataGenerator();
          m.mapiDouble(x -> rnd.nextBinomial(numberOfTrials, probabilityOfSuccess));
       };
    }
 
-   static <T> NDArrayInitializer<T> constant(T constantValue) {
+   /**
+    * <p>Initializes an NDArray by setting all elements to a constant value.</p>
+    *
+    * @param <T>           the type of NDArray
+    * @param constantValue the constant value
+    * @return the NDArrayInitializer
+    */
+   static <T extends NDArray> NDArrayInitializer<T> constant(Object constantValue) {
       return (m) -> m.fill(constantValue);
    }
 
-   static <T extends Number> NDArrayInitializer<T> constant(double constantValue) {
+   /**
+    * <p>Initializes an NDArray by setting all elements to a constant value.</p>
+    *
+    * @param constantValue the constant value
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> constant(double constantValue) {
       return (m) -> m.fill(constantValue);
    }
 
-   static <T extends Number> NDArrayInitializer<T> gaussian(double mu, double sigma) {
+   /**
+    * <p>Generates random values using a Gaussian distribution with mean <code>mu</code> and standard deviation of
+    * <code>sigma</code></p>
+    *
+    * @param mu    the mean
+    * @param sigma the standard deviation
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> gaussian(double mu, double sigma) {
       return (m) -> {
          var rnd = new RandomDataGenerator();
          m.mapiDouble(x -> rnd.nextGaussian(mu, sigma));
       };
    }
 
-   static <T> NDArrayInitializer<T> random() {
+   /**
+    * <p>Generates random values using Java's Random class with specific implementation based on the data type of the
+    * NDArray.</p>
+    *
+    * @param <T> the type of NDArray
+    * @return the NDArrayInitializer
+    */
+   static <T extends NDArray> NDArrayInitializer<T> random() {
       return (m) -> {
          var rnd = new Random();
          Class<?> c = Primitives.wrap(m.getType());
          if (c == Integer.class) {
-            Cast.<NDArray<Integer>>as(m).mapi(d -> rnd.nextInt());
+            Cast.<NumericNDArray>as(m).mapiDouble(d -> rnd.nextInt());
          } else if (c == Long.class) {
-            Cast.<NDArray<Long>>as(m).mapi(d -> rnd.nextLong());
-         } else if (c == Boolean.class) {
-            Cast.<NDArray<Boolean>>as(m).mapi(d -> rnd.nextBoolean());
+            Cast.<NumericNDArray>as(m).mapiDouble(d -> rnd.nextLong());
          } else if (c == String.class) {
-            Cast.<NDArray<String>>as(m).mapi(d -> Strings.randomHexString(rnd.nextInt(8) + 1));
+            Cast.<ObjectNDArray<String>>as(m).mapi(d -> Strings.randomHexString(rnd.nextInt(8) + 1));
          } else {
-            m.mapiDouble(n -> rnd.nextDouble());
+            Cast.<NumericNDArray>as(m).mapiDouble(n -> rnd.nextDouble());
          }
       };
    }
 
-   static NDArrayInitializer<String> randomHexString(int length) {
+   /**
+    * <p>Generates random strings of hexadecimal characters of given <code>length</code></p>
+    *
+    * @param length the length of the strings to generate
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<ObjectNDArray<String>> randomHexString(int length) {
       return (m) -> {
          var rnd = new RandomDataGenerator();
          m.mapi(x -> rnd.nextHexString(length));
       };
    }
 
-   static <T extends Number> NDArrayInitializer<T> sample(@NonNull RealDistribution distribution) {
+   /**
+    * <p>Generates random values from the given RealDistribution</p>
+    *
+    * @param distribution the distribution
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> sample(@NonNull RealDistribution distribution) {
       return (m) -> {
          m.mapiDouble(d -> distribution.sample());
       };
    }
 
-   static <T extends Number> NDArrayInitializer<T> sample(@NonNull IntegerDistribution distribution) {
+   /**
+    * <p>Generates random values from the given distribution</p>
+    *
+    * @param distribution the distribution
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> sample(@NonNull IntegerDistribution distribution) {
       return (m) -> {
          m.mapiDouble(d -> distribution.sample());
       };
    }
 
-   static <T extends Number> NDArrayInitializer<T> sample(@NonNull IntSupplier distribution) {
+   /**
+    * <p>Generates values from the given IntSupplier</p>
+    *
+    * @param supplier the supplier
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> sample(@NonNull IntSupplier supplier) {
       return (m) -> {
-         m.mapiDouble(d -> distribution.getAsInt());
+         m.mapiDouble(d -> supplier.getAsInt());
       };
    }
 
-   static <T extends Number> NDArrayInitializer<T> sample(@NonNull DoubleSupplier distribution) {
+   /**
+    * <p>Generates values from the given DoubleSupplier</p>
+    *
+    * @param supplier the supplier
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> sample(@NonNull DoubleSupplier supplier) {
       return (m) -> {
-         m.mapiDouble(d -> distribution.getAsDouble());
+         m.mapiDouble(d -> supplier.getAsDouble());
       };
    }
 
-   static <T extends Number> NDArrayInitializer<T> sample(@NonNull LongSupplier distribution) {
+   /**
+    * <p>Generates values from the given LongSupplier</p>
+    *
+    * @param supplier the supplier
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> sample(@NonNull LongSupplier supplier) {
       return (m) -> {
-         m.mapiDouble(d -> distribution.getAsLong());
+         m.mapiDouble(d -> supplier.getAsLong());
       };
    }
 
-   static <T extends Number> NDArrayInitializer<T> uniform(@NonNull Number low, @NonNull Number high) {
+   /**
+    * <p>Generates values from the given Supplier</p>
+    *
+    * @param <T>      the data type of the ObjectNDArray
+    * @param supplier the supplier
+    * @return the NDArrayInitializer
+    */
+   static <T> NDArrayInitializer<ObjectNDArray<T>> sample(@NonNull Supplier<T> supplier) {
+      return (m) -> {
+         m.map(v -> supplier.get());
+      };
+   }
+
+
+   /**
+    * <p>Generates random values from uniformly within <code>[low, high)</code></p>
+    *
+    * @param low  the lower bound of the randomly generated number
+    * @param high the upper bound of the randomly generated number
+    * @return the NDArrayInitializer
+    */
+   static NDArrayInitializer<NumericNDArray> uniform(@NonNull Number low, @NonNull Number high) {
       return (m) -> {
          var rnd = new RandomDataGenerator();
          Class<?> c = Primitives.wrap(m.getType());
          if (c == Integer.class) {
-            Cast.<NDArray<Integer>>as(m).mapi(d -> rnd.nextInt(low.intValue(), high.intValue()));
+            m.mapiDouble(d -> rnd.nextInt(low.intValue(), high.intValue()));
          } else if (c == Long.class) {
-            Cast.<NDArray<Long>>as(m).mapi(d -> rnd.nextLong(low.longValue(), high.longValue()));
+            m.mapiDouble(d -> rnd.nextLong(low.longValue(), high.longValue()));
          } else {
             m.mapiDouble(n -> rnd.nextUniform(low.doubleValue(), high.doubleValue(), true));
          }

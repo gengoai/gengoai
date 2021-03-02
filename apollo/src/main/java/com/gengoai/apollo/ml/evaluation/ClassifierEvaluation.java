@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml.evaluation;
 
 import com.gengoai.LogUtils;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.io.resource.Resource;
@@ -73,7 +74,7 @@ public abstract class ClassifierEvaluation implements Evaluation, Serializable {
     * @param gold      the gold value
     * @param predicted the predicted value
     */
-   public abstract void entry(double gold, @NonNull NDArray<? extends Number> predicted);
+   public abstract void entry(double gold, @NonNull NumericNDArray predicted);
 
    /**
     * Calculates the false negative rate, which is calculated as <code>False Positives / (True Positives + False
@@ -136,7 +137,7 @@ public abstract class ClassifierEvaluation implements Evaluation, Serializable {
 
    protected int getIntegerLabelFor(Observation output, DataSet dataset) {
       if(output.isNDArray() || output.isClassification()) {
-         NDArray<?> y = output.asNDArray();
+         NumericNDArray y = output.asNumericNDArray();
          if(y.shape().isScalar()) {
             return (int) y.get(0);
          } else {
@@ -154,7 +155,7 @@ public abstract class ClassifierEvaluation implements Evaluation, Serializable {
     *
     * @param evaluation the other evaluation to combine
     */
-   public abstract void merge(ClassifierEvaluation evaluation);
+   public abstract void merge(@NonNull ClassifierEvaluation evaluation);
 
    /**
     * Calculates the negative likelihood ratio, which is <code>False Positive Rate / Specificity</code>

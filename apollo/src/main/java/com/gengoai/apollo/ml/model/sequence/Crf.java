@@ -22,6 +22,7 @@ package com.gengoai.apollo.ml.model.sequence;
 import com.gengoai.ParameterDef;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
@@ -55,12 +56,12 @@ import static com.gengoai.tuple.Tuples.$;
  * @author David B. Bracewell
  */
 public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
-   private static final long serialVersionUID = 1L;
    public static final ParameterDef<Double> C1 = ParameterDef.doubleParam("c1");
    public static final ParameterDef<Double> C2 = ParameterDef.doubleParam("c2");
    public static final ParameterDef<Double> EPS = ParameterDef.doubleParam("eps");
    public static final ParameterDef<Integer> MIN_FEATURE_FREQ = ParameterDef.intParam("minFeatureFreq");
    public static final ParameterDef<CrfSolver> SOLVER = ParameterDef.param("solver", CrfSolver.class);
+   private static final long serialVersionUID = 1L;
    protected String modelFile;
    protected volatile CrfTagger tagger;
 
@@ -91,12 +92,12 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
 
    private Item createItem(Observation o) {
       Item item = new Item();
-      if(o instanceof VariableCollection) {
+      if (o instanceof VariableCollection) {
          VariableList instance = Cast.as(o);
-         for(Variable feature : instance) {
+         for (Variable feature : instance) {
             item.add(new Attribute(feature.getName(), feature.getValue()));
          }
-      } else if(o instanceof Variable) {
+      } else if (o instanceof Variable) {
          Variable v = Cast.as(o);
          item.add(new Attribute(v.getName(), v.getValue()));
       } else {
@@ -105,9 +106,20 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
       return item;
    }
 
-   private Item createItem(NDArray<? extends Number> row) {
+   private Item createItem(NumericNDArray row) {
       Item item = new Item();
       row.forEachSparse((i, v) -> item.add(new Attribute(Long.toString(i), v.doubleValue())));
+      return item;
+   }
+
+   private Item createItem(NDArray row) {
+      Item item = new Item();
+      for (long i = 0; i < row.length(); i++) {
+         Object value = row.get(i);
+         if (value != null) {
+            item.add(new Attribute(value.toString()));
+         }
+      }
       return item;
    }
 
@@ -116,7 +128,7 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
       CrfSuiteLoader.INSTANCE.load();
       Trainer trainer = new Trainer();
 
-      for(Datum datum : dataset) {
+      for (Datum datum : dataset) {
          Observation input = Validation.notNull(datum.get(parameters.input.value()),
                                                 "Null Input Observation");
          Sequence<?> output = Validation.notNull(datum.get(parameters.output.value()).asSequence(),
@@ -143,7 +155,7 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
 
    @Override
    public LabelType getLabelType(@NonNull String name) {
-      if(parameters.output.value().equals(name)) {
+      if (parameters.output.value().equals(name)) {
          return LabelType.Sequence;
       }
       throw new IllegalArgumentException("'" + name + "' is not a valid output for this model.");
@@ -163,24 +175,30 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
    private Tuple2<ItemSequence, StringList> toItemSequence(Observation in, Sequence<? extends Observation> out) {
       ItemSequence seq = new ItemSequence();
       StringList labels = new StringList();
-      if(in instanceof Sequence) {
+      if (in instanceof Sequence) {
          Sequence<? extends Observation> sequence = Cast.as(in);
          sequence.forEach(o -> seq.add(createItem(o)));
-      } else if(in instanceof NDArray) {
-         NDArray<? extends Number> ndArray = Cast.as(in);
-         for(int i = 0; i < ndArray.shape().rows(); i++) {
+      } else if (in instanceof NumericNDArray) {
+         NumericNDArray ndArray = in.asNumericNDArray();
+         for (int i = 0; i < ndArray.shape().rows(); i++) {
+            seq.add(createItem(ndArray.getAxis(Shape.ROW, i)));
+         }
+      } else if (in instanceof NDArray) {
+         NDArray ndArray = in.asNDArray();
+         for (int i = 0; i < ndArray.shape().rows(); i++) {
             seq.add(createItem(ndArray.getAxis(Shape.ROW, i)));
          }
       } else {
          throw new IllegalArgumentException("Observations of type '" + in.getClass() + "' are not supported as input");
       }
-      if(out != null) {
-         for(Observation o : out) {
-            if(o instanceof Variable) {
+      if (out != null) {
+         for (Observation o : out) {
+            if (o instanceof Variable) {
                Variable v = Cast.as(o);
                labels.add(v.getName());
             } else {
-               throw new IllegalArgumentException("Observations of type '" + o.getClass() + "' are not supported as an output");
+               throw new IllegalArgumentException("Observations of type '" + o
+                     .getClass() + "' are not supported as an output");
             }
          }
       }
@@ -192,7 +210,7 @@ public class Crf extends SingleSourceModel<Crf.Parameters, Crf> {
       CrfSuiteLoader.INSTANCE.load();
       ItemSequence itemSequence = toItemSequence(observation, null).v1;
       VariableSequence labeling = new VariableSequence();
-      for(Pair<String, Double> pair : tagger.tag(itemSequence)) {
+      for (Pair<String, Double> pair : tagger.tag(itemSequence)) {
          labeling.add(new Variable(pair.first, pair.second));
       }
       return labeling;

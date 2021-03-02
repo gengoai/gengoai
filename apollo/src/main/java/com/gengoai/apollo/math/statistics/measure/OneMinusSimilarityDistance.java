@@ -23,6 +23,7 @@
 package com.gengoai.apollo.math.statistics.measure;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 
 /**
  * <p>Distance measure implementation that is the one minus the value of a similarity measure</p>
@@ -48,7 +49,7 @@ class OneMinusSimilarityDistance implements DistanceMeasure {
    }
 
    @Override
-   public double calculate(NDArray<? extends Number> v1, NDArray<? extends Number> v2) {
+   public double calculate(NumericNDArray v1, NumericNDArray v2) {
       return 1d - similarityMeasure.calculate(v1,v2);
    }
 

@@ -20,6 +20,7 @@
 package com.gengoai.hermes.ml;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.model.LabelType;
@@ -66,7 +67,7 @@ public abstract class TensorFlowSequenceLabeler extends TensorFlowModel implemen
    }
 
    @Override
-   protected Observation decodeNDArray(String name, NDArray ndArray) {
+   protected Observation decodeNDArray(String name, NumericNDArray ndArray) {
       return ndArray.decodeSequence(outputs.get(name).getEncoder(), validator);
    }
 

@@ -24,6 +24,7 @@ package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.observation.Observation;
 import lombok.NonNull;
@@ -55,9 +56,9 @@ public abstract class FlatCentroidClusterer extends Clusterer {
 
    @Override
    protected final Observation transform(@NonNull Observation observation) {
-      NDArray<Float> distances = nd.DFLOAT32.array(clustering.size());
+      NumericNDArray distances = nd.DFLOAT32.zeros(clustering.size());
       for(int i = 0; i < clustering.size(); i++) {
-         distances.set(i, clustering.getMeasure().calculate(observation.asNDArray(),
+         distances.set(i, clustering.getMeasure().calculate(observation.asNumericNDArray(),
                                                             clustering.get(i).getCentroid()));
       }
       return distances;

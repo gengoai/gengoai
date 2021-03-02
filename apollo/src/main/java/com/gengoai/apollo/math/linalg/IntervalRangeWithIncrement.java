@@ -39,10 +39,6 @@ class IntervalRangeWithIncrement extends IntervalRange {
    private static class IteratorRangeWithIncrement extends IntervalRange.IteratorRange {
       private final Coordinate increment;
 
-//      public IteratorRangeWithIncrement(IndexRange range, boolean bounded, Coordinate increment) {
-//         super(range,bounded);
-//         this.increment = increment;
-//      }
       public IteratorRangeWithIncrement(Index lower, Index upper, boolean bounded, Coordinate increment) {
          super(lower, upper, bounded);
          this.increment = increment;

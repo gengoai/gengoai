@@ -23,6 +23,8 @@ import com.gengoai.ParameterDef;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.observation.Observation;
 import de.bwaldvogel.liblinear.*;
@@ -67,14 +69,14 @@ public class LibLinear extends SingleSourceModel<LibLinear.Parameters, LibLinear
    private de.bwaldvogel.liblinear.Model model;
    private int biasIndex;
 
-   private static double getLabel(NDArray n) {
+   private static double getLabel(NumericNDArray n) {
       if(n.shape().isScalar()) {
-         return n.get(0);
+         return n.getDouble(0);
       }
-      return n.argmax();
+      return n.argMaxOffset();
    }
 
-   private static Feature[] toFeature(NDArray vector, int biasIndex) {
+   private static Feature[] toFeature(NumericNDArray vector, int biasIndex) {
       int size = (int) vector.size() + (biasIndex > 0
                                         ? 1
                                         : 0);
@@ -82,13 +84,12 @@ public class LibLinear extends SingleSourceModel<LibLinear.Parameters, LibLinear
       AtomicInteger ai = new AtomicInteger(0);
       if(vector.isDense()) {
          for(long i = 0; i < vector.length(); i++) {
-            feature[ai.getAndIncrement()] = new FeatureNode((int) i + 1, vector.get(i));
+            feature[ai.getAndIncrement()] = new FeatureNode((int) i + 1, vector.getDouble(i));
          }
       } else {
-         int[] keys = vector.sparseIndices();
-         Arrays.sort(keys);
-         for(int i : keys) {
-            feature[ai.getAndIncrement()] = new FeatureNode(i + 1, vector.get(i));
+         long[] keys = vector.sparseIndices();
+         for(long i : keys) {
+            feature[ai.getAndIncrement()] = new FeatureNode((int)i + 1, vector.getDouble(i));
          }
       }
       if(biasIndex > 0) {
@@ -141,8 +142,8 @@ public class LibLinear extends SingleSourceModel<LibLinear.Parameters, LibLinear
       dataset.stream()
              .zipWithIndex()
              .forEach((datum, index) -> {
-                problem.x[index.intValue()] = toFeature(datum.get(parameters.input.value()).asNDArray(), 0);
-                problem.y[index.intValue()] = getLabel(datum.get(parameters.output.value()).asNDArray());
+                problem.x[index.intValue()] = toFeature(datum.get(parameters.input.value()).asNumericNDArray(), 0);
+                problem.y[index.intValue()] = getLabel(datum.get(parameters.output.value()).asNumericNDArray());
              });
 
       if(parameters.verbose.value()) {
@@ -178,22 +179,22 @@ public class LibLinear extends SingleSourceModel<LibLinear.Parameters, LibLinear
    protected Observation transform(@NonNull Observation observation) {
       double[] p = new double[model.getNrClass()];
       if(model.isProbabilityModel()) {
-         Linear.predictProbability(model, toFeature(observation.asNDArray(), biasIndex), p);
+         Linear.predictProbability(model, toFeature(observation.asNumericNDArray(), biasIndex), p);
       } else {
-         Linear.predictValues(model, toFeature(observation.asNDArray(), biasIndex), p);
+         Linear.predictValues(model, toFeature(observation.asNumericNDArray(), biasIndex), p);
       }
 
       if(parameters.solver.value().isSupportVectorRegression()) {
-         return NDArrayFactory.ND.scalar(p[0]);
+         return nd.DFLOAT32.scalar(p[0]);
       }
 
       //re-arrange the probabilities to match the target feature
-      double[] prime = new double[model.getNrClass()];
+      float[] prime = new float[model.getNrClass()];
       int[] labels = model.getLabels();
       for(int i = 0; i < labels.length; i++) {
-         prime[labels[i]] = p[i];
+         prime[labels[i]] = (float)p[i];
       }
-      return NDArrayFactory.ND.rowVector(prime);
+      return nd.DFLOAT32.array(prime);
    }
 
    @Override

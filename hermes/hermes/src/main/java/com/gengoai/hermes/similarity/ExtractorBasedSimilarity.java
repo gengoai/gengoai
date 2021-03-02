@@ -19,8 +19,8 @@
 
 package com.gengoai.hermes.similarity;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.math.statistics.measure.Similarity;
 import com.gengoai.collection.HashMapIndex;
 import com.gengoai.collection.Index;
@@ -79,9 +79,9 @@ public class ExtractorBasedSimilarity implements HStringSimilarity {
       Index<String> index = new HashMapIndex<>();
       index.addAll(c1.items());
       index.addAll(c2.items());
-      NDArray n1 = NDArrayFactory.SPARSE.array(index.size());
+      NumericNDArray n1 = nd.DFLOAT32.zeros(index.size());
       c1.forEach((s, v) -> n1.set(index.getId(s), v));
-      NDArray n2 = NDArrayFactory.SPARSE.array(index.size());
+      NumericNDArray n2 = nd.DFLOAT32.zeros(index.size());
       c2.forEach((s, v) -> n2.set(index.getId(s), v));
       return measure.calculate(n1, n2);
    }

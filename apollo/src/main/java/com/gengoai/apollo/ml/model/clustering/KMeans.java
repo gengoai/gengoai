@@ -22,10 +22,7 @@
 
 package com.gengoai.apollo.ml.model.clustering;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayInitializer;
-import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.model.Params;
@@ -93,11 +90,11 @@ public class KMeans extends FlatCentroidClusterer {
       Parameters fitParameters = Cast.as(parameters);
       clustering = new FlatClustering();
       clustering.setMeasure(fitParameters.measure.value());
-      final List<NDArray<Float>> vectors = Cast.cast(dataset.parallelStream()
-                                                        .map(this::getNDArray)
-                                                        .collect());
+      final List<NumericNDArray> vectors = Cast.cast(dataset.parallelStream()
+                                                            .map(this::getNDArray)
+                                                            .collect());
 
-      for (NDArray<Float> centroid : initCentroids(fitParameters.K.value(), vectors)) {
+      for (NumericNDArray centroid : initCentroids(fitParameters.K.value(), vectors)) {
          Cluster c = new Cluster();
          c.setCentroid(centroid);
          clustering.add(c);
@@ -135,15 +132,15 @@ public class KMeans extends FlatCentroidClusterer {
       return Cast.as(parameters);
    }
 
-   private NDArray<Float>[] initCentroids(int K, List<NDArray<Float>> instances) {
+   private NumericNDArray[] initCentroids(int K, List<NumericNDArray> instances) {
       final int dim = (int) instances.get(0).length();
-      NDArray<Float>[] clusters = Cast.as(IntStream.range(0, K)
+      NumericNDArray[] clusters = Cast.as(IntStream.range(0, K)
                                                    .mapToObj(i -> nd.DFLOAT32.zeros(dim))
-                                                   .toArray(NDArray[]::new));
+                                                   .toArray(NumericNDArray[]::new));
 
       double[] cnts = new double[K];
       Random rnd = new Random();
-      for (NDArray<Float> ii : instances) {
+      for (NumericNDArray ii : instances) {
          int ci = rnd.nextInt(K);
          clusters[ci].addi(ii);
          cnts[ci]++;
@@ -156,7 +153,7 @@ public class KMeans extends FlatCentroidClusterer {
       return clusters;
    }
 
-   private double iteration(List<NDArray<Float>> instances) {
+   private double iteration(List<NumericNDArray> instances) {
       final int dim = (int) instances.get(0).length();
       //Clear the points
       clustering.keepOnlyCentroids();
@@ -175,14 +172,14 @@ public class KMeans extends FlatCentroidClusterer {
 
       double numChanged = 0;
       for (Cluster cluster : clustering) {
-         NDArray<Float> centroid;
+         NumericNDArray centroid;
 
          //Calculate the new centroid, randomly generating a new vector when the custer has 0 members
          if (cluster.size() == 0) {
             centroid = nd.DFLOAT32.create(Shape.shape(dim), NDArrayInitializer.uniform(-1d, 1d));
          } else {
             centroid = nd.DFLOAT32.zeros(dim);
-            for (NDArray<Float> point : cluster.getPoints()) {
+            for (NumericNDArray point : cluster.getPoints()) {
                centroid.addi(point);
             }
             centroid.divi(cluster.size());

@@ -1,8 +1,9 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.math.linalg.nd3.dense.DenseFloat32NDArray;
+import com.gengoai.apollo.math.linalg.dense.DenseFloat32NDArray;
 import com.gengoai.conversion.Cast;
 import org.jblas.FloatMatrix;
 
@@ -33,20 +34,20 @@ public abstract class Decomposition implements Serializable {
     * @param input the input NDArray
     * @return Array of NDArray representing the factors of the product.
     */
-   public final NDArray<Float>[] decompose(NDArray<? extends Number> input) {
+   public final NumericNDArray[] decompose(NumericNDArray input) {
       if (input.rank() < 3) {
          return onMatrix(input);
       }
 
       FloatMatrix[][] results = new FloatMatrix[components][input.shape().sliceLength()];
       for (int i = 0; i < input.shape().sliceLength(); i++) {
-         NDArray<Float>[] slice = onMatrix(input.slice(i));
+         NumericNDArray[] slice = onMatrix(input.slice(i));
          for (int j = 0; j < components; j++) {
             results[j][i] = slice[j].toFloatMatrix()[0];
          }
       }
 
-      NDArray<Float>[] out = Cast.as(Array.newInstance(DenseFloat32NDArray.class, components));
+      NumericNDArray[] out = Cast.as(Array.newInstance(DenseFloat32NDArray.class, components));
       for (int j = 0; j < components; j++) {
          out[j] = new DenseFloat32NDArray(input.shape().kernels(),
                                           input.shape().channels(),
@@ -73,6 +74,6 @@ public abstract class Decomposition implements Serializable {
     * @param matrix the matrix
     * @return the components of the decomposition
     */
-   protected abstract NDArray<Float>[] onMatrix(NDArray<? extends Number> matrix);
+   protected abstract NumericNDArray[] onMatrix(NumericNDArray matrix);
 
 }//END OF Decomposition

@@ -20,9 +20,8 @@
 package com.gengoai.apollo.math.linalg;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.nd3.dense.*;
-import com.gengoai.apollo.math.linalg.nd3.sparse.SparseFloat32Factory;
-import com.gengoai.apollo.math.linalg.nd3.sparse.SparseStringNDArrayFactory;
+import com.gengoai.apollo.math.linalg.dense.*;
+import com.gengoai.apollo.math.linalg.sparse.*;
 import com.gengoai.conversion.Cast;
 import com.gengoai.math.Math2;
 import com.gengoai.math.NumericComparison;
@@ -31,52 +30,151 @@ import org.tensorflow.Tensor;
 
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.function.BinaryOperator;
+import java.util.function.UnaryOperator;
 
-import static com.gengoai.apollo.math.linalg.NDArrayFactory.probe;
-
+/**
+ * <p>Convenience methods for manipulating NDArray.</p>
+ */
 public final class nd {
-   public static final DenseInt32Factory DINT32 = new DenseInt32Factory();
-   public static final DenseInt64Factory DINT64 = new DenseInt64Factory();
-   public static final DenseFloat32Factory DFLOAT32 = new DenseFloat32Factory();
-   public static final SparseFloat32Factory SFLOAT32 = new SparseFloat32Factory();
+   /**
+    * Factory for creating a dense NumericNDArray that use ints for storage
+    */
+   public static final DenseInt32NDArrayFactory DINT32 = new DenseInt32NDArrayFactory();
+   /**
+    * Factory for creating a dense NumericNDArray that use longs for storage
+    */
+   public static final DenseInt64NDArrayFactory DINT64 = new DenseInt64NDArrayFactory();
+   /**
+    * Factory for creating a dense NumericNDArray that use floats for storage
+    */
+   public static final DenseFloat32NDArrayFactory DFLOAT32 = new DenseFloat32NDArrayFactory();
+   /**
+    * Factory for creating a dense NumericNDArray that use doubles for storage
+    */
+   public static final DenseFloat64NDArrayFactory DFLOAT64 = new DenseFloat64NDArrayFactory();
+   /**
+    * Factory for creating a dense ObjectNDArray with String as the data type
+    */
    public static final DenseStringNDArrayFactory DSTRING = new DenseStringNDArrayFactory();
+   /**
+    * Factory for creating a sparse NumericNDArray that use floats for storage
+    */
+   public static final SparseFloat32NDArrayFactory SFLOAT32 = new SparseFloat32NDArrayFactory();
+   /**
+    * Factory for creating a sparse NumericNDArray that use double for storage
+    */
+   public static final SparseFloat64NDArrayFactory SFLOAT64 = new SparseFloat64NDArrayFactory();
+   /**
+    * Factory for creating a sparse NumericNDArray that use long for storage
+    */
+   public static final SparseInt32NDArrayFactory SINT32 = new SparseInt32NDArrayFactory();
+   /**
+    * Factory for creating a sparse NumericNDArray that use long for storage
+    */
+   public static final SparseInt64NDArrayFactory SINT64 = new SparseInt64NDArrayFactory();
+   /**
+    * Factory for creating a sparse ObjectNDArray with String as the data type
+    */
    public static final SparseStringNDArrayFactory SSTRING = new SparseStringNDArrayFactory();
 
    private nd() {
       throw new IllegalAccessError();
    }
 
-   public static <T extends Number> NDArray<T> abs(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray to their absolute values returning a new NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math.abs</code> to
+    * @return the new NumericNDArray with absolute values
+    */
+   public static NumericNDArray abs(@NonNull NumericNDArray n) {
       return n.mapDouble(Math::abs);
    }
 
-
-   public static <T> NDArray<T> array(Object data, @NonNull Class<T> dType) {
-      return NDArrayFactory.forType(dType).array(data);
+   /**
+    * <p>Converts the values in the given NumericNDArray to their absolute values in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math.abs</code> to
+    * @return the given NumericNDArray
+    */
+   public static NumericNDArray absi(@NonNull NumericNDArray n) {
+      return n.mapiDouble(Math::abs);
    }
 
-   public static <T> NDArray<T> array(Object data) {
-      return Cast.as(NDArrayFactory.forType(probe(data).v2).array(data));
-   }
 
-   public static <T> NDArray<T> array(@NonNull Shape shape, Object data, @NonNull Class<T> dType) {
-      return NDArrayFactory.forType(dType).array(shape, data);
-   }
-
-   public static <T> NDArray<T> array(@NonNull Shape shape, Object data) {
-      return Cast.as(NDArrayFactory.forType(probe(data).v2).array(shape, data));
-   }
-
-   public static <T extends Number> NDArray<T> ceil(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.ceil</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math.ceil</code> to
+    * @return the new NumericNDArray with <code>Math.ceil</code> applied
+    */
+   public static NumericNDArray ceil(@NonNull NumericNDArray n) {
       return n.mapDouble(Math::ceil);
    }
 
-   public static <T> NDArray<T> convertTensor(@NonNull Tensor<T> tensor) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.ceil</code> in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math.ceil</code> to
+    * @return the given NumericNDArray with <code>Math.ceil</code> applied
+    */
+   public static NumericNDArray ceili(@NonNull NumericNDArray n) {
+      return n.mapiDouble(Math::ceil);
+   }
+
+   /**
+    * <p>Concatenates the given list of NDArray along the given axis</p>
+    *
+    * @param <T>    the NDArray type parameter
+    * @param axis   the axis to concatenate along
+    * @param arrays the arrays to concatenate
+    * @return the concatenated arrays
+    */
+   @SafeVarargs
+   public static <T extends NDArray> T concatenate(int axis, @NonNull T... arrays) {
+      return concatenate(axis, List.of(arrays));
+   }
+
+   /**
+    * <p>Concatenates the given list of NDArray along the given axis</p>
+    *
+    * @param <T>    the NDArray type parameter
+    * @param axis   the axis to concatenate along
+    * @param arrays the arrays to concatenate
+    * @return the concatenated arrays
+    */
+   public static <T extends NDArray> T concatenate(int axis, @NonNull List<T> arrays) {
+      Validation.checkArgument(arrays.size() > 0);
+      int absAxis = Shape.shape(1, 1, 1, 1).toAbsolute(axis);
+      int newSize = arrays.stream().mapToInt(n -> Math.max(1, n.shape().get(axis))).sum();
+      Shape s = arrays.get(0).shape().with(absAxis, newSize);
+      NDArray out = arrays.get(0).factory().zeros(s);
+      int offset = 0;
+      for (NDArray array : arrays) {
+         for (Index index : array.shape().range()) {
+            Object value = array.get(index);
+            index.set(absAxis, index.get(absAxis) + offset);
+            out.set(index, value);
+         }
+         offset += Math.max(1, array.shape().get(absAxis));
+      }
+      return Cast.as(out);
+   }
+
+   /**
+    * <p>Constructs an NDArray from a TensorFlow Tensor.</p>
+    *
+    * @param tensor the TensorFlow Tensor
+    * @return the NDArray
+    */
+   public static NDArray convertTensor(@NonNull Tensor<?> tensor) {
       switch (tensor.dataType()) {
          case FLOAT:
             return Cast.as(DenseFloat32NDArray.fromTensor(tensor));
          case DOUBLE:
-            return Cast.as(DenseFloat32NDArray.fromTensor(tensor));
+            return Cast.as(DenseFloat64NDArray.fromTensor(tensor));
          case INT32:
             return Cast.as(DenseInt32NDArray.fromTensor(tensor));
          case INT64:
@@ -89,7 +187,38 @@ public final class nd {
       throw new IllegalArgumentException("Cannot create NDArray from Tensor of type '" + tensor.dataType() + "'");
    }
 
-   public static <T extends Number, V extends Number> NDArray<T> dot(@NonNull NDArray<T> a, @NonNull NDArray<V> b) {
+   /**
+    * <p>Dot-Product between two NumericNDArray.</p>
+    * <ul>
+    *    <li>If both <code>a</code> and <code>b</code> are empty, the result is an empty NDArray.</li>
+    *    <li>If both <<code>b</code> is scalar, a scalar multiplication is performed.</li>
+    *    <li>If both <code>a</code> and <code>b</code> are vectors of same length, the inner product is calculated.</li>
+    *    <li>f <code>a</code> is a vector and <code>b</code> has the same length and number of rows as <code>a</code>,
+    *    the inner product is calculated with <code>b.T()</code> with the result reshaped with 1 row.</li>
+    *    <li>f <code>a</code> is a vector and <code>b</code> has the same length and number of columns as <code>a</code>,
+    *    the inner product is calculated with <code>b.T()</code> with the result reshaped with 1 column.</li>
+    *    <li>If both <code>a</code> and <code>b</code> are matrices, matrix multiplication is performed.</li>
+    *    <li>If both <code>a</code> and <code>b</code> are m-NDArrays, matrix multiplication is performed per slice.</li>
+    *    <li>If <code>a</code> is an m-NDArray and <code>b</code> a compatible matrix, matrix multiplication is performed per slice.</li>
+    *    <li>If <code>a</code> is a matrix and <code>b</code> is a  row-vector,
+    *    matrix multiplication is performed when <code>a.columns() == b.row()s</code>, otherwise the inner product is
+    *    performed in the ROW direction.</li>
+    *    <li>If <code>a</code> is a matrix and <code>b</code> is a  column-vector,
+    *    matrix multiplication is performed when <code>a.columns() == b.row()s</code>, otherwise the inner product is
+    *    performed in the COLUMN direction.</li>
+    *    <li>If <code>a</code> is an m-NDArray and <code>b</code> is a  row-vector,
+    *    matrix multiplication is performed per slice when <code>a.columns() == b.row()s</code>, otherwise the inner
+    *    product is performed in the ROW direction per slice.</li>
+    *    <li>If <code>a</code> is an m-NDArray and <code>b</code> is a  column-vector,
+    *    matrix multiplication is performed per slice when <code>a.columns() == b.row()s</code>, otherwise the inner
+    *    product is performed per slice in the COLUMN direction.</li>
+    * </ul>
+    *
+    * @param a the first NumericNDArray
+    * @param b the second NumericNDArray
+    * @return the resultant NumericNDArray
+    */
+   public static NumericNDArray dot(@NonNull NumericNDArray a, @NonNull NumericNDArray b) {
       var broadCast = a.shape().accepts(b.shape());
       switch (broadCast) {
          case EMPTY:
@@ -97,175 +226,669 @@ public final class nd {
          case SCALAR:
             return a.mul(b.scalarDouble());
          case VECTOR:
-            if (b.shape().rows() == 1) {
-               return a.mmul(b);
-            }
-            return a.factory().zeros(1).fill(a.dot(b));
+            return a.factory().scalar(a.dot(b));
+
          case MATRIX:
          case TENSOR:
          case TENSOR_CHANNEL:
          case TENSOR_KERNEL:
             return a.mmul(b);
+
          case MATRIX_ROW:
+         case TENSOR_ROW:
             if (a.shape().columns() == b.shape().rows()) {
                return a.mmul(b);
             }
-         case TENSOR_ROW:
             return a.dot(b, Shape.ROW);
+
          case MATRIX_COLUMN:
          case TENSOR_COLUMN:
             if (a.shape().columns() == b.shape().rows()) {
-               System.out.println("MMUL");
                return a.mmul(b);
             }
             return a.dot(b, Shape.COLUMN);
+
       }
+
       if (b.shape().isVector() && b.shape().length() == a.shape().rows()) {
-         return a.dot(b.T(), Shape.COLUMN);
+         return a.dot(b.T(), Shape.ROW).reshape(a.shape().with(Shape.ROW, 1));
       }
       if (b.shape().isVector() && b.shape().length() == a.shape().columns()) {
-         return a.dot(b.T(), Shape.ROW);
+         return a.dot(b.T(), Shape.COLUMN).reshape(a.shape().with(Shape.COLUMN, 1));
       }
+
       throw new IllegalArgumentException(NDArrayOps.unableToBroadcast(b.shape(), a.shape(), broadCast));
    }
 
+   /**
+    * <p>Stack arrays in sequence depth wise (along the CHANNEL axis).</p>
+    *
+    * @param <T>    the NDArray Type parameter
+    * @param arrays the arrays to stack
+    * @return the stacked NADArray
+    */
    @SafeVarargs
-   public static <T> NDArray<T> dstack(@NonNull NDArray<T>... arrays) {
+   public static <T extends NDArray> T dstack(@NonNull T... arrays) {
       return dstack(List.of(arrays));
    }
 
-   public static <T> NDArray<T> dstack(@NonNull List<NDArray<T>> arrays) {
-      Validation.checkArgument(arrays.size() > 0);
-      int channels = arrays.stream().mapToInt(n -> Math.max(1, n.shape().channels())).sum();
-      Shape s = arrays.get(0).shape().with(Shape.CHANNEL, channels);
-      NDArray<T> out = arrays.get(0).factory().zeros(s);
-      int channelOffset = 0;
-      for (NDArray<T> array : arrays) {
-         if (!s.matrixShape().equals(array.shape().matrixShape())) {
-            throw new IllegalArgumentException();
-         }
-         for (Index index : array.shape().range()) {
-            T value = array.get(index);
-            index.set(Shape.CHANNEL, index.getChannel() + channelOffset);
-            out.set(index, value);
-         }
-         channelOffset += Math.max(1, array.shape().channels());
-      }
-      return out;
+   /**
+    * <p>Stack arrays in sequence depth wise (along the CHANNEL axis).</p>
+    *
+    * @param <T>    the NDArray Type parameter
+    * @param arrays the arrays to stack
+    * @return the stacked NADArray
+    */
+   public static <T extends NDArray> T dstack(@NonNull List<T> arrays) {
+      return concatenate(Shape.CHANNEL, arrays);
    }
 
-   public static <T extends Number> NDArray<T> exp(@NonNull NDArray<T> n) {
+   /**
+    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
+    * <code>threshold</code>, setting the value to <code>thresholded</code> when the threshold is met and to
+    * <code>nonThresholdedValue</code> when not met. Results are stored in a new NDArray</p>
+    *
+    * @param lhs           the lefth-hand side NDArray
+    * @param notEqualValue the non thresholded value
+    * @return the NumericNDArray
+    */
+   public static NumericNDArray eq(@NonNull NumericNDArray lhs,
+                                   @NonNull NumericNDArray rhs,
+                                   double notEqualValue) {
+      Validation.checkArgument(lhs.shape().equals(rhs.shape()), "Shape mismatch " + rhs.shape() + " != " + lhs.shape());
+      return lhs.mapDouble(rhs, (a, b) -> a == b ? a : notEqualValue);
+   }
+
+   /**
+    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
+    * <code>threshold</code>, setting the value to <code>thresholded</code> when the threshold is met and to
+    * <code>nonThresholdedValue</code> when not met. Results are stored in a new NDArray</p>
+    *
+    * @param lhs           the lefth-hand side NDArray
+    * @param equalValue    the value to use when the two values are equal
+    * @param notEqualValue the non thresholded value
+    * @return the NumericNDArray
+    */
+   public static NumericNDArray eq(@NonNull NumericNDArray lhs,
+                                   @NonNull NumericNDArray rhs,
+                                   double equalValue,
+                                   double notEqualValue) {
+      Validation.checkArgument(lhs.shape().equals(rhs.shape()), "Shape mismatch " + rhs.shape() + " != " + lhs.shape());
+      return lhs.mapDouble(rhs, (a, b) -> a == b ? equalValue : notEqualValue);
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.exp</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math.exp</code> to
+    * @return the new NumericNDArray with <code>Math.exp</code> applied
+    */
+   public static NumericNDArray exp(@NonNull NumericNDArray n) {
       return n.mapDouble(Math::exp);
    }
 
-   public static <T extends Number> NDArray<T> floor(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.exp</code> in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math.exp</code> to
+    * @return the given NumericNDArray with <code>Math.exp</code> applied
+    */
+   public static NumericNDArray expi(@NonNull NumericNDArray n) {
+      return n.mapiDouble(Math::exp);
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.floor</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math.floor</code> to
+    * @return the new NumericNDArray with <code>Math.floor</code> applied
+    */
+   public static NumericNDArray floor(@NonNull NumericNDArray n) {
       return n.mapDouble(Math::floor);
    }
 
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.floor</code> in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math.floor</code> to
+    * @return the given NumericNDArray with <code>Math.floor</code> applied
+    */
+   public static NumericNDArray floori(@NonNull NumericNDArray n) {
+      return n.mapiDouble(Math::floor);
+   }
+
+   /**
+    * <p>Stack arrays in sequence horizontally (column wise).</p>
+    *
+    * @param <T>    the NDArray Type parameter
+    * @param arrays the arrays to stack
+    * @return the stacked NADArray
+    */
    @SafeVarargs
-   public static <T> NDArray<T> hstack(@NonNull NDArray<T>... arrays) {
+   public static <T extends NDArray> T hstack(@NonNull T... arrays) {
       return hstack(List.of(arrays));
    }
 
-   public static <T> NDArray<T> hstack(@NonNull List<NDArray<T>> arrays) {
-      Validation.checkArgument(arrays.size() > 0);
-      int columns = arrays.stream().mapToInt(n -> n.shape().columns()).sum();
-      Shape s = arrays.get(0).shape().with(Shape.COLUMN, columns);
-      NDArray<T> out = arrays.get(0).factory().zeros(s);
-      int columnOffset = 0;
-      for (NDArray<T> array : arrays) {
-         for (Index index : array.shape().range()) {
-            T value = array.get(index);
-            index.set(Shape.COLUMN, index.getColumn() + columnOffset);
-            out.set(index, value);
-         }
-         columnOffset += array.shape().columns();
-      }
-      return out;
+   /**
+    * <p>Stack arrays in sequence horizontally (column wise).</p>
+    *
+    * @param <T>    the NDArray Type parameter
+    * @param arrays the arrays to stack
+    * @return the stacked NADArray
+    */
+   public static <T extends NDArray> T hstack(@NonNull List<T> arrays) {
+      return concatenate(Shape.COLUMN, arrays);
    }
 
-   public static <T extends Number> NDArray<T> log(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math2.safeLog</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math2.safeLog</code> to
+    * @return the new NumericNDArray with <code>Math2.safeLog</code> applied
+    */
+   public static NumericNDArray log(@NonNull NumericNDArray n) {
       return n.mapDouble(Math2::safeLog);
    }
 
-   public static <T extends Number> NDArray<T> log10(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.log10</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math.log10</code> to
+    * @return the new NumericNDArray with <code>Math.log10</code> applied
+    */
+   public static NumericNDArray log10(@NonNull NumericNDArray n) {
       return n.mapDouble(Math::log10);
    }
 
-   public static <T extends Number> NDArray<T> pow(@NonNull NDArray<T> n, int power) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.log10</code> in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math.log10</code> to
+    * @return the given NumericNDArray with <code>Math.log10</code> applied
+    */
+   public static NumericNDArray log10i(@NonNull NumericNDArray n) {
+      return n.mapiDouble(Math::log10);
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math2.safeLog</code> in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math2.safeLog</code> to
+    * @return the given NumericNDArray with <code>Math2.safeLog</code> applied
+    */
+   public static NumericNDArray logi(@NonNull NumericNDArray n) {
+      return n.mapiDouble(Math2::safeLog);
+   }
+
+   /**
+    * <p>Applies the given <code>operator</code> to each element in the NDArray returning a new NDArray with the
+    * results.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param in       the NDArray whose values will be mapped
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T map(@NonNull T in, @NonNull UnaryOperator<V> operator) {
+      NDArray out = in.zeroLike();
+      for (long i = 0; i < in.shape().length(); i++) {
+         out.set(i, operator.apply(Cast.as(in.get(i))));
+      }
+      return Cast.as(out);
+   }
+
+   /**
+    * <p>Applies the given <code>operator</code> to each element in the NDArray returning a new NDArray with the
+    * results.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param in       the NDArray whose values will be mapped
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T map(@NonNull T in, V value, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(in, value, operator, null);
+   }
+
+   /**
+    * <p>Applies the given binary <code>operator</code> to the elements in the <code>lhs</code> and <code>rhs</code>
+    * NDArrays, broadcasting where necessary. The result is stored in a new NDArray.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param lhs      the left-hand side NDArray
+    * @param rhs      the right-hand side NDArray
+    * @param operator the operator to apply
+    * @return a new NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T map(@NonNull T lhs, @NonNull T rhs, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(lhs, rhs, operator, null);
+   }
+
+   /**
+    * <p>Applies the given binary <code>operator</code> to the elements along the given axis in the <code>lhs</code> to
+    * those in the <code>rhs</code> NDArrays, broadcasting where necessary. The result is stored in a new NDArray.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param axis     the axis of the <code>lhs</code> NDArray to map
+    * @param lhs      the left-hand side NDArray
+    * @param rhs      the right-hand side NDArray
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T map(@NonNull T lhs, int axis, @NonNull T rhs, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(lhs, axis, rhs, operator, null);
+   }
+
+   /**
+    * <p>Applies the given binary <code>operator</code> to the elements along the given axis in the <code>lhs</code> at
+    * the given <code>position</code> to those in the <code>rhs</code> NDArrays, broadcasting where necessary. A new
+    * NDArray is crated to store the results.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param axis     the axis of the <code>lhs</code> NDArray to map
+    * @param position the position along the axis to map
+    * @param lhs      the left-hand side NDArray
+    * @param rhs      the right-hand side NDArray
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T map(@NonNull T lhs, int axis, int position, @NonNull T rhs, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(lhs, axis, position, rhs, operator, null);
+   }
+
+   /**
+    * <p>Applies the given binary <code>operator</code> to the elements along the given axis in the <code>lhs</code> at
+    * the given <code>position</code> to the given <code>value</code>. A new NDArray is created to store the
+    * result.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param axis     the axis of the <code>lhs</code> NDArray to map
+    * @param position the position along the axis to map
+    * @param lhs      the left-hand side NDArray
+    * @param value    the right-hand side value to use in the operation
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T map(@NonNull T lhs, int axis, int position, @NonNull V value, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(lhs, axis, position, value, operator, null);
+   }
+
+   /**
+    * <p>Applies the given <code>operator</code> to each element in the NDArray returning a new NDArray with the
+    * results.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param in       the NDArray whose values will be mapped
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T mapi(@NonNull T in, V value, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(in, value, operator, in);
+   }
+
+   /**
+    * <p>Applies the given binary <code>operator</code> to the elements along the given axis in the <code>lhs</code> to
+    * those in the <code>rhs</code> NDArrays, broadcasting where necessary. The <code>lhs</code> NDArray's elements are
+    * updated in place.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param axis     the axis of the <code>lhs</code> NDArray to map
+    * @param lhs      the left-hand side NDArray
+    * @param rhs      the right-hand side NDArray
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T mapi(@NonNull T lhs, int axis, @NonNull T rhs, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(lhs, axis, rhs, operator, lhs);
+   }
+
+   /**
+    * <p>Applies the given binary <code>operator</code> to the elements along the given axis in the <code>lhs</code> at
+    * the given <code>position</code> to those in the <code>rhs</code> NDArrays, broadcasting where necessary. The
+    * <code>lhs</code> NDArray's elements are updated in place.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param axis     the axis of the <code>lhs</code> NDArray to map
+    * @param position the position along the axis to map
+    * @param lhs      the left-hand side NDArray
+    * @param rhs      the right-hand side NDArray
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T mapi(@NonNull T lhs, int axis, int position, @NonNull T rhs, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(lhs, axis, position, rhs, operator, lhs);
+   }
+
+   /**
+    * <p>Applies the given binary <code>operator</code> to the elements along the given axis in the <code>lhs</code> at
+    * the given <code>position</code> to the given <code>value</code>. The <code>lhs</code> NDArray's elements are
+    * updated in place.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param axis     the axis of the <code>lhs</code> NDArray to map
+    * @param position the position along the axis to map
+    * @param lhs      the left-hand side NDArray
+    * @param value    the right-hand side value to use in the operation
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T mapi(@NonNull T lhs, int axis, int position, @NonNull V value, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(lhs, axis, position, value, operator, lhs);
+   }
+
+   /**
+    * <p>Applies the given binary <code>operator</code> to the elements in the <code>lhs</code> and <code>rhs</code>
+    * NDArrays, broadcasting where necessary. The results are stored in the <code>lhs</code> NDArray.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param lhs      the left-hand side NDArray
+    * @param rhs      the right-hand side NDArray
+    * @param operator the operator to apply
+    * @return the NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T mapi(@NonNull T lhs, @NonNull T rhs, @NonNull BinaryOperator<V> operator) {
+      return NDArrayOps.map(lhs, rhs, operator, lhs);
+   }
+
+   /**
+    * <p>Applies the given <code>operator</code> to each element in the NDArray in-place.</p>
+    *
+    * @param <T>      the type of NDArray
+    * @param <V>      the data type of the NDArray
+    * @param in       the NDArray whose values will be mapped
+    * @param operator the operator to apply
+    * @return the given <codE>in</codE> NDArray with the results of the operator applied
+    * @throws ClassCastException If the given UnaryOperator is for a data type not assignable from the data in the given
+    *                            NDArray.
+    */
+   public static <T extends NDArray, V> T mapi(@NonNull T in, @NonNull UnaryOperator<V> operator) {
+      for (long i = 0; i < in.shape().length(); i++) {
+         in.set(i, operator.apply(Cast.as(in.get(i))));
+      }
+      return in;
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.pow</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n     the NDArray to apply <code>Math.pow</code> to
+    * @param power the number to raise the NDArray elements to
+    * @return the new NumericNDArray with <code>Math.pow</code> applied
+    */
+   public static NumericNDArray pow(@NonNull NumericNDArray n, int power) {
       return n.mapDouble(d -> Math.pow(d, power));
    }
 
-   public static <T extends Number> NDArray<T> round(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.pow</code> in-place.</p>
+    *
+    * @param n     the NDArray to apply <code>Math.pow</code> to
+    * @param power the number to raise the NDArray elements to
+    * @return the given NumericNDArray with <code>Math.pow</code> applied
+    */
+   public static NumericNDArray powi(@NonNull NumericNDArray n, int power) {
+      return n.mapiDouble(d -> Math.pow(d, power));
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.round</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math.round</code> to
+    * @return the new NumericNDArray with <code>Math.round</code> applied
+    */
+   public static NumericNDArray round(@NonNull NumericNDArray n) {
       return n.mapDouble(Math::round);
    }
 
-   public static <T extends Number> NDArray<T> sigmoid(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.round</code> in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math.round</code> to
+    * @return the given NumericNDArray with <code>Math.round</code> applied
+    */
+   public static NumericNDArray roundi(@NonNull NumericNDArray n) {
+      return n.mapDouble(Math::round);
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying a sigmoid to the values returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray
+    * @return the new NumericNDArray with the sigmoid applied
+    */
+   public static NumericNDArray sigmoid(@NonNull NumericNDArray n) {
       return n.mapDouble(x -> 1.0 / (1.0 + Math.exp(-x)));
    }
 
-   public static <T extends Number> NDArray<T> signum(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying a sigmoid to the values in-place.</p>
+    *
+    * @param n the NDArray
+    * @return the given NumericNDArray with the sigmoid applied
+    */
+   public static NumericNDArray sigmoidi(@NonNull NumericNDArray n) {
+      return n.mapDouble(x -> 1.0 / (1.0 + Math.exp(-x)));
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.signum</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math.signum</code> to
+    * @return the new NumericNDArray with <code>Math.signum</code> applied
+    */
+   public static NumericNDArray signum(@NonNull NumericNDArray n) {
       return n.mapDouble(Math::signum);
    }
 
-   public static <T extends Number> NDArray<T> sqrt(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.signum</code> in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math.signum</code> to
+    * @return the given NumericNDArray with <code>Math.signum</code> applied
+    */
+   public static NumericNDArray signumi(@NonNull NumericNDArray n) {
+      return n.mapiDouble(Math::signum);
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.sqrt</code> returning a new
+    * NumericNDArray.</p>
+    *
+    * @param n the NDArray to apply <code>Math.sqrt</code> to
+    * @return the new NumericNDArray with <code>Math.sqrt</code> applied
+    */
+   public static NumericNDArray sqrt(@NonNull NumericNDArray n) {
       return n.mapDouble(Math::sqrt);
    }
 
-   public static <T extends Number> NDArray<T> square(@NonNull NDArray<T> n) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by applying <code>Math.sqrt</code> in-place.</p>
+    *
+    * @param n the NDArray to apply <code>Math.sqrt</code> to
+    * @return the given NumericNDArray with <code>Math.sqrt</code> applied
+    */
+   public static NumericNDArray sqrti(@NonNull NumericNDArray n) {
+      return n.mapiDouble(Math::sqrt);
+   }
+
+   /**
+    * <p>Converts the values in the given NumericNDArray by squaring its values returning a new NumericNDArray.</p>
+    *
+    * @param n the NDArray
+    * @return the given NumericNDArray
+    */
+   public static NumericNDArray square(@NonNull NumericNDArray n) {
       return n.mapDouble(d -> d * d);
    }
 
-   public static <T extends Number> NDArray<T> test(@NonNull NDArray<T> n,
-                                                    @NonNull NumericComparison comparison,
-                                                    double threshold,
-                                                    double thresholdedValue,
-                                                    double nonThresholdedValue) {
+   /**
+    * <p>Converts the values in the given NumericNDArray by squaring its values in-place.</p>
+    *
+    * @param n the NDArray
+    * @return the given NumericNDArray
+    */
+   public static NumericNDArray squarei(@NonNull NumericNDArray n) {
+      return n.mapiDouble(d -> d * d);
+   }
+
+   /**
+    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
+    * <code>threshold</code>, setting the value to <code>thresholded</code> when the threshold is met and to
+    * <code>nonThresholdedValue</code> when not met. Results are stored in a new NDArray</p>
+    *
+    * @param n                   the NDArray
+    * @param comparison          the comparison
+    * @param threshold           the threshold
+    * @param thresholdedValue    the thresholded value
+    * @param nonThresholdedValue the non thresholded value
+    * @return the NumericNDArray
+    */
+   public static NumericNDArray test(@NonNull NumericNDArray n,
+                                     @NonNull NumericComparison comparison,
+                                     double threshold,
+                                     double thresholdedValue,
+                                     double nonThresholdedValue) {
       return n.mapDouble(d -> comparison.compare(d, threshold) ? thresholdedValue : nonThresholdedValue);
    }
 
-   public static <T> NDArray<T> test(@NonNull NDArray<T> n,
-                                     @NonNull BiPredicate<T, T> comparison,
-                                     T compareValue,
-                                     T trueValue) {
+   /**
+    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
+    * <code>threshold</code>, setting the value to <code>thresholded</code> when the threshold is met and to
+    * <code>nonThresholdedValue</code> when not met. Results are stored in a new NDArray</p>
+    *
+    * @param lhs                 the lefth-hand side NDArray
+    * @param comparison          the comparison
+    * @param thresholdedValue    the thresholded value
+    * @param nonThresholdedValue the non thresholded value
+    * @return the NumericNDArray
+    */
+   public static NumericNDArray test(@NonNull NumericNDArray lhs,
+                                     @NonNull NumericNDArray rhs,
+                                     @NonNull NumericComparison comparison,
+                                     double thresholdedValue,
+                                     double nonThresholdedValue) {
+      Validation.checkArgument(lhs.shape().equals(rhs.shape()), "Shape mismatch " + rhs.shape() + " != " + lhs.shape());
+      return lhs.mapDouble(rhs, (a, b) -> comparison.compare(a, b) ? thresholdedValue : nonThresholdedValue);
+   }
+
+   /**
+    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
+    * <code>compareValue</code>, setting the value to <code>trueVale</code> when the comparison evaluates to TRUE and
+    * keeping the current value when it is FALSE. Results are stored in a new NDArray</p>
+    *
+    * @param n            the NDArray
+    * @param comparison   the comparison
+    * @param compareValue the value to compare against.
+    * @param trueValue    the value to set when the comparison is true.
+    * @return the ObjectNDArray
+    */
+   public static <T> ObjectNDArray<T> test(@NonNull ObjectNDArray<T> n,
+                                           @NonNull BiPredicate<T, T> comparison,
+                                           T compareValue,
+                                           T trueValue) {
       return n.map(d -> comparison.test(d, compareValue) ? trueValue : d);
    }
 
-   public static <T> NDArray<T> test(@NonNull NDArray<T> n,
-                                     @NonNull BiPredicate<T, T> comparison,
-                                     T compareValue,
-                                     T trueValue,
-                                     T falseValue) {
+   /**
+    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
+    * <code>compareValue</code>, setting the value to <code>trueVale</code> when the comparison evaluates to TRUE and
+    * <code>falseValue</code> when it is FALSE. Results are stored in a new NDArray</p>
+    *
+    * @param n            the NDArray
+    * @param comparison   the comparison
+    * @param compareValue the value to compare against.
+    * @param trueValue    the value to set when the comparison is true.
+    * @param falseValue   the value to set when the comparison is false.
+    * @return the ObjectNDArray
+    */
+   public static <T> ObjectNDArray<T> test(@NonNull ObjectNDArray<T> n,
+                                           @NonNull BiPredicate<T, T> comparison,
+                                           T compareValue,
+                                           T trueValue,
+                                           T falseValue) {
       return n.map(d -> comparison.test(d, compareValue) ? trueValue : falseValue);
    }
 
-   public static <T extends Number> NDArray<T> test(@NonNull NDArray<T> n,
-                                                    @NonNull NumericComparison comparison,
-                                                    double threshold,
-                                                    double thresholdedValue) {
+   /**
+    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
+    * <code>threshold</code>, setting the value to <code>thresholded</code> when the threshold is met and keeps the
+    * current value when not met. Results are stored in a new NDArray</p>
+    *
+    * @param n                the NDArray
+    * @param comparison       the comparison
+    * @param threshold        the threshold
+    * @param thresholdedValue the thresholded value
+    * @return the NumericNDArray
+    */
+   public static NumericNDArray test(@NonNull NumericNDArray n,
+                                     @NonNull NumericComparison comparison,
+                                     double threshold,
+                                     double thresholdedValue) {
       return n.mapDouble(d -> comparison.compare(d, threshold) ? thresholdedValue : d);
    }
 
+   /**
+    * <p>Stack arrays in sequence horizontally (row wise).</p>
+    *
+    * @param <T>    the NDArray Type parameter
+    * @param arrays the arrays to stack
+    * @return the stacked NADArray
+    */
    @SafeVarargs
-   public static <T> NDArray<T> vstack(@NonNull NDArray<T>... arrays) {
+   public static <T extends NDArray> T vstack(@NonNull T... arrays) {
       return vstack(List.of(arrays));
    }
 
-   public static <T> NDArray<T> vstack(@NonNull List<NDArray<T>> arrays) {
-      Validation.checkArgument(arrays.size() > 0);
-      int rows = arrays.stream().mapToInt(n -> Math.max(1, n.shape().rows())).sum();
-      Shape s = arrays.get(0).shape().with(Shape.ROW, rows);
-      NDArray<T> out = arrays.get(0).factory().zeros(s);
-      int rowOffset = 0;
-      for (NDArray<T> array : arrays) {
-         for (Index index : array.shape().range()) {
-            T value = array.get(index);
-            index.set(Shape.ROW, index.getRow() + rowOffset);
-            out.set(index, value);
-         }
-         rowOffset += Math.max(1, array.shape().rows());
-      }
-      return out;
+   /**
+    * <p>Stack arrays in sequence horizontally (row wise).</p>
+    *
+    * @param <T>    the NDArray Type parameter
+    * @param arrays the arrays to stack
+    * @return the stacked NADArray
+    */
+   public static <T extends NDArray> T vstack(@NonNull List<T> arrays) {
+      return concatenate(Shape.ROW, arrays);
    }
 
 

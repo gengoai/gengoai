@@ -23,6 +23,7 @@
 package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.math.statistics.measure.Distance;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
@@ -91,11 +92,11 @@ public class DistributedKMeans extends FlatCentroidClusterer {
       for(int i = 0; i < model.clusterCenters().length; i++) {
          Cluster cluster = new Cluster();
          cluster.setId(i);
-         cluster.setCentroid(NDArrayFactory.ND.rowVector(model.clusterCenters()[i].toArray()));
+         cluster.setCentroid(nd.DFLOAT32.array(model.clusterCenters()[i].toArray()));
          clustering.add(cluster);
       }
       dataset.stream()
-             .map(n -> $(model.predict(toDenseVector(n)), n.get(parameters.input.value()).asNDArray()))
+             .map(n -> $(model.predict(toDenseVector(n)), n.get(parameters.input.value()).asNumericNDArray()))
              .forEachLocal(t -> clustering.get(t.v1).addPoint(t.v2));
 
       for(Cluster cluster : clustering) {
@@ -110,7 +111,7 @@ public class DistributedKMeans extends FlatCentroidClusterer {
 
    private Vector toDenseVector(Datum o) {
       return (Vector) new DenseVector(o.get(parameters.input.value())
-                                       .asNDArray()
+                                       .asNumericNDArray()
                                        .toDoubleArray());
    }
 

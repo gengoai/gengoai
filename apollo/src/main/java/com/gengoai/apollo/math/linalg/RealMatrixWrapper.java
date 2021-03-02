@@ -1,5 +1,6 @@
 package com.gengoai.apollo.math.linalg;
 
+import lombok.NonNull;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.apache.commons.math3.exception.OutOfRangeException;
 import org.apache.commons.math3.linear.AbstractRealMatrix;
@@ -8,20 +9,18 @@ import org.apache.commons.math3.linear.RealMatrix;
 import java.io.Serializable;
 
 /**
- * Wraps an NDArray treating it as a RealMatrix for use in Apache Commons Math algorithms.
- *
- * @author David B. Bracewell
+ * <p>Wraps an NDArray treating it as a RealMatrix for use in Apache Commons Math algorithms.</p>
  */
-public class RealMatrixWrapper extends AbstractRealMatrix implements Serializable {
+class RealMatrixWrapper extends AbstractRealMatrix implements Serializable {
    private static final long serialVersionUID = 1L;
-   private final NDArray<? extends Number> array;
+   private final NumericNDArray array;
 
    /**
-    * Instantiates a new Real matrix wrapper.
+    * Instantiates a new RealMatrixWrapper.
     *
-    * @param array the array
+    * @param array the NDArray to wrap
     */
-   public RealMatrixWrapper(NDArray<? extends Number> array) {
+   public RealMatrixWrapper(@NonNull NumericNDArray array) {
       this.array = array;
    }
 

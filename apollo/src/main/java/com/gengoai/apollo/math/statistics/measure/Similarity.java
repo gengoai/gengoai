@@ -24,6 +24,7 @@ package com.gengoai.apollo.math.statistics.measure;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.math.Math2;
 import lombok.NonNull;
 
@@ -38,7 +39,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    DotProduct {
       @Override
-      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+      public double calculate(@NonNull NumericNDArray v1, @NonNull NumericNDArray v2) {
          return v1.dot(v2);
       }
 
@@ -52,7 +53,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    Dice {
       @Override
-      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+      public double calculate(@NonNull NumericNDArray v1, @NonNull NumericNDArray v2) {
          return (2 * v1.dot(v2)) / (v1.sum() + v2.sum());
       }
 
@@ -69,7 +70,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    DiceGen2 {
       @Override
-      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+      public double calculate(@NonNull NumericNDArray v1, @NonNull NumericNDArray v2) {
          return v1.dot(v2) / (v1.sum() + v2.sum());
       }
 
@@ -85,7 +86,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    Cosine {
       @Override
-      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+      public double calculate(@NonNull NumericNDArray v1, @NonNull NumericNDArray v2) {
          double v1Norm = v1.norm2();
          double v2Norm = v2.norm2();
          if(v1Norm == 0 && v2Norm == 0) {
@@ -111,7 +112,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    Jaccard {
       @Override
-      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+      public double calculate(@NonNull NumericNDArray v1, @NonNull NumericNDArray v2) {
          if(v1.size() == 0 && v2.size() == 0) {
             return 1.0;
          }
@@ -136,7 +137,7 @@ public enum Similarity implements SimilarityMeasure {
     */
    Overlap {
       @Override
-      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+      public double calculate(@NonNull NumericNDArray v1, @NonNull NumericNDArray v2) {
          if(v1.size() == 0 && v2.size() == 0) {
             return 1.0;
          }
@@ -169,7 +170,7 @@ public enum Similarity implements SimilarityMeasure {
       }
 
       @Override
-      public double calculate(@NonNull NDArray<? extends Number> v1, @NonNull NDArray<? extends Number> v2) {
+      public double calculate(@NonNull NumericNDArray v1, @NonNull NumericNDArray v2) {
          return 1.0 - Math.acos(Cosine.calculate(v1, v2)) / Math.PI;
       }
 

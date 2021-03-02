@@ -19,10 +19,7 @@
 
 package com.gengoai.apollo.ml.transform.vectorizer;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
-import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.encoder.IndexEncoder;
 import com.gengoai.apollo.ml.observation.*;
@@ -76,7 +73,7 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
    }
 
    @Override
-   public NDArray<? extends Number> transform(Observation observation) {
+   public NumericNDArray transform(Observation observation) {
       if (observation instanceof Variable) {
          return transform(observation, null);
       } else if (observation instanceof VariableCollection) {
@@ -84,16 +81,16 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
       } else if (observation instanceof Sequence) {
          Sequence<? extends Observation> sequence = Cast.as(observation);
          if (sequence instanceof VariableSequence) {
-            List<NDArray<? extends Number>> vars = new ArrayList<>();
+            List<NumericNDArray> vars = new ArrayList<>();
             for (Observation v : sequence) {
                vars.add(transform(v, null));
             }
             return nd.vstack(Cast.cast(vars));
          }
          int maxSize = sequence.stream().mapToInt(o -> (int) o.getVariableSpace().count()).max().orElse(1);
-         NDArray<? extends Number> n = ndArrayFactory.zeros(sequence.size(), maxSize);
+         NumericNDArray n = ndArrayFactory.asNumeric().zeros(sequence.size(), maxSize);
          for (int i = 0; i < sequence.size(); i++) {
-            NDArray<Number> o = Cast.as(transform(sequence.get(i), ndArrayFactory.zeros(1, maxSize)));
+            NumericNDArray o = Cast.as(transform(sequence.get(i), ndArrayFactory.asNumeric().zeros(1, maxSize)));
             n.setAxisDouble(Shape.ROW, i, o);
          }
          return n;
@@ -101,13 +98,13 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
       throw new IllegalArgumentException("Unsupported Observation: " + observation.getClass());
    }
 
-   public NDArray<? extends Number> transform(Observation observation, NDArray<? extends Number> out) {
+   public NumericNDArray transform(Observation observation, NumericNDArray out) {
       if (observation.isVariable()) {
          int index = encoder.encode(((Variable) observation).getName());
          if (index >= 0) {
-            return ndArrayFactory.scalar(index);
+            return ndArrayFactory.asNumeric().scalar(index);
          }
-         return ndArrayFactory.scalar(0);
+         return ndArrayFactory.asNumeric().scalar(0);
       }
       VariableCollection mvo = observation.asVariableCollection();
       DoubleArrayList list = new DoubleArrayList();
@@ -119,7 +116,7 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
       });
       list.sort();
       if (out == null) {
-         out = ndArrayFactory.zeros(1, list.size());
+         out = ndArrayFactory.asNumeric().zeros(1, list.size());
       }
       for (int i = 0; i < list.size(); i++) {
          out.set(i, list.get(i));

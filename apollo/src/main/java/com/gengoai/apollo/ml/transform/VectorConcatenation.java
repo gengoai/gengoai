@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml.transform;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.collection.Sets;
@@ -99,11 +100,11 @@ public class VectorConcatenation implements Transform {
    @Override
    public Datum transform(@NonNull Datum datum) {
       List<NDArray> l = new ArrayList<>();
-      for(String input : inputs) {
+      for (String input : inputs) {
          l.add(datum.get(input).asNDArray());
       }
-      datum.put(output, factory.hstack(l));
-      if(dropInputs) {
+      datum.put(output, nd.hstack(l));
+      if (dropInputs) {
          inputs.stream().filter(i -> !output.equals(i)).forEach(datum::remove);
       }
       return datum;
@@ -118,7 +119,7 @@ public class VectorConcatenation implements Transform {
                                    .filter(e -> inputs.contains(e.getKey()))
                                    .mapToLong(e -> e.getValue().getDimension())
                                    .sum();
-      if(dropInputs) {
+      if (dropInputs) {
          inputs.forEach(dataset::removeMetadata);
       }
       dataset.updateMetadata(output, m -> {

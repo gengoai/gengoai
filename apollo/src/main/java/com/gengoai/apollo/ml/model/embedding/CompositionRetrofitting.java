@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -65,7 +66,7 @@ public class CompositionRetrofitting implements Retrofitting {
                                                 embedding.vectorStore.getSpecialKeys());
       for(String key : embedding.getAlphabet()) {
          int index = out.vectorStore.addOrGetIndex(key);
-         NDArray tv = embedding.embed(key).copy();
+         NumericNDArray tv = embedding.embed(key).copy();
          if(background.getAlphabet().contains(key)) {
             tv.addi(background.embed(key));
             if(neighborSize > 0 && neighborWeight > 0) {

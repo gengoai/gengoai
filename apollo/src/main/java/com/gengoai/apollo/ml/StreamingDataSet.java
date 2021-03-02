@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml;
 
 import com.gengoai.Copyable;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArrayFactory;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.stream.MStream;
 import com.gengoai.stream.StorageLevel;

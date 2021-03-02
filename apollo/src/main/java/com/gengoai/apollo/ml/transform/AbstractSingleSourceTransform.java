@@ -60,7 +60,7 @@ public abstract class AbstractSingleSourceTransform<T extends AbstractSingleSour
     */
    @NonNull
    protected String output = Datum.DEFAULT_INPUT;
-   protected NDArrayFactory<? extends Number> ndArrayFactory;
+   protected NDArrayFactory ndArrayFactory;
 
    public AbstractSingleSourceTransform() {
       this.ndArrayFactory = NDArrayFactory.forType(Float.class);

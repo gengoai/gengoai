@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.transform.SingleSourceTransform;
 import com.gengoai.io.resource.Resource;
@@ -70,7 +71,7 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
          String line = reader.readLine();
          while((line = reader.readLine()) != null) {
             if(Strings.isNotNullOrBlank(line) && !line.startsWith("#")) {
-               NDArray v = VSTextUtils.convertLineToVector(line, e.dimension());
+               NumericNDArray v = VSTextUtils.convertLineToVector(line, e.dimension());
                int index = e.vectorStore.addOrGetIndex(v.getLabel());
                e.vectorStore.updateVector(index, v);
             }

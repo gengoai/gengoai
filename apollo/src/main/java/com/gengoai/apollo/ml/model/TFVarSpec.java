@@ -21,8 +21,9 @@ package com.gengoai.apollo.ml.model;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -58,14 +59,11 @@ public class TFVarSpec implements Serializable {
             batch_shape[i + 1] = shape[i];
          }
       }
-      return NDArrayFactory.ND.array(batch_shape);
+      return nd.DFLOAT32.zeros(batch_shape);
    }
 
    public Tensor<?> toTensor(NDArray n) {
-      if (shape.length == 1) {
-         return Tensor.create(n.toFloatArray2());
-      }
-      return Tensor.create(n.toFloatArray3());
+      return n.toTensor();
    }
 
    public void updateBatch(NDArray batch, int index, NDArray x) {
@@ -73,7 +71,7 @@ public class TFVarSpec implements Serializable {
       if (batch.shape().channels() > 0) {
          batch.setSlice(index, x.padPost(shape.rows(), shape.columns()));
       } else {
-         batch.setRow(index, x.padRowPost(shape.columns()).T());
+         batch.setAxis(Shape.ROW, index, x.padPost(Shape.COLUMN, shape.columns()).T());
       }
    }
 

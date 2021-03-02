@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.collection.Sets;
 import com.gengoai.collection.multimap.HashSetMultimap;
 import com.gengoai.collection.multimap.Multimap;
@@ -64,12 +65,12 @@ public class FaruquiRetrofitting implements Retrofitting {
    public WordEmbedding apply(@NonNull WordEmbedding origVectors) {
       Set<String> sourceVocab = new HashSet<>(origVectors.getAlphabet());
       Set<String> sharedVocab = Sets.intersection(sourceVocab, lexicon.keySet());
-      Map<String, NDArray> unitNormedVectors = new HashMap<>();
-      Map<String, NDArray> retrofittedVectors = new HashMap<>();
+      Map<String, NumericNDArray> unitNormedVectors = new HashMap<>();
+      Map<String, NumericNDArray> retrofittedVectors = new HashMap<>();
 
       //Unit Normalize the vectors
       sourceVocab.forEach(w -> {
-         NDArray v = origVectors.embed(w).unitize();
+         NumericNDArray v = origVectors.embed(w).unitize();
          retrofittedVectors.put(w, v);
          unitNormedVectors.put(w, v.copy());
       });
@@ -79,8 +80,8 @@ public class FaruquiRetrofitting implements Retrofitting {
             Set<String> similarTerms = Sets.intersection(lexicon.get(retrofitTerm), sourceVocab);
             if(similarTerms.size() > 0) {
                //Get the original unit normalized vector for the term we are retrofitting
-               NDArray newTermVector = unitNormedVectors.get(retrofitTerm)
-                                                        .mul(similarTerms.size());
+               NumericNDArray newTermVector = unitNormedVectors.get(retrofitTerm)
+                                                               .mul(similarTerms.size());
 
                //Sum the vectors of the similar terms using the retrofitted vectors
                //from last iteration

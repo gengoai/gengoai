@@ -92,5 +92,5 @@ class SequenceLabeler(ApolloModel):
 
     def _build(self) -> List[Tensor]:
         out = self._arch(self.inputs.concatenated_model_layer())
-        out = self.outputs.output_layer("label")(out)
+        out = self.outputs.output_layer(label)(out)
         return [out]

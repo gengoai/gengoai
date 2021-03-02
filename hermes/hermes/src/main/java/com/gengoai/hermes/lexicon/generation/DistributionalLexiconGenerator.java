@@ -24,6 +24,8 @@ package com.gengoai.hermes.lexicon.generation;
 import com.gengoai.Tag;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.model.embedding.VSQuery;
 import com.gengoai.apollo.ml.model.embedding.WordEmbedding;
 import com.gengoai.collection.counter.MultiCounter;
@@ -127,17 +129,17 @@ public class DistributionalLexiconGenerator<T extends Tag> implements LexiconGen
    public Multimap<T, String> generate() {
       SetMultimap<T, String> lexicon = new HashSetMultimap<>();
       if(seedTerms.size() > 0) {
-         Map<T, NDArray> vectors = new HashMap<>();
-         Map<T, NDArray> negVectors = new HashMap<>();
+         Map<T, NumericNDArray> vectors = new HashMap<>();
+         Map<T, NumericNDArray> negVectors = new HashMap<>();
          seedTerms.keySet()
                   .forEach(tag -> {
-                     NDArray v = NDArrayFactory.DENSE.array(wordEmbeddings.dimension());
+                     NumericNDArray v = nd.DFLOAT32.zeros(wordEmbeddings.dimension());
                      seedTerms.get(tag).stream()
                               .filter(wordEmbeddings::contains)
                               .forEach(s -> v.addi(wordEmbeddings.embed(s)));
                      v.divi(seedTerms.size());
                      vectors.put(tag, v);
-                     NDArray negV = NDArrayFactory.DENSE.array(wordEmbeddings.dimension());
+                     NumericNDArray negV = nd.DFLOAT32.zeros(wordEmbeddings.dimension());
                      negativeSeedTerms.get(tag)
                                       .stream()
                                       .filter(wordEmbeddings::contains)

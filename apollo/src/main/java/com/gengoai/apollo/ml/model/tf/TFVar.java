@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml.model.tf;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.Datum;
@@ -94,11 +95,11 @@ public abstract class TFVar implements Serializable {
       int[] batch_shape = new int[shape.length + 1];
       batch_shape[0] = data.size();
       System.arraycopy(dimensionsOf(data), 0, batch_shape, 1, shape.length);
-      NDArray<Float> batch = nd.DFLOAT32.zeros(batch_shape);
+      NumericNDArray batch = nd.DFLOAT32.zeros(batch_shape);
       Shape batchShape = batch.shape();
 
       for (int i = 0; i < data.size(); i++) {
-         NDArray<Float> ni = data.get(i).get(name).asNDArray().asType(Float.class);
+         NumericNDArray ni = data.get(i).get(name).asNumericNDArray();
          if (batchShape.channels() > 0) {
             batch.setSlice(i, ni.padPost(batchShape.rows(), batchShape.columns()));
          } else {

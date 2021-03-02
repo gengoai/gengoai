@@ -23,6 +23,7 @@ import com.gengoai.Copyable;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.model.Model;
@@ -48,7 +49,7 @@ import java.util.stream.Stream;
 public final class Classification implements Serializable, Observation {
    private static final long serialVersionUID = 1L;
    private final String argMax;
-   private final NDArray distribution;
+   private final NumericNDArray distribution;
    private Encoder encoder;
 
    /**
@@ -57,7 +58,7 @@ public final class Classification implements Serializable, Observation {
     * @param distribution the distribution
     * @param encoder      the vectorizer
     */
-   public Classification(@NonNull NDArray distribution, Encoder encoder) {
+   public Classification(@NonNull NumericNDArray distribution, Encoder encoder) {
       if(distribution.shape().isScalar()) {
          this.distribution = nd.DFLOAT32.zeros(1, 2);
          this.distribution.set(0, 1d - distribution.scalarDouble());

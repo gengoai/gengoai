@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.stream.Streams;
@@ -87,7 +88,7 @@ public interface Clustering extends Iterable<Cluster>, Serializable {
       Variance variance = new Variance();
       for(int i = 0; i < size(); i++) {
          Cluster c = get(i);
-         for(NDArray point : c.getPoints()) {
+         for(NumericNDArray point : c.getPoints()) {
             variance.increment(getMeasure().calculate(point, c.getCentroid()));
          }
       }

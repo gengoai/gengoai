@@ -23,6 +23,7 @@
 package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public enum Linkage {
     */
    public final double calculate(Cluster c1, Cluster c2, Measure distanceMeasure) {
       List<Double> distances = new ArrayList<>();
-      for (NDArray t1 : flatten(c1)) {
+      for (NumericNDArray t1 : flatten(c1)) {
          distances.addAll(flatten(c2).stream()
                                      .map(t2 -> distanceMeasure.calculate(t1, t2))
                                      .collect(Collectors.toList()));
@@ -100,7 +101,7 @@ public enum Linkage {
     * @param distanceMeasure the distance measure to use
     * @return the linkage metric
     */
-   public final double calculate(NDArray v, Cluster cluster, Measure distanceMeasure) {
+   public final double calculate(NumericNDArray v, Cluster cluster, Measure distanceMeasure) {
       return calculate(cluster.getPoints().stream().mapToDouble(v2 -> distanceMeasure.calculate(v, v2)));
    }
 
@@ -110,14 +111,14 @@ public enum Linkage {
     * @param c the cluster
     * @return the list of vectors
     */
-   protected List<NDArray<Float>> flatten(Cluster c) {
+   protected List<NumericNDArray> flatten(Cluster c) {
       if (c == null) {
          return Collections.emptyList();
       }
       if (!c.getPoints().isEmpty()) {
          return c.getPoints();
       }
-      List<NDArray<Float>> list = new ArrayList<>();
+      List<NumericNDArray> list = new ArrayList<>();
       list.addAll(flatten(c.getLeft()));
       list.addAll(flatten(c.getRight()));
       return list;

@@ -24,6 +24,7 @@ package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.Lazy;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 
 import java.io.Serializable;
@@ -35,7 +36,7 @@ import java.io.Serializable;
  */
 class ApacheClusterable implements Clusterable, Serializable {
    private static final long serialVersionUID = 1L;
-   private final NDArray vector;
+   private final NumericNDArray vector;
    private final Lazy<double[]> point;
 
    /**
@@ -43,7 +44,7 @@ class ApacheClusterable implements Clusterable, Serializable {
     *
     * @param vector the vector to wrap
     */
-   public ApacheClusterable(NDArray vector) {
+   public ApacheClusterable(NumericNDArray vector) {
       this.vector = vector;
       this.point = new Lazy<>(vector::toDoubleArray);
    }
@@ -58,7 +59,7 @@ class ApacheClusterable implements Clusterable, Serializable {
     *
     * @return the vector
     */
-   public NDArray getVector() {
+   public NumericNDArray getVector() {
       return vector;
    }
 

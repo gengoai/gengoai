@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.collection.Iterables;
@@ -109,17 +110,17 @@ public class GreedyAgglomerativeClusterer extends HierarchicalClusterer {
          if (A.equals(C) || measure.getOptimum().test(ab, bc)) {
             active.remove(A);
             active.remove(B);
-            NDArray centroid = A.getCentroid().add(B.getCentroid()).divi(2.0);
+            NumericNDArray centroid = A.getCentroid().add(B.getCentroid()).divi(2.0);
             Cluster D = new Cluster();
             D.setId(A.getId());
             D.setCentroid(centroid);
             D.setScore(ab);
             D.setLeft(A);
             D.setRight(B);
-            for (NDArray point : A.getPoints()) {
+            for (NumericNDArray point : A.getPoints()) {
                D.addPoint(point);
             }
-            for (NDArray point : B.getPoints()) {
+            for (NumericNDArray point : B.getPoints()) {
                D.addPoint(point);
             }
             active.add(D);

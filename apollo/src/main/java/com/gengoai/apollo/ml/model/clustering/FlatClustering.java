@@ -88,7 +88,7 @@ public class FlatClustering implements Clustering {
       final Measure m = getMeasure();
       final Optimum o = m.getOptimum();
       for(int i = 0; i < clusters.size(); i++) {
-         double v = m.calculate(clusters.get(i).getCentroid(), observation.asNDArray());
+         double v = m.calculate(clusters.get(i).getCentroid(), observation.asNumericNDArray());
          if(o.test(v, optimum)) {
             optimum = v;
             optimumIndex = i;

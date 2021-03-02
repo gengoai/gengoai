@@ -21,7 +21,7 @@ package com.gengoai.apollo.ml.transform;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.composition.Sum;
+import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.observation.Observation;
@@ -150,7 +150,7 @@ public class Merge implements Transform {
       assertCanMerge(observations);
       Observation out;
       if (observations.get(0).isNDArray()) {
-         out = new Sum<>().compose(Cast.cast(observations));
+         out = VectorCompositions.Sum.compose(Cast.cast(observations));
       } else if (observations.get(0).isSequence()) {
          out = Sequence.merge(Cast.cast(observations), nameSpace);
       } else {

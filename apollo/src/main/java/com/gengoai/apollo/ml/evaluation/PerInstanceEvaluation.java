@@ -21,6 +21,8 @@ package com.gengoai.apollo.ml.evaluation;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.model.Model;
 import com.gengoai.apollo.ml.observation.Observation;
@@ -79,9 +81,9 @@ public class PerInstanceEvaluation implements SequenceLabelerEvaluation, Seriali
          return Cast.as(observation);
       } else if(observation.isNDArray()) {
          VariableSequence vs = new VariableSequence();
-         NDArray ndArray = observation.asNDArray();
+         NumericNDArray ndArray = observation.asNumericNDArray();
          for(int i = 0; i < ndArray.rows(); i++) {
-            NDArray row = ndArray.getRow(i);
+            NumericNDArray row = ndArray.getAxis(Shape.ROW, i);
             if(ndArray.columns() == 1) {
                vs.add(Variable.binary(Double.toString(row.getDouble(0))));
             } else {

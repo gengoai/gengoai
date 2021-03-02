@@ -23,8 +23,7 @@ import com.gengoai.LogUtils;
 import com.gengoai.MultithreadedStopwatch;
 import com.gengoai.ParameterDef;
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.observation.Observation;
@@ -52,8 +51,8 @@ import static com.gengoai.function.Functional.with;
  */
 @Log
 public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBayes> {
-   private static final long serialVersionUID = 1L;
    public static final ParameterDef<ModelType> modelTypeParam = ParameterDef.param("modelType", ModelType.class);
+   private static final long serialVersionUID = 1L;
    /**
     * The conditional probabilities
     */
@@ -100,7 +99,7 @@ public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBa
       int numLabels = (int) dataset.getMetadata(parameters.output.value()).getDimension();
 
       final Level old = log.getLevel();
-      if(!parameters.verbose.value()) {
+      if (!parameters.verbose.value()) {
          log.setLevel(Level.OFF);
       }
 
@@ -119,32 +118,32 @@ public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBa
       double[] totalTargetFeatureValues = new double[numLabels];
 
       double N = 0;
-      for(Datum instance : dataset) {
+      for (Datum instance : dataset) {
          N++;
-         NDArray vector = instance.get(parameters.input.value()).asNDArray();
-         NDArray label = instance.get(parameters.output.value()).asNDArray();
+         NumericNDArray vector = instance.get(parameters.input.value()).asNumericNDArray();
+         NumericNDArray label = instance.get(parameters.output.value()).asNumericNDArray();
          int ci;
-         if(label.shape().isScalar()) {
-            ci = (int) label.get(0);
+         if (label.shape().isScalar()) {
+            ci = (int) label.getDouble(0);
          } else {
-            ci = (int) label.argmax();
+            ci = (int) label.argMaxOffset();
          }
          priors[ci]++;
          vector.forEachSparse((index, value) -> {
-            totalTargetFeatureValues[ci] += value;
-            conditionals[(int) index][ci] += modelType.convertValue(value);
+            totalTargetFeatureValues[ci] += value.doubleValue();
+            conditionals[(int) index][ci] += modelType.convertValue(value.doubleValue());
          });
 
       }
 
-      for(int featureIndex = 0; featureIndex < conditionals.length; featureIndex++) {
+      for (int featureIndex = 0; featureIndex < conditionals.length; featureIndex++) {
          double[] tmp = Arrays.copyOf(conditionals[featureIndex], conditionals[featureIndex].length);
-         for(int labelIndex = 0; labelIndex < priors.length; labelIndex++) {
-            if(modelType == ModelType.Complementary) {
+         for (int labelIndex = 0; labelIndex < priors.length; labelIndex++) {
+            if (modelType == ModelType.Complementary) {
                double nCi = 0;
                double nC = 0;
-               for(int j = 0; j < priors.length; j++) {
-                  if(j != labelIndex) {
+               for (int j = 0; j < priors.length; j++) {
+                  if (j != labelIndex) {
                      nCi += tmp[j];
                      nC += totalTargetFeatureValues[j];
                   }
@@ -154,16 +153,17 @@ public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBa
                                                                                           nC,
                                                                                           numFeatures));
             } else {
-               conditionals[featureIndex][labelIndex] = Math2.safeLog(modelType.normalize(conditionals[featureIndex][labelIndex],
-                                                                                          priors[labelIndex],
-                                                                                          totalTargetFeatureValues[labelIndex],
-                                                                                          numFeatures));
+               conditionals[featureIndex][labelIndex] = Math2
+                     .safeLog(modelType.normalize(conditionals[featureIndex][labelIndex],
+                                                  priors[labelIndex],
+                                                  totalTargetFeatureValues[labelIndex],
+                                                  numFeatures));
             }
          }
 
       }
 
-      for(int i = 0; i < priors.length; i++) {
+      for (int i = 0; i < priors.length; i++) {
          priors[i] = Math2.safeLog(priors[i] / N);
       }
 
@@ -174,7 +174,7 @@ public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBa
 
    @Override
    public LabelType getLabelType(@NonNull String name) {
-      if(name.equals(parameters.output.value())) {
+      if (name.equals(parameters.output.value())) {
          return LabelType.classificationType(priors.length);
       }
       throw new IllegalArgumentException("'" + name + "' is not a valid output for this ");
@@ -182,7 +182,7 @@ public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBa
 
    @Override
    protected Observation transform(@NonNull Observation observation) {
-      return modelType.distribution(observation.asNDArray(), priors, conditionals);
+      return modelType.distribution(observation.asNumericNDArray(), priors, conditionals);
    }
 
    @Override
@@ -209,8 +209,8 @@ public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBa
          @Override
          double convertValue(double value) {
             return value > 0
-                   ? 1.0
-                   : 0.0;
+                  ? 1.0
+                  : 0.0;
          }
 
          @Override
@@ -219,19 +219,19 @@ public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBa
          }
 
          @Override
-         NDArray distribution(NDArray instance, double[] priors, double[][] conditionals) {
-            NDArray distribution = NDArrayFactory.ND.columnVector(priors);
-            for(int i = 0; i < priors.length; i++) {
-               for(int f = 0; f < conditionals.length; f++) {
-                  double value = distribution.get(i);
-                  if(instance.get(f) != 0) {
+         NDArray distribution(NumericNDArray instance, double[] priors, double[][] conditionals) {
+            NumericNDArray distribution = nd.DFLOAT32.array(Shape.shape(priors.length, 1), priors);
+            for (int i = 0; i < priors.length; i++) {
+               for (int f = 0; f < conditionals.length; f++) {
+                  double value = distribution.getDouble(i);
+                  if (instance.getDouble(f) != 0) {
                      distribution.set(i, value + Math2.safeLog(conditionals[f][i]));
                   } else {
                      distribution.set(i, value + Math2.safeLog(1 - conditionals[f][i]));
                   }
                }
             }
-            distribution.mapi(FastMath::exp);
+            distribution.mapiDouble(FastMath::exp);
             return distribution;
          }
       },
@@ -260,15 +260,15 @@ public class NaiveBayes extends SingleSourceModel<NaiveBayes.Parameters, NaiveBa
        * @param conditionals the feature-label conditional probabilities
        * @return the distribution as an array
        */
-      NDArray distribution(NDArray instance, double[] priors, double[][] conditionals) {
-         NDArray distribution = NDArrayFactory.ND.columnVector(priors);
+      NDArray distribution(NumericNDArray instance, double[] priors, double[][] conditionals) {
+         NumericNDArray distribution = nd.DFLOAT32.array(Shape.shape(priors.length, 1), priors);
          instance.forEachSparse((index, value) -> {
-            for(int i = 0; i < priors.length; i++) {
-               distribution.set(i, distribution.get(i) + value * conditionals[(int) index][i]);
+            for (int i = 0; i < priors.length; i++) {
+               distribution.set(i, distribution.getDouble(i) + value.doubleValue() * conditionals[(int) index][i]);
             }
 
          });
-         return distribution.mapi(Math::exp);
+         return distribution.mapiDouble(Math::exp);
       }
 
       /**

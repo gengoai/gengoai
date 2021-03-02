@@ -1,7 +1,6 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.RealMatrixWrapper;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import org.jblas.ComplexFloatMatrix;
 import org.jblas.Eigen;
@@ -23,7 +22,7 @@ public class EigenDecomposition extends Decomposition {
    }
 
    @Override
-   protected NDArray<Float>[] onMatrix(NDArray<? extends Number> input) {
+   protected NumericNDArray[] onMatrix(NumericNDArray input) {
       if (input.isDense()) {
          FloatMatrix slice = input.toFloatMatrix()[0];
          ComplexFloatMatrix[] result = Eigen.eigenvectors(slice);
@@ -33,7 +32,7 @@ public class EigenDecomposition extends Decomposition {
          );
       } else {
          org.apache.commons.math3.linear.EigenDecomposition decomposition =
-               new org.apache.commons.math3.linear.EigenDecomposition(new RealMatrixWrapper(input));
+               new org.apache.commons.math3.linear.EigenDecomposition(input.asRealMatrix());
          return arrayOf(
                nd.DFLOAT32.array(decomposition.getV().getData()),
                nd.DFLOAT32.array(decomposition.getD().getData())

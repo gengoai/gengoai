@@ -33,9 +33,7 @@ import static com.gengoai.Validation.checkArgument;
 import static com.gengoai.apollo.math.linalg.Index.zero;
 
 /**
- * Encapsulates the dimensions, i.e. shape, of an {@link NDArray}.
- *
- * @author David B. Bracewell
+ * <p>Encapsulates the dimensions, i.e. shape, of an {@link NDArray}.</p>
  */
 public class Shape extends Coordinate implements Copyable<Shape> {
    /**
@@ -61,7 +59,7 @@ public class Shape extends Coordinate implements Copyable<Shape> {
 
 
    /**
-    * Instantiates a new Shape.
+    * <p>Instantiates a new Shape.</p>
     *
     * @param dimensions the dimensions
     */
@@ -122,17 +120,20 @@ public class Shape extends Coordinate implements Copyable<Shape> {
       if (isTensor() && equals(rhs)) {
          return Broadcast.TENSOR;
       }
+
       if ((rhs.kernels() > 1 && rhs.kernels() != kernels())
             || (rhs.channels() > 1 && rhs.channels() != channels())
       ) {
          return Broadcast.ERROR;
       }
+
       if (isMatrix() && rhs.rows() == rows() && rhs.columns() <= 1) {
          return Broadcast.MATRIX_COLUMN;
       }
       if (isMatrix() && rhs.columns() == columns() && rhs.rows() <= 1) {
          return Broadcast.MATRIX_ROW;
       }
+
       if (isTensor() && rhs.matrixShape().equals(matrixShape())) {
 
          if (channels() != rhs.channels()) {
@@ -200,14 +201,12 @@ public class Shape extends Coordinate implements Copyable<Shape> {
    public Index calculateIndex(long offset) {
       int slice = toSliceIndex(offset);
       int matrix = toMatrixIndex(offset);
-      return Index.index(slice % Math.max(1, point[KERNEL]),
-                         slice / Math.max(1, point[KERNEL]),
+      int kernel = slice / Math.max(1, point[CHANNEL]);
+      int channel = slice % Math.max(1, point[CHANNEL]);
+      return Index.index(kernel,
+                         channel,
                          matrix % Math.max(1, point[ROW]),
                          matrix / Math.max(1, point[ROW]));
-   }
-
-   public long calculateOffset(@NonNull Coordinate c){
-      return (long)calculateSliceIndex(c) * sliceLength + calculateMatrixIndex(c);
    }
 
    /**
@@ -231,6 +230,9 @@ public class Shape extends Coordinate implements Copyable<Shape> {
       return row + (Math.max(rows(), 1) * column);
    }
 
+   public long calculateOffset(@NonNull Coordinate c) {
+      return (long) calculateSliceIndex(c) * matrixLength + calculateMatrixIndex(c);
+   }
 
    /**
     * <p>Calculates the index of the slice associated with the given coordinate.</p>
@@ -292,6 +294,13 @@ public class Shape extends Coordinate implements Copyable<Shape> {
       return new Shape(point);
    }
 
+   public boolean isColumnVector() {
+      if (point[0] > 0 || point[1] > 0) {
+         return false;
+      }
+      return (point[2] > 0 && point[3] <= 1);
+   }
+
    /**
     * <p>Checks if the shape has no axes</p>
     *
@@ -348,14 +357,6 @@ public class Shape extends Coordinate implements Copyable<Shape> {
       }
       return (point[2] <= 1 && point[3] > 0) || (point[2] > 0 && point[3] <= 1);
    }
-
-   public boolean isColumnVector(){
-      if (point[0] > 0 || point[1] > 0) {
-         return false;
-      }
-      return (point[2] > 0 && point[3] <= 1);
-   }
-
 
    /**
     * <p>Creates an {@link IndexRange} that iterates along the given axis at the given position.</p>

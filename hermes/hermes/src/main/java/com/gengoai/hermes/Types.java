@@ -26,6 +26,7 @@ import com.gengoai.StringTag;
 import com.gengoai.Tag;
 import com.gengoai.annotation.Preload;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.hermes.morphology.PartOfSpeech;
 import com.gengoai.hermes.morphology.TokenType;
 import com.gengoai.hermes.morphology.UniversalFeatureSet;
@@ -79,7 +80,7 @@ public interface Types {
    RelationType DEPENDENCY = RelationType.make("DEPENDENCY");
 
 
-   AttributeType<NDArray> EMBEDDING = AttributeType.make("EMBEDDING", NDArray.class);
+   AttributeType<NumericNDArray> EMBEDDING = AttributeType.make("EMBEDDING", NumericNDArray.class);
 
 
    /**

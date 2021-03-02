@@ -19,8 +19,7 @@
 
 package com.gengoai.apollo.ml.model.embedding;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.string.Strings;
@@ -30,6 +29,10 @@ import java.io.IOException;
 
 final class VSTextUtils {
 
+   private VSTextUtils() {
+      throw new IllegalAccessError();
+   }
+
    /**
     * Convert line to vector nd array.
     *
@@ -37,13 +40,13 @@ final class VSTextUtils {
     * @param dimension the dimension
     * @return the nd array
     */
-   public static NDArray<Float> convertLineToVector(String line, int dimension) {
-      NDArray<Float>  vector = nd.DFLOAT32.zeros(1, dimension);
+   public static NumericNDArray convertLineToVector(String line, int dimension) {
+      NumericNDArray vector = nd.DFLOAT32.zeros(1, dimension);
       String[] parts = line.split("[ \t]+");
-      if(parts.length < dimension + 1) {
+      if (parts.length < dimension + 1) {
          throw new IllegalStateException("Invalid Line: " + line);
       }
-      for(int i = 1; i < parts.length; i++) {
+      for (int i = 1; i < parts.length; i++) {
          vector.set(i - 1, Double.parseDouble(parts[i]));
       }
       vector.setLabel(parts[0]);
@@ -58,16 +61,16 @@ final class VSTextUtils {
     * @throws IOException the io exception
     */
    public static int determineDimension(Resource r) throws IOException {
-      try(BufferedReader reader = new BufferedReader(r.reader())) {
-         while(true) {
+      try (BufferedReader reader = new BufferedReader(r.reader())) {
+         while (true) {
             String line = reader.readLine();
-            if(Strings.isNullOrBlank(line)) {
+            if (Strings.isNullOrBlank(line)) {
                throw new IOException("Unexpected empty line at beginning of file: " + r);
-            } else if(line.startsWith("#")) {
+            } else if (line.startsWith("#")) {
                continue;
             }
             String[] cells = line.trim().split("[ \t]+");
-            if(cells.length > 4) {
+            if (cells.length > 4) {
                return cells.length - 1;
             }
             return Integer.parseInt(cells[1]);
@@ -83,11 +86,11 @@ final class VSTextUtils {
     * @throws IOException the io exception
     */
    public static String determineUnknownWord(Resource r) throws IOException {
-      try(BufferedReader reader = new BufferedReader(r.reader())) {
+      try (BufferedReader reader = new BufferedReader(r.reader())) {
          String line = reader.readLine();
-         if(Strings.isNullOrBlank(line)) {
+         if (Strings.isNullOrBlank(line)) {
             throw new IOException("Unexpected empty line at beginning of file: " + r);
-         } else if(line.startsWith("#")) {
+         } else if (line.startsWith("#")) {
             return line.substring(1).strip();
          }
          return null;
@@ -100,18 +103,14 @@ final class VSTextUtils {
     * @param vec the vec
     * @return the string
     */
-   public static String vectorToLine( NDArray<Float>  vec) {
+   public static String vectorToLine(NumericNDArray vec) {
       double[] array = vec.toDoubleArray();
       StringBuilder builder = new StringBuilder();
       builder.append(String.format("%.3f", array[0]));
-      for(int i = 1; i < array.length; i++) {
+      for (int i = 1; i < array.length; i++) {
          builder.append(" ").append(String.format("%.3f", array[i]));
       }
       return builder.toString();
-   }
-
-   private VSTextUtils() {
-      throw new IllegalAccessError();
    }
 
 }//END OF VSTextUtils

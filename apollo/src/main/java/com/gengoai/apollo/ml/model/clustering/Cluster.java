@@ -23,6 +23,7 @@
 package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -36,10 +37,10 @@ import java.util.List;
  *
  * @author David B. Bracewell
  */
-public class Cluster implements Serializable, Iterable<NDArray<Float>> {
+public class Cluster implements Serializable, Iterable<NumericNDArray> {
    private static final long serialVersionUID = 1L;
-   private final List<NDArray<Float>> points = new ArrayList<>();
-   private NDArray<Float> centroid;
+   private final List<NumericNDArray> points = new ArrayList<>();
+   private NumericNDArray centroid;
    private int id;
    private Cluster left;
    private Cluster parent;
@@ -51,7 +52,7 @@ public class Cluster implements Serializable, Iterable<NDArray<Float>> {
     *
     * @param point the point
     */
-   public void addPoint(NDArray<Float> point) {
+   public void addPoint(NumericNDArray point) {
       this.points.add(point);
    }
 
@@ -67,7 +68,7 @@ public class Cluster implements Serializable, Iterable<NDArray<Float>> {
     *
     * @return the centroid
     */
-   public NDArray<Float> getCentroid() {
+   public NumericNDArray getCentroid() {
       return centroid;
    }
 
@@ -103,7 +104,7 @@ public class Cluster implements Serializable, Iterable<NDArray<Float>> {
     *
     * @return the points in the cluster
     */
-   public List<NDArray<Float>> getPoints() {
+   public List<NumericNDArray> getPoints() {
       return points;
    }
 
@@ -130,7 +131,7 @@ public class Cluster implements Serializable, Iterable<NDArray<Float>> {
    }
 
    @Override
-   public Iterator<NDArray<Float>> iterator() {
+   public Iterator<NumericNDArray> iterator() {
       return points.iterator();
    }
 
@@ -139,7 +140,7 @@ public class Cluster implements Serializable, Iterable<NDArray<Float>> {
     *
     * @param centroid the centroid
     */
-   public void setCentroid(NDArray<Float> centroid) {
+   public void setCentroid(NumericNDArray centroid) {
       this.centroid = centroid;
    }
 

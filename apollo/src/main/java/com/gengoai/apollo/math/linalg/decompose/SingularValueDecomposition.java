@@ -1,9 +1,6 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.math.linalg.SparkLinearAlgebra;
-import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.linalg.*;
 import org.jblas.FloatMatrix;
 import org.jblas.Singular;
 
@@ -63,7 +60,7 @@ public class SingularValueDecomposition extends Decomposition {
    }
 
    @Override
-   protected NDArray<Float>[] onMatrix(NDArray<? extends Number> input) {
+   protected NumericNDArray[] onMatrix(NumericNDArray input) {
       if (distributed) {
          return SparkLinearAlgebra.svd(input,
                                        K <= 0

@@ -22,6 +22,7 @@ package com.gengoai.apollo.ml.transform;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.observation.Observation;
@@ -74,7 +75,7 @@ public class VectorAssembler implements Transform {
 
    @Override
    public Datum transform(@NonNull Datum datum) {
-      NDArray out = ndArrayFactory.array(inputs.size());
+      NumericNDArray out = ndArrayFactory.asNumeric().zeros(inputs.size());
       for(int i = 0; i < inputs.size(); i++) {
          Observation o = datum.get(inputs.get(i));
          if(o.isVariable()) {

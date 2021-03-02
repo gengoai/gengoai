@@ -19,8 +19,7 @@
 
 package com.gengoai.apollo.ml.model;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.DataSetType;
 import com.gengoai.apollo.ml.Datum;
@@ -31,6 +30,7 @@ import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.apollo.ml.transform.Transformer;
 import com.gengoai.apollo.ml.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.collection.Iterables;
+import com.gengoai.conversion.Cast;
 import com.gengoai.io.Compression;
 import com.gengoai.io.MonitoredObject;
 import com.gengoai.io.ResourceMonitor;
@@ -163,21 +163,21 @@ public abstract class TensorFlowModel implements Model {
     * @param slice the slice
     * @return the datum
     */
-   private Datum decode(Datum datum, List<NDArray> yHat, long slice) {
+   private Datum decode(Datum datum, List<NumericNDArray> yHat, long slice) {
       int i = 0;
       for (Map.Entry<String, TFVarSpec> e : outputs.entrySet()) {
-         NDArray ndArray = yHat.get(i);
-         if (ndArray.shape().order() > 2) {
+         NumericNDArray ndArray = yHat.get(i);
+         if (ndArray.shape().rank() > 2) {
             datum.put(e.getKey(), decodeNDArray(e.getKey(), yHat.get(i).slice((int) slice)));
          } else {
-            datum.put(e.getKey(), decodeNDArray(e.getKey(), yHat.get(i).getRow((int) slice)));
+            datum.put(e.getKey(), decodeNDArray(e.getKey(), yHat.get(i).getAxis(Shape.ROW, (int) slice)));
          }
          i++;
       }
       return datum;
    }
 
-   protected abstract Observation decodeNDArray(String name, NDArray ndArray);
+   protected abstract Observation decodeNDArray(String name, NumericNDArray ndArray);
 
    @Override
    public void estimate(@NonNull DataSet dataset) {
@@ -231,9 +231,9 @@ public abstract class TensorFlowModel implements Model {
       Map<String, Tensor<?>> tensors = createTensors(batch);
       tensors.forEach(runner::feed);
       outputs.forEach((mo, to) -> runner.fetch(to.getServingName()));
-      List<NDArray> results = new ArrayList<>();
+      List<NumericNDArray> results = new ArrayList<>();
       for (Tensor<?> tensor : runner.run()) {
-         results.add(NDArrayFactory.ND.fromTensorFlowTensor(tensor));
+         results.add(Cast.as(nd.convertTensor(tensor)));
          tensor.close();
       }
       List<Datum> output = new ArrayList<>();

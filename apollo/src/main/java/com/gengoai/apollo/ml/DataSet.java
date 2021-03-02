@@ -22,6 +22,7 @@ package com.gengoai.apollo.ml;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArrayFactory;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.transform.Transform;
 import com.gengoai.collection.Lists;
@@ -89,7 +90,7 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     * The factory used for constructing NDArray
     */
    @NonNull
-   protected NDArrayFactory<? extends Number> ndArrayFactory = nd.DFLOAT32;
+   protected NDArrayFactory ndArrayFactory = nd.DFLOAT32;
 
    /**
     * <p>Constructs an in-memory DataSet from the given array of examples</p>
@@ -181,7 +182,7 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     *
     * @return the NDArrayFactory
     */
-   public NDArrayFactory<? extends Number> getNDArrayFactory() {
+   public NDArrayFactory getNDArrayFactory() {
       return ndArrayFactory;
    }
 
@@ -191,7 +192,7 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     * @param ndArrayFactory the NDArrayFactory
     * @return this DataSet
     */
-   public DataSet setNDArrayFactory(@NonNull NDArrayFactory<? extends Number> ndArrayFactory) {
+   public DataSet setNDArrayFactory(@NonNull NDArrayFactory ndArrayFactory) {
       this.ndArrayFactory = ndArrayFactory;
       return this;
    }

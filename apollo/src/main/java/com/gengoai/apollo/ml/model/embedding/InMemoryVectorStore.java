@@ -21,6 +21,8 @@ package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.collection.HashMapIndex;
 import com.gengoai.collection.Index;
@@ -44,7 +46,7 @@ import java.util.stream.Stream;
 public class InMemoryVectorStore implements KeyedVectorStore {
    private static final long serialVersionUID = 1L;
    protected final Index<String> alphabet = new HashMapIndex<>();
-   protected final List<NDArray> vectors = new ArrayList<>();
+   protected final List<NumericNDArray> vectors = new ArrayList<>();
    @NonNull
    @Getter
    private final String unknownKey;
@@ -66,12 +68,12 @@ public class InMemoryVectorStore implements KeyedVectorStore {
       if(this.specialKeys.length > 0) {
          alphabet.addAll(Arrays.asList(this.specialKeys));
          for(String specialKey : this.specialKeys) {
-            vectors.add(NDArrayFactory.ND.array(dimension));
+            vectors.add(nd.DFLOAT32.zeros(dimension));
          }
       }
       if(Strings.isNotNullOrBlank(unknownKey)) {
          alphabet.add(unknownKey);
-         vectors.add(NDArrayFactory.ND.array(dimension));
+         vectors.add(nd.DFLOAT32.zeros(dimension));
       }
    }
 
@@ -106,11 +108,11 @@ public class InMemoryVectorStore implements KeyedVectorStore {
    }
 
    @Override
-   public NDArray getVector(@NonNull String key) {
+   public NumericNDArray getVector(@NonNull String key) {
       int index = alphabet.getId(key);
       return index >= 0
              ? vectors.get(index)
-             : NDArrayFactory.ND.array(1, dimension);
+             : nd.DFLOAT32.zeros(dimension);
    }
 
    @Override
@@ -124,12 +126,12 @@ public class InMemoryVectorStore implements KeyedVectorStore {
    }
 
    @Override
-   public Stream<NDArray> stream() {
+   public Stream<NumericNDArray> stream() {
       return vectors.stream();
    }
 
    @Override
-   public void updateVector(int index, @NonNull NDArray vector) {
+   public void updateVector(int index, @NonNull NumericNDArray vector) {
       if(index < 0) {
          throw new IndexOutOfBoundsException();
       }

@@ -22,10 +22,7 @@
 
 package com.gengoai.apollo.ml.model.clustering;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
-import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.model.Params;
 import com.gengoai.conversion.Cast;
@@ -79,14 +76,14 @@ public class GaussianMixtureModel extends FlatCentroidClusterer {
       clustering = new FlatClustering();
       clustering.setMeasure(p.measure.value());
 
-      final List<NDArray> vectors = dataset.parallelStream()
-                                           .map(this::getNDArray)
-                                           .collect();
+      final List<NumericNDArray> vectors = dataset.parallelStream()
+                                                  .map(this::getNDArray)
+                                                  .collect();
       int numberOfFeatures = (int) vectors.get(0).length();
       int numberOfDataPoints = (int) vectors.size();
       double[][] data = new double[numberOfDataPoints][numberOfFeatures];
       int i = 0;
-      for (NDArray vector : vectors) {
+      for (NumericNDArray vector : vectors) {
          data[i] = vector.toDoubleArray();
          i++;
       }

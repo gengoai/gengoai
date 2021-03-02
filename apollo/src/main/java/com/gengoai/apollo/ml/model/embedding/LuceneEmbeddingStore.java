@@ -21,6 +21,8 @@ package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.io.Resources;
@@ -142,11 +144,11 @@ public class LuceneEmbeddingStore {
 
    protected static NDArray lookup(IndexSearcher searcher,String... terms) throws Exception{
       int count = 0;
-      NDArray v = null;
+      NumericNDArray v = null;
       for (String term : terms) {
          TopDocs topDocs = searcher.search(new TermQuery(new Term(FIELD_ID, term)), 1);
          for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
-            NDArray temp = readVector(searcher.getIndexReader().document(scoreDoc.doc).get(FIELD_VECTOR));
+            NumericNDArray temp = readVector(searcher.getIndexReader().document(scoreDoc.doc).get(FIELD_VECTOR));
             if (v == null) {
                v = temp;
             } else {
@@ -172,9 +174,9 @@ public class LuceneEmbeddingStore {
       System.out.println("------------------");
    }
 
-   protected static NDArray readVector(String vec) {
+   protected static NumericNDArray readVector(String vec) {
       String[] p = vec.strip().split("\\s+");
-      NDArray n = NDArrayFactory.DENSE.array(1, p.length);
+      NumericNDArray n = nd.DFLOAT32.zeros(p.length);
       for (int i = 0; i < p.length; i++) {
          n.set(i, Double.parseDouble(p[i]));
       }

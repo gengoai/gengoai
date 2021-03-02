@@ -24,6 +24,7 @@ package com.gengoai.apollo.ml.evaluation;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.model.Model;
@@ -138,9 +139,9 @@ public class SilhouetteEvaluation implements ClusteringEvaluation, Serializable 
          return 0;
       }
       double s = 0;
-      for(NDArray point1 : c1) {
+      for(NumericNDArray point1 : c1) {
          double ai = 0;
-         for(NDArray point2 : c1) {
+         for(NumericNDArray point2 : c1) {
             ai += distanceMeasure.calculate(point1, point2);
          }
          ai = Double.isFinite(ai)
@@ -154,7 +155,7 @@ public class SilhouetteEvaluation implements ClusteringEvaluation, Serializable 
                                    return Double.MAX_VALUE;
                                 }
                                 double b = 0;
-                                for(NDArray point2 : clusters.get(j)) {
+                                for(NumericNDArray point2 : clusters.get(j)) {
                                    b += distanceMeasure.calculate(point1, point2);
                                 }
                                 return b;

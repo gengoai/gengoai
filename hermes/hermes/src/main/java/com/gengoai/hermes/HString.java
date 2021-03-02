@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.gengoai.Language;
 import com.gengoai.Tag;
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.VectorCompositions;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.collection.Iterables;
 import com.gengoai.collection.Iterators;
 import com.gengoai.collection.tree.Span;
@@ -515,7 +515,7 @@ public interface HString extends Span, StringLike, Serializable {
     */
    Document document();
 
-   default NDArray embedding() {
+   default NumericNDArray embedding() {
       if (hasAttribute(Types.EMBEDDING)) {
          return attribute(Types.EMBEDDING);
       }
@@ -525,7 +525,7 @@ public interface HString extends Span, StringLike, Serializable {
                                                              .collect(Collectors.toList()));
    }
 
-   default NDArray embedding(@NonNull Predicate<HString> filter) {
+   default NumericNDArray embedding(@NonNull Predicate<HString> filter) {
       if (hasAttribute(Types.EMBEDDING)) {
          return attribute(Types.EMBEDDING);
       }

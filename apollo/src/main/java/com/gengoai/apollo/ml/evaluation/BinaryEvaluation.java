@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.evaluation;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Split;
 import com.gengoai.apollo.ml.model.Model;
@@ -128,7 +129,7 @@ public class BinaryEvaluation extends ClassifierEvaluation {
    }
 
    @Override
-   public void entry(double gold, @NonNull NDArray predicted) {
+   public void entry(double gold, @NonNull NumericNDArray predicted) {
       int goldClass = (int) gold;
       int predictedClass = (int) predicted.argMaxOffset();
       prob[goldClass].add(predicted.getDouble(1));
@@ -152,7 +153,7 @@ public class BinaryEvaluation extends ClassifierEvaluation {
    @Override
    public void evaluate(@NonNull Model model, @NonNull DataSet dataset) {
       dataset.forEach(d -> entry(getIntegerLabelFor(d.get(outputName), dataset),
-                                 model.transform(d).get(outputName).asNDArray()));
+                                 model.transform(d).get(outputName).asNumericNDArray()));
    }
 
    @Override

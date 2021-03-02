@@ -19,8 +19,7 @@
 
 package com.gengoai.apollo.ml.transform;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.observation.Observation;
 import com.gengoai.stream.MStream;
@@ -45,16 +44,16 @@ public class SequenceVectorContext extends AbstractSingleSourceTransform<Sequenc
 
    @Override
    protected Observation transform(@NonNull Observation observation) {
-      NDArray sequence = observation.asNDArray();
+      NumericNDArray sequence = observation.asNumericNDArray();
       long outColumns = sequence.columns() + (left * sequence.columns()) + (right * sequence.columns());
-      NDArray out = NDArrayFactory.ND.array(sequence.rows(), (int) outColumns);
+      NumericNDArray out = nd.DFLOAT32.zeros(sequence.rows(), (int) outColumns);
       for(int r = 0; r < sequence.rows(); r++) {
          int offset = 0;
          final int row = r;
          for(int rj = r - left; rj < r + right; rj++) {
             if(rj >= 0 && rj < sequence.rows()) {
                final int o = offset;
-               sequence.getRow(rj)
+               sequence.getAxis(Shape.ROW, rj)
                        .forEachSparse((i, v) -> out.set(row, (int) i + o, v));
             }
             offset += sequence.columns();

@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml.model.tf;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.encoder.IndexEncoder;
@@ -61,9 +62,9 @@ public abstract class TFOutputVar extends TFVar {
       return new TFSequenceOutputVar(name, servingName, new IndexEncoder(defaultSymbol), SequenceValidator.ALWAYS_TRUE);
    }
 
-   public abstract Observation decode(@NonNull NDArray<Float> ndArray);
+   public abstract Observation decode(@NonNull NumericNDArray ndArray);
 
-   public NDArray<Float> extractSingleDatumResult(@NonNull NDArray<Float> yHat, int index) {
+   public NumericNDArray extractSingleDatumResult(@NonNull NumericNDArray yHat, int index) {
       if (yHat.shape().rank() > 2) {
          return yHat.slice(index);
       }

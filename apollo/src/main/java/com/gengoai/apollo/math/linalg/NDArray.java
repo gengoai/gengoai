@@ -25,24 +25,15 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.gengoai.Copyable;
 import com.gengoai.Primitives;
-import com.gengoai.apollo.math.linalg.nd3.dense.DenseFloat32NDArray;
-import com.gengoai.apollo.math.linalg.nd3.dense.DenseInt32NDArray;
-import com.gengoai.apollo.math.linalg.nd3.dense.DenseInt64NDArray;
-import com.gengoai.apollo.math.linalg.nd3.dense.DenseStringNDArray;
-import com.gengoai.apollo.ml.encoder.Encoder;
-import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
+import com.gengoai.apollo.math.linalg.dense.*;
+import com.gengoai.apollo.math.linalg.sparse.*;
 import com.gengoai.apollo.ml.observation.Observation;
-import com.gengoai.apollo.ml.observation.Sequence;
 import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.observation.VariableSequence;
 import com.gengoai.collection.Sorting;
 import com.gengoai.conversion.Cast;
-import com.gengoai.math.Operator;
 import com.gengoai.string.Strings;
 import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
-import org.jblas.DoubleMatrix;
-import org.jblas.FloatMatrix;
 import org.tensorflow.Tensor;
 
 import java.io.Serializable;
@@ -50,26 +41,34 @@ import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
-import java.util.function.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static com.gengoai.Validation.checkArgument;
-import static com.gengoai.apollo.math.linalg.Validator.*;
 import static com.gengoai.tuple.Tuples.$;
 
 /**
- * The type Nd array.
- *
- * @param <T> the type parameter
+ * <p>An N-dimensional array type containing a collection of homogeneous items. </p>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
 @JsonSubTypes({
       @JsonSubTypes.Type(value = DenseStringNDArray.class, name = "DSTRING"),
       @JsonSubTypes.Type(value = DenseFloat32NDArray.class, name = "DFLOAT32"),
+      @JsonSubTypes.Type(value = DenseFloat64NDArray.class, name = "DFLOAT64"),
       @JsonSubTypes.Type(value = DenseInt32NDArray.class, name = "DINT32"),
       @JsonSubTypes.Type(value = DenseInt64NDArray.class, name = "DINT64"),
+
+      @JsonSubTypes.Type(value = SparseStringNDArray.class, name = "SSTRING"),
+      @JsonSubTypes.Type(value = SparseFloat32NDArray.class, name = "SFLOAT32"),
+      @JsonSubTypes.Type(value = SparseFloat64NDArray.class, name = "SFLOAT64"),
+      @JsonSubTypes.Type(value = SparseInt32NDArray.class, name = "SINT32"),
+      @JsonSubTypes.Type(value = SparseInt64NDArray.class, name = "SINT64"),
+
 })
 @JsonAutoDetect(
       fieldVisibility = JsonAutoDetect.Visibility.NONE,
@@ -78,8 +77,11 @@ import static com.gengoai.tuple.Tuples.$;
       isGetterVisibility = JsonAutoDetect.Visibility.NONE,
       creatorVisibility = JsonAutoDetect.Visibility.NONE
 )
-public abstract class NDArray<T> implements Serializable, Observation {
-   protected static final NumberFormat decimalFormatter = new DecimalFormat(" 0.000000;-0");
+public abstract class NDArray implements Serializable, Observation {
+   private static final NumberFormat decimalFormatter = new DecimalFormat(" 0.000000;-0");
+   private static final String INVALID_AXIS = "Invalid axis %s for shape %s.";
+   private static final String INVALID_DIMENSION = "Invalid dimension %d for axis %d (%d) of shape %s.";
+
    private static final long serialVersionUID = 1L;
    private static final char openP = '{';
    private static final char closeP = '}';
@@ -95,12 +97,28 @@ public abstract class NDArray<T> implements Serializable, Observation {
    private double weight = 1d;
 
    /**
-    * Instantiates a new Nd array.
+    * Instantiates a new NDArray.
     *
     * @param shape the shape
     */
    public NDArray(Shape shape) {
       this.shape = shape.copy();
+   }
+
+   protected static int checkAxis(int axis, NDArray n) {
+      int absAxis = n.shape().toAbsolute(axis);
+      if (absAxis < (Shape.MAX_DIMENSIONS - n.rank()) || absAxis >= Shape.MAX_DIMENSIONS) {
+         throw new IllegalArgumentException(String.format(INVALID_AXIS, absAxis, n.shape()));
+      }
+      return absAxis;
+   }
+
+   protected static void checkDimension(int axis, int dimension, NDArray n) {
+      if (dimension < 0 || (dimension > 0 && dimension >= n.shape().get(axis))) {
+         throw new IllegalArgumentException(String.format(INVALID_DIMENSION, dimension, axis, n.shape()
+                                                                                               .toAbsolute(axis), n
+                                                                .shape()));
+      }
    }
 
    private static String formatElement(Object o, boolean isFloatingPoint) {
@@ -112,7 +130,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
       return o == null ? "null" : o.toString();
    }
 
-   private static void print(NDArray<?> m, StringBuilder writer, int indent) {
+   private static void print(NDArray m, StringBuilder writer, int indent) {
       Class<?> c = Primitives.wrap(m.getType());
       String strIndent = Strings.repeat(' ', indent);
       boolean isFloatingPoint = c == Float.class || c == Double.class;
@@ -197,14 +215,14 @@ public abstract class NDArray<T> implements Serializable, Observation {
     *
     * @return the transposed array
     */
-   public NDArray<T> T() {
+   public NDArray T() {
       if (isEmpty() || shape().isScalar()) {
          return copy();
       }
-      NDArray<T> out = factory().zeros(shape().with(Shape.ROW, Math.max(1, shape().columns()),
-                                                    Shape.COLUMN, Math.max(1, shape().rows())));
+      NDArray out = factory().zeros(shape().with(Shape.ROW, Math.max(1, shape().columns()),
+                                                 Shape.COLUMN, Math.max(1, shape().rows())));
       for (Index index : shape().range()) {
-         T value = get(index);
+         Object value = get(index);
          int col = index.getColumn();
          int row = index.getRow();
          out.set(index.set(Shape.ROW, col).set(Shape.COLUMN, row), value);
@@ -214,312 +232,22 @@ public abstract class NDArray<T> implements Serializable, Observation {
 
 
    /**
-    * <p>Adds the values in this NDArray to those in the given NDArray returning a new NDArray with the output.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.add({1,1,1,2,2,2}); //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{   11,  21,  41,
-    *       102, 202, 402}}
-    * }
-    * </pre>
-    *
-    * @param rhs the other NDArray whose values will be added
-    * @return the new NDArray with the result of this + other
-    */
-   public NDArray<T> add(@NonNull NDArray<?> rhs) {
-      return mapDouble(rhs, Operator::add);
-   }
-
-   /**
-    * <p>Adds the given scalar value to each of the values in this NDArray returning a new NDArray with the output.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.add(1);
-    *
-    *   //Would result in b being
-    *   {{   11,  21,  41,
-    *       101, 201, 401}}
-    * }
-    * </pre>
-    *
-    * @param value the value to add
-    * @return the new NDArray with the scalar value added
-    */
-   public NDArray<T> add(double value) {
-      return mapDouble(value, Operator::add);
-   }
-
-   /**
-    * <p>Adds the given NDArray along the given axis, e.g. <code>add(Shape.ROW, cVector)</code> would add
-    * <code>cVector</code> to each row. (this will span all axes higher than row, e.g. channel and
-    * kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.add(Shape.ROW, {10,20,30});
-    *
-    *   //Would result in b being
-    *   b = {{ 11,22,33,
-    *          14,25,36 },
-    *        { 17,28,39,
-    *           9,18,27 }}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to add the given NDArray along
-    * @param rhs  the NDArray to add
-    * @return the resultant NDArray
-    */
-   public NDArray<T> add(int axis, @NonNull NDArray<?> rhs) {
-      return mapAxisDouble(axis, rhs, Operator::add);
-   }
-
-   /**
-    * <p>Adds the given NDArray along the given axis at the given dimension, e.g. <code>add(Shape.ROW, 1
-    * cVector)</code> would add <code>cVector</code> to the row indexed at <code>1</code> (this will span all axes
-    * higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.add(Shape.ROW, 0, {10,20,30});
-    *
-    *   //Would result in b being
-    *   {{ 11,22,33,
-    *       4, 5, 6 },
-    *    { 17,28,39,
-    *      -1,-2,-3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to add the given NDArray along
-    * @param position the value of the axis to perform the add on
-    * @param rhs      the NDArray to add
-    * @return the resultant NDArray
-    */
-   public NDArray<T> add(int axis, int position, @NonNull NDArray<?> rhs) {
-      return mapAxisDouble(axis, position, rhs, Operator::add);
-   }
-
-   /**
-    * <p>Adds the given NDArray along the given axis at the given position, e.g. <code>add(Shape.ROW, 1
-    * cVector)</code> would add <code>cVector</code> to the row indexed at <code>1</code> (this will span all axes
-    * higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.addi(Shape.ROW, 0, 10);
-    *
-    *   //Would result in b being
-    *   {{ 11,12,13,
-    *       4, 5, 6 },
-    *    { 17,18,19,
-    *      -1,-2,-3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to add the given NDArray along
-    * @param position the position of the axis to perform the add on
-    * @param rhs      the position to add
-    * @return the resultant NDArray
-    */
-   public NDArray<T> add(int axis, int position, @NonNull Number rhs) {
-      return mapAxisDouble(axis, position, rhs.doubleValue(), Operator::add);
-   }
-
-   /**
-    * <p>Updates the value in this NDArray by adding to them the values in the given NDArray.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.addi({1,1,1,2,2,2}); //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{   11,  21,  41,
-    *       102, 202, 402}}
-    * }
-    * </pre>
-    *
-    * @param rhs the other NDArray whose values will be added
-    * @return this NDArray with the result of this + rhs
-    */
-   public NDArray<T> addi(@NonNull NDArray<?> rhs) {
-      return mapiDouble(rhs, Operator::add);
-   }
-
-   /**
-    * <p>Updates the value in this NDArray by adding to them the given value.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.addi(1);
-    *
-    *   //Would result in a being
-    *   {{   11,  21,  41,
-    *       101, 201, 401}}
-    * }
-    * </pre>
-    *
-    * @param value the value to add
-    * @return this NDArray with the scalar value added
-    */
-   public NDArray<T> addi(double value) {
-      return mapiDouble(value, Operator::add);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis by adding them to the values in the given NDArray,
-    * e.g. <code>addi(Shape.ROW, cVector)</code> would add <code>cVector</code> to each row. (this will span all axes
-    * higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{ 1, 2, 3,
-    *           4, 5, 6 },
-    *         { 7, 8, 9,
-    *          -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.addi(Shape.ROW, {10,20,30});
-    *
-    *   //Would result in a being
-    *   {{ 11,22,33,
-    *      14,25,36 },
-    *    { 17,28,39,
-    *       9,18,27 }}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to add the given NDArray along
-    * @param rhs  the NDArray to add
-    * @return this NDArray with the results of the addition
-    */
-   public NDArray<T> addi(int axis, @NonNull NDArray<?> rhs) {
-      return mapiAxisDouble(axis, rhs, Operator::add);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis for the given position by adding them to the values
-    * in the given NDArray, e.g. <code>addi(Shape.ROW, 0, cVector)</code> would add <code>cVector</code> to each row at
-    * index <code>0</code>. (this will span all axes higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.addi(Shape.ROW, 0, {10,20,30});
-    *
-    *   //Would result in a being
-    *   {{ 11,22,33,
-    *       4, 5, 6 },
-    *    { 17,28,39,
-    *      -1,-2,-3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to add the given NDArray along
-    * @param position the position of the axis to perform the add on
-    * @param rhs      the NDArray to add
-    * @return this NDArray with the results of the addition
-    */
-   public NDArray<T> addi(int axis, int position, @NonNull NDArray<?> rhs) {
-      return mapiAxisDouble(axis, position, rhs, Operator::add);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis for the given position by adding them to the values
-    * in the given NDArray, e.g. <code>addi(Shape.ROW, 0, cVector)</code> would add <code>cVector</code> to each row at
-    * index <code>0</code>. (this will span all axes higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.addi(Shape.ROW, 0, 10);
-    *
-    *   //Would result in a being
-    *   {{ 11,12,13,
-    *       4, 5, 6 },
-    *    { 17,18,19,
-    *      -1,-2,-3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to add the given NDArray along
-    * @param position the position of the axis to perform the add on
-    * @param rhs      the position to add
-    * @return this NDArray with the results of the addition
-    */
-   public NDArray<T> addi(int axis, int position, @NonNull Number rhs) {
-      return mapiAxisDouble(axis, position, rhs.doubleValue(), Operator::add);
-   }
-
-   /**
     * <p>Calculates the index in the NDArray with maximum value.</p>
     *
     * @return the index with maximum value
     */
    public Index argMax() {
       return optimum((a, b) -> Sorting.compare(a, b) > 0).v1;
+   }
+
+   /**
+    * <p>Calculates the indices for the maximum values along the given axis</p>
+    *
+    * @param axis the axis to calculate the maximum over
+    * @return the Integer-based NDArray having the indices of the maximum values in this NDArray for the given axis
+    */
+   public NumericNDArray argMax(int axis) {
+      return optimum((a, b) -> Sorting.compare(a, b) > 0, axis).v1;
    }
 
    /**
@@ -532,18 +260,6 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * <p>Calculates the indices for the maximum values along the given axis</p>
-    *
-    * @param axis the axis to calculate the maximum over
-    * @return the Integer-based NDArray having the indices of the maximum values in this NDArray for the given axis
-    */
-   public NDArray<Integer> argMax(int axis) {
-      return optimum((a, b) -> Sorting.compare(a, b) > 0, axis).v1;
-   }
-
-
-
-   /**
     * <p>Calculates the index in the NDArray with minimum value.</p>
     *
     * @return the index with minimum value
@@ -553,22 +269,22 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
+    * <p>Calculates the indices for the minimum values along the given axis</p>
+    *
+    * @param axis the axis to calculate the minimum over
+    * @return the Integer-based NDArray having the indices of the minimum values in this NDArray for the given axis
+    */
+   public NumericNDArray argMin(int axis) {
+      return optimum((a, b) -> Sorting.compare(a, b) < 0, axis).v1;
+   }
+
+   /**
     * <p>Calculates the index in the NDArray with minimum value.</p>
     *
     * @return the index with minimum value
     */
    public long argMinOffset() {
       return shape.calculateOffset(optimum((a, b) -> Sorting.compare(a, b) < 0).v1);
-   }
-
-   /**
-    * <p>Calculates the indices for the minimum values along the given axis</p>
-    *
-    * @param axis the axis to calculate the minimum over
-    * @return the Integer-based NDArray having the indices of the minimum values in this NDArray for the given axis
-    */
-   public NDArray<Integer> argMin(int axis) {
-      return optimum((a, b) -> Sorting.compare(a, b) < 0, axis).v1;
    }
 
    protected Object arrayForTensor() {
@@ -607,24 +323,41 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    @Override
-   public com.gengoai.apollo.math.linalg.NDArray asNDArray() {
-      return null;
+   public NDArray asNDArray() {
+      return this;
+   }
+
+
+   /**
+    * <p>Casts this NDArray as an ObjectNDArray of the given data type.</p>
+    *
+    * @param <T>   the data type of the ObjectNDArray
+    * @param dType the data type of the ObjectNDArray
+    * @return the ObjectNDArray
+    */
+   public <T> ObjectNDArray<T> asObjectNDArray(@NonNull Class<T> dType) {
+      throw new IllegalStateException("Cannot cast this NDArray of type '" +
+                                            getType().getSimpleName()
+                                            + "' as an ObjectNDArray of type '" +
+                                            dType.getSimpleName() + "'");
    }
 
    /**
-    * <p>Creates a new NDArray of the given <code>targetType</code> by converting the values in this array.</p>
+    * <p>Gets the number of channels in the NDArray</p>
     *
-    * @param <V>        the type of the new NDArray
-    * @param targetType the target data type
-    * @return the new NDArray
+    * @return the number of channels in the NDArray
     */
-   public <V> NDArray<V> asType(@NonNull Class<? extends V> targetType) {
-      Class<?> mt = Primitives.wrap(getType());
-      Class<?> tt = Primitives.wrap(targetType);
-      if (mt == tt) {
-         return Cast.as(this);
-      }
-      return Cast.as(NDArrayFactory.forType(targetType).array(arrayForTensor()));
+   public int channels() {
+      return shape.channels();
+   }
+
+   /**
+    * <p>Gets the number of columns in the NDArray</p>
+    *
+    * @return the number of columns in the NDArray
+    */
+   public int columns() {
+      return shape.columns();
    }
 
    /**
@@ -632,443 +365,15 @@ public abstract class NDArray<T> implements Serializable, Observation {
     *
     * @return this NDArray
     */
-   public NDArray<T> compact() {
+   public NDArray compact() {
       return this;
    }
 
    @Override
-   public NDArray<T> copy() {
+   public NDArray copy() {
       return Copyable.deepCopy(this);
    }
 
-   /**
-    * Decode sequence sequence.
-    *
-    * @param encoder   the encoder
-    * @param validator the validator
-    * @return the sequence
-    */
-   public Sequence<?> decodeSequence(@NonNull Encoder encoder,
-                                     @NonNull SequenceValidator validator) {
-      checkThisIsNumeric(this);
-      VariableSequence sequence = new VariableSequence();
-      String previous = "O";
-      for (int word = 0; word < shape().rows(); word++) {
-         NDArray<?> matrix = getAxis(Shape.ROW, word);
-         int l = matrix.shape().calculateMatrixIndex(matrix.argMax());
-         String tag = encoder.decode(l);
-         while (!validator.isValid(tag, previous, matrix)) {
-            matrix.set(l, Double.NEGATIVE_INFINITY);
-            l = matrix.shape().calculateMatrixIndex(matrix.argMax());
-            tag = encoder.decode(l);
-         }
-         previous = tag;
-         sequence.add(Variable.real(tag, matrix.getDouble(l)));
-      }
-      return sequence;
-   }
-
-   /**
-    * <p>Divides the elements in this NDArray by those in the given NDArray returning a new NDArray with the output.
-    * (Only supported by Numeric NDArray). The operation is applied with this NDArray's value as the first (i.e. left)
-    * argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.div({1,1,1,2,2,2});
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{  10,  20,  40,
-    *       50, 100, 200}}
-    * }
-    * </pre>
-    *
-    * @param rhs the NDArray to divide this NDArry by
-    * @return the new NDArray with the result of this / other
-    */
-   public NDArray<T> div(@NonNull NDArray<?> rhs) {
-      return mapDouble(rhs, Operator::divide);
-   }
-
-   /**
-    * <p>Divides the elements in this NDArray by the given scalar value returning a new NDArray with the output. (Only
-    * supported by Numeric NDArray) The operation is applied with this NDArray's value as the first (i.e. left)
-    * argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.div(2);
-    *
-    *   //Would result in b being
-    *   {{   5,  10,  20,
-    *       50, 100, 200 }}
-    * }
-    * </pre>
-    *
-    * @param value the value to divide this NDArray by
-    * @return the new NDArray with the scalar value divided
-    */
-   public NDArray<T> div(double value) {
-      return mapDouble(value, Operator::divide);
-   }
-
-   /**
-    * <p>Divides this NDArray by the given NDArray along the given axis, e.g. <code>div(Shape.ROW, cVector)</code>
-    * would divide each row by <code>cVector</code> (this will span all dimensions higher than row, e.g. channel and
-    * kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.div(Shape.ROW, {1,2,3});
-    *
-    *   //Would result in b being
-    *   {{  1,   1, 1,
-    *       4, 2.5, 3 },
-    *    {  7, 4, 3,
-    *      -1,-1,-1 }}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to divide the given NDArray along
-    * @param rhs  the NDArray to divide by
-    * @return the resultant NDArray
-    */
-   public NDArray<T> div(int axis, @NonNull NDArray<?> rhs) {
-      return mapAxisDouble(axis, rhs, Operator::divide);
-   }
-
-   /**
-    * <p>Divides this NDArray by the given NDArray along the given axis at the given axisValue, e.g.
-    * <code>div(Shape.ROW, 1 cVector)</code> would divide the row indexed at <code>1</code> by <code>cVector</code>
-    * this will span all dimensions higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.div(Shape.ROW, 0, {1,2,3});
-    *
-    *   //Would result in b being
-    *   {{  1, 1, 1,
-    *       4, 5, 6 },
-    *    {  7, 4, 3,
-    *      -1,-2,-3 }}
-    * }
-    * </pre>
-    *
-    * @param axis      the axis to divide the given NDArray along
-    * @param axisValue the axisValue of the axis to perform the divide on
-    * @param rhs       the NDArray to divide by
-    * @return the resultant NDArray
-    */
-   public NDArray<T> div(int axis, int axisValue, @NonNull NDArray<?> rhs) {
-      return mapAxisDouble(axis, axisValue, rhs, Operator::divide);
-   }
-
-   /**
-    * <p>Divides this NDArray by the given NDArray along the given axis at the given axisValue, e.g.
-    * <code>div(Shape.ROW, 1 cVector)</code> would divide the row indexed at <code>1</code> by <code>cVector</code>
-    * this will span all dimensions higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.div(Shape.ROW, 0, 2);
-    *
-    *   //Would result in b being
-    *   {{  0.5, 1, 1.5,
-    *       4, 5, 6 },
-    *    {3.5, 4,4.5,
-    *      -1,-2,-3 }}
-    * }
-    * </pre>
-    *
-    * @param axis      the axis to divide the given NDArray along
-    * @param axisValue the axisValue of the axis to perform the divide on
-    * @param rhs       the axisValue to divide by
-    * @return the resultant NDArray
-    */
-   public NDArray<T> div(int axis, int axisValue, @NonNull Number rhs) {
-      return mapAxisDouble(axis, axisValue, rhs.doubleValue(), Operator::divide);
-   }
-
-   /**
-    * <p>Divides this NDArray by the given NDArray along the given axis, e.g. <code>div(Shape.ROW, cVector)</code>
-    * would divide each row by <code>cVector</code> (this will span all dimensions higher than row, e.g. channel and
-    * kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.divi(Shape.ROW, {1,2,3});
-    *
-    *   //Would result in a being
-    *   {{  1,   1, 1,
-    *       4, 2.5, 3 },
-    *    {  7, 4, 3,
-    *      -1,-1,-1 }}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to divide the given NDArray along
-    * @param rhs  the NDArray to divide by
-    * @return this NDArray with the results of the division
-    */
-   public NDArray<T> divi(int axis, @NonNull NDArray<?> rhs) {
-      return mapiAxisDouble(axis, rhs, Operator::divide);
-   }
-
-   /**
-    * <p>Divides this NDArray by the given NDArray along the given axis at the given position, e.g.
-    * <code>div(Shape.ROW, 1 cVector)</code> would divide the row indexed at <code>1</code> by <code>cVector</code>
-    * this will span all dimensions higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.divi(Shape.ROW, 0, {1,2,3});
-    *
-    *   //Would result in a being
-    *   {{  1, 1, 1,
-    *       4, 5, 6 },
-    *    {  7, 4, 3,
-    *      -1,-2,-3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to divide the given NDArray along
-    * @param position the position of the axis to perform the divide on
-    * @param rhs      the NDArray to divide by
-    * @return this NDArray with the results of the division
-    */
-   public NDArray<T> divi(int axis, int position, @NonNull NDArray<?> rhs) {
-      return mapiAxisDouble(axis, position, rhs, Operator::divide);
-   }
-
-   /**
-    * <p>Updates the value in this NDArray by dividing its values those in the given NDArray.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.divi({1,1,1,2,2,2}); //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{   10,  20,  40,
-    *        50, 100, 200}}
-    * }
-    * </pre>
-    *
-    * @param rhs the other NDArray whose values will be divided
-    * @return this NDArray with the result of <code>this / rhs</code>
-    */
-   public NDArray<T> divi(@NonNull NDArray<?> rhs) {
-      return mapiDouble(rhs, Operator::divide);
-   }
-
-   /**
-    * <p>Updates the position in this NDArray by dividing its values by the given position.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.divi(Shape.ROW, 0, 2);
-    *
-    *   //Would result in a being
-    *   {{  0.5, 1, 1.5,
-    *       4, 5, 6 },
-    *    {3.5, 4,4.5,
-    *      -1,-2,-3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to divide the given NDArray along
-    * @param position the position of the axis to perform the divide on
-    * @param rhs      the position to divide by
-    * @return the resultant NDArray
-    */
-   public NDArray<T> divi(int axis, int position, @NonNull Number rhs) {
-      return mapiAxisDouble(axis, position, rhs.doubleValue(), Operator::divide);
-   }
-
-   /**
-    * <p>Updates the value in this NDArray by dividing it by the given value.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.divi(2);
-    *
-    *   //Would result in a being
-    *   {{   5,  10,  20,
-    *       50, 100, 200 }}
-    * }
-    * </pre>
-    *
-    * @param value the value to divide
-    * @return this NDArray with the scalar value divided
-    */
-   public NDArray<T> divi(double value) {
-      return mapiDouble(value, Operator::divide);
-   }
-
-   /**
-    * <p>Calculates the dot product between this and the given other NDArray. (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *    // Let b be a (2,3) matrix.
-    *    b = {{   2, 2, 1,
-    *             1, 1, 2 }}
-    *
-    *   //Performing
-    *   a.dot(b); // The rhs NDArray only needs to be the same total length and not the same shape.
-    *
-    *   //Would result in
-    *    1200
-    * }
-    * </pre>
-    *
-    * @param rhs the NDArray to calculate the dot product with
-    * @return NDArray of dot products
-    */
-   public double dot(@NonNull NDArray<?> rhs) {
-      checkArgsAreNumeric(this, rhs);
-      checkLengthMatch(rhs, this);
-      double dot = 0;
-      for (int i = 0; i < length(); i++) {
-         dot += getDouble(i) * rhs.getDouble(i);
-      }
-      return dot;
-   }
-
-   /**
-    * <p>Calculates the dot product between this and the given other NDArray along the given axis. (Only supported by
-    * Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *    // Let b be a (1,3) vector.
-    *    b = {  2, 2, 1 }
-    *
-    *   //Performing
-    *   c = a.dot(b); // The rhs NDArray only needs to be the same total length and not the same shape.
-    *
-    *   //Would result in c being
-    *    {{ 80,
-    *       800 }}
-    * }
-    * </pre>
-    *
-    * @param rhs  the rhs
-    * @param axis the axis
-    * @return the nd array
-    */
-   public NDArray<T> dot(@NonNull NDArray<?> rhs, int axis, int... other) {
-      checkArgsAreNumeric(this, rhs);
-      if (isEmpty() && rhs.isEmpty()) {
-         return factory().empty();
-      }
-      if (shape().isScalar() && rhs.shape().isScalar()) {
-         return factory().zeros(1).set(0, scalarDouble() * rhs.scalarDouble());
-      }
-      Validator.checkAxis(axis, this);
-      for (int i : other) {
-         Validator.checkAxis(i, this);
-      }
-      Shape comp = shape().remove(axis, other);
-      NDArray<T> out = factory().zeros(comp);
-      for (Index index : shape().range()) {
-         double lv = getDouble(index);
-         double rv = rhs.getDouble(rhs.shape.broadcast(index));
-         Index oIndex = index.remove(axis, other);
-         out.set(oIndex, out.getDouble(oIndex) + (lv * rv));
-      }
-      return out;
-   }
-
-   @Override
-   public boolean equals(Object obj) {
-      if (obj == null) {
-         return false;
-      }
-      if (obj == this) {
-         return true;
-      }
-      if (obj instanceof NDArray) {
-         NDArray<?> r = Cast.as(obj);
-         if (shape.equals(r.shape) && getType() == r.getType()) {
-            return Arrays.equals(toFloatMatrix(), r.toFloatMatrix());
-         }
-      }
-      return false;
-   }
 
    /**
     * <p>Gets the {@link NDArrayFactory} associated with constructing this
@@ -1076,7 +381,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
     *
     * @return the NDArrayFactory
     */
-   public NDArrayFactory<T> factory() {
+   public NDArrayFactory factory() {
       return Cast.as(NDArrayFactory.forType(getType()));
    }
 
@@ -1086,7 +391,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param value the value to set all cells in the NDArray
     * @return This NDArray
     */
-   public NDArray<T> fill(T value) {
+   public NDArray fill(Object value) {
       for (int i = 0; i < length(); i++) {
          set(i, value);
       }
@@ -1094,100 +399,40 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * <p>Fills the NDArray with the given double value. (Only works on numeric NDArray).</p>
+    * <p>Gets the value associated for the given offset in the NDArray.</p>
     *
-    * @param value the value to set all cells in the NDArray
-    * @return This NDArray
+    * @param offset the offset
+    * @return the value at the given offset
     */
-   public NDArray<T> fill(double value) {
-      checkThisIsNumeric(this);
-      for (int i = 0; i < length(); i++) {
-         set(i, value);
-      }
-      return this;
+   public Object get(long offset) {
+      return get(shape.calculateIndex(offset));
    }
 
    /**
-    * <p>Fills the NDArray with the given value for elements which pass the given predicate.</p>
-    *
-    * @param test  the predicate to test values to determine if the corresponding element should be filled with the
-    *              given value
-    * @param value the value to set all cells in the NDArray
-    * @return This NDArray
-    */
-   public NDArray<T> fillIf(@NonNull Predicate<? super T> test, T value) {
-      for (int i = 0; i < length(); i++) {
-         if (test.test(get(i))) {
-            set(i, value);
-         }
-      }
-      return this;
-   }
-
-   /**
-    * <p>Fills the NDArray with the given value for elements which pass the given predicate.</p>
-    *
-    * @param test  the predicate to test values to determine if the corresponding element should be filled with the
-    *              given value
-    * @param value the value to set all cells in the NDArray
-    * @return This NDArray
-    */
-   public NDArray<T> fillIf(@NonNull DoublePredicate test, double value) {
-      checkThisIsNumeric(this);
-      for (int i = 0; i < length(); i++) {
-         if (test.test(getDouble(i))) {
-            set(i, value);
-         }
-      }
-      return this;
-   }
-
-   /**
-    * Processes the sparse entries in this NDArray
-    *
-    * @param consumer the consumer
-    */
-   public void forEachSparse(@NonNull NDArray.EntryConsumer<T> consumer) {
-      for (int i = 0; i < shape().length(); i++) {
-         consumer.apply(i, get(i));
-      }
-   }
-
-   /**
-    * Get t.
-    *
-    * @param index the index
-    * @return the t
-    */
-   public T get(long index) {
-      return get(shape.calculateIndex(index));
-   }
-
-   /**
-    * Gets the value of the NDArray at the given row and column. (Assumes channel and kernel are 0)
+    * <p>Gets the value of the NDArray at the given row and column. (Assumes channel and kernel are 0)</p>
     *
     * @param row the row index
     * @param col the column index
     * @return the double value
     */
-   public T get(int row, int col) {
+   public Object get(int row, int col) {
       return get(0, 0, row, col);
    }
 
    /**
-    * Gets the value of the NDArray at the given channel, row, and column (Assumes kernel is 0)
+    * <p>Gets the value of the NDArray at the given channel, row, and column (Assumes kernel is 0)</p>
     *
     * @param channel the channel index
     * @param row     the row index
     * @param col     the column index
     * @return the double value
     */
-   public T get(int channel, int row, int col) {
+   public Object get(int channel, int row, int col) {
       return get(0, channel, row, col);
    }
 
    /**
-    * Gets the value of the NDArray at the given kernel, channel, row, and column
+    * <p>Gets the value of the NDArray at the given kernel, channel, row, and column</p>
     *
     * @param kernel  the kernel index
     * @param channel the channel index
@@ -1195,15 +440,15 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param col     the column index
     * @return the double value
     */
-   public abstract T get(int kernel, int channel, int row, int col);
+   public abstract Object get(int kernel, int channel, int row, int col);
 
    /**
-    * Get t.
+    * <p>Gets the value at the given index.</p>
     *
     * @param index the index
     * @return the t
     */
-   public T get(@NonNull Index index) {
+   public Object get(@NonNull Index index) {
       return get(index.getKernel(), index.getChannel(), index.getRow(), index.getColumn());
    }
 
@@ -1213,7 +458,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param range the range
     * @return the new NDArray
     */
-   public NDArray<T> get(@NonNull IndexRange range) {
+   public NDArray get(@NonNull IndexRange range) {
       int[] r = new int[Coordinate.MAX_DIMENSIONS - 1];
       int size = 0;
 
@@ -1225,9 +470,9 @@ public abstract class NDArray<T> implements Serializable, Observation {
       }
 
       if (size == 0) {
-         NDArray<T> out = factory().zeros(range.shape());
+         NDArray out = factory().zeros(range.shape());
          for (Index index : range) {
-            T value = get(index);
+            Object value = get(index);
             index = index.subtract(range.lower());
             out.set(index, value);
          }
@@ -1235,9 +480,9 @@ public abstract class NDArray<T> implements Serializable, Observation {
       }
 
       int[] remove = Arrays.copyOfRange(r, 0, size);
-      NDArray<T> out = factory().zeros(range.shape().remove(remove));
+      NDArray out = factory().zeros(range.shape().remove(remove));
       for (Index index : range) {
-         T value = get(index);
+         Object value = get(index);
          index = index.subtract(range.lower());
          index = index.remove(remove);
          out.set(index, value);
@@ -1252,114 +497,37 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param position the position
     * @return the nd array
     */
-   public NDArray<T> getAxis(int axis, int position) {
+   public NDArray getAxis(int axis, int position) {
       int[] remove = new int[]{axis};
-      NDArray<T> out = factory().zeros(shape().remove(remove));
+      NDArray out = factory().zeros(shape().remove(remove));
       for (Index index : shape().iterateAlong(axis, position)) {
          out.set(index.remove(remove), get(index));
       }
       return out;
    }
 
-   public NDArray<T> getRow(int position){
-      return getAxis(Shape.ROW, position);
-   }
-
-   public NDArray<T> getColumn(int position){
-      return getAxis(Shape.COLUMN, position);
-   }
-
-   public int kernels(){
-      return shape.kernels();
-   }
-
-   public int rows(){
-      return shape.rows();
-   }
-
-   public int columns() {
-      return shape.columns();
-   }
-
-   public int channels(){
-      return shape.channels();
-   }
-
    /**
     * <p>Creates a copy of the given position of the given axis of this NDArray.</p>
     *
-    * @param axis     the axis
+    * @param axis      the axis
     * @param positions the position
     * @return the nd array
     */
-   public NDArray<T> getAxis(int axis, long[] positions) {
-      NDArray<T> out = factory().zeros(shape().with(axis, positions.length));
+   public NDArray getAxis(int axis, long[] positions) {
+      NDArray out = factory().zeros(shape().with(axis, positions.length));
       int i = 0;
       for (long position : positions) {
-         for (Index index : shape().iterateAlong(axis, (int)position)) {
-            out.set(index.set(axis,i), get(index));
+         for (Index index : shape().iterateAlong(axis, (int) position)) {
+            out.set(index.set(axis, i), get(index));
          }
          i++;
       }
       return out;
    }
 
-   /**
-    * Gets the value of the NDArray at the given row and column. (Assumes channel and kernel are 0)
-    *
-    * @param row the row index
-    * @param col the column index
-    * @return the double value
-    */
-   public double getDouble(int row, int col) {
-      return getDouble(0, 0, row, col);
-   }
 
    /**
-    * Gets the value of the NDArray at the given channel, row, and column (Assumes kernel is 0)
-    *
-    * @param channel the channel index
-    * @param row     the row index
-    * @param col     the column index
-    * @return the double value
-    */
-   public double getDouble(int channel, int row, int col) {
-      return getDouble(0, channel, row, col);
-   }
-
-   /**
-    * Gets the value of the NDArray at the given kernel, channel, row, and column
-    *
-    * @param kernel  the kernel index
-    * @param channel the channel index
-    * @param row     the row index
-    * @param col     the column index
-    * @return the double value
-    */
-   public abstract double getDouble(int kernel, int channel, int row, int col);
-
-   /**
-    * <p>Gets the value at the given index as a double. (Only works on numeric NDArray)</p>
-    *
-    * @param index the index
-    * @return the double value
-    */
-   public double getDouble(long index) {
-      return getDouble(shape.calculateIndex(index));
-   }
-
-   /**
-    * <p>Gets the value at the given index as a double. (Only works on numeric NDArray)</p>
-    *
-    * @param index the index
-    * @return the double value
-    */
-   public double getDouble(@NonNull Index index) {
-      return getDouble(index.getKernel(), index.getChannel(), index.getRow(), index.getColumn());
-   }
-
-   /**
-    * Gets the label associated with the NDArray
+    * <p>Gets the label associated with the NDArray</p>
     *
     * @param <V> the type of the label
     * @return the label
@@ -1369,18 +537,18 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * Sets the label associated with the NDArray
+    * <p>Sets the label associated with the NDArray</p>
     *
     * @param label the label
     * @return This NDArray
     */
-   public NDArray<?> setLabel(Object label) {
+   public NDArray setLabel(Object label) {
       this.label = label;
       return this;
    }
 
    /**
-    * Gets the predicted label associated with this NDArray.
+    * <p>Gets the predicted label associated with this NDArray.</p>
     *
     * @param <V> the type parameter
     * @return the predicted label
@@ -1390,12 +558,12 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * Sets the predicted label for this NDArray.
+    * <p>Sets the predicted label for this NDArray.</p>
     *
     * @param predicted the predicted label
     * @return this NDArray
     */
-   public NDArray<?> setPredicted(Object predicted) {
+   public NDArray setPredicted(Object predicted) {
       this.predicted = predicted;
       return this;
    }
@@ -1413,7 +581,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * Gets the weight associated with the NDArray.
+    * <p>Gets the weight associated with the NDArray.</p>
     *
     * @return the weight
     */
@@ -1422,12 +590,12 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * Sets the weight associated with the NDArray.
+    * <p>Sets the weight associated with the NDArray.</p>
     *
     * @param weight the weight
     * @return this NDArray
     */
-   public NDArray<T> setWeight(double weight) {
+   public NDArray setWeight(double weight) {
       this.weight = (float) weight;
       return this;
    }
@@ -1461,6 +629,15 @@ public abstract class NDArray<T> implements Serializable, Observation {
    public abstract boolean isNumeric();
 
    /**
+    * <p>Gets the number of kernels in the NDArray</p>
+    *
+    * @return the number of kernels in the NDArray
+    */
+   public int kernels() {
+      return shape.kernels();
+   }
+
+   /**
     * <p>The total number of elements in this NDArray.</p>
     *
     * @return the length (total number) of the elements in the NDArray
@@ -1472,803 +649,19 @@ public abstract class NDArray<T> implements Serializable, Observation {
       return shape().length();
    }
 
-   /**
-    * <p>Creates a new NDArray with values from this NDArray evaluated using the given unary operator.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   b = a.map(String::toUpperCase);
-    *
-    *   //Would result in b being
-    *   {{ "A", "B", "C",
-    *      "D", "E", "F" }}
-    * }
-    * </pre>
-    *
-    * @param operator the operation to perform on the values of this NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> map(@NonNull UnaryOperator<T> operator) {
-      NDArray<T> out = zeroLike();
-      for (int i = 0; i < length(); i++) {
-         out.set(i, operator.apply(get(i)));
-      }
-      return out;
-   }
-
-   /**
-    * <p>Creates a new NDArray with values from this NDArray evaluated by the given binary operation with the given
-    * value. The operation is applied with this NDArray's value as the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   b = a.map("_c", String::concat);
-    *
-    *   //Would result in b being
-    *   {{ "a_c", "b_c", "c_c",
-    *      "d_c", "e_c", "f_c" }}
-    * }
-    * </pre>
-    *
-    * @param value    the value
-    * @param operator the operation to perform on the values of this NDArray and the given value
-    * @return the transformed NDArray
-    */
-   public NDArray<T> map(T value, @NonNull BinaryOperator<T> operator) {
-      return NDArrayOps.map(this, value, operator, null);
-   }
-
-   /**
-    * <p>Creates a new NDArray with values from this NDArray evaluated by the given binary operation with values in the
-    * given rhs NDArray The operation is applied with this NDArray's value as the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   b = a.map({"_a", "_b", "_c", "_d", "_e", "_f"}, String::concat);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{ "a_a", "b_b", "c_c",
-    *      "d_d", "e_e", "f_f" }}
-    * }
-    * </pre>
-    *
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given value
-    * @return the transformed NDArray
-    */
-   public NDArray<T> map(@NonNull NDArray<? extends T> rhs, @NonNull BinaryOperator<T> operator) {
-      return NDArrayOps.map(this, rhs, operator, null);
-   }
-
-   /**
-    * <p>Creates a new NDArray whose values are calculated using the given binary operator applied to the values of
-    * this NDArray along the given <code>axis</code> with the values in the given NDArray. The operation is applied with
-    * this NDArray's value as the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   b = a.mapAxis(Shape.COLUMN, {"_1", "_2"}, String::concat);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{ "a_1", "b_1", "c_1",
-    *      "d_2", "e_2", "f_2" }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to map
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapAxis(int axis,
-                             @NonNull NDArray<? extends T> rhs,
-                             @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      return NDArrayOps.map(this, axis, rhs, operator, null);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>dimension</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the given <code>value</code>. The operation is applied with this
-    * NDArray's value as the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   b = a.mapAxis(Shape.COLUMN, 1, "_C", String::concat);
-    *
-    *   //Would result in b being
-    *   {{ "a", "b_C", "c",
-    *      "d", "e_C", "f" }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to map
-    * @param position the dimension of the axis to be updated
-    * @param value    the value
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapAxis(int axis,
-                             int position,
-                             T value,
-                             @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
-      return NDArrayOps.map(this, axis, position, value, operator, null);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>position</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the values in the given NDArray. The operation is applied with this
-    * NDArray's value as the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   b = a.mapAxis(Shape.COLUMN, 1, {"_1", "_2}, String::concat);
-    *   //Note the rhs NDArray only needs to have the correct length but not shape
-    *
-    *   //Would result in b being
-    *   {{ "a", "b_1", "c",
-    *      "d", "e_2", "f" }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to map
-    * @param position the position of the axis to be updated
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapAxis(int axis,
-                             int position,
-                             NDArray<? extends T> rhs,
-                             @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
-      return NDArrayOps.map(this, axis, position, rhs, operator, null);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>dimension</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the given <code>value</code>. The operation is applied with this
-    * NDArray's value as the first (i.e. left) argument.  (Only supported by numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.mapAxisDouble(Shape.ROW, {1, 2, 4}, Operator::divide);
-    *   //Note the rhs NDArray only needs to have the correct length but not shape
-    *
-    *   //Would result in b being
-    *   {{   10,  10,  10,
-    *       100, 100, 100}}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to map
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapAxisDouble(int axis,
-                                   @NonNull NDArray<?> rhs,
-                                   @NonNull DoubleBinaryOperator operator) {
-      checkThisIsNumeric(this);
-      checkAxis(axis, this);
-      return NDArrayOps.mapDouble(this, axis, rhs, operator, null);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>dimension</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the given <code>value</code>. The operation is applied with this
-    * NDArray's value as the first (i.e. left) argument. (Only supported by numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.mapAxisDouble(Shape.ROW, 0, {1, 2, 4}, Operator::divide);
-    *   //Note the rhs NDArray only needs to have the correct length but not shape
-    *
-    *   //Would result in b being
-    *   {{   10,  10,  10,
-    *       100, 200, 400}}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to map
-    * @param position the dimension of the axis to be updated
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapAxisDouble(int axis,
-                                   int position,
-                                   @NonNull NDArray<?> rhs,
-                                   @NonNull DoubleBinaryOperator operator) {
-      checkArgsAreNumeric(this, rhs);
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
-      return NDArrayOps.mapDouble(this, axis, position, rhs, operator, null);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>dimension</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the given <code>doubleValue</code>. The operation is applied with this
-    * NDArray's doubleValue as the first (i.e. left) argument. (Only supported by numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.mapAxisDouble(Shape.ROW, 0, 2, Operator::divide);
-    *
-    *   //Would result in b being
-    *   {{    5,  10,  20,
-    *       100, 200, 400}}
-    * }
-    * </pre>
-    *
-    * @param axis        the axis to map
-    * @param position    the dimension of the axis to be updated
-    * @param doubleValue the doubleValue
-    * @param operator    the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapAxisDouble(int axis,
-                                   int position,
-                                   double doubleValue,
-                                   @NonNull DoubleBinaryOperator operator) {
-      checkThisIsNumeric(this);
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
-      return NDArrayOps.mapDouble(this, axis, position, doubleValue, operator, null);
-   }
-
-   /**
-    * <p>Creates a new NDArray with values from this NDArray evaluated using the given unary operator.
-    * (Only supported by numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.mapDouble(a -> a / 10);
-    *
-    *   //Would result in b being
-    *   {{   1,  2,  4,
-    *       10, 20, 40}}
-    * }
-    * </pre>
-    *
-    * @param operator the operation to perform on the values of this NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapDouble(@NonNull DoubleUnaryOperator operator) {
-      checkThisIsNumeric(this);
-      NDArray<T> out = zeroLike();
-      for (int i = 0; i < length(); i++) {
-         out.set(i, operator.applyAsDouble(getDouble(i)));
-      }
-      return out;
-   }
-
-   /**
-    * <p>Creates a new NDArray with values from this NDArray evaluated by the given binary operation with values in the
-    * given rhs NDArray The operation is applied with this NDArray's value as the first (i.e. left) argument. (Only
-    * supported by numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.mapDouble(a, Operator::divide);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{   1,  1,  1,
-    *        1,  1, 1}}
-    * }
-    * </pre>
-    *
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given value
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapDouble(@NonNull NDArray<?> rhs,
-                               @NonNull DoubleBinaryOperator operator) {
-      return NDArrayOps.mapDouble(this, rhs, operator, null);
-   }
-
-   /**
-    * <p>Creates a new NDArray with values from this NDArray evaluated by the given binary operation with the given
-    * value. The operation is applied with this NDArray's value as the first (i.e. left) argument. (Only supported by
-    * numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.mapDouble(10, Operator::divide);
-    *
-    *   //Would result in b being
-    *   {{   1,  2,  4,
-    *       10, 20, 40}}
-    * }
-    * </pre>
-    *
-    * @param value    the value
-    * @param operator the operation to perform on the values of this NDArray and the given value
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapDouble(double value,
-                               @NonNull DoubleBinaryOperator operator) {
-      return NDArrayOps.mapDouble(this, value, operator, null);
-   }
-
    @Override
    public void mapVariables(@NonNull Function<Variable, Variable> mapper) {
       throw new UnsupportedOperationException("NDArray does not support mapping.");
    }
 
    /**
-    * <p>Updates the values in this NDArray using the given unary operator.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   a.mapi(String::toUpperCase);
-    *
-    *   //Would result in a being
-    *   {{ "A", "B", "C",
-    *      "D", "E", "F" }}
-    * }
-    * </pre>
-    *
-    * @param operator the operation to perform on the values of this NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapi(@NonNull UnaryOperator<T> operator) {
-      for (int i = 0; i < length(); i++) {
-         set(i, operator.apply(get(i)));
-      }
-      return this;
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by applying the given binary operation to each element with the given
-    * value. The operation is applied with this NDArray's value as the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   a.mapi("_c", String::concat);
-    *
-    *   //Would result in a being
-    *   {{ "a_c", "b_c", "c_c",
-    *      "d_c", "e_c", "f_c" }}
-    * }
-    * </pre>
-    *
-    * @param value    the value
-    * @param operator the operation to perform on the values of this NDArray and the given value
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapi(T value, @NonNull BinaryOperator<T> operator) {
-      return NDArrayOps.map(this, value, operator, this);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by applying the given binary operation to each element with the associated
-    * element in the <code>rhs</code> NDArray. The operation is applied with this NDArray's value as the first (i.e.
-    * left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   a.mapi({"_a", "_b", "_c", "_d", "_e", "_f"}, String::concat);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{ "a_a", "b_b", "c_c",
-    *      "d_d", "e_e", "f_f" }}
-    * }
-    * </pre>
-    *
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given value
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapi(@NonNull NDArray<? extends T> rhs, @NonNull BinaryOperator<T> operator) {
-      return NDArrayOps.map(this, rhs, operator, this);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>axis</code> of this NDArray by performing the given binary operation
-    * with the values in the given NDArray. The operation is applied with this NDArray's value as the first (i.e. left)
-    * argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   a.mapiAxis(Shape.COLUMN, {"_1", "_2"}, String::concat);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{ "a_1", "b_1", "c_1",
-    *      "d_2", "e_2", "f_2" }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to map
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapiAxis(int axis,
-                              @NonNull NDArray<? extends T> rhs,
-                              @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      return NDArrayOps.map(this, axis, rhs, operator, this);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>axis</code> at the given <code>position</code>  of this NDArray by
-    * performing the given binary operation with the given value. The operation is applied with this NDArray's value as
-    * the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   b = a.mapAxis(Shape.COLUMN, 1, "_C", String::concat);
-    *
-    *   //Would result in b being
-    *   {{ "a", "b_C", "c",
-    *      "d", "e_C", "f" }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to apply the operation on
-    * @param position the axis position to apply the operation on
-    * @param rhs      the right hand side value to use in the binary operation
-    * @param operator the operation to perform on the values of this NDArray and the given rhs value
-    * @return this NDArray
-    */
-   public NDArray<T> mapiAxis(int axis,
-                              int position,
-                              T rhs,
-                              @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
-      return NDArrayOps.map(this, axis, position, rhs, operator, this);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>position</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the values in the given NDArray. The operation is applied with this
-    * NDArray's value as the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix of String.
-    *    a = {{ "a", "b", "c",
-    *           "d", "e", "f" }}
-    *
-    *   //Performing
-    *   b = a.mapAxis(Shape.COLUMN, 1, {"_1", "_2}, String::concat);
-    *   //Note the rhs NDArray only needs to have the correct length but not shape
-    *
-    *   //Would result in b being
-    *   {{ "a", "b_1", "c",
-    *      "d", "e_2", "f" }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to apply the operation on
-    * @param position the axis position to apply the operation on
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return this NDArray
-    */
-   public NDArray<T> mapiAxis(int axis,
-                              int position,
-                              NDArray<? extends T> rhs,
-                              @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
-      return NDArrayOps.map(this, axis, position, rhs, operator, this);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>dimension</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the values in the given NDArray. The operation is applied with this
-    * NDArray's value as the first (i.e. left) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.mapiAxisDouble(Shape.ROW, {1, 2, 4}, Operator::divide);
-    *   //Note the rhs NDArray only needs to have the correct length but not shape
-    *
-    *   //Would result in a being
-    *   {{   10,  10,  10,
-    *       100, 100, 100}}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to map
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapiAxisDouble(int axis,
-                                    @NonNull NDArray<?> rhs,
-                                    @NonNull DoubleBinaryOperator operator) {
-      checkArgsAreNumeric(this, rhs);
-      checkAxis(axis, this);
-      return NDArrayOps.mapDouble(this, axis, rhs, operator, this);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>position</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the given <code>value</code>. The operation is applied with this
-    * NDArray's value as the first (i.e. left) argument.  (Only supported by numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *    a.mapiAxisDouble(Shape.ROW, 0, 2, Operator::divide);
-    *
-    *   //Would result in a being
-    *   {{    5,  10,  20,
-    *       100, 200, 400}}
-    * }
-    * </pre>
-    *
-    * @param axis     the row whose values we want to manipulate
-    * @param position the position of the axis to be updated
-    * @param value    the value
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapiAxisDouble(int axis,
-                                    int position,
-                                    double value,
-                                    @NonNull DoubleBinaryOperator operator) {
-      checkThisIsNumeric(this);
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
-      return NDArrayOps.mapDouble(this, axis, position, value, operator, this);
-   }
-
-   /**
-    * <p>Updates the values along the given <code>position</code> of the given <code>axis</code> of this NDArray by
-    * performing the given binary operation with the given <code>value</code>. The operation is applied with this
-    * NDArray's value as the first (i.e. left) argument.  (Only supported by numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.mapAxisDouble(Shape.ROW, 0, {1, 2, 4}, Operator::divide);
-    *   //Note the rhs NDArray only needs to have the correct length but not shape
-    *
-    *   //Would result in a being
-    *   {{   10,  10,  10,
-    *       100, 200, 400}}
-    * }
-    * </pre>
-    *
-    * @param axis     the row whose values we want to manipulate
-    * @param position the position of the axis to be updated
-    * @param rhs      the right hand side NDArray
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapiAxisDouble(int axis,
-                                    int position,
-                                    @NonNull NDArray<?> rhs,
-                                    @NonNull DoubleBinaryOperator operator) {
-      checkArgsAreNumeric(this, rhs);
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
-      return NDArrayOps.mapDouble(this, axis, position, rhs, operator, this);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray evaluated using the given unary operator. (Only supported by numeric
-    * NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.mapiDouble(a -> a / 10);
-    *
-    *   //Would result in a being
-    *   {{   1,  2,  4,
-    *       10, 20, 40}}
-    * }
-    * </pre>
-    *
-    * @param operator the operation to perform on the values of this NDArray
-    * @return this NDArray with the operator applied
-    */
-   public NDArray<T> mapiDouble(@NonNull DoubleUnaryOperator operator) {
-      checkThisIsNumeric(this);
-      for (int i = 0; i < length(); i++) {
-         set(i, operator.applyAsDouble(getDouble(i)));
-      }
-      return this;
-   }
-
-   /**
-    * <>Updates the values int this NDArray by performing the given binary operation with the values in the given
-    * NDArray. The operation is applied with this NDArray's value as the first (i.e. left) argument.  (Only supported by
-    * numeric NDArray).</>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.mapiDouble(a, Operator::divide);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{   1,  1,  1,
-    *        1,  1, 1}}
-    * }
-    * </pre>
-    *
-    * @param rhs      the rhs
-    * @param operator the operation to perform on the values of this NDArray and the given NDArray
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapiDouble(@NonNull NDArray<?> rhs, @NonNull DoubleBinaryOperator operator) {
-      checkArgsAreNumeric(this, rhs);
-      return NDArrayOps.mapDouble(this, rhs, operator, this);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by performing he given binary operation with the given value. The operation
-    * is applied with this NDArray's value as the first (i.e. left) argument.  (Only supported by numeric NDArray).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.mapiDouble(10, Operator::divide);
-    *
-    *   //Would result in a being
-    *   {{   1,  2,  4,
-    *       10, 20, 40}}
-    * }
-    * </pre>
-    *
-    * @param value    the value
-    * @param operator the operation to perform on the values of this NDArray and the given value
-    * @return the transformed NDArray
-    */
-   public NDArray<T> mapiDouble(double value, @NonNull DoubleBinaryOperator operator) {
-      checkThisIsNumeric(this);
-      return NDArrayOps.mapDouble(this, value, operator, this);
-   }
-
-   protected NDArray<T> matrixMultiplicationImpl(NDArray<?> rhs) {
-      checkArgument(shape().columns() == rhs.shape().rows(),
-                    () -> "Cannot multiply NDArray of shape " + shape() + " by NDArray of shape " + rhs
-                          .shape());
-      NDArray<T> out = factory().zeros(Shape.shape(shape().rows(), rhs.shape().columns()));
-      for (int row = 0; row < shape().rows(); row++) {
-         for (int lhsColumn = 0; lhsColumn < shape().columns(); lhsColumn++) {
-            for (int rhsColumn = 0; rhsColumn < rhs.shape().columns(); rhsColumn++) {
-               out.set(row, rhsColumn,
-                       out.getDouble(row, rhsColumn) +
-                             getDouble(row, lhsColumn) * rhs.getDouble(lhsColumn, rhsColumn));
-            }
-         }
-      }
-      return out;
-   }
-
-   /**
     * <p>Calculates the maximum values along the given axis across all slices.</p>
     *
-    * @param axis the axis to calculate the maximum over
+    * @param axis  the axis to calculate the maximum over
+    * @param other the other
     * @return the maximum values in this NDArray for the given axis
     */
-   public NDArray<T> max(int axis, @NonNull int... other) {
+   public NDArray max(int axis, @NonNull int... other) {
       checkAxis(axis, this);
       for (int axe : other) {
          checkAxis(axe, this);
@@ -2281,42 +674,19 @@ public abstract class NDArray<T> implements Serializable, Observation {
     *
     * @return the maximum value
     */
-   public T max() {
+   public Object max() {
       return optimum((a, b) -> Sorting.compare(a, b) > 0).v2;
    }
 
-   /**
-    * <p>Calculates the mean value in the NDArray across all slices. (Only supported by numeric NDArray).</p>
-    *
-    * @return the mean value
-    */
-   public double mean() {
-      checkThisIsNumeric(this);
-      return sum() / length();
-   }
-
-   /**
-    * <p>Calculates the mean values along the given axis across slices in the NDArray. (Only supported by numeric
-    * NDArray).</p>
-    *
-    * @return the mean value
-    */
-   public NDArray<Float> mean(int axis, @NonNull int... other) {
-      checkThisIsNumeric(this);
-      return NDArrayOps.reduceDoubleAxis(this, nd.DFLOAT32, Operator::add, axis, other)
-                       .divi(IntStream.concat(IntStream.of(axis), IntStream.of(other))
-                                      .map(shape::get)
-                                      .distinct()
-                                      .reduce(1, Operator::multiply));
-   }
 
    /**
     * <p>Calculates the  minimum values along the given axis across slices</p>
     *
-    * @param axis the axis to calculate the minimum over
+    * @param axis  the axis to calculate the minimum over
+    * @param other the other
     * @return the the minimum values in this NDArray for the given axis
     */
-   public NDArray<T> min(int axis, int... other) {
+   public NDArray min(int axis, int... other) {
       return optimum((a, b) -> Sorting.compare(a, b) < 0, axis, other).v2;
    }
 
@@ -2325,403 +695,15 @@ public abstract class NDArray<T> implements Serializable, Observation {
     *
     * @return the minimum value
     */
-   public T min() {
+   public Object min() {
       return optimum((a, b) -> Sorting.compare(a, b) < 0).v2;
    }
 
-   /**
-    * <p>Creates a new NDArray by multiplying the (matrix) slices of this NDArray with those in the given NDArray.
-    * (Only supported by numeric NDArray).</p>
-    *
-    * @param rhs the NDArray to multiply
-    * @return the resulting NDArray
-    */
-   public NDArray<T> mmul(@NonNull NDArray<?> rhs) {
-      checkArgsAreNumeric(this, rhs);
-      checkArgument(shape().columns() == rhs.shape().rows(),
-                    () -> "Cannot multiply NDArray of shape " +
-                          shape() +
-                          " by NDArray of shape " +
-                          rhs.shape());
-      if (shape().isVector() || shape().isMatrix()) {
-         return matrixMultiplicationImpl(rhs);
-      }
-      return NDArrayOps.mapSlice(shape().with(Shape.COLUMN, rhs.shape.columns()), this, rhs, NDArray::mmul);
-   }
-
-   /**
-    * <p>Multiplies the values in this NDArray to those in the given NDArray returning a new NDArray with the output.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.mul({1,1,1,2,2,2}); //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{   10,  20,  40,
-    *       200, 400, 800}}
-    * }
-    * </pre>
-    *
-    * @param rhs the other NDArray whose values will be multiplied
-    * @return the new NDArray with the result of <code>this * rhs</code>
-    */
-   public NDArray<T> mul(@NonNull NDArray<?> rhs) {
-      return mapDouble(rhs, Operator::multiply);
-   }
-
-   /**
-    * <p>Multiplies the given scalar value to each of the values in this NDArray returning a new NDArray with the
-    * output. (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.mul(2);
-    *
-    *   //Would result in b being
-    *   {{   20,  40,  80,
-    *       200, 400, 800}}
-    * }
-    * </pre>
-    *
-    * @param value the value to multiply
-    * @return the new NDArray with the scalar value multiply
-    */
-   public NDArray<T> mul(double value) {
-      return mapDouble(value, Operator::multiply);
-   }
-
-   /**
-    * <p>Multiples the given NDArray along the given axis, e.g. <code>add(Shape.ROW, cVector)</code> would add
-    * <code>cVector</code> to each row. (this will span all axes higher than row, e.g. channel and
-    * kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.mul(Shape.ROW, {10,20,30});
-    *
-    *   //Would result in b being
-    *   b = {{ 10, 20, 30,
-    *          40,100,180 },
-    *        { 70,160,270
-    *         -10,-40,-90 }}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to multiply the given NDArray along
-    * @param rhs  the NDArray to multiply
-    * @return the resultant NDArray
-    */
-   public NDArray<T> mul(int axis, @NonNull NDArray<?> rhs) {
-      return mapAxisDouble(axis, rhs, Operator::multiply);
-   }
-
-   /**
-    * <p>Multiplies the given NDArray along the given axis at the given axisValue, e.g. <code>add(Shape.ROW, 1
-    * cVector)</code> would add <code>cVector</code> to the row indexed at <code>1</code> (this will span all axes
-    * higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.mul(Shape.ROW, 0, {10,20,30});
-    *
-    *   //Would result in b being
-    *   {{ 10, 60, 90
-    *       4,  5,  6 },
-    *    { 70,160,270
-    *      -1, -2, -3 }}
-    * }
-    * </pre>
-    *
-    * @param axis      the axis to multiply the given NDArray along
-    * @param axisValue the axisValue of the axis to perform the multiply on
-    * @param rhs       the NDArray to multiply
-    * @return the resultant NDArray
-    */
-   public NDArray<T> mul(int axis, int axisValue, @NonNull NDArray<?> rhs) {
-      return mapAxisDouble(axis, axisValue, rhs, Operator::multiply);
-   }
-
-   /**
-    * <p>Multiplies the given NDArray along the given axis at the given axisValue, e.g. <code>add(Shape.ROW, 1
-    * cVector)</code> would add <code>cVector</code> to the row indexed at <code>1</code> (this will span all axes
-    * higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.mul(Shape.ROW, 0, 10);
-    *
-    *   //Would result in b being
-    *   {{ 10, 20, 30
-    *       4,  5,  6 },
-    *    { 70, 80, 90
-    *      -1, -2, -3 }}
-    * }
-    * </pre>
-    *
-    * @param axis      the axis to multiply the given NDArray along
-    * @param axisValue the axisValue of the axis to perform the multiply on
-    * @param rhs       the NDArray to multiply
-    * @return the resultant NDArray
-    */
-   public NDArray<T> mul(int axis, int axisValue, @NonNull Number rhs) {
-      return mapAxisDouble(axis, axisValue, rhs.doubleValue(), Operator::multiply);
-   }
-
-   /**
-    * <p>Updates the value in this NDArray by multiplying to them the values in the given NDArray.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.muli({1,1,1,2,2,2}); //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{   10,  20,  40,
-    *       200, 400, 800}}
-    * }
-    * </pre>
-    *
-    * @param rhs the other NDArray whose values will be multiplied
-    * @return this NDArray
-    */
-   public NDArray<T> muli(@NonNull NDArray<?> rhs) {
-      return mapiDouble(rhs, Operator::multiply);
-   }
-
-   /**
-    * <p>Updates the value in this NDArray by multiplying to them the given value.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.muli(2);
-    *
-    *   //Would result in a being
-    *   {{   20,  40,  80,
-    *       200, 400, 800}}
-    * }
-    * </pre>
-    *
-    * @param value the value to multiply
-    * @return this NDArray
-    */
-   public NDArray<T> muli(double value) {
-      return mapiDouble(value, Operator::multiply);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis by multiplying them to the values in the given
-    * NDArray, e.g. <code>addi(Shape.ROW, cVector)</code> would add <code>cVector</code> to each row. (this will span
-    * all axes higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.muli(Shape.ROW, {10,20,30});
-    *
-    *   //Would result in a being
-    *   {{ 10, 20, 30,
-    *      40,100,180 },
-    *    { 70,160,270
-    *     -10,-40,-90 }}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to multiply the given NDArray along
-    * @param rhs  the NDArray to multiply
-    * @return this NDArray
-    */
-   public NDArray<T> muli(int axis, @NonNull NDArray<?> rhs) {
-      return mapiAxisDouble(axis, rhs, Operator::multiply);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis for the given position by adding them to the values
-    * in the given NDArray, e.g. <code>addi(Shape.ROW, 0, cVector)</code> would add <code>cVector</code> to each row at
-    * index <code>0</code>. (this will span all axes higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.muli(Shape.ROW, 0, {10,20,30});
-    *
-    *   //Would result in a being
-    *   {{ 10, 60, 90
-    *       4,  5,  6 },
-    *    { 70,160,270
-    *      -1, -2, -3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to add the given NDArray along
-    * @param position the position of the axis to perform the add on
-    * @param rhs      the NDArray to add
-    * @return this NDArray with the results of the addition
-    */
-   public NDArray<T> muli(int axis, int position, @NonNull NDArray<?> rhs) {
-      return mapiAxisDouble(axis, position, rhs, Operator::multiply);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis for the given position by adding them to the values
-    * in the given NDArray, e.g. <code>addi(Shape.ROW, 0, cVector)</code> would add <code>cVector</code> to each row at
-    * index <code>0</code>. (this will span all axes higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.muli(Shape.ROW, 0, 10);
-    *
-    *   //Would result in a being
-    *   {{ 10, 20, 30
-    *       4,  5,  6 },
-    *    { 70, 80, 90
-    *      -1, -2, -3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to add the given NDArray along
-    * @param position the position of the axis to perform the add on
-    * @param rhs      the NDArray to add
-    * @return this NDArray with the results of the addition
-    */
-   public NDArray<T> muli(int axis, int position, Number rhs) {
-      return mapiAxisDouble(axis, position, rhs.doubleValue(), Operator::multiply);
-   }
-
-   /**
-    * <p>Calculates the norm1 of the values along the given axis in the NDArray across slices. (Only supported by
-    * numeric NDArray).</p>
-    *
-    * @return the L1 norm value
-    */
-   public NDArray<T> norm1(int axis, @NonNull int... other) {
-      checkThisIsNumeric(this);
-      if (rank() <= 1) {
-         return NDArrayOps.reduceDoubleAxis(this, (a, b) -> a + Math.abs(b), axis, other);
-      }
-      int[] f = IntStream.concat(IntStream.of(axis), IntStream.of(other))
-                         .distinct()
-                         .sorted()
-                         .toArray();
-      NDArray<T> sum = mapDouble(Math::abs).sum(f[0]);
-      if (f.length > 1) {
-         axis = f[1];
-         int[] o = f.length > 2 ? Arrays.copyOfRange(f, 2, f.length) : new int[0];
-         return sum.max(axis, o);
-      }
-      return sum;
-   }
-
-   /**
-    * <o>Calculates the L1 norm of the NDArray across slices. (Only support numeric NDArray)</o>
-    *
-    * @return the L1 norm of the NDArray
-    */
-   public double norm1() {
-      checkThisIsNumeric(this);
-      double l1 = 0;
-      for (Index index : shape().range()) {
-         l1 += Math.abs(getDouble(index));
-      }
-      return l1;
-   }
-
-   /**
-    * <p>Calculates the L2 norm -- or Magnitude -- of the NDArray for the given axis. (Only support numeric
-    * NDArray)</p>
-    *
-    * @return the L2 norm value
-    */
-   public NDArray<T> norm2(int axis, int... other) {
-      checkThisIsNumeric(this);
-      if (shape().rank() <= 1) {
-         return NDArrayOps.reduceDoubleAxis(this, (a, b) -> a + b * b, axis, other).mapiDouble(Math::sqrt);
-      }
-      NDArray<T> n = mapDouble(a -> a * a);
-      return NDArrayOps.reduceDoubleAxis(n, Operator::add, axis, other).mapiDouble(Math::sqrt);
-   }
-
-   /**
-    * <p>Calculates the L2 norm -- or Magnitude -- of the NDArray across slices. (Only support numeric NDArray)</p>
-    *
-    * @return the L2 norm of the NDArray
-    */
-   public double norm2() {
-      checkThisIsNumeric(this);
-      double l2 = 0;
-      for (Index index : shape().range()) {
-         double v = getDouble(index);
-         l2 += (v * v);
-      }
-      return Math.sqrt(l2);
-   }
-
-   protected Tuple2<Index, T> optimum(BiFunction<T, T, Boolean> function) {
+   private Tuple2<Index, Object> optimum(BiFunction<Object, Object, Boolean> function) {
       Index pos = null;
-      T opt = null;
+      Object opt = null;
       for (Index index : shape().range()) {
-         T value = get(index);
+         Object value = get(index);
          if (opt == null || function.apply(value, opt)) {
             pos = index;
             opt = value;
@@ -2730,24 +712,24 @@ public abstract class NDArray<T> implements Serializable, Observation {
       return $(pos, opt);
    }
 
-   protected Tuple2<NDArray<Integer>, NDArray<T>> optimum(BiFunction<T, T, Boolean> function, int axis, int... other) {
+   private Tuple2<NumericNDArray, NDArray> optimum(BiFunction<Object, Object, Boolean> function, int axis, int... other) {
       if (shape().isEmpty()) {
          return $(nd.DINT32.empty(),
                   factory().empty());
       }
       if (shape().isScalar()) {
          return $(nd.DINT32.scalar(0),
-                  factory().scalar(scalar()));
+                  factory().zeros(1).fill(scalar()));
       }
       checkAxis(axis, this);
       Shape s = shape().remove(axis, other);
-      NDArray<T> out = factory().zeros(s);
-      NDArray<Integer> outPos = nd.DINT32.zeros(s).fill(-1);
+      NDArray out = factory().zeros(s);
+      NumericNDArray outPos = nd.DINT32.zeros(s).fill(-1);
       for (Index index : shape().range()) {
-         T value = get(index);
+         Object value = get(index);
          Index outIndex = index.remove(axis, other);
-         T outValue = out.get(outIndex);
-         if (outValue == null || outPos.get(outIndex) < 0 || function.apply(value, outValue)) {
+         Object outValue = out.get(outIndex);
+         if (outValue == null || outPos.getDouble(outIndex) < 0 || function.apply(value, outValue)) {
             out.set(outIndex, value);
             int optIndex = index.get(axis);
             outPos.set(outIndex, optIndex);
@@ -2757,31 +739,36 @@ public abstract class NDArray<T> implements Serializable, Observation {
       return $(outPos, out);
    }
 
-   public NDArray<T> padPost(int axis, int maxLength) {
-      checkArgument(maxLength > 0, "max length must be > 0");
-      int absAxis = checkAxis(axis, this);
-      return padPost(shape().with(absAxis, Math.max(maxLength, shape().get(absAxis))));
-   }
+   /**
+    * <p>Constructs a new NDArray where the given <code>axis</code> is changed to have <code>length</code> values,
+    * where this NDArray will either be padded with zeros or nulls to extend its size to the new length or truncated to
+    * match the new length. All padding is done at the end of the axis.</p>
+    *
+    * @param axis   the axis to pad.
+    * @param length the new length of the given axis
+    * @return the padded NDArray.
+    */
+   public abstract NDArray padPost(int axis, int length);
 
-   public NDArray<T> padPost(int axis1, int axis1Max,
-                             int axis2, int axis2Max) {
-      checkArgument(axis1Max > 0, "max length must be > 0");
-      checkArgument(axis2Max > 0, "max length must be > 0");
-      int absAxis1 = checkAxis(axis1, this);
-      int absAxis2 = checkAxis(axis2, this);
-      return padPost(shape().with(absAxis1, Math.max(axis1Max, shape().get(absAxis1)),
-                                  absAxis2, Math.max(axis2Max, shape().get(absAxis2))));
-   }
+   /**
+    * <p>Constructs a new NDArray where the given <code>axes</code> are changed to have the given <code>length</code>
+    * values, where this NDArray will either be padded with zeros or nulls to extend its size to the new lengths or
+    * truncated to match the new lengths. All padding is done at the end of the axis. Note that the argument to this
+    * method expects (int, int) pairs where the first integer is the axis and the second the new length.</p>
+    *
+    * @param axisLengthPairs array of integers <code>axis1, length, axis2, length2, ... ,axisN, lengthN</code>
+    * @return the padded NDArray.
+    */
+   public abstract NDArray padPost(@NonNull int... axisLengthPairs);
 
-   public NDArray<T> padPost(@NonNull Shape newShape) {
-      NDArray<T> out = factory().zeros(newShape);
-      for (Index index : shape().range()) {
-         if (newShape.contains(index)) {
-            out.set(index, get(index));
-         }
-      }
-      return out;
-   }
+   /**
+    * <p>Constructs a new NDArray where  where this NDArray will either be padded with zeros or nulls to extend its
+    * size to the new length or truncated to the given Shape. All padding is done at the end of the axis.</p>
+    *
+    * @param paddedShape the shape of the padded NDArray
+    * @return the padded NDArray.
+    */
+   public abstract NDArray padPost(@NonNull Shape paddedShape);
 
    /**
     * <p>Pretty Prints the NDArray</p>
@@ -2795,295 +782,12 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * <p>Calculates the rank (number of axes) for the tensor.</p>
+    * <p>Calculates the rank (number of axes) for the NDArray.</p>
     *
     * @return The rank of the tensor
     */
    public final int rank() {
       return shape.rank();
-   }
-
-   /**
-    * <p>Takes the values in the left hand NDArray and divides them by the elements in this NDArray returning a new
-    * NDArray with the output. (Only supported by Numeric NDArray). The operation is applied with this NDArray's value
-    * as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.rdiv({100,200,400,100,200,400});
-    *   //Note the lhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{  10, 10, 10,
-    *       1,   1,  1}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the division operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdiv(@NonNull NDArray<?> lhs) {
-      return mapDouble(lhs, (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Performs a division on each element, <code>e</code>. in this NDArray as <code>value / e </code> returning a
-    * new NDArray with the results.  The operation is applied with this NDArray's value as the second (i.e. right)
-    * argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.rdiv(10);
-    *
-    *   //Would result in b being
-    *   {{   1,  2,  4,
-    *       10, 20, 40 }}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side value for division
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdiv(double lhs) {
-      return mapDouble(lhs, (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Takes the values in the left hand NDArray and divides them by the elements in this NDArray along the given
-    * axis returning a new NDArray with the output. (Only supported by Numeric NDArray). The operation is applied with
-    * this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.rdiv(Shape.ROW, {100,200,400});
-    *   //Note the lhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{  10, 10, 10,
-    *       1,   1,  1}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the division operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdiv(int axis, @NonNull NDArray<?> lhs) {
-      return mapAxisDouble(axis, lhs, (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Takes the values in the left hand NDArray and divides them by the elements in this NDArray along the given
-    * axis at the given position returning a new NDArray with the output. (Only supported by Numeric NDArray). The
-    * operation is applied with this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.rdiv(Shape.ROW, 0, {1,2,4});
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{  10, 10, 10,
-    *      100,200,400}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the division operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdiv(int axis, int position, @NonNull NDArray<?> lhs) {
-      return mapAxisDouble(axis, position, lhs, (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Takes the left hand value and divide it by the elements in this NDArray along the given
-    * axis at the given position returning a new NDArray with the output. (Only supported by Numeric NDArray). The
-    * operation is applied with this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.rdiv(Shape.ROW, 0, 10);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{   1,  1,  1,
-    *       10, 20, 40}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the division operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdiv(int axis, int position, @NonNull Number lhs) {
-      return mapAxisDouble(axis, position, lhs.doubleValue(), (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by taking the values in the left hand NDArray and dividing them by the
-    * elements in this NDArray . (Only supported by Numeric NDArray). The operation is applied with this NDArray's value
-    * as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rdivi({100,200,400,100,200,400});
-    *   //Note the lhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{  10, 10, 10,
-    *       1,   1,  1}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the division operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdivi(@NonNull NDArray<?> lhs) {
-      return mapiDouble(lhs, (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Updates this NDArray by performing a division on each element, <code>e</code>. in this NDArray as
-    * <code>value / e </code>.  The operation is applied with this NDArray's value as the second (i.e. right)
-    * argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rdivi(10);
-    *
-    *   //Would result in a being
-    *   {{   1,  2,  4,
-    *       10, 20, 40 }}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side value for division
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdivi(double lhs) {
-      return mapiDouble(lhs, (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Updates this NDArray by taking the values in the left hand NDArray and dividing them by the elements in this
-    * NDArray along the given axis. (Only supported by Numeric NDArray). The operation is applied with this NDArray's
-    * value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rdivi(Shape.ROW, {100,200,400});
-    *   //Note the lhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{  10, 10, 10,
-    *       1,   1,  1}}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to perform the operation along
-    * @param lhs  the left hand side NDArray of the division operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdivi(int axis, @NonNull NDArray<?> lhs) {
-      return mapiAxisDouble(axis, lhs, (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by taking the values in the left hand NDArray and dividing them by the
-    * elements in this NDArray along the given axis at the given position. (Only supported by Numeric NDArray). The
-    * operation is applied with this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rdivi(Shape.ROW, 0, {100,200,400});
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{  10, 10, 10,
-    *      100,200,400}}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to perform the operation along
-    * @param position the position of the axis to restrict the operation on
-    * @param lhs      the left hand side NDArray of the division operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdivi(int axis, int position, @NonNull NDArray<?> lhs) {
-      return mapiAxisDouble(axis, position, lhs, (a, b) -> b / a);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by taking the left hand value and dividing it by the
-    * elements in this NDArray along the given axis at the given position. (Only supported by Numeric NDArray). The
-    * operation is applied with this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rdivi(Shape.ROW, 0, 10);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{  1, 2, 4,
-    *      10,20,40}}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to perform the operation along
-    * @param position the position of the axis to restrict the operation on
-    * @param lhs      the left hand side NDArray of the division operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rdivi(int axis, int position, @NonNull Number lhs) {
-      return mapiAxisDouble(axis, position, lhs.doubleValue(), (a, b) -> b / a);
    }
 
    @Override
@@ -3092,299 +796,30 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * <p>Updates the shape of this NDArray. Note that the total number of elements cannot
-    * chansender@whiteemailsdelivery.comge.</p>
+    * <p>Updates the shape of this NDArray. Note that the total number of elements cannot change.</p>
     *
     * @param newShape the new shape of the NDArray
     * @return this NDArray with new shape
     */
-   public abstract NDArray<T> reshape(@NonNull Shape newShape);
+   public abstract NDArray reshape(@NonNull Shape newShape);
 
-   public NDArray<T> reshape(@NonNull int... dims) {
+   /**
+    * <p>Updates the shape of this NDArray. Note that the total number of elements cannot change.</p>
+    *
+    * @param dims the new dimensions of the NDArray
+    * @return this NDArray with new shape
+    */
+   public NDArray reshape(@NonNull int... dims) {
       return reshape(Shape.shape(dims));
    }
 
    /**
-    * <p>Takes the values in the left hand NDArray and subtracts them by the elements in this NDArray returning a new
-    * NDArray with the output. (Only supported by Numeric NDArray). The operation is applied with this NDArray's value
-    * as the second (i.e. right) argument.</p>
+    * <p>Gets the number of rows in the NDArray</p>
     *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.rsub({11,22,44,101,202,404});
-    *   //Note the lhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{  1, 2, 4,
-    *       1, 2, 4 }}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the subtraction operator.
-    * @return the new resultant NDArray
+    * @return the number of rows in the NDArray
     */
-   public NDArray<T> rsub(@NonNull NDArray<?> lhs) {
-      return mapDouble(lhs, (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Performs a subtraction on each element, <code>e</code>. in this NDArray as <code>value - e </code> returning a
-    * new NDArray with the results.  The operation is applied with this NDArray's value as the second (i.e. right)
-    * argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.rsub(10);
-    *
-    *   //Would result in b being
-    *   {{   0,  10,  30,
-    *       90, 190, 390 }}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side value for subtraction
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsub(double lhs) {
-      return mapDouble(lhs, (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Takes the values in the left hand NDArray and subtracts them by the elements in this NDArray along the given
-    * axis returning a new NDArray with the output. (Only supported by Numeric NDArray). The operation is applied with
-    * this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.rsub(Shape.ROW, {10,20,40});
-    *   //Note the lhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{  0,   0,   0,
-    *      90, 180, 360}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the subtraction operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsub(int axis, @NonNull NDArray<?> lhs) {
-      return mapAxisDouble(axis, lhs, (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Takes the values in the left hand NDArray and subtracts them by the elements in this NDArray along the given
-    * axis at the given position returning a new NDArray with the output. (Only supported by Numeric NDArray). The
-    * operation is applied with this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.sub(Shape.ROW, 0, {10,20,40});
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{   0,  0,  0,
-    *       90, 180, 360}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the subtraction operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsub(int axis, int position, @NonNull NDArray<?> lhs) {
-      return mapAxisDouble(axis, position, lhs, (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Takes the left hand value and subtracts them by the elements in this NDArray along the given
-    * axis at the given position returning a new NDArray with the output. (Only supported by Numeric NDArray). The
-    * operation is applied with this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.sub(Shape.ROW, 0, 10);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{   0,   10,  20,
-    *       100, 200, 400}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the subtraction operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsub(int axis, int position, @NonNull Number lhs) {
-      return mapAxisDouble(axis, position, lhs.doubleValue(), (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Updates this NDArray by taking the values in the left hand NDArray and subtracting them by the elements in
-    * this NDArray along the given axis. (Only supported by Numeric NDArray). The operation is applied with this
-    * NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rsubi(Shape.ROW, {10,20,40});
-    *   //Note the lhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{  0,   0,   0,
-    *     -90,-180,-360}}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to perform the operation along
-    * @param lhs  the left hand side NDArray of the subtraction operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsubi(int axis, @NonNull NDArray<?> lhs) {
-      return mapiAxisDouble(axis, lhs, (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by taking the values in the left hand NDArray and subtracting them by the
-    * elements in this NDArray along the given axis at the given position. (Only supported by Numeric NDArray). The
-    * operation is applied with this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rsubi(Shape.ROW, 0, {10,20,40});
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{   0,  0,  0,
-    *      100,200,400}}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to perform the operation along
-    * @param position the position of the axis to restrict the operation on
-    * @param lhs      the left hand side NDArray of the subtraction operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsubi(int axis, int position, @NonNull NDArray<?> lhs) {
-      return mapiAxisDouble(axis, position, lhs, (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by taking the left hand value and subtracting it by the
-    * elements in this NDArray along the given axis at the given position. (Only supported by Numeric NDArray). The
-    * operation is applied with this NDArray's value as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rsubi(Shape.ROW, 0, 10);
-    *   //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{   0, 10, 30,
-    *      100,200,400}}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to perform the operation along
-    * @param position the position of the axis to restrict the operation on
-    * @param lhs      the left hand side NDArray of the subtraction operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsubi(int axis, int position, @NonNull Number lhs) {
-      return mapiAxisDouble(axis, position, lhs.doubleValue(), (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray by taking the values in the left hand NDArray and subtracting them by the
-    * elements in this NDArray . (Only supported by Numeric NDArray). The operation is applied with this NDArray's value
-    * as the second (i.e. right) argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rsubi({20,30,50,101,201,401});
-    *   //Note the lhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{  10, 10, 10,
-    *       1,   1,  1}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side NDArray of the subtraction operator.
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsubi(@NonNull NDArray<?> lhs) {
-      return mapiDouble(lhs, (a, b) -> b - a);
-   }
-
-   /**
-    * <p>Updates this NDArray by performing a division on each element, <code>e</code>. in this NDArray as
-    * <code>value / e </code>.  The operation is applied with this NDArray's value as the second (i.e. right)
-    * argument.</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.rsubi(10);
-    *
-    *   //Would result in a being
-    *   {{   0,  10,  30,
-    *       90, 190, 390}}
-    * }
-    * </pre>
-    *
-    * @param lhs the left hand side value for division
-    * @return the new resultant NDArray
-    */
-   public NDArray<T> rsubi(double lhs) {
-      return mapiDouble(lhs, (a, b) -> b - a);
+   public int rows() {
+      return shape.rows();
    }
 
    /**
@@ -3392,19 +827,10 @@ public abstract class NDArray<T> implements Serializable, Observation {
     *
     * @return the scalar value
     */
-   public T scalar() {
+   public Object scalar() {
       return get(0);
    }
 
-   /**
-    * <p>Returns the scalar value of this NDArray (value at <code>(0,0,0,0)</code>)</p>
-    *
-    * @return the scalar value
-    */
-   public double scalarDouble() {
-      checkThisIsNumeric(this);
-      return getDouble(0);
-   }
 
    /**
     * <p>Sets the value of the element at the given index. (row/column if vector, entry if other)</p>
@@ -3413,7 +839,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param value the value
     * @return this NDArray
     */
-   public NDArray<T> set(long index, T value) {
+   public NDArray set(long index, Object value) {
       return set(shape.calculateIndex(index), value);
    }
 
@@ -3425,31 +851,34 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param value the value
     * @return this NDArray
     */
-   public NDArray<T> set(int row, int col, T value) {
+   public NDArray set(int row, int col, Object value) {
       return set(0, 0, row, col, value);
    }
 
    /**
     * Sets the value of the element at the given row and column (assumes kernel and channel are 0).
     *
-    * @param row   the row index
-    * @param col   the column index
-    * @param value the value
+    * @param channel the channel
+    * @param row     the row index
+    * @param col     the column index
+    * @param value   the value
     * @return this NDArray
     */
-   public NDArray<T> set(int channel, int row, int col, T value) {
+   public NDArray set(int channel, int row, int col, Object value) {
       return set(0, channel, row, col, value);
    }
 
    /**
     * Sets the value of the element at the given row and column (assumes kernel and channel are 0).
     *
-    * @param row   the row index
-    * @param col   the column index
-    * @param value the value
+    * @param kernel  the kernel
+    * @param channel the channel
+    * @param row     the row index
+    * @param col     the column index
+    * @param value   the value
     * @return this NDArray
     */
-   public abstract NDArray<T> set(int kernel, int channel, int row, int col, T value);
+   public abstract NDArray set(int kernel, int channel, int row, int col, Object value);
 
    /**
     * <p>Sets the value of the element at the given index. (row/column if vector, entry if other)</p>
@@ -3458,63 +887,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param value the value
     * @return this NDArray
     */
-   public NDArray<T> set(@NonNull Index index, T value) {
-      return set(index.getKernel(), index.getChannel(), index.getRow(), index.getColumn(), value);
-   }
-
-   /**
-    * <p>Sets the value of the element at the given index. (row/column if vector, entry if other)</p>
-    *
-    * @param index the index
-    * @param value the value
-    * @return this NDArray
-    */
-   public NDArray<T> set(long index, double value) {
-      return set(shape.calculateIndex(index), value);
-   }
-
-   /**
-    * Sets the value of the element at the given row and column (assumes kernel and channel are 0).
-    *
-    * @param row   the row index
-    * @param col   the column index
-    * @param value the value
-    * @return this NDArray
-    */
-   public NDArray<T> set(int row, int col, double value) {
-      return set(0, 0, row, col, value);
-   }
-
-   /**
-    * Sets the value of the element at the given row and column (assumes kernel and channel are 0).
-    *
-    * @param row   the row index
-    * @param col   the column index
-    * @param value the value
-    * @return this NDArray
-    */
-   public NDArray<T> set(int channel, int row, int col, double value) {
-      return set(0, channel, row, col, value);
-   }
-
-   /**
-    * Sets the value of the element at the given row and column (assumes kernel and channel are 0).
-    *
-    * @param row   the row index
-    * @param col   the column index
-    * @param value the value
-    * @return this NDArray
-    */
-   public abstract NDArray<T> set(int kernel, int channel, int row, int col, double value);
-
-   /**
-    * <p>Sets the value of the element at the given index. (row/column if vector, entry if other)</p>
-    *
-    * @param index the index
-    * @param value the value
-    * @return this NDArray
-    */
-   public NDArray<T> set(@NonNull Index index, double value) {
+   public NDArray set(@NonNull Index index, Object value) {
       return set(index.getKernel(), index.getChannel(), index.getRow(), index.getColumn(), value);
    }
 
@@ -3527,7 +900,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param rhs      the NDArray whose values we will copy
     * @return this NDArray
     */
-   public NDArray<T> setAxis(int axis, int position, @NonNull NDArray<T> rhs) {
+   public NDArray setAxis(int axis, int position, @NonNull NDArray rhs) {
       return setRange(shape().iterateAlong(axis, position), rhs);
    }
 
@@ -3539,38 +912,13 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param rhs      the value to set the elements to
     * @return this NDArray
     */
-   public NDArray<T> setAxis(int axis, int position, @NonNull T rhs) {
+   public NDArray setAxis(int axis, int position, Object rhs) {
       checkAxis(axis, this);
       checkDimension(axis, position, this);
       for (Index index : shape().iterateAlong(axis, position)) {
          set(index, rhs);
       }
       return this;
-   }
-
-   /**
-    * <p>Sets the values along the given <code>axis</code> at the given <code>position</code> to those in the given
-    * NDArray.</p>
-    *
-    * @param axis     the axis to set
-    * @param position the position of the axis to set
-    * @param rhs      the NDArray whose values we will copy
-    * @return this NDArray
-    */
-   public NDArray<T> setAxisDouble(int axis, int position, @NonNull NDArray<?> rhs) {
-      return setRangeDouble(shape().iterateAlong(axis, position), rhs);
-   }
-
-   /**
-    * <p>Sets the values along the given <code>axis</code> at the given <code>position</code> to the given value.</p>
-    *
-    * @param axis     the axis to set
-    * @param position the position of the axis to set
-    * @param rhs      the value to set the elements to
-    * @return this NDArray
-    */
-   public NDArray<T> setAxisDouble(int axis, int position, double rhs) {
-      return setRangeDouble(shape().iterateAlong(axis, position), rhs);
    }
 
    /**
@@ -3581,7 +929,7 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param rhs        the NDArray whose values we will assign to this NDArray.
     * @return this NDArray
     */
-   public NDArray<T> setRange(@NonNull IndexRange indexRange, @NonNull NDArray<T> rhs) {
+   public NDArray setRange(@NonNull IndexRange indexRange, @NonNull NDArray rhs) {
       for (Index index : indexRange) {
          if (rhs.shape().isVector()) {
             set(index, rhs.get(Math.max(index.getRow(), index.getColumn())));
@@ -3600,56 +948,24 @@ public abstract class NDArray<T> implements Serializable, Observation {
     * @param rhs        the value we will assign to this NDArray.
     * @return this NDArray
     */
-   public NDArray<T> setRange(@NonNull IndexRange indexRange, @NonNull T rhs) {
+   public NDArray setRange(@NonNull IndexRange indexRange, Object rhs) {
       indexRange.forEach(i -> set(i, rhs));
       return this;
    }
 
-   /**
-    * <p>Sets the range <code>[from, to)</code> of values in this NDArray to those of the given <code>rhs</code>. The
-    * given values NDArray will be broadcast as necessary.</p>
-    *
-    * @param indexRange The range of indices to use for setting the values from the given NDArray
-    * @param rhs        the NDArray whose values we will assign to this NDArray.
-    * @return this NDArray
-    */
-   public NDArray<T> setRangeDouble(@NonNull IndexRange indexRange,
-                                    @NonNull NDArray<?> rhs) {
-      for (Index index : indexRange) {
-         if (rhs.shape().isVector()) {
-            set(index, rhs.getDouble(Math.max(index.getRow(), index.getColumn())));
-         } else {
-            set(index, rhs.getDouble(rhs.shape().broadcast(index)));
-         }
-      }
-      return this;
-   }
 
    /**
-    * <p>Sets the range <code>[from, to)</code> of values in this NDArray to those of the given <code>rhs</code>. The
-    * given values NDArray will be broadcast as necessary.</p>
-    *
-    * @param indexRange The range of indices to use for setting the values from the given NDArray
-    * @param rhs        the NDArray whose values we will assign to this NDArray.
-    * @return this NDArray
-    */
-   public NDArray<T> setRangeDouble(@NonNull IndexRange indexRange, double rhs) {
-      indexRange.forEach(i -> set(i, rhs));
-      return this;
-   }
-
-   /**
-    * Sets the slice at the given index.
+    * <p>Sets the slice at the given index.</p>
     *
     * @param index the slice index
     * @param slice the NDArray of values for the new slice
     * @return this NDArray
     */
-   public NDArray<T> setSlice(int index, @NonNull NDArray<T> slice) {
+   public NDArray setSlice(int index, @NonNull NDArray slice) {
       checkArgument(shape().matrixShape().equals(slice.shape().matrixShape()),
                     () -> "Cannot set slice of different shape " +
                           slice.shape() + " != " + shape());
-      NDArray<T> tSlice = slice(index);
+      NDArray tSlice = slice(index);
       for (Index ii : tSlice.shape().matrixShape().range()) {
          tSlice.set(ii, slice.get(ii));
       }
@@ -3657,19 +973,17 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * Sets the slice at the given index.
+    * <p>Sets the slice at the given index.</p>
     *
     * @param kernel  the kernel position
     * @param channel the channel position
     * @param slice   the NDArray of values for the new slice
     * @return this NDArray
     */
-   public NDArray<T> setSlice(int kernel, int channel, @NonNull NDArray<T> slice) {
-      return setSlice(shape().calculateSliceIndex(kernel, channel), slice);
-   }
+   public abstract NDArray setSlice(int kernel, int channel, @NonNull NDArray slice);
 
    /**
-    * Gets the shape of this NDArray.
+    * <p>Gets the shape of this NDArray.</p>
     *
     * @return the shape
     */
@@ -3687,38 +1001,47 @@ public abstract class NDArray<T> implements Serializable, Observation {
    }
 
    /**
-    * Returns a  view of a single slice of this NDArray. Note that changes to the slice will effect this NDArray.
+    * <p>Returns a view of a single slice of this NDArray. Note that changes to the slice will effect this NDArray.</p>
     *
     * @param index the slice index
     * @return the NDArray for the slice
     */
-   public abstract NDArray<T> slice(int index);
-
-   public abstract NDArray<T> slice(int startKernel, int startChannel, int endKernel, int endChannel);
+   public abstract NDArray slice(int index);
 
    /**
-    * Returns a  view of a single slice of this NDArray. Note that changes to the slice will effect this NDArray.
+    * <p>Returns a view of a this NDArray made up of the slices ranging from the starting kernel and channel to the
+    * ending kernel and channel. Note that changes to the slice will effect this NDArray.</p>
+    *
+    * @param startKernel  the start kernel
+    * @param startChannel the start channel
+    * @param endKernel    the end kernel
+    * @param endChannel   the end channel
+    * @return the sliced view of this NDArray
+    */
+   public abstract NDArray slice(int startKernel, int startChannel, int endKernel, int endChannel);
+
+   /**
+    * <p>Returns a  view of a single slice of this NDArray. Note that changes to the slice will effect this
+    * NDArray.</p>
     *
     * @param kernel  the kernel index
     * @param channel the channel index
     * @return the NDArray for the slice
     */
-   public NDArray<T> slice(int kernel, int channel) {
-      return slice(shape.calculateSliceIndex(kernel, channel));
-   }
+   public abstract NDArray slice(int kernel, int channel);
 
    /**
-    * Returns a  view of a single slice of this NDArray. Note that changes to the slice will effect this NDArray.
+    * <p>Returns a  view of a single slice of this NDArray. Note that changes to the slice will effect this
+    * NDArray.</p>
     *
     * @param index the slice index
     * @return the NDArray for the slice
     */
-   public NDArray<T> slice(@NonNull Index index) {
-      return slice(index.getKernel(), index.getChannel());
-   }
+   public abstract NDArray slice(@NonNull Index index);
+
 
    /**
-    * Gets the indices of the sparse entries
+    * <p>Gets the indices of the sparse entries</p>
     *
     * @return the index array
     */
@@ -3726,405 +1049,6 @@ public abstract class NDArray<T> implements Serializable, Observation {
       return LongStream.range(0, length()).toArray();
    }
 
-   /**
-    * <p>Subtracts the values in this NDArray to those in the given NDArray returning a new NDArray with the output.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.sub({1,1,1,2,2,2}); //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in b being
-    *   {{    9,  19,  29,
-    *        98, 198, 398}}
-    * }
-    * </pre>
-    *
-    * @param rhs the other NDArray whose values will be subtract
-    * @return the new NDArray with the result of <code>this - other</code>
-    */
-   public NDArray<T> sub(@NonNull NDArray<?> rhs) {
-      return mapDouble(rhs, Operator::subtract);
-   }
-
-   /**
-    * <p>Subtracts the given scalar value to each of the values in this NDArray returning a new NDArray with the
-    * output. (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   b = a.sub(1);
-    *
-    *   //Would result in b being
-    *   {{   9,  19,  39,
-    *       99, 199, 399}}
-    * }
-    * </pre>
-    *
-    * @param value the value to subtracted
-    * @return the new NDArray with the scalar value subtracted
-    */
-   public NDArray<T> sub(double value) {
-      return mapDouble(value, Operator::subtract);
-   }
-
-   /**
-    * <p>Subtracts the given NDArray along the given axis, e.g. <code>sub(Shape.ROW, cVector)</code> would add
-    * <code>cVector</code> to each row. (this will span all axes higher than row, e.g. channel and
-    * kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.sub(Shape.ROW, {1,2,3});
-    *
-    *   //Would result in b being
-    *   b = {{ 0,  0,  0
-    *          3,  3,  3 },
-    *        { 6,  6,  6,
-    *          0,  0,  0 }}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to subtract the given NDArray along
-    * @param rhs  the NDArray to subtract
-    * @return the resultant NDArray
-    */
-   public NDArray<T> sub(int axis, @NonNull NDArray<?> rhs) {
-      return mapAxisDouble(axis, rhs, Operator::subtract);
-   }
-
-   /**
-    * <p>Subtracts the given NDArray along the given axis at the given position, e.g. <code>sub(Shape.ROW, 1
-    * cVector)</code> would add <code>cVector</code> to the row indexed at <code>1</code> (this will span all axes
-    * higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.add(Shape.ROW, 0, {1,2,3});
-    *
-    *   //Would result in b being
-    *   {{  0,  0,  0,
-    *       4,  5,  6 },
-    *    {  6,  6,  6,
-    *      -1, -2, -3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to subtract the given NDArray along
-    * @param position the position of the axis to perform the subtract on
-    * @param rhs      the NDArray to subtract
-    * @return the resultant NDArray
-    */
-   public NDArray<T> sub(int axis, int position, @NonNull NDArray<?> rhs) {
-      return mapAxisDouble(axis, position, rhs, Operator::subtract);
-   }
-
-   /**
-    * <p>Subtracts the given NDArray along the given axis at the given position, e.g. <code>sub(Shape.ROW, 1
-    * 10)</code> would subtract <code>10</code> to the row indexed at <code>1</code> (this will span all axes higher
-    * than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   b = a.add(Shape.ROW, 0,  2});
-    *
-    *   //Would result in b being
-    *   {{ -1,  0,  1,
-    *       4,  5,  6 },
-    *    {  5,  6,  7,
-    *      -1, -2, -3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to subtract the given NDArray along
-    * @param position the position of the axis to perform the subtract on
-    * @param rhs      the number to subtract
-    * @return the resultant NDArray
-    */
-   public NDArray<T> sub(int axis, int position, @NonNull Number rhs) {
-      return mapAxisDouble(axis, position, rhs.doubleValue(), Operator::subtract);
-   }
-
-   /**
-    * <p>Updates the value in this NDArray by subtracting to them the values in the given NDArray.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.subi({1,1,1,2,2,2}); //Note the rhs NDArray only needs to have the same length not the same shape
-    *
-    *   //Would result in a being
-    *   {{    9,  19,  29,
-    *        98, 198, 398}}
-    * }
-    * </pre>
-    *
-    * @param rhs the other NDArray whose values will be subtracted
-    * @return this NDArray with the result of <code>this - rhs</code>
-    */
-   public NDArray<T> subi(@NonNull NDArray<?> rhs) {
-      return mapiDouble(rhs, Operator::subtract);
-   }
-
-   /**
-    * <p>Updates the value in this NDArray by subtracting from them the given value.
-    * (Only supported by Numeric NDArray)</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,3) matrix.
-    *    a = {{   10,  20,  40,
-    *            100, 200, 400 }}
-    *
-    *   //Performing
-    *   a.subi(1);
-    *
-    *   //Would result in a being
-    *   {{   9,  19,  39,
-    *       99, 199, 399}}
-    * }
-    * </pre>
-    *
-    * @param value the value to subtract
-    * @return this NDArray with the scalar value subtracted
-    */
-   public NDArray<T> subi(double value) {
-      return mapiDouble(value, Operator::subtract);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis by subtracting from them the values in the given
-    * NDArray, e.g. <code>subi(Shape.ROW, cVector)</code> would add <code>cVector</code> to each row. (this will span
-    * all axes higher than row, e.g. channel and kernel in the case of row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.subi(Shape.ROW, {1,2,3});
-    *
-    *   //Would result in a being
-    *   {{ 0,  0,  0
-    *          3,  3,  3 },
-    *        { 6,  6,  6,
-    *          0,  0,  0 }}
-    * }
-    * </pre>
-    *
-    * @param axis the axis to subtract the given NDArray along
-    * @param rhs  the NDArray to subtract
-    * @return this NDArray with the results of the subtraction
-    */
-   public NDArray<T> subi(int axis, @NonNull NDArray<?> rhs) {
-      return mapiAxisDouble(axis, rhs, Operator::subtract);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis for the given position by subtracting from them the
-    * values in the given NDArray, e.g. <code>subi(Shape.ROW, 0, cVector)</code> would add <code>cVector</code> to each
-    * row at index <code>0</code>. (this will span all axes higher than row, e.g. channel and kernel in the case of
-    * row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.add(Shape.ROW, 0, {1,2,3});
-    *
-    *   //Would result in a being
-    *   {{  0,  0,  0,
-    *       4,  5,  6 },
-    *    {  6,  6,  6,
-    *      -1, -2, -3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to subtract the given NDArray along
-    * @param position the position of the axis to perform the subtract on
-    * @param rhs      the NDArray to subtract
-    * @return this NDArray with the results of the subtraction
-    */
-   public NDArray<T> subi(int axis, int position, @NonNull NDArray<?> rhs) {
-      return mapiAxisDouble(axis, position, rhs, Operator::subtract);
-   }
-
-   /**
-    * <p>Updates the values in this NDArray along the given axis for the given position by subtracting from them the
-    * values in the given NDArray, e.g. <code>subi(Shape.ROW, 0, 10)</code> would subtract <code>10</code> from each row
-    * at index <code>0</code>. (this will span all axes higher than row, e.g. channel and kernel in the case of
-    * row).</p>
-    *
-    * <pre>
-    * {@code
-    *    // Let a be a (2,2,3) tensor.
-    *    a = {{  1, 2, 3,
-    *            4, 5, 6 },
-    *         {  7, 8, 9,
-    *           -1,-2,-3 }}
-    *
-    *   //Performing
-    *   a.add(Shape.ROW, 0, 2);
-    *
-    *   //Would result in a being
-    *   {{ -1,  0,  3,
-    *       4,  5,  6 },
-    *    {  5,  6,  7,
-    *      -1, -2, -3 }}
-    * }
-    * </pre>
-    *
-    * @param axis     the axis to subtract the given NDArray along
-    * @param position the position of the axis to perform the subtract on
-    * @param rhs      the number to subtract
-    * @return this NDArray with the results of the subtraction
-    */
-   public NDArray<T> subi(int axis, int position, @NonNull Number rhs) {
-      return mapiAxisDouble(axis, position, rhs.doubleValue(), Operator::subtract);
-   }
-
-   /**
-    * <p>Calculates the sum of values along the given axis in the NDArray across slices. (Only supported by numeric
-    * NDArray).</p>
-    *
-    * @return the sumb value
-    */
-   public NDArray<T> sum(int axis, int... other) {
-      checkThisIsNumeric(this);
-      return NDArrayOps.reduceDoubleAxis(this, Operator::add, axis, other);
-   }
-
-   /**
-    * <p>Calculates the sum of all values in the NDArray across slices. (Only supported by numeric NDArrays)</>
-    *
-    * @return the sum
-    */
-   public double sum() {
-      checkThisIsNumeric(this);
-      return shape()
-            .range()
-            .stream()
-            .mapToDouble(this::getDouble).reduce(0, Operator::add);
-   }
-
-   /**
-    * <p>Calculates the sum of squares of the values along the given axis in the NDArray across slices. (Only supported
-    * by numeric NDArray).</p>
-    *
-    * @return the sumb value
-    */
-   public NDArray<T> sumOfSquares(int axis, int... other) {
-      checkThisIsNumeric(this);
-      return NDArrayOps.reduceDoubleAxis(this, (a, b) -> a + (b * b), axis, other);
-   }
-
-   /**
-    * <p>Calculates the sum of squares for all values in the NDArray across slices. (Only supported by numeric
-    * NDArrays)</p>
-    *
-    * @return the sum of squares
-    */
-   public double sumOfSquares() {
-      checkThisIsNumeric(this);
-      return shape()
-            .range()
-            .stream()
-            .mapToDouble(this::getDouble).reduce(0, (a, b) -> a + (b * b));
-   }
-
-   /**
-    * Converts the NDArray into an array of DoubleMatrix. (one per slice)
-    *
-    * @return the array of DoubleMatrix
-    */
-   public DoubleMatrix[] toDoubleMatrix() {
-      if (shape.isEmpty()) {
-         return new DoubleMatrix[0];
-      }
-      if (shape.isScalar()) {
-         return new DoubleMatrix[]{DoubleMatrix.scalar(scalarDouble())};
-      }
-      DoubleMatrix[] m = new DoubleMatrix[shape.sliceLength()];
-      for (int i = 0; i < shape.sliceLength(); i++) {
-         DoubleMatrix v = new DoubleMatrix(Math.max(1, shape.rows()), shape.columns());
-         NDArray<T> n = slice(i);
-         for (int j = 0; j < n.length(); j++) {
-            v.put(j, n.getDouble(j));
-         }
-         m[i] = v;
-      }
-      return m;
-   }
-
-
-   /**
-    * Converts the NDArray into an array of DoubleMatrix. (one per slice)
-    *
-    * @return the array of DoubleMatrix
-    */
-   public FloatMatrix[] toFloatMatrix() {
-      if (shape.isEmpty()) {
-         return new FloatMatrix[0];
-      }
-      if (shape.isScalar()) {
-         return new FloatMatrix[]{FloatMatrix.scalar((float) scalarDouble())};
-      }
-      FloatMatrix[] m = new FloatMatrix[shape.sliceLength()];
-      for (int i = 0; i < shape.sliceLength(); i++) {
-         FloatMatrix v = new FloatMatrix(Math.max(1, shape.rows()), shape.columns());
-         NDArray<T> n = slice(i);
-         for (int j = 0; j < n.length(); j++) {
-            v.put(j, (float) n.getDouble(j));
-         }
-         m[i] = v;
-      }
-      return m;
-   }
 
    protected Shape toSliceShape(int startKernel, int startChannel, int endKernel, int endChannel) {
       checkArgument(startKernel >= 0, () -> "Invalid starting kernel " + startKernel);
@@ -4168,12 +1092,19 @@ public abstract class NDArray<T> implements Serializable, Observation {
     *
     * @return the tensor
     */
-   public Tensor<T> toTensor() {
+   public Tensor<?> toTensor() {
       return Cast.as(Tensor.create(arrayForTensor()));
    }
 
 
-   public NDArray<T> transpose(@NonNull int... newAxes) {
+   /**
+    * <p>Transposes this NDArray where the argument to the method is the permutation of the axes in this NDArray., For
+    * example: <code>transpose(3,2,1)</code> will transpose the COLUMN and CHANNEL axes.</p>
+    *
+    * @param newAxes the permuted axes of this NDArray
+    * @return the transposed NDArray
+    */
+   public NDArray transpose(@NonNull int... newAxes) {
       if (shape().isEmpty()) {
          return factory().empty();
       }
@@ -4193,23 +1124,10 @@ public abstract class NDArray<T> implements Serializable, Observation {
       }
       int[] n = {0, 1, 2, 3};
       System.arraycopy(newAxes, 0, n, n.length - newAxes.length, newAxes.length);
-      NDArray<T> out = factory().zeros(shape().get(n[0]), shape().get(n[1]), shape().get(n[2]), shape().get(n[3]));
+      NDArray out = factory().zeros(shape().get(n[0]), shape().get(n[1]), shape().get(n[2]), shape().get(n[3]));
       for (Index index : shape().range()) {
          out.set(index.get(n[0]), index.get(n[1]), index.get(n[2]), index.get(n[3]), get(index));
       }
-      return out;
-   }
-
-   /**
-    * <p>Unitizes the NDArray by dividing the values by L2 Norm. (Only supported by numeric NDArrays)</p>
-    *
-    * @return Unitized version of this NDArray
-    */
-   public NDArray<Float> unitize() {
-      checkThisIsNumeric(this);
-      NDArray<Float> out = nd.DFLOAT32.zeros(shape);
-      double norm2 = norm2();
-      shape.range().forEach(ii -> out.set(ii, getDouble(ii) / norm2));
       return out;
    }
 
@@ -4224,30 +1142,20 @@ public abstract class NDArray<T> implements Serializable, Observation {
     *
     * @return this NDArray filled with zero (or NULL) values
     */
-   public NDArray<T> zero() {
-      return fill(Cast.as(Primitives.defaultValue(getType())));
-   }
+   public abstract NDArray zero();
 
    /**
     * <p>Creates an NDArray of zeros with the same shape as this NDArray</p>
     *
     * @return the zero-valued NDArray
     */
-   public NDArray<T> zeroLike() {
-      return factory().zeros(shape().copy());
-   }
+   public abstract NDArray zeroLike();
 
-   public double[] toDoubleArray() {
-      checkThisIsNumeric(this);
-      double[] out = new double[(int)length()];
-      for (long i = 0; i < length(); i++) {
-         out[(int)i] = getDouble(i);
-      }
-      return out;
-   }
 
    /**
-    * Interface for processing individual entries of an NDArray
+    * <p>Interface for processing individual entries of an NDArray</p>
+    *
+    * @param <T> the type parameter
     */
    @FunctionalInterface
    public interface EntryConsumer<T> {

@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.model.embedding;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import lombok.NonNull;
 
@@ -72,14 +73,14 @@ public interface KeyedVectorStore extends Serializable, Encoder {
     * @param key the key
     * @return the vector
     */
-   NDArray getVector(@NonNull String key);
+   NumericNDArray getVector(@NonNull String key);
 
    /**
     * Gets a stream over the vectors in the store.
     *
     * @return the stream of vectors.
     */
-   Stream<NDArray> stream();
+   Stream<NumericNDArray> stream();
 
    /**
     * Updates the vector at the given index.
@@ -87,6 +88,6 @@ public interface KeyedVectorStore extends Serializable, Encoder {
     * @param index  the index of the vector
     * @param vector the new vector
     */
-   void updateVector(int index, @NonNull NDArray vector);
+   void updateVector(int index, @NonNull NumericNDArray vector);
 
 }//END OF KeyedVectorStore

@@ -19,8 +19,8 @@
 
 package com.gengoai.apollo.ml.model.embedding;
 
-import com.gengoai.apollo.math.linalg.composition.Average;
-import com.gengoai.apollo.math.linalg.composition.VectorComposition;
+import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
+import com.gengoai.apollo.math.linalg.compose.VectorComposition;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.model.CombinableOutputFitParameters;
 import com.gengoai.apollo.ml.model.FitParameters;
@@ -53,10 +53,9 @@ public class WordEmbeddingFitParameters<T extends WordEmbeddingFitParameters<T>>
    public final Parameter<Integer> windowSize = parameter(Params.Embedding.windowSize, 10);
    /**
     * The {@link VectorComposition} to use when combining outputs for multiple inputs (default {@link
-    * com.gengoai.apollo.math.linalg.composition.Average}).
+    * VectorCompositions#Average}).
     */
-   public final Parameter<VectorComposition<Float, Float>> aggregationFunction = parameter(Params.Embedding.aggregationFunction,
-                                                                                           new Average<Float>());
+   public final Parameter<VectorComposition> aggregationFunction = parameter(Params.Embedding.aggregationFunction, VectorCompositions.Average);
    /**
     * Determines the naming strategy for converting Variables into words (default Full).
     */

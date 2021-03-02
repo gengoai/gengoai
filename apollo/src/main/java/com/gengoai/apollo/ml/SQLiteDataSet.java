@@ -21,6 +21,7 @@ package com.gengoai.apollo.ml;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArrayFactory;
 import com.gengoai.conversion.Cast;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.function.Unchecked;
@@ -120,7 +121,7 @@ public final class SQLiteDataSet extends DataSet {
                                                                                    r.getObject(value.getName())));
          stream.forEach(m -> m.forEach(Unchecked.biConsumer((source, metadata) -> {
             if (source.equals("ndArrayFactory")) {
-               super.ndArrayFactory = Cast.as(NDArrayFactory.forType(Reflect.getClassForNameQuietly(metadata.toString())));
+               super.ndArrayFactory = NDArrayFactory.forType(Reflect.getClassForNameQuietly(metadata.toString()));
             } else {
                super.metadata.put(source, Json.parse(metadata.toString(), ObservationMetadata.class));
             }
@@ -270,7 +271,7 @@ public final class SQLiteDataSet extends DataSet {
 
    @Override
    @SneakyThrows
-   public DataSet setNDArrayFactory(@NonNull NDArrayFactory<? extends Number> ndArrayFactory) {
+   public DataSet setNDArrayFactory(@NonNull NDArrayFactory ndArrayFactory) {
       super.setNDArrayFactory(ndArrayFactory);
       metadataTable.insert(InsertType.INSERT_OR_REPLACE)
                    .values(SQL.L("ndArrayFactory"), SQL.L(ndArrayFactory.getType().getName()))

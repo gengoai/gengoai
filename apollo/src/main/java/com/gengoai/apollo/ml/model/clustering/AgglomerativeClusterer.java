@@ -23,6 +23,7 @@
 package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.model.FitParameters;
 import com.gengoai.apollo.ml.model.Params;
@@ -97,7 +98,7 @@ public class AgglomerativeClusterer extends HierarchicalClusterer {
          minC.getV1().setParent(cprime);
          minC.getV2().setParent(cprime);
          cprime.setScore(minC.v3);
-         for(NDArray point : Iterables.concat(minC.getV1().getPoints(), minC.getV2().getPoints())) {
+         for(NumericNDArray point : Iterables.concat(minC.getV1().getPoints(), minC.getV2().getPoints())) {
             cprime.addPoint(point);
          }
          clusters.remove(minC.getV1());
@@ -121,8 +122,8 @@ public class AgglomerativeClusterer extends HierarchicalClusterer {
       clustering = new HierarchicalClustering();
       clustering.setMeasure(parameters.measure.value());
 
-      final List<NDArray> vectors = dataset.parallelStream()
-                                           .map(datum -> datum.get(parameters.input.value()).asNDArray())
+      final List<NumericNDArray> vectors = dataset.parallelStream()
+                                           .map(datum -> datum.get(parameters.input.value()).asNumericNDArray())
                                            .collect();
 
       idGenerator.set(0);
@@ -140,12 +141,12 @@ public class AgglomerativeClusterer extends HierarchicalClusterer {
       return new Parameters();
    }
 
-   private List<Cluster> initDistanceMatrix(List<NDArray> instances,
+   private List<Cluster> initDistanceMatrix(List<NumericNDArray> instances,
                                             PriorityQueue<Tuple3<Cluster, Cluster, Double>> priorityQueue,
                                             Parameters parameters
                                            ) {
       List<Cluster> clusters = new ArrayList<>();
-      for(NDArray item : instances) {
+      for(NumericNDArray item : instances) {
          Cluster c = new Cluster();
          c.addPoint(item);
          c.setId(idGenerator.getAndIncrement());

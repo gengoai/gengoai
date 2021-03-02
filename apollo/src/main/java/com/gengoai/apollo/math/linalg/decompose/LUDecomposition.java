@@ -1,8 +1,7 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.RealMatrixWrapper;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import org.jblas.Decompose;
 import org.jblas.FloatMatrix;
@@ -26,7 +25,7 @@ public class LUDecomposition extends Decomposition {
    }
 
    @Override
-   protected NDArray<Float>[] onMatrix(NDArray<? extends Number> m) {
+   protected NumericNDArray[] onMatrix(NumericNDArray m) {
       Validation.checkArgument(m.shape().isSquare(), "Only square matrices are supported");
       if (m.isDense()) {
          Decompose.LUDecomposition<FloatMatrix> r = Decompose.lu(m.toFloatMatrix()[0]);
@@ -37,7 +36,7 @@ public class LUDecomposition extends Decomposition {
          );
       }
       org.apache.commons.math3.linear.LUDecomposition luDecomposition =
-            new org.apache.commons.math3.linear.LUDecomposition(new RealMatrixWrapper(m));
+            new org.apache.commons.math3.linear.LUDecomposition(m.asRealMatrix());
       return arrayOf(
             nd.DFLOAT32.array(luDecomposition.getL().getData()),
             nd.DFLOAT32.array(luDecomposition.getU().getData()),

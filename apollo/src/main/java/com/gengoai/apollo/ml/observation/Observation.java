@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.gengoai.Copyable;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import lombok.NonNull;
 
 import java.io.Serializable;
@@ -53,9 +54,7 @@ import java.util.stream.Stream;
             @JsonSubTypes.Type(value = VariableList.class, name = "vl"),
             @JsonSubTypes.Type(value = VariableCollectionSequence.class, name = "vcs"),
             @JsonSubTypes.Type(value = VariableSequence.class, name = "vs"),
-//            @JsonSubTypes.Type(value = DenseMatrix.class, name = "dm"),
-//            @JsonSubTypes.Type(value = SparseMatrix.class, name = "sm"),
-//            @JsonSubTypes.Type(value = Tensor.class, name = "tensor"),
+            @JsonSubTypes.Type(value = NDArray.class, name = "nd")
       }
 )
 public interface Observation extends Copyable<Observation>, Serializable {
@@ -75,7 +74,16 @@ public interface Observation extends Copyable<Observation>, Serializable {
     *
     * @return the nd array
     */
-   default NDArray<?> asNDArray() {
+   default NDArray asNDArray() {
+      throw new IllegalArgumentException(getClass().getSimpleName() + " is not an NDArray.");
+   }
+
+   /**
+    * Casts this Observation as a {@link NDArray} throwing  {@link IllegalArgumentException} if the cast is invalid.
+    *
+    * @return the nd array
+    */
+   default NumericNDArray asNumericNDArray() {
       throw new IllegalArgumentException(getClass().getSimpleName() + " is not an NDArray.");
    }
 

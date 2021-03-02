@@ -19,8 +19,7 @@
 
 package com.gengoai.apollo.ml.model.tf;
 
-import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.model.LabelType;
 import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
@@ -40,7 +39,7 @@ public class TFSequenceOutputVar extends TFOutputVar {
    }
 
    @Override
-   public Observation decode(@NonNull NDArray ndArray) {
+   public Observation decode(@NonNull NumericNDArray ndArray) {
       return ndArray.decodeSequence(getEncoder(), validator);
    }
 

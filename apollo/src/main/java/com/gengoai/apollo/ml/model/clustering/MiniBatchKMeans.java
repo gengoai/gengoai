@@ -23,6 +23,7 @@
 package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.statistics.Sampling;
 import com.gengoai.apollo.math.statistics.measure.Measure;
 import com.gengoai.apollo.ml.DataSet;
@@ -77,7 +78,7 @@ public class MiniBatchKMeans extends FlatCentroidClusterer {
       super(with(new Parameters(), updater));
    }
 
-   private Tuple2<Integer, Double> best(NDArray v) {
+   private Tuple2<Integer, Double> best(NumericNDArray v) {
       int bestId = 0;
       final Measure measure = parameters.measure.value();
       double bestMeasure = measure.calculate(v, clustering.get(0).getCentroid());
@@ -96,7 +97,7 @@ public class MiniBatchKMeans extends FlatCentroidClusterer {
       Parameters parameters = getFitParameters();
       clustering = new FlatClustering();
       clustering.setMeasure(parameters.measure.value());
-      final List<NDArray> vectors = dataset.parallelStream()
+      final List<NumericNDArray> vectors = dataset.parallelStream()
                                            .map(this::getNDArray)
                                            .collect();
       PrimitiveIterator.OfInt itr = Sampling.uniformInts(parameters.K.value(), 0, (int) vectors.size(), false)
@@ -131,9 +132,9 @@ public class MiniBatchKMeans extends FlatCentroidClusterer {
       return Cast.as(parameters);
    }
 
-   private double iteration(List<NDArray> stream, int[] counts, int batchSize) {
+   private double iteration(List<NumericNDArray> stream, int[] counts, int batchSize) {
       //Select batch and compute the best cluster for each item
-      List<Tuple3<NDArray, Integer, Double>> batch =
+      List<Tuple3<NumericNDArray, Integer, Double>> batch =
             Sampling.uniformInts(batchSize, 0, (int) stream.size(), true)
                     .parallel()
                     .mapToObj(i -> best(stream.get(i)).appendLeft(stream.get(i)))
@@ -141,12 +142,12 @@ public class MiniBatchKMeans extends FlatCentroidClusterer {
 
       //Update the centroids based on the assignments
       double diff = 0d;
-      for (Tuple3<NDArray, Integer, Double> assignment : batch) {
-         NDArray target = assignment.v1;
+      for (Tuple3<NumericNDArray, Integer, Double> assignment : batch) {
+         NumericNDArray target = assignment.v1;
          int cid = assignment.v2;
          counts[cid]++;
          double eta = 1.0 / counts[cid];
-         NDArray centroid = clustering.get(cid).getCentroid();
+         NumericNDArray centroid = clustering.get(cid).getCentroid();
          centroid.muli(1.0 - eta).addi(target.mul(eta));
          diff += assignment.v3;
       }

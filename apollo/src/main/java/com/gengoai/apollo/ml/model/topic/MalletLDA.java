@@ -32,6 +32,7 @@ import com.gengoai.ParameterDef;
 import com.gengoai.SystemInfo;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.model.Params;
@@ -180,14 +181,14 @@ public class MalletLDA extends TopicModel {
       final Alphabet alphabet = pipes.getDataAlphabet();
       int index = alphabet.lookupIndex(feature, false);
       if(index == -1) {
-         return NDArrayFactory.ND.array(topicModel.numTopics);
+         return nd.DFLOAT32.zeros(topicModel.numTopics);
       }
       double[] dist = new double[topicModel.numTopics];
       double[][] termScores = topicModel.getTopicWords(true, true);
       for(int i = 0; i < topicModel.numTopics; i++) {
          dist[i] = termScores[i][index];
       }
-      return NDArrayFactory.ND.rowVector(dist);
+      return nd.DFLOAT32.array(dist);
    }
 
    private NDArray inference(Observation observation) {
@@ -196,7 +197,7 @@ public class MalletLDA extends TopicModel {
                                                          Strings.EMPTY,
                                                          null,
                                                          null));
-      return NDArrayFactory.ND.rowVector(getInferencer().getSampledDistribution(instances.get(0),
+      return nd.DFLOAT32.array(getInferencer().getSampledDistribution(instances.get(0),
                                                                                 800,
                                                                                 5,
                                                                                 100));

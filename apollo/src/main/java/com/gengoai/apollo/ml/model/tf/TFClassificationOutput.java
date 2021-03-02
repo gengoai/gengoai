@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.model.tf;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.Encoder;
@@ -40,7 +41,7 @@ public class TFClassificationOutput extends TFOutputVar {
    }
 
    @Override
-   public Observation decode(@NonNull NDArray ndArray) {
+   public Observation decode(@NonNull NumericNDArray ndArray) {
       return new Classification(ndArray, getEncoder());
    }
 

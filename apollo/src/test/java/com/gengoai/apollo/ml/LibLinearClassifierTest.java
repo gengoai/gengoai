@@ -19,7 +19,6 @@ public class LibLinearClassifierTest extends BaseClassifierTest {
    @Override
    public boolean passes(ClassifierEvaluation evaluation) {
       MultiClassEvaluation mce = Cast.as(evaluation);
-      mce.output();
       return mce.microF1() >= 0.85;
    }
 }//END OF LibLinearClassifierTest

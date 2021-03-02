@@ -21,6 +21,8 @@ package com.gengoai.apollo.ml.model.tf;
 
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.DataSetType;
 import com.gengoai.apollo.ml.Datum;
@@ -36,6 +38,7 @@ import com.gengoai.apollo.ml.transform.Transformer;
 import com.gengoai.apollo.ml.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.collection.Iterables;
 import com.gengoai.config.Config;
+import com.gengoai.conversion.Cast;
 import com.gengoai.io.Compression;
 import com.gengoai.io.MonitoredObject;
 import com.gengoai.io.ResourceMonitor;
@@ -185,9 +188,9 @@ public class TFModel implements Model, Serializable {
 
       outputs.forEach((mo, to) -> runner.fetch(to.getServingName()));
 
-      List<NDArray> results = new ArrayList<>();
+      List<NumericNDArray> results = new ArrayList<>();
       for (Tensor<?> tensor : runner.run()) {
-         results.add(NDArrayFactory.ND.fromTensorFlowTensor(tensor));
+         results.add(Cast.as(nd.convertTensor(tensor)));
          tensor.close();
       }
 
@@ -196,9 +199,9 @@ public class TFModel implements Model, Serializable {
          Datum d = batchTransformed.get(slice);
          int resultIndex = 0;
          for (Map.Entry<String, TFOutputVar> e : outputs.entrySet()) {
-            NDArray r = results.get(resultIndex);
+            NumericNDArray r = results.get(resultIndex);
             TFOutputVar v = e.getValue();
-            NDArray yHat = v.extractSingleDatumResult(r, slice);
+            NumericNDArray yHat = v.extractSingleDatumResult(r, slice);
             d.put(v.getName(), v.decode(yHat));
             resultIndex++;
          }

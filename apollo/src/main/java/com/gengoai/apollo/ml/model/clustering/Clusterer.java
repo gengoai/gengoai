@@ -23,6 +23,7 @@
 package com.gengoai.apollo.ml.model.clustering;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.model.LabelType;
@@ -66,8 +67,8 @@ public abstract class Clusterer extends SingleSourceModel<ClusterFitParameters, 
       throw new IllegalArgumentException("'" + name + "' is not a valid output for this model.");
    }
 
-   protected NDArray<Float> getNDArray(Datum datum) {
-      NDArray<Float> n = datum.get(parameters.input.value()).asNDArray().asType(Float.class);
+   protected NumericNDArray getNDArray(Datum datum) {
+      NumericNDArray n = datum.get(parameters.input.value()).asNumericNDArray();
       if (Strings.isNotNullOrBlank(parameters.output.value()) &&
             datum.containsKey(parameters.output.value())) {
          n.setLabel(datum.get(parameters.output.value()));

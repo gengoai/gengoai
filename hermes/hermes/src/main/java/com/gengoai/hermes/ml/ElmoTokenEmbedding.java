@@ -20,6 +20,8 @@
 package com.gengoai.hermes.ml;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.NoOptEncoder;
@@ -57,9 +59,9 @@ public class ElmoTokenEmbedding extends TensorFlowModel implements HStringMLMode
       Iterators.zip(hString.sentences().iterator(), processBatch(dataSet).iterator())
                .forEachRemaining(e -> {
                   Annotation sentence = e.getKey();
-                  NDArray embeddings = e.getValue().getDefaultInput().asNDArray();
+                  NumericNDArray embeddings = e.getValue().getDefaultInput().asNumericNDArray();
                   for (int i = 0; i < sentence.tokenLength(); i++) {
-                     sentence.tokenAt(i).put(Types.EMBEDDING, embeddings.getRow(i));
+                     sentence.tokenAt(i).put(Types.EMBEDDING, embeddings.getAxis(Shape.ROW, i));
                   }
                });
       return hString;
@@ -71,7 +73,7 @@ public class ElmoTokenEmbedding extends TensorFlowModel implements HStringMLMode
    }
 
    @Override
-   protected Observation decodeNDArray(String name, NDArray ndArray) {
+   protected Observation decodeNDArray(String name, NumericNDArray ndArray) {
       return ndArray;
    }
 

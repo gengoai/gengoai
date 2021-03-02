@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.transform.vectorizer;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.encoder.HashingEncoder;
 import com.gengoai.apollo.ml.observation.Variable;
 
@@ -48,7 +49,7 @@ public class HashingVectorizer extends AbstractVariableVectorizer<HashingVectori
    }
 
    @Override
-   protected void encodeVariableInto(Variable v, NDArray ndArray) {
+   protected void encodeVariableInto(Variable v, NumericNDArray ndArray) {
       int index = encoder.encode(v.getName());
       if(index >= 0) {
          if(isBinary) {

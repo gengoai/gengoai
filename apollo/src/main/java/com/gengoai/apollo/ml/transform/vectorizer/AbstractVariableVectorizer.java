@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.transform.vectorizer;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.observation.Observation;
@@ -54,21 +55,21 @@ public abstract class AbstractVariableVectorizer<T extends AbstractVariableVecto
     * @param v       the variable
     * @param ndArray the NDArray
     */
-   protected abstract void encodeVariableInto(Variable v, NDArray<? extends Number> ndArray);
+   protected abstract void encodeVariableInto(Variable v, NumericNDArray ndArray);
 
    @Override
-   protected final NDArray<? extends Number> transform(Observation observation) {
+   protected final NumericNDArray transform(Observation observation) {
       if (observation instanceof Variable) {
-         NDArray<? extends Number> n = ndArrayFactory.zeros(1, encoder.size());
+         NumericNDArray n = ndArrayFactory.asNumeric().zeros(1, encoder.size());
          encodeVariableInto(Cast.as(observation), n);
          return n;
       } else if (observation instanceof VariableCollection) {
-         NDArray<? extends Number> n = ndArrayFactory.zeros(1, encoder.size());
+         NumericNDArray n = ndArrayFactory.asNumeric().zeros(1, encoder.size());
          observation.asVariableCollection().forEach(v -> encodeVariableInto(v, n));
          return n;
       } else if (observation instanceof Sequence) {
          Sequence<? extends Observation> sequence = Cast.as(observation);
-         List<NDArray<? extends Number>> rows = new ArrayList<>();
+         List<NumericNDArray> rows = new ArrayList<>();
          sequence.forEach(o -> rows.add(transform(o)));
          return nd.vstack(Cast.cast(rows));
       }

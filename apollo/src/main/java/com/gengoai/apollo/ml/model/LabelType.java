@@ -69,17 +69,17 @@ public enum LabelType {
    Sequence {
       @Override
       public Observation transform(Encoder encoder, @NonNull Observation observation) {
-         if(observation.isSequence()) {
+         if (observation.isSequence()) {
             return observation;
-         } else if(observation.isNDArray()) {
+         } else if (observation.isNDArray()) {
             VariableSequence sequence = new VariableSequence();
-            com.gengoai.apollo.math.linalg.NDArray<?> ndArray = observation.asNDArray();
-            for(int i = 0; i < ndArray.shape().rows(); i++) {
-               if(ndArray.shape().columns() == 1) {
-                  sequence.add(Variable.binary(encoder.decode(ndArray.getDouble(0))));
+            com.gengoai.apollo.math.linalg.NDArray ndArray = observation.asNDArray();
+            for (int i = 0; i < ndArray.shape().rows(); i++) {
+               if (ndArray.shape().columns() == 1) {
+                  sequence.add(Variable.binary(encoder.decode(ndArray.asNumericNDArray().scalarDouble())));
                } else {
                   long argmax = ndArray.shape().calculateOffset(ndArray.argMax());
-                  sequence.add(Variable.real(encoder.decode(argmax), ndArray.getDouble(argmax)));
+                  sequence.add(Variable.real(encoder.decode(argmax), ndArray.asNumericNDArray().getDouble(argmax)));
                }
             }
             return sequence;
@@ -98,7 +98,7 @@ public enum LabelType {
    NDArray {
       @Override
       public Observation transform(Encoder encoder, @NonNull Observation observation) {
-         if(observation.isNDArray()) {
+         if (observation.isNDArray()) {
             return observation;
          }
          throw new IllegalArgumentException("Expecting NDArray, but found: " + observation.getClass());
@@ -118,15 +118,15 @@ public enum LabelType {
     */
    public static LabelType classificationType(int numLabels) {
       return numLabels > 2
-             ? LabelType.MultiClassClassification
-             : LabelType.BinaryClassification;
+            ? LabelType.MultiClassClassification
+            : LabelType.BinaryClassification;
    }
 
    private static Observation transformToClassification(Encoder encoder, Observation observation) {
-      if(observation.isClassification()) {
+      if (observation.isClassification()) {
          return observation;
-      } else if(observation.isNDArray()) {
-         return new Classification(observation.asNDArray(), encoder);
+      } else if (observation.isNDArray()) {
+         return new Classification(observation.asNumericNDArray(), encoder);
       }
       throw new IllegalArgumentException("Expecting Classification or NDArray, but found: " + observation.getClass());
    }

@@ -19,10 +19,9 @@
 
 package com.gengoai.apollo.ml.model.embedding;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.composition.Average;
-import com.gengoai.apollo.math.linalg.composition.VectorComposition;
-import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.linalg.*;
+import com.gengoai.apollo.math.linalg.compose.VectorComposition;
+import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.NoOptEncoder;
@@ -58,7 +57,7 @@ public abstract class WordEmbedding implements Transform {
     * @param words       the words whose vectors we want to compose
     * @return a composite vector consisting of the given words and calculated using the given vector composition
     */
-   public final NDArray<Float> compose(@NonNull VectorComposition<Float, Float> composition, @NonNull String... words) {
+   public final NumericNDArray compose(@NonNull VectorComposition composition, @NonNull String... words) {
       if (words == null) {
          return nd.DFLOAT32.zeros(dimension());
       } else if (words.length == 1) {
@@ -88,7 +87,7 @@ public abstract class WordEmbedding implements Transform {
     * @param feature the feature name whose NDArray we want
     * @return the NDArray for the given feature, zero vector or unknown vector if feature is not valid.
     */
-   public final NDArray<Float> embed(@NonNull String feature) {
+   public final NumericNDArray embed(@NonNull String feature) {
       return vectorStore.getVector(feature);
    }
 
@@ -122,8 +121,8 @@ public abstract class WordEmbedding implements Transform {
     * @param query the query to use find similar vectors
     * @return Stream of vectors matching the query
     */
-   public final Stream<NDArray> query(@NonNull VSQuery query) {
-      NDArray queryVector = query.queryVector(this);
+   public final Stream<NumericNDArray> query(@NonNull VSQuery query) {
+      NumericNDArray queryVector = query.queryVector(this);
       return query.applyFilters(vectorStore.stream()
                                            .parallel()
                                            .map(v -> v.copy().setWeight(query.measure().calculate(v, queryVector))));
@@ -146,20 +145,20 @@ public abstract class WordEmbedding implements Transform {
       return datum;
    }
 
-   protected NDArray<Float> transform(Observation o) {
+   protected NumericNDArray transform(Observation o) {
       if (o.isVariable()) {
          return embed(getVariableName(o.asVariable()));
       } else if (o.isVariableCollection()) {
          if (o.getVariableSpace().count() == 0) {
             return nd.DFLOAT32.zeros(1, dimension());
          }
-         return new Average<Float>().compose(o.asVariableCollection()
-                                              .getVariableSpace()
-                                              .map(v -> embed(getVariableName(v)))
-                                              .collect(Collectors.toList()));
+         return VectorCompositions.Average.compose(o.asVariableCollection()
+                                                    .getVariableSpace()
+                                                    .map(v -> embed(getVariableName(v)))
+                                                    .collect(Collectors.toList()));
       } else if (o.isSequence()) {
          Sequence<?> sequence = o.asSequence();
-         List<NDArray<Float>> vectors = new ArrayList<>();
+         List<NumericNDArray> vectors = new ArrayList<>();
          for (Observation observation : sequence) {
             vectors.add(transform(observation));
          }

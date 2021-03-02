@@ -20,6 +20,7 @@
 package com.gengoai.apollo.ml.transform.vectorizer;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.encoder.Encoder;
 import com.gengoai.apollo.ml.encoder.IndexEncoder;
 import com.gengoai.apollo.ml.observation.Variable;
@@ -63,7 +64,7 @@ public class CountVectorizer extends AbstractVariableVectorizer<CountVectorizer>
    }
 
    @Override
-   protected void encodeVariableInto(Variable v, NDArray ndArray) {
+   protected void encodeVariableInto(Variable v, NumericNDArray ndArray) {
       int index = encoder.encode(v.getName());
       if(index >= 0) {
          ndArray.set(index, ndArray.getDouble(index) + v.getValue());

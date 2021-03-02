@@ -20,6 +20,7 @@
 package com.gengoai.hermes.ml;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.encoder.NoOptEncoder;
@@ -59,7 +60,7 @@ public class UniversalSentenceEncoder extends TensorFlowModel implements HString
       Iterators.zip(hString.sentences().iterator(), processBatch(dataSet).iterator())
                .forEachRemaining(e -> {
                   Annotation sentence = e.getKey();
-                  NDArray embeddings = e.getValue().getDefaultOutput().asNDArray();
+                  NumericNDArray embeddings = e.getValue().getDefaultOutput().asNumericNDArray();
                   sentence.put(Types.EMBEDDING, embeddings);
                });
       return hString;
@@ -84,7 +85,7 @@ public class UniversalSentenceEncoder extends TensorFlowModel implements HString
 
 
    @Override
-   protected Observation decodeNDArray(String name, NDArray ndArray) {
+   protected Observation decodeNDArray(String name, NumericNDArray ndArray) {
       return ndArray;
    }
 

@@ -19,8 +19,7 @@
 
 package com.gengoai.apollo.ml.model.topic;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.ml.DataSet;
 import com.gengoai.apollo.ml.Datum;
 import com.gengoai.apollo.ml.model.Params;
@@ -51,7 +50,7 @@ import static com.gengoai.function.Functional.with;
 public class LSA extends BaseVectorTopicModel {
    private static final long serialVersionUID = 1L;
    private final Parameters parameters;
-   private List<NDArray> topicVectors = new ArrayList<>();
+   private List<NumericNDArray> topicVectors = new ArrayList<>();
 
    /**
     * Instantiates a new LSA model with default parameters.
@@ -78,7 +77,7 @@ public class LSA extends BaseVectorTopicModel {
       this.parameters = with(new Parameters(), updater);
    }
 
-   private Stream<NDArray> encode(Datum d) {
+   private Stream<NumericNDArray> encode(Datum d) {
       if(parameters.combineInputs.value()) {
          return mergeVariableSpace(d.stream(getInputs()))
                .getVariableSpace()
@@ -91,7 +90,8 @@ public class LSA extends BaseVectorTopicModel {
    @Override
    public void estimate(@NonNull DataSet dataset) {
       encoderFit(dataset, getInputs(), parameters.namingPattern.value());
-      SparkStream<Vector> stream = new SparkStream<Vector>(dataset.parallelStream().toDistributedStream()
+      SparkStream<Vector> stream = new SparkStream<Vector>(dataset.parallelStream()
+                                                                  .toDistributedStream()
                                                                   .flatMap(this::encode)
                                                                   .map(o -> new DenseVector(o.toDoubleArray())))
             .cache();
@@ -99,11 +99,11 @@ public class LSA extends BaseVectorTopicModel {
       //since we have document x word, V is the word x component matrix
       // U = document x component, E = singular components, V = word x component
       // Transpose V to get component (topics) x words
-      NDArray topicMatrix = toMatrix(sparkSVD(mat, parameters.K.value()).V().transpose());
+      NumericNDArray topicMatrix = toMatrix(sparkSVD(mat, parameters.K.value()).V().transpose());
       for(int i = 0; i < parameters.K.value(); i++) {
          Counter<String> featureDist = Counters.newCounter();
-         NDArray dist = NDArrayFactory.ND.columnVector(topicMatrix.getRow(i).toDoubleArray());
-         dist.forEachSparse((index, v) -> featureDist.set(encoder.decode(index), v));
+         NumericNDArray dist = nd.DFLOAT32.array(topicMatrix.getAxis(Shape.ROW, i).toDoubleArray());
+         dist.forEachSparse((index, v) -> featureDist.set(encoder.decode(index), v.doubleValue()));
          topics.add(new Topic(i, featureDist));
          topicVectors.add(dist);
       }
@@ -118,23 +118,23 @@ public class LSA extends BaseVectorTopicModel {
    public NDArray getTopicDistribution(String feature) {
       int i = encoder.encode(feature);
       if(i == -1) {
-         return NDArrayFactory.ND.rowVector(new double[topics.size()]);
+         return nd.DFLOAT32.array(new double[topics.size()]);
       }
       double[] dist = new double[topics.size()];
       for(int i1 = 0; i1 < topics.size(); i1++) {
-         dist[i1] = topicVectors.get(i1).get(i);
+         dist[i1] = topicVectors.get(i1).getDouble(i);
       }
-      return NDArrayFactory.ND.rowVector(dist);
+      return nd.DFLOAT32.array(dist);
    }
 
    @Override
-   protected NDArray inference(NDArray vector) {
+   protected NumericNDArray inference(NumericNDArray vector) {
       double[] scores = new double[topics.size()];
       for(int i = 0; i < topics.size(); i++) {
          double score = vector.dot(topicVectors.get(i));
          scores[i] = score;
       }
-      return NDArrayFactory.ND.rowVector(scores);
+      return nd.DFLOAT32.array(scores);
    }
 
    /**
