@@ -39,7 +39,7 @@ import static com.gengoai.string.Re.*;
 /**
  * @author David B. Bracewell
  */
-public enum ContextPatternParser implements TokenDef {
+enum ContextPatternParser implements TokenDef {
    STRICT {
       @Override
       public List<List<FeatureGetter>> generate(ParserToken token, TokenStream tokenStream) {
@@ -69,7 +69,7 @@ public enum ContextPatternParser implements TokenDef {
                    namedGroup("", oneOrMore(DIGIT)), //0
                    zeroOrOne("\\s*,\\s*",
                              namedGroup("", oneOrMore(DIGIT)) //1
-                            ),
+                   ),
                    q(">"));
       }
 
@@ -79,13 +79,13 @@ public enum ContextPatternParser implements TokenDef {
 
          int nMin = Integer.parseInt(token.getVariable(0));
          int nMax = token.getVariable(1) != null
-                    ? Integer.parseInt(token.getVariable(1))
-                    : nMin;
+               ? Integer.parseInt(token.getVariable(1))
+               : nMin;
 
          ParserToken nt = tokenStream.consume();
          List<List<FeatureGetter>> subFeatures = ((ContextPatternParser) nt.getType()).generate(nt, tokenStream);
-         for(int i = 0; i <= subFeatures.size(); i++) {
-            for(int j = i + nMin; j <= i + nMax && j <= subFeatures.size(); j++) {
+         for (int i = 0; i <= subFeatures.size(); i++) {
+            for (int j = i + nMin; j <= i + nMax && j <= subFeatures.size(); j++) {
                getters.add(Lists.asArrayList(Iterables.flatten(subFeatures.subList(i, j))));
             }
          }
@@ -96,12 +96,12 @@ public enum ContextPatternParser implements TokenDef {
       @Override
       public List<List<FeatureGetter>> generate(ParserToken token, TokenStream tokenStream) {
          String[] prefixes = (token.getVariable(0) != null
-                              ? token.getVariable(0)
-                              : token.getVariable(1))
+               ? token.getVariable(0)
+               : token.getVariable(1))
                .split("\\s*,\\s*");
          int low = Integer.parseInt(token.getVariable(2));
 
-         if(token.getVariable(3) == null) {
+         if (token.getVariable(3) == null) {
             return List.of(Stream.of(prefixes)
                                  .map(p -> new FeatureGetter(low, p))
                                  .collect(Collectors.toList()));
@@ -110,8 +110,8 @@ public enum ContextPatternParser implements TokenDef {
          String op = token.getVariable(3);
          int high = Integer.parseInt(token.getVariable(4));
          final List<List<FeatureGetter>> getters = new ArrayList<>();
-         if(op.equals(",")) {
-            for(int i = low; i <= high; i++) {
+         if (op.equals(",")) {
+            for (int i = low; i <= high; i++) {
                final int offset = i;
                getters.add(Stream.of(prefixes)
                                  .map(p -> new FeatureGetter(offset, p))
@@ -119,7 +119,7 @@ public enum ContextPatternParser implements TokenDef {
             }
          } else {
             List<FeatureGetter> l = new ArrayList<>();
-            for(int i = low; i <= high; i++) {
+            for (int i = low; i <= high; i++) {
                final int offset = i;
                l.addAll(Stream.of(prefixes)
                               .map(p -> new FeatureGetter(offset, p))
@@ -141,7 +141,7 @@ public enum ContextPatternParser implements TokenDef {
                          namedGroup("", or(q(".."), ",")), //3
                          "\\s*",
                          namedGroup("", zeroOrOne(chars("-+")), oneOrMore(DIGIT)) //4
-                        ),
+               ),
                q("]"));
       }
    };
@@ -153,23 +153,23 @@ public enum ContextPatternParser implements TokenDef {
       List<List<FeatureGetter>> extractors = Collections.emptyList();
 
       AtomicBoolean isStrict = new AtomicBoolean(false);
-      while(ts.hasNext()) {
+      while (ts.hasNext()) {
          ParserToken token = ts.consume();
-         if(token.getType() == STRICT) {
+         if (token.getType() == STRICT) {
             isStrict.set(true);
             continue;
          }
          List<List<FeatureGetter>> getters = ((ContextPatternParser) token.getType()).generate(token, ts);
-         if(ts.hasNext()) {
+         if (ts.hasNext()) {
             ts.consume(PIPE);
          }
 
-         if(extractors.isEmpty()) {
+         if (extractors.isEmpty()) {
             extractors = getters;
          } else {
             List<List<FeatureGetter>> out = new ArrayList<>();
-            for(List<FeatureGetter> extractor : extractors) {
-               for(List<FeatureGetter> getter : getters) {
+            for (List<FeatureGetter> extractor : extractors) {
+               for (List<FeatureGetter> getter : getters) {
                   out.add(new ArrayList<>(extractor));
                   out.get(out.size() - 1).addAll(getter);
                }

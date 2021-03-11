@@ -22,6 +22,7 @@ package com.gengoai.apollo.feature;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableCollection;
 import com.gengoai.apollo.data.observation.VariableCollectionSequence;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,8 +32,11 @@ import java.util.stream.Collectors;
  */
 class ContextFeaturizerImpl<I> extends ContextFeaturizer<I> {
    private static final long serialVersionUID = 1L;
+   @Getter
    private final String featurePrefix;
+   @Getter
    private final boolean ignoreEmptyContext;
+   @Getter
    private final List<FeatureGetter> patterns;
 
    ContextFeaturizerImpl(boolean ignoreEmptyContext, List<FeatureGetter> patterns) {

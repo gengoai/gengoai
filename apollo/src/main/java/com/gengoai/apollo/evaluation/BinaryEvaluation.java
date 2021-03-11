@@ -19,9 +19,10 @@
 
 package com.gengoai.apollo.evaluation;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.Validation;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Split;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.model.Model;
 import com.gengoai.conversion.Cast;
 import com.gengoai.math.Math2;
@@ -59,6 +60,15 @@ public class BinaryEvaluation extends ClassifierEvaluation {
    private double tp = 0;
 
    /**
+    * Instantiates a new BinaryEvaluation.
+    *
+    * @param outputName the name of the output source we will evaluate
+    */
+   public BinaryEvaluation(@NonNull String outputName) {
+      super(outputName);
+   }
+
+   /**
     * Performs a cross-validation of the given classifier using the given dataset
     *
     * @param dataset the dataset to perform cross-validation on
@@ -66,12 +76,14 @@ public class BinaryEvaluation extends ClassifierEvaluation {
     * @param nFolds  the number of folds to perform
     * @return the classifier evaluation
     */
-   public static BinaryEvaluation crossvalidation(DataSet dataset,
-                                                  Model model,
+   public static BinaryEvaluation crossvalidation(@NonNull DataSet dataset,
+                                                  @NonNull Model model,
                                                   int nFolds,
                                                   String outputName) {
+      Validation.notNullOrBlank(outputName, "The output name cannot be blank or null.");
+      Validation.checkArgument(nFolds > 1, "Must specify more than 1 fold.");
       BinaryEvaluation evaluation = new BinaryEvaluation(outputName);
-      for(Split split : Split.createFolds(dataset.shuffle(), nFolds)) {
+      for (Split split : Split.createFolds(dataset.shuffle(), nFolds)) {
          model.estimate(split.train);
          evaluation.evaluate(model, split.test);
       }
@@ -89,18 +101,10 @@ public class BinaryEvaluation extends ClassifierEvaluation {
    public static BinaryEvaluation evaluate(@NonNull Model model,
                                            @NonNull DataSet testingData,
                                            @NonNull String outputSourceName) {
+      Validation.notNullOrBlank(outputSourceName, "The output name cannot be blank or null.");
       BinaryEvaluation evaluation = new BinaryEvaluation(outputSourceName);
       evaluation.evaluate(model, testingData);
       return evaluation;
-   }
-
-   /**
-    * Instantiates a new BinaryEvaluation.
-    *
-    * @param outputName the name of the output source we will evaluate
-    */
-   public BinaryEvaluation(@NonNull String outputName) {
-      super(outputName);
    }
 
    @Override
@@ -132,16 +136,16 @@ public class BinaryEvaluation extends ClassifierEvaluation {
       int goldClass = (int) gold;
       int predictedClass = (int) predicted.argMaxOffset();
       prob[goldClass].add(predicted.getDouble(1));
-      if(goldClass == 1) {
+      if (goldClass == 1) {
          positive++;
-         if(predictedClass == 1) {
+         if (predictedClass == 1) {
             tp++;
          } else {
             fn++;
          }
       } else {
          negative++;
-         if(predictedClass == 1) {
+         if (predictedClass == 1) {
             fp++;
          } else {
             tn++;
@@ -167,7 +171,7 @@ public class BinaryEvaluation extends ClassifierEvaluation {
 
    @Override
    public void merge(ClassifierEvaluation evaluation) {
-      if(evaluation instanceof BinaryEvaluation) {
+      if (evaluation instanceof BinaryEvaluation) {
          BinaryEvaluation bce = Cast.as(evaluation);
          this.prob[0].addAllOf(bce.prob[0]);
          this.prob[1].addAllOf(bce.prob[1]);
@@ -180,7 +184,7 @@ public class BinaryEvaluation extends ClassifierEvaluation {
    public void output(PrintStream printStream, boolean printConfusionMatrix) {
       TableFormatter tableFormatter = new TableFormatter();
 
-      if(printConfusionMatrix) {
+      if (printConfusionMatrix) {
          tableFormatter.header(asList("Predicted / Gold", "TRUE", "FALSE", "TOTAL"));
          tableFormatter.content(
                asList("TRUE", truePositives(), falsePositives(), (truePositives() + falsePositives())));

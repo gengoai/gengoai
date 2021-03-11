@@ -25,8 +25,9 @@ import com.gengoai.math.HashingFunctions;
 import com.gengoai.stream.MStream;
 import lombok.NonNull;
 
-import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Uses the hashing trick to reduce the feature space by hashing feature names into a given number of buckets.
@@ -70,7 +71,9 @@ public class HashingEncoder implements Encoder {
 
    @Override
    public Set<String> getAlphabet() {
-      return Collections.emptySet();
+      return IntStream.range(0, size())
+                      .mapToObj(index -> "Hash(" + index + ")")
+                      .collect(Collectors.toSet());
    }
 
    @Override

@@ -19,16 +19,13 @@
 
 package com.gengoai.apollo.feature;
 
-import com.gengoai.apollo.data.observation.*;
-import com.gengoai.string.Strings;
+import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.data.observation.VariableCollectionSequence;
+import com.gengoai.apollo.data.observation.VariableList;
 import lombok.NonNull;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * <P>A feature extractor that allows for the extraction of contextual features, i.e. using features from previous and
@@ -64,6 +61,18 @@ import java.util.stream.Stream;
  * {@link Observation}s. This is accomplished by creating a {@link Featurizer} and then calling {@link
  * Featurizer#withContext(String[])}.
  * </p>
+ * <p>In addition contextual features can be defined using the following operators:</p>
+ * <ul>
+ *    <li><code>~</code>: Strict - will only create a feature if all elements are found, e.g.
+ *    <code>~WORD[-1]|WORD[0]</code> will only create a feature if both <code>WORD[-1]</code> and <code>WORD[0]</code>
+ *    represent valid offsets (not the first word in a sequence)</li>
+ *    <li><code>[min, max]</code>: Range - generates unique features for each prefix in the range <code>min</code> to
+ *    <code>max</code>, .e.g. <code>WORD[-2,-1]|WORD[0]</code> will generate the features <code>WORD[-2]|WORD[0]</code>
+ *    and <code>WORD[-1]|WORD[0]</code>.</li>
+ *    <li><code>&lt;min, max&gt;</code>: NGram - generates NGrams from <code>min</code> to <code>max</code>. Works in
+ *    conjunction with ranges, e.g. <code>&lt;1,2&gt;WORD[-2,-1]|WORD[0]</code> will generate the features
+ *    <code>WORD[-2]|WORD[0]</code>, <code>WORD[-1]|WORD[0]</code>, and <code>WORD[-2]|WORD[-1]|WORD[0]</code></li>
+ * </ul>
  *
  * @param <I> the input type parameter
  * @author David B. Bracewell
@@ -71,43 +80,12 @@ import java.util.stream.Stream;
 public abstract class ContextFeaturizer<I> implements FeatureExtractor<I>, Serializable {
    private static final long serialVersionUID = 1L;
 
-   /**
-    * Chains together multiple <code>ContextFeaturizer</code>s into a single Featurizer.
-    *
-    * @param <I>      the input type parameter
-    * @param patterns the patterns
-    * @return the context featurizer
-    */
-   public static <I> ContextFeaturizer<I> chain(String... patterns) {
-      return new ChainedContextFeaturizer<>(Stream.of(patterns)
-                                                  .map(SingleContextFeaturizer::new)
-                                                  .collect(Collectors.toList()));
-   }
-
    public static <I> ContextFeaturizer<I> chain(@NonNull List<ContextFeaturizer<? super I>> featurizers) {
       return new ChainedContextFeaturizer<>(featurizers);
    }
 
-   //   public static <I> ContextFeaturizer<I> chain(List<String> patterns) {
-   //      return new ChainedContextFeaturizer<>(patterns.stream()
-   //                                                    .map(SingleContextFeaturizer::new)
-   //                                                    .collect(Collectors.toList()));
-   //   }
-
-   /**
-    * Convenience method for creating a ContextFeaturizer from a given pattern. Will use beginning and end of sequence
-    * markers as needed.
-    *
-    * @param <I>     the input type parameter
-    * @param pattern the pattern
-    * @return the context feature
-    */
-   public static <I> ContextFeaturizer<I> contextFeaturizer(String pattern) {
-      return new SingleContextFeaturizer<>(pattern);
-   }
-
    @Override
-   public final VariableList extractObservation(I input) {
+   public final VariableList extractObservation(@NonNull I input) {
       throw new UnsupportedOperationException();
    }
 
@@ -121,7 +99,7 @@ public abstract class ContextFeaturizer<I> implements FeatureExtractor<I>, Seria
 
       @Override
       public VariableCollectionSequence contextualize(VariableCollectionSequence sequence) {
-         for(ContextFeaturizer<? super I> contextFeaturizer : contextFeaturizers) {
+         for (ContextFeaturizer<? super I> contextFeaturizer : contextFeaturizers) {
             sequence = contextFeaturizer.contextualize(sequence);
          }
          return sequence;
@@ -130,74 +108,12 @@ public abstract class ContextFeaturizer<I> implements FeatureExtractor<I>, Seria
       @Override
       public String toString() {
          StringBuilder builder = new StringBuilder("ContextualFeatures\n");
-         for(ContextFeaturizer<? super I> contextFeaturizer : contextFeaturizers) {
+         for (ContextFeaturizer<? super I> contextFeaturizer : contextFeaturizers) {
             builder.append("\t").append(contextFeaturizer).append("\n");
          }
          return builder.toString();
       }
 
-   }
-
-   private static class SingleContextFeaturizer<I> extends ContextFeaturizer<I> {
-      private static final Pattern featurePattern = Pattern.compile("^(.+?)\\[([-+]?\\d+)]$");
-      private static final long serialVersionUID = 1L;
-      private final String featurePrefix;
-      private final boolean ignoreEmptyContext;
-      private final int[] offsets;
-      private final String[] prefix;
-      private final String pattern;
-
-      private SingleContextFeaturizer(String pattern) {
-         this.pattern = pattern;
-         this.ignoreEmptyContext = pattern.startsWith("~");
-         String[] patterns = this.ignoreEmptyContext
-                             ? pattern.substring(1).split("\\|")
-                             : pattern.split("\\|");
-         prefix = new String[patterns.length];
-         offsets = new int[patterns.length];
-         featurePrefix = Strings.join(patterns, "|");
-         for(int i = 0; i < patterns.length; i++) {
-            Matcher m = featurePattern.matcher(patterns[i]);
-            if(m.find()) {
-               prefix[i] = m.group(1);
-               offsets[i] = Integer.parseInt(m.group(2));
-            } else {
-               throw new IllegalArgumentException(patterns[i] + " is not a legal pattern");
-            }
-         }
-      }
-
-      @Override
-      public VariableCollectionSequence contextualize(VariableCollectionSequence sequence) {
-         for(ContextualIterator itr = sequence.contextualIterator(); itr.hasNext(); ) {
-            VariableCollection instance = itr.next();
-            StringBuilder fName = new StringBuilder();
-
-            for(int i = 0; i < prefix.length; i++) {
-               Variable f = itr.getContext(offsets[i])
-                               .getVariableByPrefix(prefix[i]);
-               if(ignoreEmptyContext) {
-                  if(f.getSuffix().startsWith("__BOS-") || f.getSuffix().startsWith("__EOS-")) {
-                     fName = null;
-                     break;
-                  }
-               }
-               if(i > 0) {
-                  fName.append("|");
-               }
-               fName.append(f.getSuffix());
-            }
-            if(fName != null) {
-               instance.add(Variable.binary(featurePrefix, fName.toString()));
-            }
-         }
-         return sequence;
-      }
-
-      @Override
-      public String toString() {
-         return pattern;
-      }
    }
 
 }//END OF ContextFeaturizer

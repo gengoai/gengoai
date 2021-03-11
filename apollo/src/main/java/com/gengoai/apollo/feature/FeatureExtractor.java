@@ -22,14 +22,15 @@ package com.gengoai.apollo.feature;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.VariableCollectionSequence;
 import com.gengoai.apollo.data.observation.VariableList;
+import lombok.NonNull;
 
 import java.util.List;
 
 /**
  * <p>
- * A featurizer extractor converts an input object into an {@link Observation}.
- * Specializations of this class are {@link Featurizer} that extract features based on a single object and {@link
- * ContextFeaturizer} which extract features based on the objects and its context.
+ * A feature extractor converts an input object into an {@link Observation}.  Specializations of this class are {@link
+ * Featurizer} that extract features based on a single object and {@link ContextFeaturizer} which extract features based
+ * on the objects and its context.
  * </p>
  *
  * @param <I> the type parameter for the object being converted to an example.
@@ -43,17 +44,17 @@ public interface FeatureExtractor<I> extends ObservationExtractor<I> {
     * @param sequence the sequence to generate contextual features for
     * @return the example with contextual features
     */
-   default VariableCollectionSequence contextualize(VariableCollectionSequence sequence) {
+   default VariableCollectionSequence contextualize(@NonNull VariableCollectionSequence sequence) {
       return sequence;
    }
 
    @Override
-   VariableList extractObservation(I input);
+   VariableList extractObservation(@NonNull I input);
 
    @Override
-   default VariableCollectionSequence extractSequence(List<? extends I> sequence) {
+   default VariableCollectionSequence extractSequence(@NonNull List<? extends I> sequence) {
       VariableCollectionSequence out = new VariableCollectionSequence();
-      for(I i : sequence) {
+      for (I i : sequence) {
          out.add(extractObservation(i));
       }
       return contextualize(out);

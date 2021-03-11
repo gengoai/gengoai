@@ -54,7 +54,7 @@ public class MalletEncoder implements Encoder {
 
    @Override
    public int encode(String variableName) {
-      return alphabet.lookupIndex(variableName);
+      return alphabet.lookupIndex(variableName, false);
    }
 
    @Override

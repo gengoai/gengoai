@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * Implementation of a {@link Encoder} for a Fixed vocabulary.
+ * <p>Implementation of a {@link Encoder} for a Fixed vocabulary.</p>
  *
  * @author David B. Bracewell
  */
@@ -50,6 +50,7 @@ public class FixedEncoder implements Encoder {
     * Instantiates a new FixedEncoder.
     *
     * @param alphabet the alphabet
+    * @param unknown  the unknown
     */
    @JsonCreator
    public FixedEncoder(@JsonProperty("alphabet") @NonNull Iterable<String> alphabet,
@@ -58,6 +59,12 @@ public class FixedEncoder implements Encoder {
       this.unknown = Strings.emptyToNull(unknown);
    }
 
+   /**
+    * Instantiates a new FixedEncoder reading the vocabulary from the given file.
+    *
+    * @param vocabFile the vocab file with one entry per line
+    * @param unknown   the vocabulary item representing an unknown value
+    */
    public FixedEncoder(@NonNull Resource vocabFile, String unknown) {
       try {
          this.alphabet.addAll(Iterables.filter(Iterables.transform(vocabFile.readLines(), String::strip),
@@ -68,10 +75,23 @@ public class FixedEncoder implements Encoder {
       }
    }
 
+   /**
+    * Instantiates a new FixedEncoder.
+    *
+    * @param alphabet the alphabet
+    */
    public FixedEncoder(@NonNull Iterable<String> alphabet) {
       this(alphabet, null);
    }
 
+   /**
+    * Static constructor for creating a FixedEncoder from a vocabulary in the given <code>vocabFile</code> and having
+    * the given <code>unknown</code> word.
+    *
+    * @param vocabFile the vocab file with one entry per line
+    * @param unknown   the vocabulary item representing an unknown value
+    * @return the FixedEncoder
+    */
    public static FixedEncoder fixedEncoder(@NonNull Resource vocabFile, String unknown) {
       return new FixedEncoder(vocabFile, unknown);
    }

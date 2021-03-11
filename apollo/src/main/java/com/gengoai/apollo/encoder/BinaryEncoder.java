@@ -36,6 +36,14 @@ public class BinaryEncoder implements Encoder {
    private final String trueLabel;
    private final String falseLabel;
 
+
+   /**
+    * Instantiates a new BinaryEncoder with <code>false</code> and <code>true</code>.
+    */
+   public BinaryEncoder() {
+      this("false", "true");
+   }
+
    /**
     * Instantiates a new BinaryEncoder.
     *
@@ -49,7 +57,7 @@ public class BinaryEncoder implements Encoder {
 
    @Override
    public String decode(double index) {
-      switch((int) index) {
+      switch ((int) index) {
          case 0:
             return falseLabel;
          case 1:
@@ -60,10 +68,10 @@ public class BinaryEncoder implements Encoder {
 
    @Override
    public int encode(String variableName) {
-      if(Strings.safeEquals(variableName, falseLabel, true)) {
+      if (Strings.safeEquals(variableName, falseLabel, true)) {
          return 0;
       }
-      if(Strings.safeEquals(variableName, trueLabel, true)) {
+      if (Strings.safeEquals(variableName, trueLabel, true)) {
          return 1;
       }
       return -1;

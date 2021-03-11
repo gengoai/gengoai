@@ -20,7 +20,6 @@
 package com.gengoai.hermes.ml;
 
 import com.gengoai.Language;
-import com.gengoai.apollo.feature.Featurizer;
 import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.apollo.model.tf.TFInputVar;
 import com.gengoai.apollo.model.tf.TFOutputVar;
@@ -35,10 +34,12 @@ import com.gengoai.hermes.ml.feature.Features;
 import com.gengoai.io.Resources;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.gengoai.apollo.encoder.FixedEncoder.fixedEncoder;
+import static com.gengoai.apollo.feature.Featurizer.booleanFeaturizer;
+import static com.gengoai.apollo.feature.Featurizer.valueFeaturizer;
 import static com.gengoai.hermes.ResourceType.WORD_LIST;
+import static java.util.stream.Collectors.toList;
 
 public class NeuralNERModel2 extends TFSequenceLabeler {
    private static final long serialVersionUID = 1L;
@@ -51,8 +52,8 @@ public class NeuralNERModel2 extends TFSequenceLabeler {
    public NeuralNERModel2() {
       super(
             List.of(
-                  TFInputVar.sequence(TOKENS, fixedEncoder(WORD_LIST.locate("glove", Language.ENGLISH)
-                                                                    .orElseThrow(), "--UNKNOWN--")),
+                  TFInputVar.sequence(TOKENS, fixedEncoder(WORD_LIST.locate("glove", Language.ENGLISH).orElseThrow(),
+                                                           "--UNKNOWN--")),
                   TFInputVar.sequence(SHAPE),
                   TFInputVar.sequence(CHARS, -1, MAX_WORD_LENGTH)
             ),
@@ -108,12 +109,11 @@ public class NeuralNERModel2 extends TFSequenceLabeler {
    @Override
    public HStringDataSetGenerator getDataGenerator() {
       return HStringDataSetGenerator.builder(Types.SENTENCE)
-                                    .tokenSequence(TOKENS, Featurizer.valueFeaturizer(HString::toLowerCase))
-                                    .tokenSequence(CHARS, Featurizer.booleanFeaturizer(h -> h.charNGrams(1)
-                                                                                             .stream()
-                                                                                             .map(HString::toLowerCase)
-                                                                                             .collect(Collectors
-                                                                                                            .toList())))
+                                    .tokenSequence(TOKENS, valueFeaturizer(HString::toLowerCase))
+                                    .tokenSequence(CHARS, booleanFeaturizer(h -> h.charNGrams(1)
+                                                                                  .stream()
+                                                                                  .map(HString::toLowerCase)
+                                                                                  .collect(toList())))
                                     .tokenSequence(SHAPE, Features.WordShape)
                                     .source(LABEL, IOB.encoder(Types.ENTITY))
                                     .build();

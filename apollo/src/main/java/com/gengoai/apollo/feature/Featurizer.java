@@ -53,7 +53,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
     * @param function the function to convert the object into feature names
     * @return the featurizer
     */
-   public static <I> Featurizer<I> booleanFeaturizer(SerializableFunction<? super I, ? extends Collection<String>> function) {
+   public static <I> Featurizer<I> booleanFeaturizer(@NonNull SerializableFunction<? super I, ? extends Collection<String>> function) {
       return new BooleanExtractor<>(function);
    }
 
@@ -65,11 +65,11 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
     * @return the featurizer
     */
    @SafeVarargs
-   public static <I> Featurizer<I> chain(Featurizer<? super I>... featurizers) {
+   public static <I> Featurizer<I> chain(@NonNull Featurizer<? super I>... featurizers) {
       return new ChainFeaturizer<I>(Arrays.asList(featurizers));
    }
 
-   public static <I> Featurizer<I> chain(List<Featurizer<? super I>> featurizers) {
+   public static <I> Featurizer<I> chain(@NonNull List<Featurizer<? super I>> featurizers) {
       return new ChainFeaturizer<>(featurizers);
    }
 
@@ -83,10 +83,10 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
    public static Featurizer<Iterable<String>> countFeaturizer(String featurePrefix, boolean normalize) {
       return new RealExtractor<>(itreable -> {
          Counter<String> cntr = Counters.newCounter();
-         for(String s : itreable) {
+         for (String s : itreable) {
             cntr.increment(Variable.binary(featurePrefix, s).getName());
          }
-         if(normalize) {
+         if (normalize) {
             return cntr.divideBySum();
          }
          return cntr;
@@ -103,16 +103,16 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
     * @return the featurizer
     */
    public static <I> Featurizer<I> multiValueFeaturizer(String featurePrefix,
-                                                        SerializableFunction<? super I, Iterable<String>> function) {
+                                                        @NonNull SerializableFunction<? super I, Iterable<String>> function) {
       return new Featurizer<I>() {
          @Override
          public List<Variable> applyAsFeatures(I input) {
             Iterable<String> iterable = function.apply(input);
             return iterable == null
-                   ? Collections.emptyList()
-                   : Streams.asStream(iterable)
-                            .map(s -> Variable.binary(featurePrefix, s))
-                            .collect(Collectors.toList());
+                  ? Collections.emptyList()
+                  : Streams.asStream(iterable)
+                           .map(s -> Variable.binary(featurePrefix, s))
+                           .collect(Collectors.toList());
          }
       };
    }
@@ -126,7 +126,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
     * @param predicate   the predicate to test the input object.
     * @return the featurizer
     */
-   public static <I> Featurizer<I> predicateFeaturizer(String featureName, SerializablePredicate<? super I> predicate) {
+   public static <I> Featurizer<I> predicateFeaturizer(String featureName, @NonNull SerializablePredicate<? super I> predicate) {
       return new PredicateExtractor<>(featureName, predicate);
    }
 
@@ -138,7 +138,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
     * @param function the function to convert the object into a counter of feature names and values.
     * @return the featurizer
     */
-   public static <I> Featurizer<I> realFeaturizer(SerializableFunction<? super I, ? extends Counter<String>> function) {
+   public static <I> Featurizer<I> realFeaturizer(@NonNull SerializableFunction<? super I, ? extends Counter<String>> function) {
       return new RealExtractor<>(function);
    }
 
@@ -166,10 +166,10 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
     * @param input the input object to extract for features from
     * @return the list of extracted {@link Variable}
     */
-   public abstract List<Variable> applyAsFeatures(I input);
+   public abstract List<Variable> applyAsFeatures(@NonNull I input);
 
    @Override
-   public VariableList extractObservation(I input) {
+   public VariableList extractObservation(@NonNull I input) {
       return new VariableList(applyAsFeatures(input));
    }
 
@@ -179,7 +179,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
     * @param patterns the contextual feature patterns
     * @return the feature extractor
     */
-   public final FeatureExtractor<I> withContext(String... patterns) {
+   public final FeatureExtractor<I> withContext(@NonNull String... patterns) {
       return withContext(Arrays.asList(patterns));
    }
 
@@ -189,12 +189,12 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
     * @param patterns the contextual feature patterns
     * @return the feature extractor
     */
-   public final FeatureExtractor<I> withContext(List<String> patterns) {
-      if(patterns == null || patterns.size() == 0) {
+   public final FeatureExtractor<I> withContext(@NonNull List<String> patterns) {
+      if (patterns == null || patterns.size() == 0) {
          return this;
       }
       List<ContextFeaturizer<? super I>> contextFeaturizers = new ArrayList<>();
-      for(String pattern : patterns) {
+      for (String pattern : patterns) {
          contextFeaturizers.addAll(ContextPatternParser.parse(pattern));
       }
       return new FeatureExtractorImpl<>(this, ContextFeaturizer.chain(contextFeaturizers));
@@ -228,7 +228,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
       @Override
       public List<Variable> applyAsFeatures(I input) {
          List<Variable> features = new ArrayList<>();
-         for(Featurizer<? super I> featurizer : featurizers) {
+         for (Featurizer<? super I> featurizer : featurizers) {
             features.addAll(featurizer.applyAsFeatures(input));
          }
          return features;
@@ -237,7 +237,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
       @Override
       public String toString() {
          StringBuilder builder = new StringBuilder("Features\n");
-         for(Featurizer<? super I> featurizer : featurizers) {
+         for (Featurizer<? super I> featurizer : featurizers) {
             builder.append("\t").append(featurizer).append("\n");
          }
          return builder.toString();
@@ -256,7 +256,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
 
       @Override
       public List<Variable> applyAsFeatures(I input) {
-         if(predicate.test(input)) {
+         if (predicate.test(input)) {
             return Collections.singletonList(feature);
          }
          return Collections.emptyList();
@@ -293,7 +293,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
       @Override
       public List<Variable> applyAsFeatures(I input) {
          String value = function.apply(input);
-         if(value == null) {
+         if (value == null) {
             return Collections.emptyList();
          }
          return Collections.singletonList(Variable.binary(featurePrefix, value));
