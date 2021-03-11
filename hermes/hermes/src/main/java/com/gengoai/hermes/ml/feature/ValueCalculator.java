@@ -1,6 +1,6 @@
 package com.gengoai.hermes.ml.feature;
 
-import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.function.SerializableFunction;
 import lombok.NonNull;

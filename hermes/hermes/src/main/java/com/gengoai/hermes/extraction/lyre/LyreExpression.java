@@ -24,7 +24,7 @@ package com.gengoai.hermes.extraction.lyre;
 
 import com.fasterxml.jackson.annotation.*;
 import com.gengoai.Validation;
-import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.collection.Lists;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;

@@ -21,7 +21,7 @@ package com.gengoai.hermes.similarity;
 
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.math.statistics.measure.Similarity;
+import com.gengoai.apollo.math.measure.Similarity;
 import com.gengoai.collection.HashMapIndex;
 import com.gengoai.collection.Index;
 import com.gengoai.collection.counter.Counter;

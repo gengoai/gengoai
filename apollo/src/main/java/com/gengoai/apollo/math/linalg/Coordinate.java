@@ -28,6 +28,8 @@ import java.util.Arrays;
 /**
  * A multi-dimensional coordinate in some coordinate space. Acts as the base class for <code>Index</code> and
  * <code>Shape</code>.
+ *
+ * @author David B. Bracewell
  */
 public abstract class Coordinate implements Serializable, Comparable<Coordinate> {
    /**

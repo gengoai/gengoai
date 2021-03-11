@@ -28,6 +28,8 @@ import java.util.function.Supplier;
  * <p>Base factory for creating ObjectNDArray.</p>
  *
  * @param <T> the type parameter
+ *
+ * @author David B. Bracewell
  */
 public abstract class ObjectNDArrayFactory<T> extends NDArrayFactory {
    private static final long serialVersionUID = 1L;

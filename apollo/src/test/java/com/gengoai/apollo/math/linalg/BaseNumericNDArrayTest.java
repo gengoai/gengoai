@@ -19,11 +19,11 @@
 
 package com.gengoai.apollo.math.linalg;
 
-import com.gengoai.apollo.ml.encoder.Encoder;
-import com.gengoai.apollo.ml.encoder.FixedEncoder;
-import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
-import com.gengoai.apollo.ml.observation.Observation;
-import com.gengoai.apollo.ml.observation.Sequence;
+import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.encoder.FixedEncoder;
+import com.gengoai.apollo.model.sequence.SequenceValidator;
+import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.conversion.Cast;
 import com.gengoai.json.Json;
 import com.gengoai.math.Operator;
@@ -585,19 +585,42 @@ public abstract class BaseNumericNDArrayTest {
 
    @Test
    public void map() {
+      assertEquals(factory.empty(), factory.empty().map(ROW, factory.empty(), Operator::add));
+      assertEquals(factory.empty(), factory.empty().map(ROW, 0, factory.empty(), Operator::add));
+      assertEquals(factory.empty(), factory.empty().map(ROW, 0, 43, Operator::add));
+      assertEquals(factory.empty(), factory.empty().map((a) -> a + 1));
+      assertEquals(factory.empty(), factory.empty().map(factory.empty(), Operator::add));
+
+      assertEquals(factory.array(new double[]{2,2,2,2}),
+                   rowVector.add(COLUMN, 0, factory.ones(4)));
+      assertEquals(factory.array(new double[]{2,1,1,1}),
+                   rowVector.add(COLUMN, 0, factory.ones(1)));
+
+      assertEquals(factory.array(new double[][]{{2.000000, 3.000000, 4.000000, 5.000000},
+                         {5.000000, 6.000000, 7.000000, 8.000000},
+                         {9.000000, 10.000000, 11.000000, 12.000000}}),
+                   matrix34.add(ROW, 0, factory.ones(4)));
+
       assertEquals(factory.arange(Shape.shape(3, 4), 2),
-                   matrix34.mapDouble(i -> i + 1));
+                   matrix34.map(i -> i + 1));
       assertEquals(factory.arange(Shape.shape(2, 2, 3, 4), 2),
-                   tensor2234.mapDouble(i -> i + 1));
+                   tensor2234.map(i -> i + 1));
       assertEquals(factory.arange(Shape.shape(2, 2, 3, 4), 2),
-                   tensor2234.mapDouble(1, Operator::add));
+                   tensor2234.map(1, Operator::add));
+
+
+      assertEquals(factory.arange(Shape.shape(2, 2, 3, 4), 2),
+                   tensor2234.map(ROW, factory.scalar(1), Operator::add));
+      assertEquals(factory.array(new int[]{2, 2, 2, 2}),
+                   rowVector.map(ROW, factory.array(new int[]{1, 1, 1, 1}), Operator::add));
+
 
       assertEquals(factory.arange(Shape.shape(2, 2, 3, 4), 2, 2)
                           .setSlice(1, 0, Cast.as(factory.arange(Shape.shape(3, 4), 26, 2)))
                           .setSlice(1, 1, Cast.as(factory.arange(Shape.shape(3, 4), 50, 2))),
-                   tensor2234.mapDouble(tensor234, Operator::add));
+                   tensor2234.map(tensor234, Operator::add));
 
-      assertEquals(factory.array(new int[]{2, 2, 2, 2}), rowVector.mapDouble(colVector, Operator::add));
+      assertEquals(factory.array(new int[]{2, 2, 2, 2}), rowVector.map(colVector, Operator::add));
 
 
    }

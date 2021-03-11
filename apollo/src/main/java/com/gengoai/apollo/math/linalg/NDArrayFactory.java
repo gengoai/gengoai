@@ -21,6 +21,7 @@ package com.gengoai.apollo.math.linalg;
 
 import com.gengoai.Primitives;
 import com.gengoai.apollo.math.linalg.dense.GenericDenseObjectNDArrayFactory;
+import com.gengoai.apollo.math.linalg.sparse.GenericSparseObjectNDArrayFactory;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
@@ -31,6 +32,8 @@ import static com.gengoai.apollo.math.linalg.nd.*;
 
 /**
  * <p>Factory for constructing new NDArray of a given data type.</p>
+ *
+ * @author David B. Bracewell
  */
 public abstract class NDArrayFactory implements Serializable {
    private static final long serialVersionUID = 1L;
@@ -70,7 +73,9 @@ public abstract class NDArrayFactory implements Serializable {
          return Cast.as(sparse ? SSTRING : DSTRING);
       }
 
-      return Cast.as(new GenericDenseObjectNDArrayFactory<>(type));
+      return sparse
+            ? Cast.as(new GenericSparseObjectNDArrayFactory<>(type))
+            : Cast.as(new GenericDenseObjectNDArrayFactory<>(type));
    }
 
    /**

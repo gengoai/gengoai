@@ -23,34 +23,25 @@ package com.gengoai.hermes;
 
 import com.gengoai.Language;
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.DataSetType;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.encoder.FixedEncoder;
-import com.gengoai.apollo.ml.encoder.IndexEncoder;
-import com.gengoai.apollo.ml.evaluation.MultiClassEvaluation;
-import com.gengoai.apollo.ml.feature.Featurizer;
-import com.gengoai.apollo.ml.model.LibLinear;
-import com.gengoai.apollo.ml.model.PipelineModel;
-import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.observation.VariableSequence;
-import com.gengoai.apollo.ml.transform.Transformer;
-import com.gengoai.apollo.ml.transform.vectorizer.HashingVectorizer;
-import com.gengoai.apollo.ml.transform.vectorizer.IndexingVectorizer;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.DataSetType;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.evaluation.MultiClassEvaluation;
+import com.gengoai.apollo.feature.Featurizer;
+import com.gengoai.apollo.model.LibLinear;
+import com.gengoai.apollo.model.PipelineModel;
+import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.data.transform.vectorizer.HashingVectorizer;
+import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.TermExtractor;
 import com.gengoai.hermes.ml.ElmoTokenEmbedding;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.feature.ValueCalculator;
 import com.gengoai.hermes.tools.HermesCLI;
-import com.gengoai.io.Resources;
-import com.gengoai.json.Json;
 import com.gengoai.stream.StreamingContext;
 
-import java.util.List;
-
 import static com.gengoai.collection.Maps.hashMapOf;
-import static com.gengoai.hermes.ResourceType.WORD_LIST;
 import static com.gengoai.tuple.Tuples.$;
 
 /**

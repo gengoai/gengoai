@@ -22,12 +22,10 @@
 package com.gengoai.hermes.lexicon.generation;
 
 import com.gengoai.Tag;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.ml.model.embedding.VSQuery;
-import com.gengoai.apollo.ml.model.embedding.WordEmbedding;
+import com.gengoai.apollo.model.embedding.VSQuery;
+import com.gengoai.apollo.model.embedding.WordEmbedding;
 import com.gengoai.collection.counter.MultiCounter;
 import com.gengoai.collection.counter.MultiCounters;
 import com.gengoai.collection.multimap.HashSetMultimap;
@@ -41,7 +39,7 @@ import lombok.Setter;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.gengoai.apollo.math.statistics.measure.Similarity.Cosine;
+import static com.gengoai.apollo.math.measure.Similarity.Cosine;
 
 /**
  * Generates a lexicon based on similarity in an embedding space where positive and negative examples can be given per

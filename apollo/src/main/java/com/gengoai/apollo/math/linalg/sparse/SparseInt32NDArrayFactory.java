@@ -24,20 +24,23 @@ import com.gengoai.apollo.math.linalg.NumericNDArrayFactory;
 import com.gengoai.apollo.math.linalg.Shape;
 import lombok.NonNull;
 
+/**
+ * <p>Factory for creating Sparse 32-bit int NDArrays</p>
+ *
+ * @author David B. Bracewell
+ */
 public class SparseInt32NDArrayFactory extends NumericNDArrayFactory {
+   /**
+    * The singleton instance of the Factory
+    */
+   public static final SparseInt32NDArrayFactory INSTANCE = new SparseInt32NDArrayFactory();
    private static final long serialVersionUID = 1L;
 
-   public SparseInt32NDArrayFactory() {
+   private SparseInt32NDArrayFactory() {
       super(int.class);
    }
 
-   public NumericNDArray array(int[] a) {
-      if (a.length == 0) {
-         return empty();
-      }
-      return new SparseInt32NDArray(a);
-   }
-
+   @Override
    public NumericNDArray array(@NonNull Shape shape, int[] a) {
       if (shape.length() != a.length) {
          throw new IllegalArgumentException("Length mismatch " + a.length + " != " + shape.length());
@@ -50,7 +53,7 @@ public class SparseInt32NDArrayFactory extends NumericNDArrayFactory {
 
    @Override
    public NumericNDArray scalar(@NonNull Number value) {
-      return new SparseInt32NDArray(new int[]{value.intValue()});
+      return zeros(Shape.shape(1)).set(0, value.intValue());
    }
 
 
@@ -58,4 +61,4 @@ public class SparseInt32NDArrayFactory extends NumericNDArrayFactory {
    public NumericNDArray zeros(@NonNull Shape shape) {
       return new SparseInt32NDArray(shape);
    }
-}
+}//END OF SparseInt32NDArrayFactory

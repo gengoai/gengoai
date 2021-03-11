@@ -21,12 +21,19 @@ package com.gengoai.apollo.math.linalg.compose;
 
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.decompose.SingularValueDecomposition;
 import lombok.NonNull;
 
 import java.util.List;
 
+/**
+ * <p>Common Vector Compositions</p>
+ *
+ * @author David B. Bracewell
+ */
 public enum VectorCompositions implements VectorComposition {
+   /**
+    * Combines NDArray by summing their elements
+    */
    Sum {
       @Override
       public NumericNDArray compose(@NonNull List<NumericNDArray> vectors) {
@@ -42,12 +49,18 @@ public enum VectorCompositions implements VectorComposition {
          return toReturn;
       }
    },
+   /**
+    * Combines NDArray by taking the average of the elements
+    */
    Average {
       @Override
       public NumericNDArray compose(@NonNull List<NumericNDArray> vectors) {
          return Sum.compose(vectors).divi(vectors.size());
       }
    },
+   /**
+    * Combines NDArrays taking the maximum value at each index
+    */
    Max {
       @Override
       public NumericNDArray compose(@NonNull List<NumericNDArray> vectors) {
@@ -57,12 +70,15 @@ public enum VectorCompositions implements VectorComposition {
             if (toReturn == null) {
                toReturn = v.copy();
             } else {
-               toReturn.mapiDouble(v, Math::max);
+               toReturn.mapi(v, Math::max);
             }
          }
          return toReturn;
       }
    },
+   /**
+    * Combines NDArrays taking the minimum value at each index
+    */
    Min {
       @Override
       public NumericNDArray compose(@NonNull List<NumericNDArray> vectors) {
@@ -72,13 +88,16 @@ public enum VectorCompositions implements VectorComposition {
             if (toReturn == null) {
                toReturn = v.copy();
             } else {
-               toReturn.mapiDouble(v, Math::min);
+               toReturn.mapi(v, Math::min);
             }
          }
          return toReturn;
       }
    },
-   PointWiseMultiply{
+   /**
+    * Combines NDArray by multiplying the elements in a point-wise fashion
+    */
+   PointWiseMultiply {
       @Override
       public NumericNDArray compose(@NonNull List<NumericNDArray> vectors) {
          Validation.checkArgument(vectors.size() > 0, "Must supply at least one vector");
@@ -91,15 +110,6 @@ public enum VectorCompositions implements VectorComposition {
             }
          }
          return toReturn;
-      }
-   },
-   SVD {
-      private final SingularValueDecomposition svd = new SingularValueDecomposition(1);
-
-      @Override
-      public NumericNDArray compose(@NonNull List<NumericNDArray> vectors) {
-         Validation.checkArgument(vectors.size() > 0, "Must supply at least one vector");
-         return null;// svd.decompose(nd.vstack(vectors))[2].getAxis(Shape.ROW, 0);
       }
    }
 }//END OF VectorCompositions

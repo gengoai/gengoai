@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -126,7 +127,12 @@ public class LocalInMemoryMStream<T> extends AbstractLocalMStream<T> {
       if(withReplacement) {
          return new LocalInMemoryMStream<>(Lists.sampleWithReplacement(collection, number));
       }
-      return super.sample(false, number);
+      List<T> sample = new ArrayList<>();
+      new Random().ints(0,collection.size())
+                  .distinct()
+                  .limit(Math.min(number,collection.size()))
+                  .forEach(index -> sample.add(collection.get(index)));
+      return new LocalInMemoryMStream<>(sample);
    }
 
    @Override

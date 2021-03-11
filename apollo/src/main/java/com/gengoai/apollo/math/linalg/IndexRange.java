@@ -26,6 +26,8 @@ import java.util.stream.Stream;
 
 /**
  * <p>An contiguous range of {@link Index}.</p>
+ *
+ * @author David B. Bracewell
  */
 public interface IndexRange extends Iterable<Index> {
 

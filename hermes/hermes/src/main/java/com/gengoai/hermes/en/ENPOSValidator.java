@@ -19,9 +19,9 @@
 
 package com.gengoai.hermes.en;
 
-import com.gengoai.apollo.ml.observation.Observation;
-import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
+import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.model.sequence.SequenceValidator;
 import com.gengoai.hermes.morphology.PartOfSpeech;
 import com.gengoai.hermes.morphology.PennTreeBank;
 import com.gengoai.string.StringMatcher;

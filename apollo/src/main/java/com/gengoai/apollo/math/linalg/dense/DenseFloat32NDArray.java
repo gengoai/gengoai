@@ -37,12 +37,17 @@ import java.util.function.UnaryOperator;
 
 import static com.gengoai.Validation.checkArgument;
 
-public class DenseFloat32NDArray extends NumericNDArray {
+/**
+ * <p>Dense NDArray representing 32-bit float values.</p>
+ *
+ * @author David B. Bracewell
+ */
+public final class DenseFloat32NDArray extends NumericNDArray {
    private static final long serialVersionUID = 1L;
    private FloatMatrix[] matrices;
 
-   public DenseFloat32NDArray(@NonNull Shape shape,
-                              @NonNull float... data) {
+   protected DenseFloat32NDArray(@NonNull Shape shape,
+                                 @NonNull float... data) {
       this(shape);
       for (int i = 0; i < data.length; i++) {
          set(i, data[i]);
@@ -62,17 +67,17 @@ public class DenseFloat32NDArray extends NumericNDArray {
    }
 
 
-   public DenseFloat32NDArray(@NonNull float... data) {
+   protected DenseFloat32NDArray(@NonNull float... data) {
       super(Shape.shape(data.length));
       this.matrices = new FloatMatrix[]{new FloatMatrix(1, data.length, data)};
    }
 
-   public DenseFloat32NDArray(@NonNull float[][] data) {
+   protected DenseFloat32NDArray(@NonNull float[][] data) {
       super(Shape.shape(data.length, data[0].length));
       this.matrices = new FloatMatrix[]{new FloatMatrix(data)};
    }
 
-   public DenseFloat32NDArray(@NonNull float[][][] data) {
+   protected DenseFloat32NDArray(@NonNull float[][][] data) {
       super(Shape.shape(data.length, data[0].length, data[0][0].length));
       this.matrices = new FloatMatrix[shape().sliceLength()];
       for (int channel = 0; channel < data.length; channel++) {
@@ -80,7 +85,7 @@ public class DenseFloat32NDArray extends NumericNDArray {
       }
    }
 
-   public DenseFloat32NDArray(@NonNull float[][][][] data) {
+   protected DenseFloat32NDArray(@NonNull float[][][][] data) {
       super(Shape.shape(data.length, data[0].length, data[0][0].length, data[0][0][0].length));
       this.matrices = new FloatMatrix[shape().sliceLength()];
       for (int kernel = 0; kernel < data.length; kernel++) {
@@ -90,8 +95,7 @@ public class DenseFloat32NDArray extends NumericNDArray {
       }
    }
 
-
-   public DenseFloat32NDArray(@NonNull Shape shape) {
+   protected DenseFloat32NDArray(@NonNull Shape shape) {
       super(shape);
       this.matrices = new FloatMatrix[shape.sliceLength()];
       for (int i = 0; i < this.matrices.length; i++) {
@@ -99,20 +103,26 @@ public class DenseFloat32NDArray extends NumericNDArray {
       }
    }
 
-   public DenseFloat32NDArray(@NonNull FloatMatrix fm) {
+   protected DenseFloat32NDArray(@NonNull FloatMatrix fm) {
       super(Shape.shape(fm.rows, fm.columns));
       this.matrices = new FloatMatrix[]{fm};
    }
 
-   public DenseFloat32NDArray(@NonNull Shape shape, @NonNull FloatMatrix[] fm) {
+   private DenseFloat32NDArray(@NonNull Shape shape, @NonNull FloatMatrix[] fm) {
       super(shape);
       this.matrices = fm;
    }
 
-   public DenseFloat32NDArray(int kernels, int channels, @NonNull FloatMatrix[] fm) {
+   protected DenseFloat32NDArray(int kernels, int channels, @NonNull FloatMatrix[] fm) {
       this(Shape.shape(kernels, channels, fm[0].rows, fm[0].columns), fm);
    }
 
+   /**
+    * <p>Converts TensorFlow Tenors for Float type to DenseFloat32NDArray.</p>
+    *
+    * @param tensor the tensor
+    * @return the converted Tensor
+    */
    public static NumericNDArray fromTensor(@NonNull Tensor<?> tensor) {
       if (tensor.dataType() == DataType.FLOAT) {
          Shape s = Shape.shape(tensor.shape());
@@ -139,22 +149,13 @@ public class DenseFloat32NDArray extends NumericNDArray {
       return mapSlices(FloatMatrix::transpose);
    }
 
-   @Override
-   protected Object arrayForTensor() {
-      if (shape().isEmpty() || shape().isVector()) {
-         return matrices[0].toArray();
-      } else if (shape().isMatrix()) {
-         return matrices[0].toArray2();
-      }
-      return super.arrayForTensor();
-   }
 
    @Override
    public NumericNDArray fill(double value) {
       return forEachMatrix(value, (a, b) -> a.fill((float) value));
    }
 
-   protected NumericNDArray forEachMatrix(DenseFloat32NDArray rhs, BiMatrixConsumer op) {
+   private NumericNDArray forEachMatrix(DenseFloat32NDArray rhs, BiMatrixConsumer op) {
       for (Index index : shape().sliceIterator()) {
          int ti = shape().calculateSliceIndex(index);
          int ri = rhs.shape().calculateSliceIndex(rhs.shape().broadcast(index));
@@ -163,7 +164,7 @@ public class DenseFloat32NDArray extends NumericNDArray {
       return this;
    }
 
-   protected NumericNDArray forEachMatrix(double value, MatrixDoubleConsumer op) {
+   private NumericNDArray forEachMatrix(double value, MatrixDoubleConsumer op) {
       for (FloatMatrix matrix : matrices) {
          op.accept(matrix, value);
       }
@@ -190,12 +191,7 @@ public class DenseFloat32NDArray extends NumericNDArray {
       return true;
    }
 
-   @Override
-   public boolean isNumeric() {
-      return true;
-   }
-
-   protected NumericNDArray mapSlices(UnaryOperator<FloatMatrix> op) {
+   private NumericNDArray mapSlices(UnaryOperator<FloatMatrix> op) {
       if (matrices.length == 0) {
          return factory().empty();
       }
@@ -213,7 +209,7 @@ public class DenseFloat32NDArray extends NumericNDArray {
       if (rhs instanceof DenseFloat32NDArray) {
          DenseFloat32NDArray n = Cast.as(rhs);
          return new DenseFloat32NDArray(matrices[0].mmul(n.matrices[0]));
-      }else {
+      } else {
          return new DenseFloat32NDArray(matrices[0].mmul(rhs.toFloatMatrix()[0]));
       }
    }
@@ -284,7 +280,7 @@ public class DenseFloat32NDArray extends NumericNDArray {
 
    @Override
    public NumericNDArray slice(int index) {
-      if( matrices.length == 1 ) {
+      if (matrices.length == 1) {
          return new DenseFloat32NDArray(matrices[0]);
       }
       return new DenseFloat32NDArray(matrices[index]);
@@ -313,6 +309,7 @@ public class DenseFloat32NDArray extends NumericNDArray {
       return m;
    }
 
+   @Override
    @JsonProperty("data")
    public float[] toFloatArray() {
       float[] array = new float[(int) length()];
@@ -327,16 +324,13 @@ public class DenseFloat32NDArray extends NumericNDArray {
       return matrices;
    }
 
-
    @FunctionalInterface
-   protected interface BiMatrixConsumer {
-
+   private interface BiMatrixConsumer {
       void accept(FloatMatrix a, FloatMatrix b);
    }
 
    @FunctionalInterface
-   protected interface MatrixDoubleConsumer {
-
+   private interface MatrixDoubleConsumer {
       void accept(FloatMatrix a, double b);
    }
 

@@ -21,8 +21,8 @@
 
 package com.gengoai.hermes;
 
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.model.topic.MalletLDA;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.model.topic.MalletLDA;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.Extractor;

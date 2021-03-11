@@ -21,8 +21,8 @@
 
 package com.gengoai.hermes.ml.feature;
 
-import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.feature.Featurizer;
+import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.feature.Featurizer;
 import com.gengoai.hermes.HString;
 
 import java.util.ArrayList;

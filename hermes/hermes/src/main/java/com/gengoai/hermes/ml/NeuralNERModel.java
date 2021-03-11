@@ -20,9 +20,9 @@
 package com.gengoai.hermes.ml;
 
 import com.gengoai.Language;
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.feature.Featurizer;
-import com.gengoai.apollo.ml.model.ModelIO;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.feature.Featurizer;
+import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.collection.Maps;
 import com.gengoai.config.Config;
 import com.gengoai.hermes.*;
@@ -34,10 +34,10 @@ import com.gengoai.io.Resources;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.gengoai.apollo.ml.encoder.FixedEncoder.fixedEncoder;
-import static com.gengoai.apollo.ml.encoder.IndexEncoder.indexEncoder;
-import static com.gengoai.apollo.ml.encoder.IndexEncoder.iobLabelEncoder;
-import static com.gengoai.apollo.ml.model.TFVarSpec.varSpec;
+import static com.gengoai.apollo.encoder.FixedEncoder.fixedEncoder;
+import static com.gengoai.apollo.encoder.IndexEncoder.indexEncoder;
+import static com.gengoai.apollo.encoder.IndexEncoder.iobLabelEncoder;
+import static com.gengoai.apollo.model.TFVarSpec.varSpec;
 import static com.gengoai.hermes.ResourceType.WORD_LIST;
 import static com.gengoai.tuple.Tuples.$;
 

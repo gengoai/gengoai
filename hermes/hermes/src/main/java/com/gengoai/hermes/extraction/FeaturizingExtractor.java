@@ -23,7 +23,7 @@
 package com.gengoai.hermes.extraction;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.gengoai.apollo.ml.feature.Featurizer;
+import com.gengoai.apollo.feature.Featurizer;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.extraction.lyre.LyreExpression;
 

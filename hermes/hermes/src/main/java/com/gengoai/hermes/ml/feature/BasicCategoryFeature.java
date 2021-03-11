@@ -19,8 +19,8 @@
 
 package com.gengoai.hermes.ml.feature;
 
-import com.gengoai.apollo.ml.feature.Featurizer;
-import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.feature.Featurizer;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.hermes.BasicCategories;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;

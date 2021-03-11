@@ -19,12 +19,12 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.encoder.IndexEncoder;
-import com.gengoai.apollo.ml.encoder.NoOptEncoder;
-import com.gengoai.apollo.ml.model.TFVarSpec;
-import com.gengoai.apollo.ml.model.TensorUtils;
-import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.encoder.IndexEncoder;
+import com.gengoai.apollo.encoder.NoOptEncoder;
+import com.gengoai.apollo.model.TFVarSpec;
+import com.gengoai.apollo.model.TensorUtils;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.collection.Maps;
 import com.gengoai.hermes.AnnotationType;
 import com.gengoai.hermes.Types;

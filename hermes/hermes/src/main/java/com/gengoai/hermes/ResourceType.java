@@ -20,7 +20,7 @@
 package com.gengoai.hermes;
 
 import com.gengoai.Language;
-import com.gengoai.apollo.ml.model.ModelIO;
+import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.cache.Cache;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;

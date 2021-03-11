@@ -1,6 +1,7 @@
 package com.gengoai.conversion;
 
 import com.gengoai.json.JsonEntry;
+import com.gengoai.math.Math2;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -45,16 +46,17 @@ public abstract class BaseNumberTypeConverter implements TypeConverter {
       }
 
       try {
+         return convertNumber(Double.parseDouble(object.toString()));
+      } catch(Exception e) {
+         //ignore this and try biginteger
+      }
+
+      try {
          return convertNumber(Long.parseLong(object.toString(),16));
       } catch(Exception e) {
          //ignore this and try a double parse
       }
 
-      try {
-         return convertNumber(Double.parseDouble(object.toString()));
-      } catch(Exception e) {
-         //ignore this and try biginteger
-      }
 
       try {
          return convertNumber(new BigInteger(object.toString()));

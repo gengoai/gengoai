@@ -19,21 +19,25 @@
 
 package com.gengoai.apollo.math.linalg.dense;
 
-import com.gengoai.apollo.math.linalg.*;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArrayFactory;
+import com.gengoai.apollo.math.linalg.Shape;
 import lombok.NonNull;
 
+/**
+ * <p>Factory for creating Dense 32-bit int NDArrays</p>
+ *
+ * @author David B. Bracewell
+ */
 public final class DenseInt32NDArrayFactory extends NumericNDArrayFactory {
+   /**
+    * The singleton instance of the Factory
+    */
+   public static final DenseInt32NDArrayFactory INSTANCE = new DenseInt32NDArrayFactory();
    private static final long serialVersionUID = 1L;
 
-
-   public DenseInt32NDArrayFactory() {
+   private DenseInt32NDArrayFactory() {
       super(int.class);
-   }
-
-
-   @Override
-   public NumericNDArray scalar(@NonNull Number value) {
-      return new DenseInt32NDArray(new int[]{value.intValue()});
    }
 
    @Override
@@ -55,35 +59,13 @@ public final class DenseInt32NDArrayFactory extends NumericNDArrayFactory {
    }
 
    @Override
-   public NumericNDArray array(int[][] a) {
-      if (a.length == 0 || a[0].length == 0) {
-         return empty();
-      }
-      return new DenseInt32NDArray(a);
+   public NumericNDArray scalar(@NonNull Number value) {
+      return new DenseInt32NDArray(new int[]{value.intValue()});
    }
-
-   @Override
-   public NumericNDArray array(int[][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0) {
-         return empty();
-      }
-      return new DenseInt32NDArray(a);
-   }
-
-   @Override
-   public NumericNDArray array(int[][][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0 || a[0][0][0].length == 0) {
-         return empty();
-      }
-      return new DenseInt32NDArray(a);
-   }
-
-
-
 
    @Override
    public NumericNDArray zeros(@NonNull Shape shape) {
       return new DenseInt32NDArray(shape);
    }
-}
+}//END OF DenseInt32NDArrayFactory
 

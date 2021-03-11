@@ -1,7 +1,7 @@
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
-import com.gengoai.apollo.ml.observation.Observation;
+import com.gengoai.apollo.model.sequence.SequenceValidator;
+import com.gengoai.apollo.data.observation.Observation;
 
 /**
  * <p>Sequence validator ensuring correct IOB tag output</p>

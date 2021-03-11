@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.tensorflow.DataType;
@@ -31,16 +32,17 @@ import org.tensorflow.Tensor;
 
 import static com.gengoai.Validation.checkArgument;
 
+/**
+ * <p>Dense NDArray representing 64-bit int values.</p>
+ *
+ * @author David B. Bracewell
+ */
 public class DenseInt64NDArray extends NumericNDArray {
    private static final long serialVersionUID = 1L;
    private long[][] data;
 
-   /**
-    * Instantiates a new Nd array.
-    *
-    * @param shape the shape
-    */
-   public DenseInt64NDArray(Shape shape) {
+
+   protected DenseInt64NDArray(Shape shape) {
       super(shape);
       this.data = new long[shape().sliceLength()][shape().matrixLength()];
    }
@@ -58,13 +60,13 @@ public class DenseInt64NDArray extends NumericNDArray {
    }
 
 
-   public DenseInt64NDArray(@NonNull long[] v) {
+   protected DenseInt64NDArray(@NonNull long[] v) {
       super(Shape.shape(v.length));
       this.data = new long[1][v.length];
       System.arraycopy(v, 0, this.data[0], 0, v.length);
    }
 
-   public DenseInt64NDArray(@NonNull Shape shape, @NonNull long[] v) {
+   protected DenseInt64NDArray(@NonNull Shape shape, @NonNull long[] v) {
       super(shape);
       this.data = new long[shape.sliceLength()][shape.matrixLength()];
       for (int i = 0; i < v.length; i++) {
@@ -72,55 +74,25 @@ public class DenseInt64NDArray extends NumericNDArray {
       }
    }
 
-   public DenseInt64NDArray(@NonNull long[][] v) {
-      super(Shape.shape(v.length, v[0].length));
-      this.data = new long[1][shape().matrixLength()];
-      for (int row = 0; row < v.length; row++) {
-         for (int col = 0; col < v[row].length; col++) {
-            set(row, col, v[row][col]);
-         }
-      }
-   }
 
-   public DenseInt64NDArray(@NonNull long[][][] v) {
-      super(Shape.shape(v.length, v[0].length, v[0][0].length));
-      this.data = new long[shape().sliceLength()][shape().matrixLength()];
-      for (int channel = 0; channel < v.length; channel++) {
-         for (int row = 0; row < v[channel].length; row++) {
-            for (int col = 0; col < v[channel][row].length; col++) {
-               set(channel, row, col, v[channel][row][col]);
-            }
-         }
-      }
-   }
-
-   public DenseInt64NDArray(@NonNull long[][][][] v) {
-      super(Shape.shape(v.length, v[0].length, v[0][0].length, v[0][0][0].length));
-      this.data = new long[shape().sliceLength()][shape().matrixLength()];
-      for (int kernel = 0; kernel < v.length; kernel++) {
-         for (int channel = 0; channel < v[kernel].length; channel++) {
-            for (int row = 0; row < v[kernel][channel].length; row++) {
-               for (int col = 0; col < v[kernel][channel][row].length; col++) {
-                  set(kernel, channel, row, col, v[kernel][channel][row][col]);
-               }
-            }
-         }
-      }
-   }
-
+   /**
+    * <p>Converts TensorFlow Tenors for INT64 type to DenseFloat32NDArray.</p>
+    *
+    * @param tensor the tensor
+    * @return the converted Tensor
+    */
    public static NumericNDArray fromTensor(@NonNull Tensor<?> tensor) {
       if (tensor.dataType() == DataType.INT64) {
          Shape s = Shape.shape(tensor.shape());
          switch (s.rank()) {
             case 1:
-               return new DenseInt64NDArray(tensor.copyTo(new long[s.columns()]));
+               return nd.DINT64.array(tensor.copyTo(new long[s.columns()]));
             case 2:
-               return new DenseInt64NDArray(tensor.copyTo(new long[s.rows()][s.columns()]));
+               return nd.DINT64.array(tensor.copyTo(new long[s.rows()][s.columns()]));
             case 3:
-               return new DenseInt64NDArray(tensor.copyTo(new long[s.channels()][s.rows()][s.columns()]));
+               return nd.DINT64.array(tensor.copyTo(new long[s.channels()][s.rows()][s.columns()]));
             default:
-               return new DenseInt64NDArray(tensor.copyTo(new long[s.kernels()][s.channels()][s.rows()][s
-                     .columns()]));
+               return nd.DINT64.array(tensor.copyTo(new long[s.kernels()][s.channels()][s.rows()][s.columns()]));
          }
       }
       throw new IllegalArgumentException("Unsupported type '" + tensor.dataType().name() + "'");
@@ -143,11 +115,6 @@ public class DenseInt64NDArray extends NumericNDArray {
 
    @Override
    public boolean isDense() {
-      return true;
-   }
-
-   @Override
-   public boolean isNumeric() {
       return true;
    }
 
@@ -200,7 +167,7 @@ public class DenseInt64NDArray extends NumericNDArray {
    public NumericNDArray slice(int index) {
       DenseInt64NDArray v = new DenseInt64NDArray(Shape.shape(shape().rows(),
                                                               shape().columns()));
-      if( data.length == 1 ) {
+      if (data.length == 1) {
          v.data[0] = data[0];
       } else {
          v.data[0] = data[index];
@@ -222,6 +189,7 @@ public class DenseInt64NDArray extends NumericNDArray {
       return v;
    }
 
+   @Override
    @JsonProperty("data")
    public long[] toLongArray() {
       long[] array = new long[(int) length()];

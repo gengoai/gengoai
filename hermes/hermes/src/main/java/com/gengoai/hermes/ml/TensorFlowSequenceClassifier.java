@@ -19,21 +19,18 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.model.LabelType;
-import com.gengoai.apollo.ml.model.Model;
-import com.gengoai.apollo.ml.model.TFVarSpec;
-import com.gengoai.apollo.ml.model.TensorFlowModel;
-import com.gengoai.apollo.ml.observation.Observation;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.model.LabelType;
+import com.gengoai.apollo.model.Model;
+import com.gengoai.apollo.model.TFVarSpec;
+import com.gengoai.apollo.model.TensorFlowModel;
+import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.hermes.AttributeType;
 import com.gengoai.hermes.HString;
 import lombok.NonNull;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public abstract class TensorFlowSequenceClassifier<T> extends TensorFlowModel implements HStringMLModel {

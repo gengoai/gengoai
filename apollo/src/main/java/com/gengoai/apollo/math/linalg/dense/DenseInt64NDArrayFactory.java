@@ -24,9 +24,19 @@ import com.gengoai.apollo.math.linalg.NumericNDArrayFactory;
 import com.gengoai.apollo.math.linalg.Shape;
 import lombok.NonNull;
 
+/**
+ * <p>Factory for creating Dense 64-bit int NDArrays</p>
+ *
+ * @author David B. Bracewell
+ */
 public class DenseInt64NDArrayFactory extends NumericNDArrayFactory {
+   private static final long serialVersionUID = 1L;
+   /**
+    * The singleton instance of the Factory
+    */
+   public static final DenseInt64NDArrayFactory INSTANCE = new DenseInt64NDArrayFactory();
 
-   public DenseInt64NDArrayFactory() {
+   private DenseInt64NDArrayFactory() {
       super(long.class);
    }
 
@@ -49,30 +59,6 @@ public class DenseInt64NDArrayFactory extends NumericNDArrayFactory {
    }
 
    @Override
-   public NumericNDArray array(long[][] a) {
-      if (a.length == 0 || a[0].length == 0) {
-         return empty();
-      }
-      return new DenseInt64NDArray(a);
-   }
-
-   @Override
-   public NumericNDArray array(long[][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0) {
-         return empty();
-      }
-      return new DenseInt64NDArray(a);
-   }
-
-   @Override
-   public NumericNDArray array(long[][][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0 || a[0][0][0].length == 0) {
-         return empty();
-      }
-      return new DenseInt64NDArray(a);
-   }
-
-   @Override
    public NumericNDArray scalar(@NonNull Number value) {
       return new DenseInt64NDArray(new long[]{value.longValue()});
    }
@@ -81,4 +67,5 @@ public class DenseInt64NDArrayFactory extends NumericNDArrayFactory {
    public NumericNDArray zeros(@NonNull Shape shape) {
       return new DenseInt64NDArray(shape.copy());
    }
-}
+
+}//END OF DenseInt64NDArrayFactory

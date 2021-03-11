@@ -19,10 +19,10 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.DataSetGenerator;
-import com.gengoai.apollo.ml.DataSetType;
-import com.gengoai.apollo.ml.feature.ObservationExtractor;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.DataSetGenerator;
+import com.gengoai.apollo.data.DataSetType;
+import com.gengoai.apollo.feature.ObservationExtractor;
 import com.gengoai.conversion.Cast;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.hermes.AnnotationType;

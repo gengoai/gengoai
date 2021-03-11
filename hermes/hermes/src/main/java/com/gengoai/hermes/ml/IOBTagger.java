@@ -21,9 +21,9 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.evaluation.Evaluation;
-import com.gengoai.apollo.ml.model.Model;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.evaluation.Evaluation;
+import com.gengoai.apollo.model.Model;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.AnnotationType;
 import com.gengoai.hermes.HString;

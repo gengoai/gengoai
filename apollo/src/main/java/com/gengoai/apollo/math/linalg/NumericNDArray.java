@@ -20,11 +20,11 @@
 package com.gengoai.apollo.math.linalg;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.ml.encoder.Encoder;
-import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
-import com.gengoai.apollo.ml.observation.Sequence;
-import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.observation.VariableSequence;
+import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.model.sequence.SequenceValidator;
+import com.gengoai.apollo.data.observation.Sequence;
+import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.data.observation.VariableSequence;
 import com.gengoai.conversion.Cast;
 import com.gengoai.math.Operator;
 import lombok.NonNull;
@@ -41,8 +41,10 @@ import java.util.stream.IntStream;
 import static com.gengoai.Validation.checkArgument;
 
 /**
- * <p>An NDArray whose elements are primitive numbers (e.g., float, double, int, long, etc.). Allows for manipulation of
- * elements and common vector/matrix/tensor operations to be performed on double representations of the numbers.</p>
+ * <p>An NDArray whose elements are primitive numbers (e.g., float, double, int, long, etc.). Allows for manipulation
+ * of elements and common vector/matrix/tensor operations to be performed on double representations of the numbers.</p>
+ *
+ * @author David B. Bracewell
  */
 public abstract class NumericNDArray extends NDArray {
    private static final long serialVersionUID = 1L;
@@ -84,16 +86,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new NDArray with the result of this + other
     */
    public NumericNDArray add(@NonNull NumericNDArray rhs) {
-      return mapDouble(rhs, Operator::add);
-   }
-
-   /**
-    * <p>Wraps this NumericNDArray as a RealMatrix to be used with Apache Math.</p>
-    *
-    * @return the RealMatrix
-    */
-   public RealMatrix asRealMatrix(){
-      return new RealMatrixWrapper(this);
+      return map(rhs, Operator::add);
    }
 
    /**
@@ -119,7 +112,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new NDArray with the scalar value added
     */
    public NumericNDArray add(double value) {
-      return mapDouble(value, Operator::add);
+      return map(value, Operator::add);
    }
 
    /**
@@ -151,7 +144,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray add(int axis, @NonNull NumericNDArray rhs) {
-      return mapAxisDouble(axis, rhs, Operator::add);
+      return map(axis, rhs, Operator::add);
    }
 
    /**
@@ -184,7 +177,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray add(int axis, int position, @NonNull NumericNDArray rhs) {
-      return mapAxisDouble(axis, position, rhs, Operator::add);
+      return map(axis, position, rhs, Operator::add);
    }
 
    /**
@@ -217,7 +210,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray add(int axis, int position, @NonNull Number rhs) {
-      return mapAxisDouble(axis, position, rhs.doubleValue(), Operator::add);
+      return map(axis, position, rhs.doubleValue(), Operator::add);
    }
 
    /**
@@ -243,7 +236,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the result of this + rhs
     */
    public NumericNDArray addi(@NonNull NumericNDArray rhs) {
-      return mapiDouble(rhs, Operator::add);
+      return mapi(rhs, Operator::add);
    }
 
    /**
@@ -269,7 +262,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the scalar value added
     */
    public NumericNDArray addi(double value) {
-      return mapiDouble(value, Operator::add);
+      return mapi(value, Operator::add);
    }
 
    /**
@@ -301,7 +294,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the addition
     */
    public NumericNDArray addi(int axis, @NonNull NumericNDArray rhs) {
-      return mapiAxisDouble(axis, rhs, Operator::add);
+      return mapi(axis, rhs, Operator::add);
    }
 
    /**
@@ -334,7 +327,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the addition
     */
    public NumericNDArray addi(int axis, int position, @NonNull NumericNDArray rhs) {
-      return mapiAxisDouble(axis, position, rhs, Operator::add);
+      return mapi(axis, position, rhs, Operator::add);
    }
 
    /**
@@ -367,12 +360,21 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the addition
     */
    public NumericNDArray addi(int axis, int position, @NonNull Number rhs) {
-      return mapiAxisDouble(axis, position, rhs.doubleValue(), Operator::add);
+      return mapi(axis, position, rhs.doubleValue(), Operator::add);
    }
 
    @Override
    public NumericNDArray asNumericNDArray() {
       return this;
+   }
+
+   /**
+    * <p>Wraps this NumericNDArray as a RealMatrix to be used with Apache Math.</p>
+    *
+    * @return the RealMatrix
+    */
+   public RealMatrix asRealMatrix() {
+      return new RealMatrixWrapper(this);
    }
 
    @Override
@@ -438,7 +440,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new NDArray with the result of this / other
     */
    public NumericNDArray div(@NonNull NumericNDArray rhs) {
-      return mapDouble(rhs, Operator::divide);
+      return map(rhs, Operator::divide);
    }
 
    /**
@@ -465,7 +467,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new NDArray with the scalar value divided
     */
    public NumericNDArray div(double value) {
-      return mapDouble(value, Operator::divide);
+      return map(value, Operator::divide);
    }
 
    /**
@@ -497,7 +499,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray div(int axis, @NonNull NumericNDArray rhs) {
-      return mapAxisDouble(axis, rhs, Operator::divide);
+      return map(axis, rhs, Operator::divide);
    }
 
    /**
@@ -530,7 +532,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray div(int axis, int axisValue, @NonNull NumericNDArray rhs) {
-      return mapAxisDouble(axis, axisValue, rhs, Operator::divide);
+      return map(axis, axisValue, rhs, Operator::divide);
    }
 
    /**
@@ -563,7 +565,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray div(int axis, int axisValue, @NonNull Number rhs) {
-      return mapAxisDouble(axis, axisValue, rhs.doubleValue(), Operator::divide);
+      return map(axis, axisValue, rhs.doubleValue(), Operator::divide);
    }
 
    /**
@@ -595,7 +597,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the division
     */
    public NumericNDArray divi(int axis, @NonNull NumericNDArray rhs) {
-      return mapiAxisDouble(axis, rhs, Operator::divide);
+      return mapi(axis, rhs, Operator::divide);
    }
 
    /**
@@ -628,7 +630,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the division
     */
    public NumericNDArray divi(int axis, int position, @NonNull NumericNDArray rhs) {
-      return mapiAxisDouble(axis, position, rhs, Operator::divide);
+      return mapi(axis, position, rhs, Operator::divide);
    }
 
    /**
@@ -654,7 +656,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the result of <code>this / rhs</code>
     */
    public NumericNDArray divi(@NonNull NumericNDArray rhs) {
-      return mapiDouble(rhs, Operator::divide);
+      return mapi(rhs, Operator::divide);
    }
 
    /**
@@ -686,7 +688,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray divi(int axis, int position, @NonNull Number rhs) {
-      return mapiAxisDouble(axis, position, rhs.doubleValue(), Operator::divide);
+      return mapi(axis, position, rhs.doubleValue(), Operator::divide);
    }
 
    /**
@@ -712,7 +714,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the scalar value divided
     */
    public NumericNDArray divi(double value) {
-      return mapiDouble(value, Operator::divide);
+      return mapi(value, Operator::divide);
    }
 
    /**
@@ -808,6 +810,9 @@ public abstract class NumericNDArray extends NDArray {
       if (obj instanceof NumericNDArray) {
          NumericNDArray r = Cast.as(obj);
          if (shape().equals(r.shape()) && getType() == r.getType()) {
+            if (isEmpty() && r.isEmpty()) {
+               return true;
+            }
             return Arrays.equals(toFloatMatrix(), r.toFloatMatrix());
          }
       }
@@ -868,7 +873,7 @@ public abstract class NumericNDArray extends NDArray {
    public void forEachSparse(@NonNull NDArray.EntryConsumer<Number> consumer) {
       for (int i = 0; i < shape().length(); i++) {
          Number n = get(i);
-         if( n.doubleValue() != 0) {
+         if (n.doubleValue() != 0) {
             consumer.apply(i, get(i));
          }
       }
@@ -994,10 +999,9 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given NDArray
     * @return the transformed NDArray
     */
-   public NumericNDArray mapAxisDouble(int axis,
-                                       @NonNull NumericNDArray rhs,
-                                       @NonNull DoubleBinaryOperator operator) {
-      checkAxis(axis, this);
+   public NumericNDArray map(int axis,
+                             @NonNull NumericNDArray rhs,
+                             @NonNull DoubleBinaryOperator operator) {
       return NDArrayOps.mapDouble(this, axis, rhs, operator, null);
    }
 
@@ -1028,12 +1032,10 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given NDArray
     * @return the transformed NDArray
     */
-   public NumericNDArray mapAxisDouble(int axis,
-                                       int position,
-                                       @NonNull NumericNDArray rhs,
-                                       @NonNull DoubleBinaryOperator operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
+   public NumericNDArray map(int axis,
+                             int position,
+                             @NonNull NumericNDArray rhs,
+                             @NonNull DoubleBinaryOperator operator) {
       return NDArrayOps.mapDouble(this, axis, position, rhs, operator, null);
    }
 
@@ -1063,12 +1065,10 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator    the operation to perform on the values of this NDArray and the given NDArray
     * @return the transformed NDArray
     */
-   public NumericNDArray mapAxisDouble(int axis,
-                                       int position,
-                                       double doubleValue,
-                                       @NonNull DoubleBinaryOperator operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
+   public NumericNDArray map(int axis,
+                             int position,
+                             double doubleValue,
+                             @NonNull DoubleBinaryOperator operator) {
       return NDArrayOps.mapDouble(this, axis, position, doubleValue, operator, null);
    }
 
@@ -1094,7 +1094,7 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray
     * @return the transformed NDArray
     */
-   public NumericNDArray mapDouble(@NonNull DoubleUnaryOperator operator) {
+   public NumericNDArray map(@NonNull DoubleUnaryOperator operator) {
       NumericNDArray out = zeroLike();
       for (int i = 0; i < length(); i++) {
          out.set(i, operator.applyAsDouble(getDouble(i)));
@@ -1127,8 +1127,8 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given value
     * @return the transformed NDArray
     */
-   public NumericNDArray mapDouble(@NonNull NumericNDArray rhs,
-                                   @NonNull DoubleBinaryOperator operator) {
+   public NumericNDArray map(@NonNull NumericNDArray rhs,
+                             @NonNull DoubleBinaryOperator operator) {
       return NDArrayOps.mapDouble(this, rhs, operator, null);
    }
 
@@ -1156,8 +1156,8 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given value
     * @return the transformed NDArray
     */
-   public NumericNDArray mapDouble(double value,
-                                   @NonNull DoubleBinaryOperator operator) {
+   public NumericNDArray map(double value,
+                             @NonNull DoubleBinaryOperator operator) {
       return NDArrayOps.mapDouble(this, value, operator, null);
    }
 
@@ -1187,9 +1187,9 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given NDArray
     * @return the transformed NDArray
     */
-   public NumericNDArray mapiAxisDouble(int axis,
-                                        @NonNull NumericNDArray rhs,
-                                        @NonNull DoubleBinaryOperator operator) {
+   public NumericNDArray mapi(int axis,
+                              @NonNull NumericNDArray rhs,
+                              @NonNull DoubleBinaryOperator operator) {
 
       checkAxis(axis, this);
       return NDArrayOps.mapDouble(this, axis, rhs, operator, this);
@@ -1221,13 +1221,10 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given NDArray
     * @return the transformed NDArray
     */
-   public NumericNDArray mapiAxisDouble(int axis,
-                                        int position,
-                                        double value,
-                                        @NonNull DoubleBinaryOperator operator) {
-
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
+   public NumericNDArray mapi(int axis,
+                              int position,
+                              double value,
+                              @NonNull DoubleBinaryOperator operator) {
       return NDArrayOps.mapDouble(this, axis, position, value, operator, this);
    }
 
@@ -1258,13 +1255,10 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given NDArray
     * @return the transformed NDArray
     */
-   public NumericNDArray mapiAxisDouble(int axis,
-                                        int position,
-                                        @NonNull NumericNDArray rhs,
-                                        @NonNull DoubleBinaryOperator operator) {
-
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
+   public NumericNDArray mapi(int axis,
+                              int position,
+                              @NonNull NumericNDArray rhs,
+                              @NonNull DoubleBinaryOperator operator) {
       return NDArrayOps.mapDouble(this, axis, position, rhs, operator, this);
    }
 
@@ -1290,7 +1284,7 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray
     * @return this NDArray with the operator applied
     */
-   public NumericNDArray mapiDouble(@NonNull DoubleUnaryOperator operator) {
+   public NumericNDArray mapi(@NonNull DoubleUnaryOperator operator) {
 
       for (int i = 0; i < length(); i++) {
          set(i, operator.applyAsDouble(getDouble(i)));
@@ -1323,7 +1317,7 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given NDArray
     * @return the transformed NDArray
     */
-   public NumericNDArray mapiDouble(@NonNull NumericNDArray rhs, @NonNull DoubleBinaryOperator operator) {
+   public NumericNDArray mapi(@NonNull NumericNDArray rhs, @NonNull DoubleBinaryOperator operator) {
 
       return NDArrayOps.mapDouble(this, rhs, operator, this);
    }
@@ -1351,7 +1345,7 @@ public abstract class NumericNDArray extends NDArray {
     * @param operator the operation to perform on the values of this NDArray and the given value
     * @return the transformed NDArray
     */
-   public NumericNDArray mapiDouble(double value, @NonNull DoubleBinaryOperator operator) {
+   public NumericNDArray mapi(double value, @NonNull DoubleBinaryOperator operator) {
 
       return NDArrayOps.mapDouble(this, value, operator, this);
    }
@@ -1433,7 +1427,6 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resulting NDArray
     */
    public NumericNDArray mmul(@NonNull NumericNDArray rhs) {
-
       checkArgument(shape().columns() == rhs.shape().rows(),
                     () -> "Cannot multiply NDArray of shape " +
                           shape() +
@@ -1442,7 +1435,12 @@ public abstract class NumericNDArray extends NDArray {
       if (shape().isVector() || shape().isMatrix()) {
          return matrixMultiplicationImpl(rhs);
       }
-      return NDArrayOps.mapSlice(shape().with(Shape.COLUMN, rhs.shape().columns()), this, rhs, NumericNDArray::mmul);
+      NumericNDArray out = factory().zeros(shape().with(Shape.COLUMN, rhs.shape().columns()));
+      for (int i = 0; i < shape().sliceLength(); i++) {
+         int rslice = rhs.shape().sliceLength() == 1 ? 0 : i;
+         out.setSlice(i, slice(i).mmul(rhs.slice(rslice)));
+      }
+      return out;
    }
 
    /**
@@ -1468,7 +1466,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new NDArray with the result of <code>this * rhs</code>
     */
    public NumericNDArray mul(@NonNull NumericNDArray rhs) {
-      return mapDouble(rhs, Operator::multiply);
+      return map(rhs, Operator::multiply);
    }
 
    /**
@@ -1494,7 +1492,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new NDArray with the scalar value multiply
     */
    public NumericNDArray mul(double value) {
-      return mapDouble(value, Operator::multiply);
+      return map(value, Operator::multiply);
    }
 
    /**
@@ -1526,7 +1524,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray mul(int axis, @NonNull NumericNDArray rhs) {
-      return mapAxisDouble(axis, rhs, Operator::multiply);
+      return map(axis, rhs, Operator::multiply);
    }
 
    /**
@@ -1559,7 +1557,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray mul(int axis, int axisValue, @NonNull NumericNDArray rhs) {
-      return mapAxisDouble(axis, axisValue, rhs, Operator::multiply);
+      return map(axis, axisValue, rhs, Operator::multiply);
    }
 
    /**
@@ -1592,7 +1590,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray mul(int axis, int axisValue, @NonNull Number rhs) {
-      return mapAxisDouble(axis, axisValue, rhs.doubleValue(), Operator::multiply);
+      return map(axis, axisValue, rhs.doubleValue(), Operator::multiply);
    }
 
    /**
@@ -1618,7 +1616,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray
     */
    public NumericNDArray muli(@NonNull NumericNDArray rhs) {
-      return mapiDouble(rhs, Operator::multiply);
+      return mapi(rhs, Operator::multiply);
    }
 
    /**
@@ -1644,7 +1642,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray
     */
    public NumericNDArray muli(double value) {
-      return mapiDouble(value, Operator::multiply);
+      return mapi(value, Operator::multiply);
    }
 
    /**
@@ -1676,7 +1674,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray
     */
    public NumericNDArray muli(int axis, @NonNull NumericNDArray rhs) {
-      return mapiAxisDouble(axis, rhs, Operator::multiply);
+      return mapi(axis, rhs, Operator::multiply);
    }
 
    /**
@@ -1709,7 +1707,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the addition
     */
    public NumericNDArray muli(int axis, int position, @NonNull NumericNDArray rhs) {
-      return mapiAxisDouble(axis, position, rhs, Operator::multiply);
+      return mapi(axis, position, rhs, Operator::multiply);
    }
 
    /**
@@ -1742,7 +1740,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the addition
     */
    public NumericNDArray muli(int axis, int position, Number rhs) {
-      return mapiAxisDouble(axis, position, rhs.doubleValue(), Operator::multiply);
+      return mapi(axis, position, rhs.doubleValue(), Operator::multiply);
    }
 
    /**
@@ -1762,7 +1760,7 @@ public abstract class NumericNDArray extends NDArray {
                          .distinct()
                          .sorted()
                          .toArray();
-      NumericNDArray sum = mapDouble(Math::abs).sum(f[0]);
+      NumericNDArray sum = map(Math::abs).sum(f[0]);
       if (f.length > 1) {
          axis = f[1];
          int[] o = f.length > 2 ? Arrays.copyOfRange(f, 2, f.length) : new int[0];
@@ -1796,10 +1794,10 @@ public abstract class NumericNDArray extends NDArray {
    public NumericNDArray norm2(int axis, int... other) {
 
       if (shape().rank() <= 1) {
-         return NDArrayOps.reduceDoubleAxis(this, (a, b) -> a + b * b, axis, other).mapiDouble(Math::sqrt);
+         return NDArrayOps.reduceDoubleAxis(this, (a, b) -> a + b * b, axis, other).mapi(Math::sqrt);
       }
-      NumericNDArray n = mapDouble(a -> a * a);
-      return NDArrayOps.reduceDoubleAxis(n, Operator::add, axis, other).mapiDouble(Math::sqrt);
+      NumericNDArray n = map(a -> a * a);
+      return NDArrayOps.reduceDoubleAxis(n, Operator::add, axis, other).mapi(Math::sqrt);
    }
 
    /**
@@ -1913,7 +1911,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdiv(@NonNull NumericNDArray lhs) {
-      return mapDouble(lhs, (a, b) -> b / a);
+      return map(lhs, (a, b) -> b / a);
    }
 
    /**
@@ -1940,7 +1938,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdiv(double lhs) {
-      return mapDouble(lhs, (a, b) -> b / a);
+      return map(lhs, (a, b) -> b / a);
    }
 
    /**
@@ -1969,7 +1967,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdiv(int axis, @NonNull NumericNDArray lhs) {
-      return mapAxisDouble(axis, lhs, (a, b) -> b / a);
+      return map(axis, lhs, (a, b) -> b / a);
    }
 
    /**
@@ -1999,7 +1997,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdiv(int axis, int position, @NonNull NumericNDArray lhs) {
-      return mapAxisDouble(axis, position, lhs, (a, b) -> b / a);
+      return map(axis, position, lhs, (a, b) -> b / a);
    }
 
    /**
@@ -2029,7 +2027,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdiv(int axis, int position, @NonNull Number lhs) {
-      return mapAxisDouble(axis, position, lhs.doubleValue(), (a, b) -> b / a);
+      return map(axis, position, lhs.doubleValue(), (a, b) -> b / a);
    }
 
    /**
@@ -2057,7 +2055,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdivi(@NonNull NumericNDArray lhs) {
-      return mapiDouble(lhs, (a, b) -> b / a);
+      return mapi(lhs, (a, b) -> b / a);
    }
 
    /**
@@ -2084,7 +2082,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdivi(double lhs) {
-      return mapiDouble(lhs, (a, b) -> b / a);
+      return mapi(lhs, (a, b) -> b / a);
    }
 
    /**
@@ -2113,7 +2111,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdivi(int axis, @NonNull NumericNDArray lhs) {
-      return mapiAxisDouble(axis, lhs, (a, b) -> b / a);
+      return mapi(axis, lhs, (a, b) -> b / a);
    }
 
    /**
@@ -2143,7 +2141,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdivi(int axis, int position, @NonNull NumericNDArray lhs) {
-      return mapiAxisDouble(axis, position, lhs, (a, b) -> b / a);
+      return mapi(axis, position, lhs, (a, b) -> b / a);
    }
 
    /**
@@ -2173,7 +2171,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rdivi(int axis, int position, @NonNull Number lhs) {
-      return mapiAxisDouble(axis, position, lhs.doubleValue(), (a, b) -> b / a);
+      return mapi(axis, position, lhs.doubleValue(), (a, b) -> b / a);
    }
 
    @Override
@@ -2209,7 +2207,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsub(@NonNull NumericNDArray lhs) {
-      return mapDouble(lhs, (a, b) -> b - a);
+      return map(lhs, (a, b) -> b - a);
    }
 
    /**
@@ -2236,7 +2234,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsub(double lhs) {
-      return mapDouble(lhs, (a, b) -> b - a);
+      return map(lhs, (a, b) -> b - a);
    }
 
    /**
@@ -2265,7 +2263,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsub(int axis, @NonNull NumericNDArray lhs) {
-      return mapAxisDouble(axis, lhs, (a, b) -> b - a);
+      return map(axis, lhs, (a, b) -> b - a);
    }
 
    /**
@@ -2295,7 +2293,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsub(int axis, int position, @NonNull NumericNDArray lhs) {
-      return mapAxisDouble(axis, position, lhs, (a, b) -> b - a);
+      return map(axis, position, lhs, (a, b) -> b - a);
    }
 
    /**
@@ -2325,7 +2323,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsub(int axis, int position, @NonNull Number lhs) {
-      return mapAxisDouble(axis, position, lhs.doubleValue(), (a, b) -> b - a);
+      return map(axis, position, lhs.doubleValue(), (a, b) -> b - a);
    }
 
    /**
@@ -2354,7 +2352,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsubi(int axis, @NonNull NumericNDArray lhs) {
-      return mapiAxisDouble(axis, lhs, (a, b) -> b - a);
+      return mapi(axis, lhs, (a, b) -> b - a);
    }
 
    /**
@@ -2384,7 +2382,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsubi(int axis, int position, @NonNull NumericNDArray lhs) {
-      return mapiAxisDouble(axis, position, lhs, (a, b) -> b - a);
+      return mapi(axis, position, lhs, (a, b) -> b - a);
    }
 
    /**
@@ -2414,7 +2412,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsubi(int axis, int position, @NonNull Number lhs) {
-      return mapiAxisDouble(axis, position, lhs.doubleValue(), (a, b) -> b - a);
+      return mapi(axis, position, lhs.doubleValue(), (a, b) -> b - a);
    }
 
    /**
@@ -2442,7 +2440,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsubi(@NonNull NumericNDArray lhs) {
-      return mapiDouble(lhs, (a, b) -> b - a);
+      return mapi(lhs, (a, b) -> b - a);
    }
 
    /**
@@ -2469,7 +2467,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new resultant NDArray
     */
    public NumericNDArray rsubi(double lhs) {
-      return mapiDouble(lhs, (a, b) -> b - a);
+      return mapi(lhs, (a, b) -> b - a);
    }
 
    /**
@@ -2705,7 +2703,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new NDArray with the result of <code>this - other</code>
     */
    public NumericNDArray sub(@NonNull NumericNDArray rhs) {
-      return mapDouble(rhs, Operator::subtract);
+      return map(rhs, Operator::subtract);
    }
 
    /**
@@ -2731,7 +2729,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the new NDArray with the scalar value subtracted
     */
    public NumericNDArray sub(double value) {
-      return mapDouble(value, Operator::subtract);
+      return map(value, Operator::subtract);
    }
 
    /**
@@ -2763,7 +2761,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray sub(int axis, @NonNull NumericNDArray rhs) {
-      return mapAxisDouble(axis, rhs, Operator::subtract);
+      return map(axis, rhs, Operator::subtract);
    }
 
    /**
@@ -2796,7 +2794,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray sub(int axis, int position, @NonNull NumericNDArray rhs) {
-      return mapAxisDouble(axis, position, rhs, Operator::subtract);
+      return map(axis, position, rhs, Operator::subtract);
    }
 
    /**
@@ -2829,7 +2827,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return the resultant NDArray
     */
    public NumericNDArray sub(int axis, int position, @NonNull Number rhs) {
-      return mapAxisDouble(axis, position, rhs.doubleValue(), Operator::subtract);
+      return map(axis, position, rhs.doubleValue(), Operator::subtract);
    }
 
    /**
@@ -2855,7 +2853,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the result of <code>this - rhs</code>
     */
    public NumericNDArray subi(@NonNull NumericNDArray rhs) {
-      return mapiDouble(rhs, Operator::subtract);
+      return mapi(rhs, Operator::subtract);
    }
 
    /**
@@ -2881,7 +2879,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the scalar value subtracted
     */
    public NumericNDArray subi(double value) {
-      return mapiDouble(value, Operator::subtract);
+      return mapi(value, Operator::subtract);
    }
 
    /**
@@ -2913,7 +2911,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the subtraction
     */
    public NumericNDArray subi(int axis, @NonNull NumericNDArray rhs) {
-      return mapiAxisDouble(axis, rhs, Operator::subtract);
+      return mapi(axis, rhs, Operator::subtract);
    }
 
    /**
@@ -2947,7 +2945,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the subtraction
     */
    public NumericNDArray subi(int axis, int position, @NonNull NumericNDArray rhs) {
-      return mapiAxisDouble(axis, position, rhs, Operator::subtract);
+      return mapi(axis, position, rhs, Operator::subtract);
    }
 
    /**
@@ -2981,7 +2979,7 @@ public abstract class NumericNDArray extends NDArray {
     * @return this NDArray with the results of the subtraction
     */
    public NumericNDArray subi(int axis, int position, @NonNull Number rhs) {
-      return mapiAxisDouble(axis, position, rhs.doubleValue(), Operator::subtract);
+      return mapi(axis, position, rhs.doubleValue(), Operator::subtract);
    }
 
    /**
@@ -3043,6 +3041,48 @@ public abstract class NumericNDArray extends NDArray {
       double[] out = new double[(int) length()];
       for (long i = 0; i < length(); i++) {
          out[(int) i] = getDouble(i);
+      }
+      return out;
+   }
+
+   /**
+    * <p>Converts this NDArray into a float array. The array is encoded using column major order for matrices and
+    * kernel-major order for slices.</p>
+    *
+    * @return the float array
+    */
+   public float[] toFloatArray() {
+      float[] out = new float[(int) length()];
+      for (long i = 0; i < length(); i++) {
+         out[(int) i] = (float)getDouble(i);
+      }
+      return out;
+   }
+
+   /**
+    * <p>Converts this NDArray into a long array. The array is encoded using column major order for matrices and
+    * kernel-major order for slices.</p>
+    *
+    * @return the long array
+    */
+   public long[] toLongArray() {
+      long[] out = new long[(int) length()];
+      for (long i = 0; i < length(); i++) {
+         out[(int) i] = get(i).longValue();
+      }
+      return out;
+   }
+
+   /**
+    * <p>Converts this NDArray into a int array. The array is encoded using column major order for matrices and
+    * kernel-major order for slices.</p>
+    *
+    * @return the int array
+    */
+   public int[] toIntArray() {
+      int[] out = new int[(int) length()];
+      for (long i = 0; i < length(); i++) {
+         out[(int) i] = (int)getDouble(i);
       }
       return out;
    }

@@ -22,10 +22,10 @@
 package com.gengoai.hermes.ml;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.evaluation.SequenceLabelerEvaluation;
-import com.gengoai.apollo.ml.model.Model;
-import com.gengoai.apollo.ml.observation.Sequence;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.evaluation.SequenceLabelerEvaluation;
+import com.gengoai.apollo.model.Model;
+import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.collection.Sets;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;

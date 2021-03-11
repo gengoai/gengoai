@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 
 /**
  * <p>A coordinate that indicates a particular position in a coordinate space.</p>
+ *
+ * @author David B. Bracewell
  */
 public class Index extends Coordinate implements Copyable<Index> {
    private static final long serialVersionUID = 1L;

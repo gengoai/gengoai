@@ -29,6 +29,11 @@ import lombok.NonNull;
 import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
 
+/**
+ * <p>Dense NDArray representing String values.</p>
+ *
+ * @author David B. Bracewell
+ */
 public class DenseStringNDArray extends ObjectNDArray<String> {
    private static final long serialVersionUID = 1L;
    private String[][] data;
@@ -39,7 +44,7 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
     *
     * @param shape the shape
     */
-   public DenseStringNDArray(Shape shape) {
+   protected DenseStringNDArray(Shape shape) {
       super(shape);
       this.data = new String[shape().sliceLength()][shape().matrixLength()];
    }
@@ -57,13 +62,13 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
       setWeight(weight);
    }
 
-   public DenseStringNDArray(@NonNull String[] v) {
+   protected DenseStringNDArray(@NonNull String[] v) {
       super(Shape.shape(v.length));
       this.data = new String[1][v.length];
       System.arraycopy(v, 0, this.data[0], 0, v.length);
    }
 
-   public DenseStringNDArray(@NonNull Shape shape, @NonNull String[] v) {
+   protected DenseStringNDArray(@NonNull Shape shape, @NonNull String[] v) {
       super(shape);
       this.data = new String[shape.sliceLength()][shape.matrixLength()];
       for (int i = 0; i < v.length; i++) {
@@ -71,43 +76,7 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
       }
    }
 
-   public DenseStringNDArray(@NonNull String[][] v) {
-      super(Shape.shape(v.length, v[0].length));
-      this.data = new String[1][shape().matrixLength()];
-      for (int row = 0; row < v.length; row++) {
-         for (int col = 0; col < v[row].length; col++) {
-            set(row, col, v[row][col]);
-         }
-      }
-   }
-
-   public DenseStringNDArray(@NonNull String[][][] v) {
-      super(Shape.shape(v.length, v[0].length, v[0][0].length));
-      this.data = new String[shape().sliceLength()][shape().matrixLength()];
-      for (int channel = 0; channel < v.length; channel++) {
-         for (int row = 0; row < v[channel].length; row++) {
-            for (int col = 0; col < v[channel][row].length; col++) {
-               set(channel, row, col, v[channel][row][col]);
-            }
-         }
-      }
-   }
-
-   public DenseStringNDArray(@NonNull String[][][][] v) {
-      super(Shape.shape(v.length, v[0].length, v[0][0].length, v[0][0][0].length));
-      this.data = new String[shape().sliceLength()][shape().matrixLength()];
-      for (int kernel = 0; kernel < v.length; kernel++) {
-         for (int channel = 0; channel < v[kernel].length; channel++) {
-            for (int row = 0; row < v[kernel][channel].length; row++) {
-               for (int col = 0; col < v[kernel][channel][row].length; col++) {
-                  set(kernel, channel, row, col, v[kernel][channel][row][col]);
-               }
-            }
-         }
-      }
-   }
-
-   public DenseStringNDArray(@NonNull byte[][] v) {
+   protected DenseStringNDArray(@NonNull byte[][] v) {
       super(Shape.shape(v.length));
       this.data = new String[1][shape().matrixLength()];
       for (int i = 0; i < v.length; i++) {
@@ -115,7 +84,7 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
       }
    }
 
-   public DenseStringNDArray(@NonNull byte[][][] v) {
+   protected DenseStringNDArray(@NonNull byte[][][] v) {
       super(Shape.shape(v.length, v[0].length));
       this.data = new String[1][shape().matrixLength()];
       for (int row = 0; row < v.length; row++) {
@@ -125,7 +94,7 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
       }
    }
 
-   public DenseStringNDArray(@NonNull byte[][][][] v) {
+   protected DenseStringNDArray(@NonNull byte[][][][] v) {
       super(Shape.shape(v.length, v[0].length, v[0][0].length));
       this.data = new String[shape().sliceLength()][shape().matrixLength()];
       for (int channel = 0; channel < v.length; channel++) {
@@ -137,7 +106,7 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
       }
    }
 
-   public DenseStringNDArray(@NonNull byte[][][][][] v) {
+   protected DenseStringNDArray(@NonNull byte[][][][][] v) {
       super(Shape.shape(v.length, v[0].length, v[0][0].length, v[0][0][0].length));
       this.data = new String[shape().sliceLength()][shape().matrixLength()];
       for (int kernel = 0; kernel < v.length; kernel++) {
@@ -152,6 +121,12 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
       }
    }
 
+   /**
+    * <p>Converts TensorFlow Tensors for STRING type to DenseFloat32NDArray.</p>
+    *
+    * @param tensor the tensor
+    * @return the converted Tensor
+    */
    public static ObjectNDArray<String> fromTensor(@NonNull Tensor<?> tensor) {
       if (tensor.dataType() == DataType.STRING) {
          long[] s = tensor.shape();
@@ -182,11 +157,6 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
    @Override
    public boolean isDense() {
       return true;
-   }
-
-   @Override
-   public boolean isNumeric() {
-      return false;
    }
 
    @Override
@@ -233,7 +203,7 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
    public ObjectNDArray<String> slice(int index) {
       DenseStringNDArray v = new DenseStringNDArray(Shape.shape(shape().rows(),
                                                                 shape().columns()));
-      if(  data.length == 1) {
+      if (data.length == 1) {
          v.data[0] = data[0];
       } else {
          v.data[0] = data[index];
@@ -320,4 +290,4 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
 
       throw new IllegalStateException();
    }
-}
+}//END OF DenseStringNDArray

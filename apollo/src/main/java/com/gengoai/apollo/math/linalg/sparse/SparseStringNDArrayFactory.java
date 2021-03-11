@@ -24,9 +24,19 @@ import com.gengoai.apollo.math.linalg.ObjectNDArrayFactory;
 import com.gengoai.apollo.math.linalg.Shape;
 import lombok.NonNull;
 
+/**
+ * <p>Factory for creating Sparse String NDArrays</p>
+ *
+ * @author David B. Bracewell
+ */
 public class SparseStringNDArrayFactory extends ObjectNDArrayFactory<String> {
+   /**
+    * The singleton instance of the Factory
+    */
+   public static final SparseStringNDArrayFactory INSTANCE = new SparseStringNDArrayFactory();
+   private static final long serialVersionUID = 1L;
 
-   public SparseStringNDArrayFactory() {
+   protected SparseStringNDArrayFactory() {
       super(String.class);
    }
 
@@ -40,46 +50,14 @@ public class SparseStringNDArrayFactory extends ObjectNDArrayFactory<String> {
       return new SparseStringNDArray(shape, a);
    }
 
-   @Override
-   public ObjectNDArray<String> array(String[] a) {
-      if (a.length == 0) {
-         return empty();
-      }
-      return new SparseStringNDArray(a);
-   }
-
-   @Override
-   public ObjectNDArray<String> array(String[][] a) {
-      if (a.length == 0 || a[0].length == 0) {
-         return empty();
-      }
-      return new SparseStringNDArray(a);
-   }
-
-   @Override
-   public ObjectNDArray<String> array(String[][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0) {
-         return empty();
-      }
-      return new SparseStringNDArray(a);
-   }
-
-   @Override
-   public ObjectNDArray<String> array(String[][][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0 || a[0][0][0].length == 0) {
-         return empty();
-      }
-      return new SparseStringNDArray(a);
-   }
-
 
    @Override
    public ObjectNDArray<String> scalar(String value) {
-      return new SparseStringNDArray(new String[]{value});
+      return zeros(Shape.shape(1)).set(0, value);
    }
 
    @Override
    public ObjectNDArray<String> zeros(@NonNull Shape shape) {
       return new SparseStringNDArray(shape);
    }
-}
+}//END OF SparseStringNDArrayFactory

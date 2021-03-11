@@ -19,16 +19,16 @@
 
 package com.gengoai.hermes.en;
 
-import com.gengoai.apollo.ml.DataSetType;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.feature.FeatureExtractor;
-import com.gengoai.apollo.ml.feature.Featurizer;
-import com.gengoai.apollo.ml.model.Params;
-import com.gengoai.apollo.ml.model.PipelineModel;
-import com.gengoai.apollo.ml.model.sequence.GreedyAvgPerceptron;
-import com.gengoai.apollo.ml.observation.Sequence;
-import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.transform.MinCountFilter;
+import com.gengoai.apollo.data.DataSetType;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.feature.FeatureExtractor;
+import com.gengoai.apollo.feature.Featurizer;
+import com.gengoai.apollo.model.Params;
+import com.gengoai.apollo.model.PipelineModel;
+import com.gengoai.apollo.model.sequence.GreedyAvgPerceptron;
+import com.gengoai.apollo.data.observation.Sequence;
+import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.data.transform.MinCountFilter;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;

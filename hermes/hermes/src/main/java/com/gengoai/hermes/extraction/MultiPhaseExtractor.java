@@ -23,7 +23,7 @@
 package com.gengoai.hermes.extraction;
 
 import com.gengoai.Copyable;
-import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.collection.Arrays2;
 import com.gengoai.conversion.Cast;
 import com.gengoai.hermes.AnnotationType;

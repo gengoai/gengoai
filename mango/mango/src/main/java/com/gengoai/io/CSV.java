@@ -69,7 +69,7 @@ public class CSV implements Serializable {
     * @return the csv builder builder with delimiter set to a comma character
     */
    public static CSV csv() {
-      return CSV.builder();
+      return new CSV();
    }
 
    /**

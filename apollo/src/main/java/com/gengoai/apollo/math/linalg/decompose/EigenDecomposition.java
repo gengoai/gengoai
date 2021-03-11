@@ -17,6 +17,9 @@ import static com.gengoai.collection.Arrays2.arrayOf;
 public class EigenDecomposition extends Decomposition {
    private static final long serialVersionUID = 1L;
 
+   /**
+    * Instantiates a new Eigen decomposition.
+    */
    public EigenDecomposition() {
       super(2);
    }

@@ -20,8 +20,8 @@
 package com.gengoai.hermes.ml.feature;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.ml.feature.Featurizer;
-import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.feature.Featurizer;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.conversion.Cast;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.function.SerializablePredicate;

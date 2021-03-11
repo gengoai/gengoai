@@ -19,9 +19,9 @@
 
 package com.gengoai.hermes.tools;
 
-import com.gengoai.apollo.ml.model.ModelIO;
-import com.gengoai.apollo.ml.model.embedding.VSQuery;
-import com.gengoai.apollo.ml.model.embedding.WordEmbedding;
+import com.gengoai.apollo.model.ModelIO;
+import com.gengoai.apollo.model.embedding.VSQuery;
+import com.gengoai.apollo.model.embedding.WordEmbedding;
 import com.gengoai.application.Option;
 import com.gengoai.conversion.Cast;
 import com.gengoai.io.resource.Resource;

@@ -37,12 +37,17 @@ import java.util.function.UnaryOperator;
 
 import static com.gengoai.Validation.checkArgument;
 
-public class DenseFloat64NDArray extends NumericNDArray {
+/**
+ * <p>Dense NDArray representing 64-bit float values.</p>
+ *
+ * @author David B. Bracewell
+ */
+public final class DenseFloat64NDArray extends NumericNDArray {
    private static final long serialVersionUID = 1L;
    private DoubleMatrix[] matrices;
 
-   public DenseFloat64NDArray(@NonNull Shape shape,
-                              @NonNull double... data) {
+   protected DenseFloat64NDArray(@NonNull Shape shape,
+                                 @NonNull double... data) {
       this(shape);
       for (int i = 0; i < data.length; i++) {
          set(i, data[i]);
@@ -62,17 +67,17 @@ public class DenseFloat64NDArray extends NumericNDArray {
    }
 
 
-   public DenseFloat64NDArray(@NonNull double... data) {
+   protected DenseFloat64NDArray(@NonNull double... data) {
       super(Shape.shape(data.length));
       this.matrices = new DoubleMatrix[]{new DoubleMatrix(1, data.length, data)};
    }
 
-   public DenseFloat64NDArray(@NonNull double[][] data) {
+   protected DenseFloat64NDArray(@NonNull double[][] data) {
       super(Shape.shape(data.length, data[0].length));
       this.matrices = new DoubleMatrix[]{new DoubleMatrix(data)};
    }
 
-   public DenseFloat64NDArray(@NonNull double[][][] data) {
+   protected DenseFloat64NDArray(@NonNull double[][][] data) {
       super(Shape.shape(data.length, data[0].length, data[0][0].length));
       this.matrices = new DoubleMatrix[shape().sliceLength()];
       for (int channel = 0; channel < data.length; channel++) {
@@ -80,7 +85,7 @@ public class DenseFloat64NDArray extends NumericNDArray {
       }
    }
 
-   public DenseFloat64NDArray(@NonNull double[][][][] data) {
+   protected DenseFloat64NDArray(@NonNull double[][][][] data) {
       super(Shape.shape(data.length, data[0].length, data[0][0].length, data[0][0][0].length));
       this.matrices = new DoubleMatrix[shape().sliceLength()];
       for (int kernel = 0; kernel < data.length; kernel++) {
@@ -91,7 +96,7 @@ public class DenseFloat64NDArray extends NumericNDArray {
    }
 
 
-   public DenseFloat64NDArray(@NonNull Shape shape) {
+   protected DenseFloat64NDArray(@NonNull Shape shape) {
       super(shape);
       this.matrices = new DoubleMatrix[shape.sliceLength()];
       for (int i = 0; i < this.matrices.length; i++) {
@@ -99,21 +104,27 @@ public class DenseFloat64NDArray extends NumericNDArray {
       }
    }
 
-   public DenseFloat64NDArray(@NonNull DoubleMatrix fm) {
+   protected DenseFloat64NDArray(@NonNull DoubleMatrix fm) {
       super(Shape.shape(fm.rows, fm.columns));
       this.matrices = new DoubleMatrix[]{fm};
    }
 
 
-   public DenseFloat64NDArray(@NonNull Shape shape, @NonNull DoubleMatrix[] fm) {
+   private DenseFloat64NDArray(@NonNull Shape shape, @NonNull DoubleMatrix[] fm) {
       super(shape);
       this.matrices = fm;
    }
 
-   public DenseFloat64NDArray(int kernels, int channels, @NonNull DoubleMatrix[] fm) {
+   protected DenseFloat64NDArray(int kernels, int channels, @NonNull DoubleMatrix[] fm) {
       this(Shape.shape(kernels, channels, fm[0].rows, fm[0].columns), fm);
    }
 
+   /**
+    * <p>Converts TensorFlow Tenors for Float type to DenseFloat32NDArray.</p>
+    *
+    * @param tensor the tensor
+    * @return the converted Tensor
+    */
    public static NumericNDArray fromTensor(@NonNull Tensor<?> tensor) {
       if (tensor.dataType() == DataType.DOUBLE) {
          Shape s = Shape.shape(tensor.shape());
@@ -141,21 +152,11 @@ public class DenseFloat64NDArray extends NumericNDArray {
    }
 
    @Override
-   protected Object arrayForTensor() {
-      if (shape().isEmpty() || shape().isVector()) {
-         return matrices[0].toArray();
-      } else if (shape().isMatrix()) {
-         return matrices[0].toArray2();
-      }
-      return super.arrayForTensor();
-   }
-
-   @Override
    public NumericNDArray fill(double value) {
       return forEachMatrix(value, (a, b) -> a.fill((float) value));
    }
 
-   protected NumericNDArray forEachMatrix(DenseFloat64NDArray rhs, BiMatrixConsumer op) {
+   private NumericNDArray forEachMatrix(DenseFloat64NDArray rhs, BiMatrixConsumer op) {
       for (Index index : shape().sliceIterator()) {
          int ti = shape().calculateSliceIndex(index);
          int ri = rhs.shape().calculateSliceIndex(rhs.shape().broadcast(index));
@@ -164,7 +165,7 @@ public class DenseFloat64NDArray extends NumericNDArray {
       return this;
    }
 
-   protected NumericNDArray forEachMatrix(double value, MatrixDoubleConsumer op) {
+   private NumericNDArray forEachMatrix(double value, MatrixDoubleConsumer op) {
       for (DoubleMatrix matrix : matrices) {
          op.accept(matrix, value);
       }
@@ -191,12 +192,7 @@ public class DenseFloat64NDArray extends NumericNDArray {
       return true;
    }
 
-   @Override
-   public boolean isNumeric() {
-      return true;
-   }
-
-   protected NumericNDArray mapSlices(UnaryOperator<DoubleMatrix> op) {
+   private NumericNDArray mapSlices(UnaryOperator<DoubleMatrix> op) {
       if (matrices.length == 0) {
          return factory().empty();
       }
@@ -306,10 +302,15 @@ public class DenseFloat64NDArray extends NumericNDArray {
    }
 
    @Override
+   @JsonProperty("data")
+   public double[] toDoubleArray() {
+      return super.toDoubleArray();
+   }
+
+   @Override
    public DoubleMatrix[] toDoubleMatrix() {
       return matrices;
    }
-
 
    @Override
    public FloatMatrix[] toFloatMatrix() {
@@ -320,21 +321,13 @@ public class DenseFloat64NDArray extends NumericNDArray {
       return m;
    }
 
-   @Override
-   @JsonProperty("data")
-   public double[] toDoubleArray() {
-      return super.toDoubleArray();
-   }
-
    @FunctionalInterface
-   protected interface BiMatrixConsumer {
-
+   private interface BiMatrixConsumer {
       void accept(DoubleMatrix a, DoubleMatrix b);
    }
 
    @FunctionalInterface
-   protected interface MatrixDoubleConsumer {
-
+   private interface MatrixDoubleConsumer {
       void accept(DoubleMatrix a, double b);
    }
 }//END OF DenseFloat64NDArray

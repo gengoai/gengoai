@@ -19,9 +19,9 @@
 
 package com.gengoai.hermes.zh;
 
-import com.gengoai.apollo.ml.feature.ObservationExtractor;
-import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.observation.VariableSequence;
+import com.gengoai.apollo.feature.ObservationExtractor;
+import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.data.observation.VariableSequence;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.Document;
 import com.gengoai.hermes.HString;

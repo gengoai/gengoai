@@ -27,33 +27,42 @@ import org.jblas.DoubleMatrix;
 import org.jblas.FloatMatrix;
 import org.jblas.MatrixFunctions;
 
-public class DenseFloat64NDArrayFactory extends NumericNDArrayFactory {
+import static com.gengoai.Validation.checkArgument;
 
-   public DenseFloat64NDArrayFactory() {
+/**
+ * <p>Factory for creating Dense 64-bit flot NDArrays</p>
+ *
+ * @author David B. Bracewell
+ */
+public final class DenseFloat64NDArrayFactory extends NumericNDArrayFactory {
+   /**
+    * The singleton instance of the Factory
+    */
+   public static final DenseFloat64NDArrayFactory INSTANCE = new DenseFloat64NDArrayFactory();
+   private static final long serialVersionUID = 1L;
+
+   private DenseFloat64NDArrayFactory() {
       super(Double.class);
    }
 
-   @Override
-   public NumericNDArray scalar(@NonNull Number value) {
-      return new DenseFloat64NDArray(DoubleMatrix.scalar(value.doubleValue()));
-   }
-
-   @Override
-   public NumericNDArray zeros(@NonNull Shape shape) {
-      return new DenseFloat64NDArray(shape);
-   }
-
+   /**
+    * <p>Creates an NDArray containing the given JBlas FloatMatrix.</p>
+    *
+    * @param floatMatrix the float matrix
+    * @return the NumericNDArray
+    */
    public NumericNDArray array(@NonNull FloatMatrix floatMatrix) {
       return new DenseFloat64NDArray(MatrixFunctions.floatToDouble(floatMatrix));
    }
 
+   /**
+    * <p>Creates an NDArray containing the given JBlas DoubleMatrix.</p>
+    *
+    * @param doubleMatrix the double matrix
+    * @return the NumericNDArray
+    */
    public NumericNDArray array(@NonNull DoubleMatrix doubleMatrix) {
       return new DenseFloat64NDArray(doubleMatrix);
-   }
-
-   @Override
-   public NumericNDArray empty() {
-      return new DenseFloat64NDArray(DoubleMatrix.EMPTY);
    }
 
    @Override
@@ -88,6 +97,36 @@ public class DenseFloat64NDArrayFactory extends NumericNDArrayFactory {
          return empty();
       }
       return new DenseFloat64NDArray(a);
+   }
+
+   @Override
+   public NumericNDArray empty() {
+      return new DenseFloat64NDArray(DoubleMatrix.EMPTY);
+   }
+
+   @Override
+   public NumericNDArray scalar(@NonNull Number value) {
+      return new DenseFloat64NDArray(DoubleMatrix.scalar(value.doubleValue()));
+   }
+
+   /**
+    * <p>Creates a new Tensor from with given number of <code>kernels</code> and <code>channels</code> where each slice
+    * is defined as one the supplied JBlas DoubleMatrix</p>
+    *
+    * @param kernels  the number of kernels
+    * @param channels the number of channels
+    * @param matrices the matrices
+    * @return the NumericNDArray
+    */
+   public NumericNDArray tensor(int kernels, int channels, @NonNull DoubleMatrix[] matrices) {
+      checkArgument((kernels * channels) == matrices.length,
+                    () -> "Length mismatch: expecting " + (kernels * channels) + " matrices, but received " + matrices.length);
+      return new DenseFloat64NDArray(kernels, channels, matrices);
+   }
+
+   @Override
+   public NumericNDArray zeros(@NonNull Shape shape) {
+      return new DenseFloat64NDArray(shape);
    }
 
 }//END OF DenseFloat64NDArrayFactory

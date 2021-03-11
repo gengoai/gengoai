@@ -19,13 +19,13 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.evaluation.Evaluation;
-import com.gengoai.apollo.ml.evaluation.PerInstanceEvaluation;
-import com.gengoai.apollo.ml.model.FitParameters;
-import com.gengoai.apollo.ml.model.LabelType;
-import com.gengoai.apollo.ml.model.Model;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.evaluation.Evaluation;
+import com.gengoai.apollo.evaluation.PerInstanceEvaluation;
+import com.gengoai.apollo.model.FitParameters;
+import com.gengoai.apollo.model.LabelType;
+import com.gengoai.apollo.model.Model;
 import com.gengoai.collection.Iterables;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.hermes.HString;

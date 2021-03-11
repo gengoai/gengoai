@@ -19,7 +19,7 @@
 
 package com.gengoai.hermes.workflow.actions;
 
-import com.gengoai.apollo.math.statistics.measure.Similarity;
+import com.gengoai.apollo.math.measure.Similarity;
 import com.gengoai.collection.Lists;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.DocumentCollection;

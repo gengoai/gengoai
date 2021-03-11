@@ -19,6 +19,7 @@
 
 package com.gengoai.apollo.math.linalg;
 
+import com.gengoai.apollo.math.linalg.dense.DenseStringNDArray;
 import com.gengoai.json.Json;
 import org.junit.Test;
 
@@ -79,6 +80,11 @@ public abstract class BaseObjectNDArrayTest {
       };
    }
 
+   @Test(expected = IllegalArgumentException.class)
+   public void badMapAxisPosition() {
+      tensor234.map(Shape.KERNEL, 2, "A", String::concat);
+   }
+
    @Test
    public void compact() {
       tensor234.compact();
@@ -95,7 +101,7 @@ public abstract class BaseObjectNDArrayTest {
       List<String> out = new ArrayList<>();
       s.forEachSparse((i, v) -> out.add(v));
       assertArrayEquals(new String[]{"A"},
-                   out.toArray(new String[0]));
+                        out.toArray(new String[0]));
    }
 
    @Test
@@ -106,6 +112,144 @@ public abstract class BaseObjectNDArrayTest {
 
    @Test
    public void map() {
+      assertEquals(factory.empty(), factory.empty().map(String::toLowerCase));
+      assertEquals(factory.empty(), factory.empty().map(factory.empty(), String::concat));
+      assertEquals(factory.empty(), factory.empty().map(Shape.COLUMN, factory.empty(), String::concat));
+      assertEquals(factory.empty(), factory.empty().map(Shape.ROW, 0, "A", String::concat));
+      assertEquals(factory.empty(), factory.empty().map(Shape.ROW, 0, factory.empty(), String::concat));
+
+      assertEquals(factory.array(new String[][]{
+            {"AA", "BA"},
+            {"CA", "DA"}
+      }), factory.array(new String[][]{
+            {"A", "B"},
+            {"C", "D"}
+      }).map(Shape.ROW, factory.scalar("A"), String::concat));
+
+      assertEquals(factory.array(new String[]{
+            "CA", "DA"
+      }), factory.array(new String[]{
+            "C", "D"
+      }).map(Shape.COLUMN, factory.array(new String[]{"A", "A"}), String::concat));
+
+      assertEquals(factory.array(new String[]{"aa", "ab"}), factory.array(new String[]{"a", "b"})
+                                                                   .map(factory.scalar("a"), (a, b) -> b + a));
+
+      assertEquals(factory.array(new String[][]{
+                         {"A1", "B2", "C3", "D4"},
+                         {"E", "F", "G", "H"},
+                         {"I", "J", "K", "L"}
+                   }),
+                   matrix34.map(Shape.ROW, 0, rowVector, String::concat));
+
+
+      assertEquals(factory.array(new String[]{"11", "22", "33", "44"}),
+                   rowVector.map(Shape.ROW, 0, factory.array(new String[]{"1", "2", "3", "4"}), String::concat));
+
+      assertEquals(factory.array(new String[][][][]{
+                         {
+
+                               {
+                                     {"A1", "B2", "C3", "D4"},
+                                     {"E1", "F2", "G3", "H4"},
+                                     {"I1", "J2", "K3", "L4"}
+                               },
+                               {
+                                     {"M1", "N2", "O3", "P4"},
+                                     {"Q1", "R2", "S3", "T4"},
+                                     {"U1", "V2", "W3", "X4"}
+                               }
+                         },
+                         {
+                               {
+                                     {"Y", "Z", "[", "\\"},
+                                     {"]", "^", "_", "`"},
+                                     {"a", "b", "c", "d"}
+                               },
+                               {
+                                     {"e", "f", "g", "h"},
+                                     {"i", "j", "k", "l"},
+                                     {"m", "n", "o", "p"}
+                               }
+                         }
+                   }),
+                   tensor2234.map(Shape.KERNEL, 0, rowVector, String::concat));
+
+
+      assertEquals(factory.array(new String[][][][]{
+                         {
+
+                               {
+                                     {"A1", "B2", "C3", "D4"},
+                                     {"E1", "F2", "G3", "H4"},
+                                     {"I1", "J2", "K3", "L4"}
+                               },
+                               {
+                                     {"M1", "N2", "O3", "P4"},
+                                     {"Q1", "R2", "S3", "T4"},
+                                     {"U1", "V2", "W3", "X4"}
+                               }
+                         },
+                         {
+                               {
+                                     {"Y1", "Z2", "[3", "\\4"},
+                                     {"]1", "^2", "_3", "`4"},
+                                     {"a1", "b2", "c3", "d4"}
+                               },
+                               {
+                                     {"e1", "f2", "g3", "h4"},
+                                     {"i1", "j2", "k3", "l4"},
+                                     {"m1", "n2", "o3", "p4"}
+                               }
+                         }
+                   }),
+                   tensor2234.map(Shape.ROW,  rowVector, String::concat));
+
+      assertEquals(factory.array(new String[][][][]{
+                         {
+
+                               {
+                                     {"A1", "B2", "C3", "D4"},
+                                     {"E", "F", "G", "H"},
+                                     {"I", "J", "K", "L"}
+                               },
+                               {
+                                     {"M1", "N2", "O3", "P4"},
+                                     {"Q", "R", "S", "T"},
+                                     {"U", "V", "W", "X"}
+                               }
+                         },
+                         {
+                               {
+                                     {"Y1", "Z2", "[3", "\\4"},
+                                     {"]", "^", "_", "`"},
+                                     {"a", "b", "c", "d"}
+                               },
+                               {
+                                     {"e1", "f2", "g3", "h4"},
+                                     {"i", "j", "k", "l"},
+                                     {"m", "n", "o", "p"}
+                               }
+                         }
+                   }),
+                   tensor2234.map(Shape.ROW, 0, rowVector, String::concat));
+
+      assertEquals(factory.array(new String[][]{
+                         {"Aa", "Ba", "Ca", "Da"},
+                         {"E", "F", "G", "H"},
+                         {"I", "J", "K", "L"}
+                   }),
+                   matrix34.map(Shape.ROW, 0, factory.scalar("a"), String::concat));
+
+      assertEquals(factory.array(new String[][]{
+                         {"A1", "B1", "C1", "D1"},
+                         {"E2", "F2", "G2", "H2"},
+                         {"I3", "J3", "K3", "L3"}
+                   }),
+                   matrix34.map(factory.array(Shape.shape(3, 1), new String[]{"1", "2", "3"}), String::concat));
+
+      assertEquals(factory.array(new String[]{"aa", "ab"}), factory.array(new String[]{"a", "b"})
+                                                                   .map(factory.scalar("a"), (a, b) -> b + a));
       assertEquals(factory.array(new String[][][]{
             {
                   {"a", "b", "c", "d"},
@@ -377,10 +521,12 @@ public abstract class BaseObjectNDArrayTest {
 
    @Test
    public void toTensor() {
-      assertEquals(tensor234, nd.convertTensor(tensor234.toTensor()));
-      assertEquals(rowVector, nd.convertTensor(rowVector.toTensor()));
-      assertEquals(matrix34, nd.convertTensor(matrix34.toTensor()));
-      assertEquals(tensor2234, nd.convertTensor(tensor2234.toTensor()));
+      if( tensor234 instanceof DenseStringNDArray) {
+         assertEquals(tensor234, nd.convertTensor(tensor234.toTensor()));
+         assertEquals(rowVector, nd.convertTensor(rowVector.toTensor()));
+         assertEquals(matrix34, nd.convertTensor(matrix34.toTensor()));
+         assertEquals(tensor2234, nd.convertTensor(tensor2234.toTensor()));
+      }
    }
 
    @Test

@@ -20,10 +20,10 @@
 package com.gengoai.hermes.ml;
 
 import com.gengoai.Language;
-import com.gengoai.apollo.ml.feature.Featurizer;
-import com.gengoai.apollo.ml.model.ModelIO;
-import com.gengoai.apollo.ml.model.tf.TFInputVar;
-import com.gengoai.apollo.ml.model.tf.TFOutputVar;
+import com.gengoai.apollo.feature.Featurizer;
+import com.gengoai.apollo.model.ModelIO;
+import com.gengoai.apollo.model.tf.TFInputVar;
+import com.gengoai.apollo.model.tf.TFOutputVar;
 import com.gengoai.config.Config;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.Document;
@@ -37,7 +37,7 @@ import com.gengoai.io.Resources;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.gengoai.apollo.ml.encoder.FixedEncoder.fixedEncoder;
+import static com.gengoai.apollo.encoder.FixedEncoder.fixedEncoder;
 import static com.gengoai.hermes.ResourceType.WORD_LIST;
 
 public class NeuralNERModel2 extends TFSequenceLabeler {

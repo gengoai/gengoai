@@ -25,6 +25,8 @@ import lombok.NonNull;
 
 /**
  * <p>Base factory for creating NumericNDArrays.</p>
+ *
+ * @author David B. Bracewell
  */
 public abstract class NumericNDArrayFactory extends NDArrayFactory {
    private static final long serialVersionUID = 1L;

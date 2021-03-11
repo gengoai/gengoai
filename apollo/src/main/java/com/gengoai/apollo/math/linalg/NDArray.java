@@ -27,8 +27,8 @@ import com.gengoai.Copyable;
 import com.gengoai.Primitives;
 import com.gengoai.apollo.math.linalg.dense.*;
 import com.gengoai.apollo.math.linalg.sparse.*;
-import com.gengoai.apollo.ml.observation.Observation;
-import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.collection.Sorting;
 import com.gengoai.conversion.Cast;
 import com.gengoai.string.Strings;
@@ -54,6 +54,8 @@ import static com.gengoai.tuple.Tuples.$;
 
 /**
  * <p>An N-dimensional array type containing a collection of homogeneous items. </p>
+ *
+ * @author David B. Bracewell
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
 @JsonSubTypes({
@@ -62,12 +64,15 @@ import static com.gengoai.tuple.Tuples.$;
       @JsonSubTypes.Type(value = DenseFloat64NDArray.class, name = "DFLOAT64"),
       @JsonSubTypes.Type(value = DenseInt32NDArray.class, name = "DINT32"),
       @JsonSubTypes.Type(value = DenseInt64NDArray.class, name = "DINT64"),
+      @JsonSubTypes.Type(value = GenericDenseObjectNDArray.class, name = "DGENERIC"),
 
       @JsonSubTypes.Type(value = SparseStringNDArray.class, name = "SSTRING"),
       @JsonSubTypes.Type(value = SparseFloat32NDArray.class, name = "SFLOAT32"),
       @JsonSubTypes.Type(value = SparseFloat64NDArray.class, name = "SFLOAT64"),
       @JsonSubTypes.Type(value = SparseInt32NDArray.class, name = "SINT32"),
       @JsonSubTypes.Type(value = SparseInt64NDArray.class, name = "SINT64"),
+      @JsonSubTypes.Type(value = GenericSparseObjectNDArray.class, name = "SGENERIC")
+
 
 })
 @JsonAutoDetect(
@@ -620,13 +625,6 @@ public abstract class NDArray implements Serializable, Observation {
    public boolean isNDArray() {
       return true;
    }
-
-   /**
-    * <p>Checks whether or not this NDArray's elements are numeric</p>
-    *
-    * @return True - if the elements are numeric, False otherwise
-    */
-   public abstract boolean isNumeric();
 
    /**
     * <p>Gets the number of kernels in the NDArray</p>

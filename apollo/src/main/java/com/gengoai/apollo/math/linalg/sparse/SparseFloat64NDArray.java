@@ -35,15 +35,16 @@ import java.util.Arrays;
 
 import static com.gengoai.Validation.checkArgument;
 
+/**
+ * <p>Sparse NDArray representing 64-bit float values.</p>
+ *
+ * @author David B. Bracewell
+ */
 public class SparseFloat64NDArray extends NumericNDArray {
+   private static final long serialVersionUID = 1L;
    private OpenIntDoubleHashMap[] data;
 
-   /**
-    * Instantiates a new Nd array.
-    *
-    * @param shape the shape
-    */
-   public SparseFloat64NDArray(Shape shape) {
+   protected SparseFloat64NDArray(Shape shape) {
       super(shape);
       this.data = new OpenIntDoubleHashMap[shape.sliceLength()];
       for (int i = 0; i < shape.sliceLength(); i++) {
@@ -63,15 +64,7 @@ public class SparseFloat64NDArray extends NumericNDArray {
       setWeight(weight);
    }
 
-   public SparseFloat64NDArray(@NonNull double[] v) {
-      this(Shape.shape(v.length));
-      for (int i = 0; i < v.length; i++) {
-         set(i, v[i]);
-      }
-   }
-
-
-   public SparseFloat64NDArray(@NonNull Shape shape, @NonNull double[] v) {
+   protected SparseFloat64NDArray(@NonNull Shape shape, @NonNull double[] v) {
       this(shape);
       for (int i = 0; i < v.length; i++) {
          set(i, v[i]);
@@ -121,11 +114,6 @@ public class SparseFloat64NDArray extends NumericNDArray {
    @Override
    public boolean isDense() {
       return false;
-   }
-
-   @Override
-   public boolean isNumeric() {
-      return true;
    }
 
    @Override
@@ -210,8 +198,29 @@ public class SparseFloat64NDArray extends NumericNDArray {
    }
 
    @Override
+   public float[] toFloatArray() {
+      float[] out = new float[(int) length()];
+      forEachSparse((index, value) -> out[(int) index] = value.floatValue());
+      return out;
+   }
+
+   @Override
+   public int[] toIntArray() {
+      int[] out = new int[(int) length()];
+      forEachSparse((index, value) -> out[(int) index] = value.intValue());
+      return out;
+   }
+
+   @Override
+   public long[] toLongArray() {
+      long[] out = new long[(int) length()];
+      forEachSparse((index, value) -> out[(int) index] = value.longValue());
+      return out;
+   }
+
+   @Override
    public Tensor<?> toTensor() {
       return nd.DFLOAT64.array(shape(), toDoubleArray()).toTensor();
    }
 
-}
+}//END OF SparseFloat64NDArray

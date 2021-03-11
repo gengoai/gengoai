@@ -35,15 +35,16 @@ import java.util.Arrays;
 
 import static com.gengoai.Validation.checkArgument;
 
+/**
+ * <p>Sparse NDArray representing 64-bit int values.</p>
+ *
+ * @author David B. Bracewell
+ */
 public class SparseInt64NDArray extends NumericNDArray {
+   private static final long serialVersionUID = 1L;
    private OpenIntLongHashMap[] data;
 
-   /**
-    * Instantiates a new Nd array.
-    *
-    * @param shape the shape
-    */
-   public SparseInt64NDArray(Shape shape) {
+   protected SparseInt64NDArray(Shape shape) {
       super(shape);
       this.data = new OpenIntLongHashMap[shape.sliceLength()];
       for (int i = 0; i < shape.sliceLength(); i++) {
@@ -63,15 +64,8 @@ public class SparseInt64NDArray extends NumericNDArray {
       setWeight(weight);
    }
 
-   public SparseInt64NDArray(@NonNull long[] v) {
-      this(Shape.shape(v.length));
-      for (int i = 0; i < v.length; i++) {
-         set(i, v[i]);
-      }
-   }
 
-
-   public SparseInt64NDArray(@NonNull Shape shape, @NonNull long[] v) {
+   protected SparseInt64NDArray(@NonNull Shape shape, @NonNull long[] v) {
       this(shape);
       for (int i = 0; i < v.length; i++) {
          set(i, v[i]);
@@ -121,11 +115,6 @@ public class SparseInt64NDArray extends NumericNDArray {
    @Override
    public boolean isDense() {
       return false;
-   }
-
-   @Override
-   public boolean isNumeric() {
-      return true;
    }
 
    @Override
@@ -202,12 +191,27 @@ public class SparseInt64NDArray extends NumericNDArray {
    }
 
    @Override
+   public float[] toFloatArray() {
+      float[] out = new float[(int) length()];
+      forEachSparse((index, value) -> out[(int) index] = value.floatValue());
+      return out;
+   }
+
+   @Override
+   public int[] toIntArray() {
+      int[] out = new int[(int) length()];
+      forEachSparse((index, value) -> out[(int) index] = value.intValue());
+      return out;
+   }
+
+   @Override
    public double[] toDoubleArray() {
       double[] out = new double[(int) length()];
       forEachSparse((index, value) -> out[(int) index] = value.doubleValue());
       return out;
    }
 
+   @Override
    @JsonProperty("data")
    public long[] toLongArray() {
       long[] out = new long[(int) length()];
@@ -220,4 +224,4 @@ public class SparseInt64NDArray extends NumericNDArray {
       return nd.DINT64.array(shape(), toLongArray()).toTensor();
    }
 
-}
+}//END OF SparseInt64NDArray

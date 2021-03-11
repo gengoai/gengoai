@@ -24,9 +24,19 @@ import com.gengoai.apollo.math.linalg.ObjectNDArrayFactory;
 import com.gengoai.apollo.math.linalg.Shape;
 import lombok.NonNull;
 
+/**
+ * <p>Factory for creating Dense String NDArrays</p>
+ *
+ * @author David B. Bracewell
+ */
 public class DenseStringNDArrayFactory extends ObjectNDArrayFactory<String> {
+   /**
+    * The singleton instance of the Factory
+    */
+   public static final DenseStringNDArrayFactory INSTANCE = new DenseStringNDArrayFactory();
+   private static final long serialVersionUID = 1L;
 
-   public DenseStringNDArrayFactory() {
+   private DenseStringNDArrayFactory() {
       super(String.class);
    }
 
@@ -49,31 +59,8 @@ public class DenseStringNDArrayFactory extends ObjectNDArrayFactory<String> {
       return new DenseStringNDArray(a);
    }
 
-   @Override
-   public ObjectNDArray<String> array(String[][] a) {
-      if (a.length == 0 || a[0].length == 0) {
-         return empty();
-      }
-      return new DenseStringNDArray(a);
-   }
 
-   @Override
-   public ObjectNDArray<String> array(String[][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0) {
-         return empty();
-      }
-      return new DenseStringNDArray(a);
-   }
-
-   @Override
-   public ObjectNDArray<String> array(String[][][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0 || a[0][0][0].length == 0) {
-         return empty();
-      }
-      return new DenseStringNDArray(a);
-   }
-
-   public ObjectNDArray<String> scalar(String o){
+   public ObjectNDArray<String> scalar(String o) {
       return new DenseStringNDArray(new String[]{o});
    }
 
@@ -82,4 +69,4 @@ public class DenseStringNDArrayFactory extends ObjectNDArrayFactory<String> {
    public ObjectNDArray<String> zeros(@NonNull Shape shape) {
       return new DenseStringNDArray(shape);
    }
-}
+}//END OF DenseStringNDArrayFactory

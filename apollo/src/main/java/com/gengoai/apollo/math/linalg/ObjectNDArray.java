@@ -32,6 +32,8 @@ import java.util.function.UnaryOperator;
  * functions.</p>
  *
  * @param <T> the type parameter
+ *
+ * @author David B. Bracewell
  */
 public abstract class ObjectNDArray<T> extends NDArray {
    private static final long serialVersionUID = 1L;
@@ -285,7 +287,6 @@ public abstract class ObjectNDArray<T> extends NDArray {
    public ObjectNDArray<T> map(int axis,
                                @NonNull ObjectNDArray<T> rhs,
                                @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
       return NDArrayOps.map(this, axis, rhs, operator, null);
    }
 
@@ -319,8 +320,6 @@ public abstract class ObjectNDArray<T> extends NDArray {
                                int position,
                                T value,
                                @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
       return NDArrayOps.map(this, axis, position, value, operator, null);
    }
 
@@ -355,8 +354,6 @@ public abstract class ObjectNDArray<T> extends NDArray {
                                int position,
                                ObjectNDArray<T> rhs,
                                @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
       return NDArrayOps.map(this, axis, position, rhs, operator, null);
    }
 
@@ -507,8 +504,8 @@ public abstract class ObjectNDArray<T> extends NDArray {
                                 int position,
                                 T rhs,
                                 @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
+//      checkAxis(axis, this);
+//      checkDimension(axis, position, this);
       return NDArrayOps.map(this, axis, position, rhs, operator, this);
    }
 
@@ -543,8 +540,6 @@ public abstract class ObjectNDArray<T> extends NDArray {
                                 int position,
                                 ObjectNDArray<T> rhs,
                                 @NonNull BinaryOperator<T> operator) {
-      checkAxis(axis, this);
-      checkDimension(axis, position, this);
       return NDArrayOps.map(this, axis, position, rhs, operator, this);
    }
 

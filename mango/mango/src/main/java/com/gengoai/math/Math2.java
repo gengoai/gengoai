@@ -203,6 +203,19 @@ public final class Math2 {
    }
 
    /**
+    * Safe log double.
+    *
+    * @param d the d
+    * @return the double
+    */
+   public static double safeLog2(double d) {
+      if (Double.isFinite(d)) {
+         return d <= 0d ? -10 : Math.log(d) / Math.log(2);
+      }
+      return 0d;
+   }
+
+   /**
     * <p>Sums the numbers in a given iterable treating them as doubles.</p>
     *
     * @param values the iterable of numbers to sum

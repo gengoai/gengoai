@@ -32,16 +32,17 @@ import org.tensorflow.Tensor;
 
 import java.util.Arrays;
 
+/**
+ * <p>Sparse NDArray representing String values.</p>
+ *
+ * @author David B. Bracewell
+ */
 public class SparseStringNDArray extends ObjectNDArray<String> {
+   private static final long serialVersionUID = 1L;
    private OpenIntObjectHashMap<String>[] data;
 
-   /**
-    * Instantiates a new Nd array.
-    *
-    * @param shape the shape
-    */
    @SuppressWarnings("unchecked")
-   public SparseStringNDArray(Shape shape) {
+   protected SparseStringNDArray(Shape shape) {
       super(shape);
       this.data = new OpenIntObjectHashMap[shape.sliceLength()];
       for (int i = 0; i < shape.sliceLength(); i++) {
@@ -49,50 +50,10 @@ public class SparseStringNDArray extends ObjectNDArray<String> {
       }
    }
 
-   public SparseStringNDArray(@NonNull String[] v) {
-      this(Shape.shape(v.length));
-      for (int i = 0; i < v.length; i++) {
-         set(i, v[i]);
-      }
-   }
-
-   public SparseStringNDArray(@NonNull Shape shape, @NonNull String[] v) {
+   protected SparseStringNDArray(@NonNull Shape shape, @NonNull String[] v) {
       this(shape);
       for (int i = 0; i < v.length; i++) {
          set(i, v[i]);
-      }
-   }
-
-   public SparseStringNDArray(@NonNull String[][] v) {
-      this(Shape.shape(v.length, v[0].length));
-      for (int row = 0; row < v.length; row++) {
-         for (int col = 0; col < v[row].length; col++) {
-            set(row, col, v[row][col]);
-         }
-      }
-   }
-
-   public SparseStringNDArray(@NonNull String[][][] v) {
-      this(Shape.shape(v.length, v[0].length, v[0][0].length));
-      for (int channel = 0; channel < v.length; channel++) {
-         for (int row = 0; row < v[channel].length; row++) {
-            for (int col = 0; col < v[channel][row].length; col++) {
-               set(channel, row, col, v[channel][row][col]);
-            }
-         }
-      }
-   }
-
-   public SparseStringNDArray(@NonNull String[][][][] v) {
-      this(Shape.shape(v.length, v[0].length, v[0][0].length, v[0][0][0].length));
-      for (int kernel = 0; kernel < v.length; kernel++) {
-         for (int channel = 0; channel < v[kernel].length; channel++) {
-            for (int row = 0; row < v[kernel][channel].length; row++) {
-               for (int col = 0; col < v[kernel][channel][row].length; col++) {
-                  set(kernel, channel, row, col, v[kernel][channel][row][col]);
-               }
-            }
-         }
       }
    }
 
@@ -146,11 +107,6 @@ public class SparseStringNDArray extends ObjectNDArray<String> {
 
    @Override
    public boolean isDense() {
-      return false;
-   }
-
-   @Override
-   public boolean isNumeric() {
       return false;
    }
 
@@ -235,4 +191,5 @@ public class SparseStringNDArray extends ObjectNDArray<String> {
    public Tensor<?> toTensor() {
       return nd.DSTRING.array(shape(), toArray()).toTensor();
    }
-}
+
+}//END OF SparseStringNDArray

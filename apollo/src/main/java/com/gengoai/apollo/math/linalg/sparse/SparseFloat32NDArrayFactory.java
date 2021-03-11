@@ -24,20 +24,24 @@ import com.gengoai.apollo.math.linalg.NumericNDArrayFactory;
 import com.gengoai.apollo.math.linalg.Shape;
 import lombok.NonNull;
 
+/**
+ * <p>Factory for creating Sparse 32-bit flot NDArrays</p>
+ *
+ * @author David B. Bracewell
+ */
 public class SparseFloat32NDArrayFactory extends NumericNDArrayFactory {
+   /**
+    * The singleton instance of the Factory
+    */
+   public static final SparseFloat32NDArrayFactory INSTANCE = new SparseFloat32NDArrayFactory();
    private static final long serialVersionUID = 1L;
 
-   public SparseFloat32NDArrayFactory() {
+   private SparseFloat32NDArrayFactory() {
       super(float.class);
    }
 
-   public NumericNDArray array(float[] a) {
-      if (a.length == 0) {
-         return empty();
-      }
-      return new SparseFloat32NDArray(a);
-   }
 
+   @Override
    public NumericNDArray array(@NonNull Shape shape, float[] a) {
       if (shape.length() != a.length) {
          throw new IllegalArgumentException("Length mismatch " + a.length + " != " + shape.length());
@@ -47,35 +51,15 @@ public class SparseFloat32NDArrayFactory extends NumericNDArrayFactory {
       return new SparseFloat32NDArray(shape, a);
    }
 
-   public NumericNDArray array(float[][] a) {
-      if (a.length == 0 || a[0].length == 0) {
-         return empty();
-      }
-      return new SparseFloat32NDArray(a);
-   }
-
-   public NumericNDArray array(float[][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0) {
-         return empty();
-      }
-      return new SparseFloat32NDArray(a);
-   }
-
-   public NumericNDArray array(float[][][][] a) {
-      if (a.length == 0 || a[0].length == 0 || a[0][0].length == 0 || a[0][0][0].length == 0) {
-         return empty();
-      }
-      return new SparseFloat32NDArray(a);
-   }
 
    @Override
    public NumericNDArray scalar(@NonNull Number value) {
-      return new SparseFloat32NDArray(new float[]{value.floatValue()});
+      return array(new float[]{value.floatValue()});
    }
-
 
    @Override
    public NumericNDArray zeros(@NonNull Shape shape) {
       return new SparseFloat32NDArray(shape);
    }
-}
+
+}//END OF SparseFloat32NDArrayFactory

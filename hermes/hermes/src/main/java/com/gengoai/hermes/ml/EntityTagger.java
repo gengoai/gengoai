@@ -19,11 +19,11 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.DataSetType;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.feature.FeatureExtractor;
-import com.gengoai.apollo.ml.feature.Featurizer;
-import com.gengoai.apollo.ml.model.sequence.Crf;
+import com.gengoai.apollo.data.DataSetType;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.feature.FeatureExtractor;
+import com.gengoai.apollo.feature.Featurizer;
+import com.gengoai.apollo.model.sequence.Crf;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.DocumentCollection;

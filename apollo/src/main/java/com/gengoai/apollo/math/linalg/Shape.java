@@ -34,6 +34,8 @@ import static com.gengoai.apollo.math.linalg.Index.zero;
 
 /**
  * <p>Encapsulates the dimensions, i.e. shape, of an {@link NDArray}.</p>
+ *
+ * @author David B. Bracewell
  */
 public class Shape extends Coordinate implements Copyable<Shape> {
    /**
@@ -92,6 +94,24 @@ public class Shape extends Coordinate implements Copyable<Shape> {
          intD[i] = (int) dimensions[i];
       }
       return new Shape(intD);
+   }
+
+   /**
+    * <p>Determines if and how an NDArray with the given <code>rhs</code> shape cab be broadcasted onto an NDArray of
+    * this shape along the given <code>axis</code>.</p>
+    *
+    * @param rhs the right-hand NDArray shape
+    * @param axis the axis an operation will be performed on
+    * @return the Broadcast type
+    */
+   public Broadcast accepts(@NonNull Shape rhs, int axis) {
+      var absAxis = toAbsolute(axis);
+      var broadcast = accepts(rhs);
+      if ((broadcast == Broadcast.TENSOR_ROW || broadcast == Broadcast.TENSOR_COLUMN)
+            && (absAxis == KERNEL || absAxis == CHANNEL)) {
+         return Broadcast.TENSOR;
+      }
+      return broadcast;
    }
 
    /**

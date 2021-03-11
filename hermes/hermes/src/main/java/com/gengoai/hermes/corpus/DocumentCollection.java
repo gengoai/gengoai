@@ -19,10 +19,10 @@
 
 package com.gengoai.hermes.corpus;
 
-import com.gengoai.apollo.math.statistics.measure.Association;
-import com.gengoai.apollo.math.statistics.measure.ContingencyTable;
-import com.gengoai.apollo.math.statistics.measure.ContingencyTableCalculator;
-import com.gengoai.apollo.ml.DataSet;
+import com.gengoai.apollo.math.measure.Association;
+import com.gengoai.apollo.math.measure.ContingencyTable;
+import com.gengoai.apollo.math.measure.ContingencyTableCalculator;
+import com.gengoai.apollo.data.DataSet;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.multimap.ArrayListMultimap;
 import com.gengoai.collection.multimap.ListMultimap;

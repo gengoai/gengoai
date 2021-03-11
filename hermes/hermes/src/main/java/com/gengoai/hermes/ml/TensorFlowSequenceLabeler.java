@@ -19,16 +19,15 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.model.LabelType;
-import com.gengoai.apollo.ml.model.Model;
-import com.gengoai.apollo.ml.model.TFVarSpec;
-import com.gengoai.apollo.ml.model.TensorFlowModel;
-import com.gengoai.apollo.ml.model.sequence.SequenceValidator;
-import com.gengoai.apollo.ml.observation.Observation;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.model.LabelType;
+import com.gengoai.apollo.model.Model;
+import com.gengoai.apollo.model.TFVarSpec;
+import com.gengoai.apollo.model.TensorFlowModel;
+import com.gengoai.apollo.model.sequence.SequenceValidator;
+import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
 import lombok.NonNull;

@@ -21,6 +21,8 @@ package com.gengoai.apollo.math.linalg;
 
 /**
  * <p>Describes the type of broadcasting required to complete a mapping operation</p>
+ *
+ * @author David B. Bracewell
  */
 public enum Broadcast {
    /**

@@ -19,22 +19,20 @@
 
 package com.gengoai.hermes.zh;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreType;
-import com.gengoai.apollo.ml.feature.ObservationExtractor;
-import com.gengoai.apollo.ml.observation.*;
+import com.gengoai.apollo.feature.ObservationExtractor;
+import com.gengoai.apollo.data.observation.*;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.lexicon.WordList;
 import com.gengoai.string.CharMatcher;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.gengoai.apollo.ml.observation.Variable.binary;
+import static com.gengoai.apollo.data.observation.Variable.binary;
 
 public class ZHSegmentationExtractor implements ObservationExtractor<HString> {
    @NonNull

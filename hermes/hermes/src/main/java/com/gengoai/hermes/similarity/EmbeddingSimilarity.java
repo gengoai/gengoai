@@ -20,7 +20,7 @@
 package com.gengoai.hermes.similarity;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.statistics.measure.Similarity;
+import com.gengoai.apollo.math.measure.Similarity;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import lombok.AccessLevel;

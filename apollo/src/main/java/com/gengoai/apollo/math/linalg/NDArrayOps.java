@@ -65,6 +65,11 @@ class NDArrayOps {
                                        V value,
                                        @NonNull BinaryOperator<V> operator,
                                        T target) {
+
+      if (lhs.isEmpty()) {
+         return Cast.as(lhs.copy());
+      }
+
       int absAxis = lhs.shape().toAbsolute(axis);
       if (position < lhs.shape().get(absAxis)) {
          T out = ensureNDArray(lhs, target, true);
@@ -72,6 +77,7 @@ class NDArrayOps {
             .forEach(ii -> out.set(ii, operator.apply(Cast.as(lhs.get(ii)), Cast.as(value))));
          return out;
       }
+
       throw new IllegalArgumentException("Unable to map along axis (" +
                                                axis +
                                                ") at position  (" +
@@ -88,7 +94,6 @@ class NDArrayOps {
       if (broadcast == Broadcast.ERROR) {
          throw new IllegalArgumentException(unableToBroadcast(rhs.shape(), lhs.shape(), broadcast));
       }
-
       switch (broadcast) {
          case EMPTY:
             return Cast.as(lhs.copy());
@@ -127,7 +132,7 @@ class NDArrayOps {
                                        @NonNull BinaryOperator<V> operator,
                                        T target) {
 
-      var broadcast = lhs.shape().accepts(rhs.shape());
+      var broadcast = lhs.shape().accepts(rhs.shape(), axis);
       if (broadcast == Broadcast.ERROR) {
          throw new IllegalArgumentException(unableToBroadcast(rhs.shape(), lhs.shape(), broadcast));
       }
@@ -149,7 +154,7 @@ class NDArrayOps {
          case MATRIX_ROW:
          case MATRIX_COLUMN: {
             int cmpAxis = absAxis == Shape.ROW ? Shape.COLUMN : Shape.ROW;
-            T out = ensureNDArray(lhs, target, false);
+            T out = ensureNDArray(lhs, target, true);
             for (Index index : lhsShape.range()) {
                V l = Cast.as(lhs.get(index));
                V r = Cast.as(rhs.get(rhs.shape().broadcast(index).get(cmpAxis)));
@@ -200,7 +205,7 @@ class NDArrayOps {
                                        @NonNull BinaryOperator<V> operator,
                                        T target) {
 
-      var broadcast = lhs.shape().accepts(rhs.shape());
+      var broadcast = lhs.shape().accepts(rhs.shape(), axis);
       if (broadcast == Broadcast.ERROR) {
          throw new IllegalArgumentException(unableToBroadcast(rhs.shape(), lhs.shape(), broadcast));
       }
@@ -208,18 +213,21 @@ class NDArrayOps {
       var lhsShape = lhs.shape();
       var rhsShape = rhs.shape();
       int absAxis = lhsShape.toAbsolute(axis);
-
       switch (broadcast) {
          case EMPTY:
             return Cast.as(lhs.copy());
+
          case SCALAR:
             return map(lhs, axis, position, Cast.<V>as(rhs.scalar()), operator, target);
+
          case VECTOR:
             return map(lhs, rhs, operator, target);
+
+         case MATRIX:
          case MATRIX_ROW:
          case MATRIX_COLUMN: {
             int cmpAxis = absAxis == Shape.ROW ? Shape.COLUMN : Shape.ROW;
-            T out = ensureNDArray(lhs, target, false);
+            T out = ensureNDArray(lhs, target, true);
             Index start = Index.zero().set(absAxis, position);
             Index end = lhsShape.asIndex(absAxis, position + 1);
             for (Index index : start.boundedIteratorTo(end)) {
@@ -250,6 +258,7 @@ class NDArrayOps {
             return out;
          }
 
+         case TENSOR:
          case TENSOR_CHANNEL:
          case TENSOR_KERNEL: {
             return mapSliceRange(lhs,
@@ -317,7 +326,7 @@ class NDArrayOps {
                                    @NonNull DoubleBinaryOperator operator,
                                    NumericNDArray target) {
 
-      var broadcast = lhs.shape().accepts(rhs.shape());
+      var broadcast = lhs.shape().accepts(rhs.shape(), axis);
       if (broadcast == Broadcast.ERROR) {
          throw new IllegalArgumentException(unableToBroadcast(rhs.shape(), lhs.shape(), broadcast));
       }
@@ -326,6 +335,8 @@ class NDArrayOps {
       int absAxis = lhsShape.toAbsolute(axis);
 
       switch (broadcast) {
+         case EMPTY:
+            return Cast.as(lhs.copy());
 
          case SCALAR:
             return mapDouble(lhs, rhs.scalarDouble(), operator, target);
@@ -385,7 +396,7 @@ class NDArrayOps {
                                    @NonNull DoubleBinaryOperator operator,
                                    NumericNDArray target) {
 
-      var broadcast = lhs.shape().accepts(rhs.shape());
+      var broadcast = lhs.shape().accepts(rhs.shape(), axis);
       if (broadcast == Broadcast.ERROR) {
          throw new IllegalArgumentException(unableToBroadcast(rhs.shape(), lhs.shape(), broadcast));
       }
@@ -402,6 +413,7 @@ class NDArrayOps {
          case VECTOR:
             return mapDouble(lhs, rhs, operator, target);
 
+         case MATRIX:
          case MATRIX_ROW:
          case MATRIX_COLUMN: {
             int cmpAxis = absAxis == Shape.ROW ? Shape.COLUMN : Shape.ROW;
@@ -435,6 +447,7 @@ class NDArrayOps {
             return out;
          }
 
+         case TENSOR:
          case TENSOR_CHANNEL:
          case TENSOR_KERNEL: {
             return mapDoubleSliceRange(lhs,
@@ -460,6 +473,10 @@ class NDArrayOps {
                                    double value,
                                    @NonNull DoubleBinaryOperator operator,
                                    NumericNDArray target) {
+      if( lhs.isEmpty() ){
+         return lhs.copy();
+      }
+
       int absAxis = lhs.shape().toAbsolute(axis);
       if (axisValue < lhs.shape().get(absAxis)) {
          NumericNDArray out = ensureNDArray(lhs, target, true);
@@ -510,18 +527,6 @@ class NDArrayOps {
    }
 
 
-   static NumericNDArray mapSlice(Shape outputShape,
-                                  NumericNDArray lhs,
-                                  NumericNDArray rhs,
-                                  BiFunction<NumericNDArray, NumericNDArray, NumericNDArray> operator) {
-      NumericNDArray out = lhs.factory().zeros(outputShape);
-      for (int i = 0; i < lhs.shape().sliceLength(); i++) {
-         int rslice = rhs.shape().sliceLength() == 1 ? 0 : i;
-         out.setSlice(i, operator.apply(lhs.slice(i), rhs.slice(rslice)));
-      }
-      return out;
-   }
-
 
    static <T extends NDArray, V> T mapSliceRange(T lhs,
                                                  NDArray rhs,
@@ -535,6 +540,7 @@ class NDArrayOps {
          try {
             map(lhs.slice(index), rhs.slice(index), operator, out.slice(index));
          } catch (RuntimeException e) {
+            e.printStackTrace();
             throw new IllegalArgumentException(unableToBroadcast(rhsShape, lhsShape, Broadcast.ERROR));
          }
       }

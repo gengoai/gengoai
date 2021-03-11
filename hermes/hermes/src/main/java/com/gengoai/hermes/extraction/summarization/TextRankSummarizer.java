@@ -19,7 +19,7 @@
 
 package com.gengoai.hermes.extraction.summarization;
 
-import com.gengoai.apollo.math.statistics.measure.Similarity;
+import com.gengoai.apollo.math.measure.Similarity;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.graph.Graph;
 import com.gengoai.graph.scoring.PageRank;

@@ -35,15 +35,16 @@ import java.util.Arrays;
 
 import static com.gengoai.Validation.checkArgument;
 
+/**
+ * <p>Sparse NDArray representing 32-bit int values.</p>
+ *
+ * @author David B. Bracewell
+ */
 public class SparseInt32NDArray extends NumericNDArray {
+   private static final long serialVersionUID = 1L;
    private OpenIntIntHashMap[] data;
 
-   /**
-    * Instantiates a new Nd array.
-    *
-    * @param shape the shape
-    */
-   public SparseInt32NDArray(Shape shape) {
+   protected SparseInt32NDArray(Shape shape) {
       super(shape);
       this.data = new OpenIntIntHashMap[shape.sliceLength()];
       for (int i = 0; i < shape.sliceLength(); i++) {
@@ -63,22 +64,12 @@ public class SparseInt32NDArray extends NumericNDArray {
       setWeight(weight);
    }
 
-   public SparseInt32NDArray(@NonNull int[] v) {
-      this(Shape.shape(v.length));
-      for (int i = 0; i < v.length; i++) {
-         set(i, v[i]);
-      }
-   }
-
-
-   public SparseInt32NDArray(@NonNull Shape shape, @NonNull int[] v) {
+   protected SparseInt32NDArray(@NonNull Shape shape, @NonNull int[] v) {
       this(shape);
       for (int i = 0; i < v.length; i++) {
          set(i, v[i]);
       }
    }
-
-
 
    @Override
    public NumericNDArray compact() {
@@ -122,11 +113,6 @@ public class SparseInt32NDArray extends NumericNDArray {
    @Override
    public boolean isDense() {
       return false;
-   }
-
-   @Override
-   public boolean isNumeric() {
-      return true;
    }
 
    @Override
@@ -209,10 +195,26 @@ public class SparseInt32NDArray extends NumericNDArray {
       return out;
    }
 
+
+   @Override
+   public float[] toFloatArray() {
+      float[] out = new float[(int) length()];
+      forEachSparse((index, value) -> out[(int) index] = value.floatValue());
+      return out;
+   }
+
    @JsonProperty("data")
+   @Override
    public int[] toIntArray() {
       int[] out = new int[(int) length()];
       forEachSparse((index, value) -> out[(int) index] = value.intValue());
+      return out;
+   }
+
+   @Override
+   public long[] toLongArray() {
+      long[] out = new long[(int) length()];
+      forEachSparse((index, value) -> out[(int) index] = value.longValue());
       return out;
    }
 
@@ -221,4 +223,4 @@ public class SparseInt32NDArray extends NumericNDArray {
       return nd.DINT32.array(shape(), toIntArray()).toTensor();
    }
 
-}
+}//END OF SparseInt32NDArray

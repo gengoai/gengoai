@@ -19,15 +19,16 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.encoder.NoOptEncoder;
-import com.gengoai.apollo.ml.model.*;
-import com.gengoai.apollo.ml.observation.Observation;
-import com.gengoai.apollo.ml.observation.Variable;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.model.LabelType;
+import com.gengoai.apollo.model.Model;
+import com.gengoai.apollo.encoder.NoOptEncoder;
+import com.gengoai.apollo.model.*;
+import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.collection.Iterators;
 import com.gengoai.collection.Maps;
 import com.gengoai.hermes.Annotation;

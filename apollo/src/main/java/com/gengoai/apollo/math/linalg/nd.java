@@ -35,48 +35,50 @@ import java.util.function.UnaryOperator;
 
 /**
  * <p>Convenience methods for manipulating NDArray.</p>
+ *
+ * @author David B. Bracewell
  */
 public final class nd {
    /**
     * Factory for creating a dense NumericNDArray that use ints for storage
     */
-   public static final DenseInt32NDArrayFactory DINT32 = new DenseInt32NDArrayFactory();
+   public static final DenseInt32NDArrayFactory DINT32 = DenseInt32NDArrayFactory.INSTANCE;
    /**
     * Factory for creating a dense NumericNDArray that use longs for storage
     */
-   public static final DenseInt64NDArrayFactory DINT64 = new DenseInt64NDArrayFactory();
+   public static final DenseInt64NDArrayFactory DINT64 = DenseInt64NDArrayFactory.INSTANCE;
    /**
     * Factory for creating a dense NumericNDArray that use floats for storage
     */
-   public static final DenseFloat32NDArrayFactory DFLOAT32 = new DenseFloat32NDArrayFactory();
+   public static final DenseFloat32NDArrayFactory DFLOAT32 = DenseFloat32NDArrayFactory.INSTANCE;
    /**
     * Factory for creating a dense NumericNDArray that use doubles for storage
     */
-   public static final DenseFloat64NDArrayFactory DFLOAT64 = new DenseFloat64NDArrayFactory();
+   public static final DenseFloat64NDArrayFactory DFLOAT64 = DenseFloat64NDArrayFactory.INSTANCE;
    /**
     * Factory for creating a dense ObjectNDArray with String as the data type
     */
-   public static final DenseStringNDArrayFactory DSTRING = new DenseStringNDArrayFactory();
+   public static final DenseStringNDArrayFactory DSTRING = DenseStringNDArrayFactory.INSTANCE;
    /**
     * Factory for creating a sparse NumericNDArray that use floats for storage
     */
-   public static final SparseFloat32NDArrayFactory SFLOAT32 = new SparseFloat32NDArrayFactory();
+   public static final SparseFloat32NDArrayFactory SFLOAT32 = SparseFloat32NDArrayFactory.INSTANCE;
    /**
     * Factory for creating a sparse NumericNDArray that use double for storage
     */
-   public static final SparseFloat64NDArrayFactory SFLOAT64 = new SparseFloat64NDArrayFactory();
+   public static final SparseFloat64NDArrayFactory SFLOAT64 = SparseFloat64NDArrayFactory.INSTANCE;
    /**
     * Factory for creating a sparse NumericNDArray that use long for storage
     */
-   public static final SparseInt32NDArrayFactory SINT32 = new SparseInt32NDArrayFactory();
+   public static final SparseInt32NDArrayFactory SINT32 = SparseInt32NDArrayFactory.INSTANCE;
    /**
     * Factory for creating a sparse NumericNDArray that use long for storage
     */
-   public static final SparseInt64NDArrayFactory SINT64 = new SparseInt64NDArrayFactory();
+   public static final SparseInt64NDArrayFactory SINT64 = SparseInt64NDArrayFactory.INSTANCE;
    /**
     * Factory for creating a sparse ObjectNDArray with String as the data type
     */
-   public static final SparseStringNDArrayFactory SSTRING = new SparseStringNDArrayFactory();
+   public static final SparseStringNDArrayFactory SSTRING = SparseStringNDArrayFactory.INSTANCE;
 
    private nd() {
       throw new IllegalAccessError();
@@ -89,7 +91,7 @@ public final class nd {
     * @return the new NumericNDArray with absolute values
     */
    public static NumericNDArray abs(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::abs);
+      return n.map(Math::abs);
    }
 
    /**
@@ -99,7 +101,7 @@ public final class nd {
     * @return the given NumericNDArray
     */
    public static NumericNDArray absi(@NonNull NumericNDArray n) {
-      return n.mapiDouble(Math::abs);
+      return n.mapi(Math::abs);
    }
 
 
@@ -111,7 +113,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math.ceil</code> applied
     */
    public static NumericNDArray ceil(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::ceil);
+      return n.map(Math::ceil);
    }
 
    /**
@@ -121,7 +123,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math.ceil</code> applied
     */
    public static NumericNDArray ceili(@NonNull NumericNDArray n) {
-      return n.mapiDouble(Math::ceil);
+      return n.mapi(Math::ceil);
    }
 
    /**
@@ -283,30 +285,33 @@ public final class nd {
       return concatenate(Shape.CHANNEL, arrays);
    }
 
+
    /**
-    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
-    * <code>threshold</code>, setting the value to <code>thresholded</code> when the threshold is met and to
-    * <code>nonThresholdedValue</code> when not met. Results are stored in a new NDArray</p>
+    * <p>Tests if the values in the given <code>lhs</code> are equal to the values in the given <code>rhs</code>
+    * NDArray, setting the value to the value in the <code>lhs</code> NDArray when they are equal and to
+    * <code>notEqualValue</code> when they are not. Results are stored in a new NDArray</p>
     *
-    * @param lhs           the lefth-hand side NDArray
-    * @param notEqualValue the non thresholded value
+    * @param lhs           the left-hand side NDArray whose values are being tested.
+    * @param rhs           the right-hand side NDArray being tested against.
+    * @param notEqualValue the value to assign on non-equality
     * @return the NumericNDArray
     */
    public static NumericNDArray eq(@NonNull NumericNDArray lhs,
                                    @NonNull NumericNDArray rhs,
                                    double notEqualValue) {
       Validation.checkArgument(lhs.shape().equals(rhs.shape()), "Shape mismatch " + rhs.shape() + " != " + lhs.shape());
-      return lhs.mapDouble(rhs, (a, b) -> a == b ? a : notEqualValue);
+      return lhs.map(rhs, (a, b) -> a == b ? a : notEqualValue);
    }
 
    /**
-    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
-    * <code>threshold</code>, setting the value to <code>thresholded</code> when the threshold is met and to
-    * <code>nonThresholdedValue</code> when not met. Results are stored in a new NDArray</p>
+    * <p>Tests if the values in the given <code>lhs</code> are equal to the values in the given <code>rhs</code>
+    * NDArray, setting the value to <code>equalValue</code> when they are equal and to <code>notEqualValue</code> when
+    * they are not. Results are stored in a new NDArray</p>
     *
-    * @param lhs           the lefth-hand side NDArray
-    * @param equalValue    the value to use when the two values are equal
-    * @param notEqualValue the non thresholded value
+    * @param lhs           the left-hand side NDArray whose values are being tested.
+    * @param rhs           the right-hand side NDArray being tested against.
+    * @param equalValue    the value to assign on equality
+    * @param notEqualValue the value to assign on non-equality
     * @return the NumericNDArray
     */
    public static NumericNDArray eq(@NonNull NumericNDArray lhs,
@@ -314,7 +319,43 @@ public final class nd {
                                    double equalValue,
                                    double notEqualValue) {
       Validation.checkArgument(lhs.shape().equals(rhs.shape()), "Shape mismatch " + rhs.shape() + " != " + lhs.shape());
-      return lhs.mapDouble(rhs, (a, b) -> a == b ? equalValue : notEqualValue);
+      return lhs.map(rhs, (a, b) -> a == b ? equalValue : notEqualValue);
+   }
+
+   /**
+    * <p>Tests if the values in the given <code>lhs</code> are equal to the values in the given <code>rhs</code>
+    * NDArray, setting the value to the value in the <code>lhs</code> NDArray when they are equal and to
+    * <code>notEqualValue</code> when they are not. The <code>lhs</code> NDArray is updated in-place.</p>
+    *
+    * @param lhs           the left-hand side NDArray whose values are being tested.
+    * @param rhs           the right-hand side NDArray being tested against.
+    * @param notEqualValue the value to assign on non-equality
+    * @return the NumericNDArray
+    */
+   public static NumericNDArray eqi(@NonNull NumericNDArray lhs,
+                                    @NonNull NumericNDArray rhs,
+                                    double notEqualValue) {
+      Validation.checkArgument(lhs.shape().equals(rhs.shape()), "Shape mismatch " + rhs.shape() + " != " + lhs.shape());
+      return lhs.mapi(rhs, (a, b) -> a == b ? a : notEqualValue);
+   }
+
+   /**
+    * <p>Tests if the values in the given <code>lhs</code> are equal to the values in the given <code>rhs</code>
+    * NDArray, setting the value to <code>equalValue</code> when they are equal and to <code>notEqualValue</code> when
+    * they are not. The <code>lhs</code> NDArray is updated in-place.</p>
+    *
+    * @param lhs           the left-hand side NDArray whose values are being tested.
+    * @param rhs           the right-hand side NDArray being tested against.
+    * @param equalValue    the value to assign on equality
+    * @param notEqualValue the value to assign on non-equality
+    * @return the NumericNDArray
+    */
+   public static NumericNDArray eqi(@NonNull NumericNDArray lhs,
+                                    @NonNull NumericNDArray rhs,
+                                    double equalValue,
+                                    double notEqualValue) {
+      Validation.checkArgument(lhs.shape().equals(rhs.shape()), "Shape mismatch " + rhs.shape() + " != " + lhs.shape());
+      return lhs.mapi(rhs, (a, b) -> a == b ? equalValue : notEqualValue);
    }
 
    /**
@@ -325,7 +366,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math.exp</code> applied
     */
    public static NumericNDArray exp(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::exp);
+      return n.map(Math::exp);
    }
 
    /**
@@ -335,7 +376,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math.exp</code> applied
     */
    public static NumericNDArray expi(@NonNull NumericNDArray n) {
-      return n.mapiDouble(Math::exp);
+      return n.mapi(Math::exp);
    }
 
    /**
@@ -346,7 +387,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math.floor</code> applied
     */
    public static NumericNDArray floor(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::floor);
+      return n.map(Math::floor);
    }
 
    /**
@@ -356,7 +397,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math.floor</code> applied
     */
    public static NumericNDArray floori(@NonNull NumericNDArray n) {
-      return n.mapiDouble(Math::floor);
+      return n.mapi(Math::floor);
    }
 
    /**
@@ -390,7 +431,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math2.safeLog</code> applied
     */
    public static NumericNDArray log(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math2::safeLog);
+      return n.map(Math2::safeLog);
    }
 
    /**
@@ -401,7 +442,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math.log10</code> applied
     */
    public static NumericNDArray log10(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::log10);
+      return n.map(Math::log10);
    }
 
    /**
@@ -411,7 +452,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math.log10</code> applied
     */
    public static NumericNDArray log10i(@NonNull NumericNDArray n) {
-      return n.mapiDouble(Math::log10);
+      return n.mapi(Math::log10);
    }
 
    /**
@@ -421,7 +462,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math2.safeLog</code> applied
     */
    public static NumericNDArray logi(@NonNull NumericNDArray n) {
-      return n.mapiDouble(Math2::safeLog);
+      return n.mapi(Math2::safeLog);
    }
 
    /**
@@ -654,7 +695,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math.pow</code> applied
     */
    public static NumericNDArray pow(@NonNull NumericNDArray n, int power) {
-      return n.mapDouble(d -> Math.pow(d, power));
+      return n.map(d -> Math.pow(d, power));
    }
 
    /**
@@ -665,7 +706,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math.pow</code> applied
     */
    public static NumericNDArray powi(@NonNull NumericNDArray n, int power) {
-      return n.mapiDouble(d -> Math.pow(d, power));
+      return n.mapi(d -> Math.pow(d, power));
    }
 
    /**
@@ -676,7 +717,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math.round</code> applied
     */
    public static NumericNDArray round(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::round);
+      return n.map(Math::round);
    }
 
    /**
@@ -686,7 +727,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math.round</code> applied
     */
    public static NumericNDArray roundi(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::round);
+      return n.map(Math::round);
    }
 
    /**
@@ -697,7 +738,7 @@ public final class nd {
     * @return the new NumericNDArray with the sigmoid applied
     */
    public static NumericNDArray sigmoid(@NonNull NumericNDArray n) {
-      return n.mapDouble(x -> 1.0 / (1.0 + Math.exp(-x)));
+      return n.map(x -> 1.0 / (1.0 + Math.exp(-x)));
    }
 
    /**
@@ -707,7 +748,7 @@ public final class nd {
     * @return the given NumericNDArray with the sigmoid applied
     */
    public static NumericNDArray sigmoidi(@NonNull NumericNDArray n) {
-      return n.mapDouble(x -> 1.0 / (1.0 + Math.exp(-x)));
+      return n.map(x -> 1.0 / (1.0 + Math.exp(-x)));
    }
 
    /**
@@ -718,7 +759,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math.signum</code> applied
     */
    public static NumericNDArray signum(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::signum);
+      return n.map(Math::signum);
    }
 
    /**
@@ -728,7 +769,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math.signum</code> applied
     */
    public static NumericNDArray signumi(@NonNull NumericNDArray n) {
-      return n.mapiDouble(Math::signum);
+      return n.mapi(Math::signum);
    }
 
    /**
@@ -739,7 +780,7 @@ public final class nd {
     * @return the new NumericNDArray with <code>Math.sqrt</code> applied
     */
    public static NumericNDArray sqrt(@NonNull NumericNDArray n) {
-      return n.mapDouble(Math::sqrt);
+      return n.map(Math::sqrt);
    }
 
    /**
@@ -749,7 +790,7 @@ public final class nd {
     * @return the given NumericNDArray with <code>Math.sqrt</code> applied
     */
    public static NumericNDArray sqrti(@NonNull NumericNDArray n) {
-      return n.mapiDouble(Math::sqrt);
+      return n.mapi(Math::sqrt);
    }
 
    /**
@@ -759,7 +800,7 @@ public final class nd {
     * @return the given NumericNDArray
     */
    public static NumericNDArray square(@NonNull NumericNDArray n) {
-      return n.mapDouble(d -> d * d);
+      return n.map(d -> d * d);
    }
 
    /**
@@ -769,7 +810,7 @@ public final class nd {
     * @return the given NumericNDArray
     */
    public static NumericNDArray squarei(@NonNull NumericNDArray n) {
-      return n.mapiDouble(d -> d * d);
+      return n.mapi(d -> d * d);
    }
 
    /**
@@ -789,27 +830,24 @@ public final class nd {
                                      double threshold,
                                      double thresholdedValue,
                                      double nonThresholdedValue) {
-      return n.mapDouble(d -> comparison.compare(d, threshold) ? thresholdedValue : nonThresholdedValue);
+      return n.map(d -> comparison.compare(d, threshold) ? thresholdedValue : nonThresholdedValue);
    }
 
    /**
-    * <p>Tests the values in the given NDArray using the given <code>comparison</code> against the given
-    * <code>threshold</code>, setting the value to <code>thresholded</code> when the threshold is met and to
-    * <code>nonThresholdedValue</code> when not met. Results are stored in a new NDArray</p>
+    * <p>Tests the values in the <code>lhs</code> NDArray against the values in the <code>rhs</code> NDArray using the
+    * given <code>comparison</code>, setting the outcome to <code>1</code> when the values are equals and to
+    * <code>0</code> when they are not equal. Results are stored in a new NDArray</p>
     *
-    * @param lhs                 the lefth-hand side NDArray
-    * @param comparison          the comparison
-    * @param thresholdedValue    the thresholded value
-    * @param nonThresholdedValue the non thresholded value
+    * @param lhs        the left-hand side NDArray whose values are being tested.
+    * @param rhs        the right-hand side NDArray being tested against.
+    * @param comparison the comparison
     * @return the NumericNDArray
     */
    public static NumericNDArray test(@NonNull NumericNDArray lhs,
                                      @NonNull NumericNDArray rhs,
-                                     @NonNull NumericComparison comparison,
-                                     double thresholdedValue,
-                                     double nonThresholdedValue) {
+                                     @NonNull NumericComparison comparison) {
       Validation.checkArgument(lhs.shape().equals(rhs.shape()), "Shape mismatch " + rhs.shape() + " != " + lhs.shape());
-      return lhs.mapDouble(rhs, (a, b) -> comparison.compare(a, b) ? thresholdedValue : nonThresholdedValue);
+      return lhs.map(rhs, (a, b) -> comparison.compare(a, b) ? 1 : 0);
    }
 
    /**
@@ -865,7 +903,7 @@ public final class nd {
                                      @NonNull NumericComparison comparison,
                                      double threshold,
                                      double thresholdedValue) {
-      return n.mapDouble(d -> comparison.compare(d, threshold) ? thresholdedValue : d);
+      return n.map(d -> comparison.compare(d, threshold) ? thresholdedValue : d);
    }
 
    /**

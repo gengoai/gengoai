@@ -38,6 +38,8 @@ import java.util.function.Supplier;
  * <p>Functional Interface that initializes the values of a given NDArray.</p>
  *
  * @param <T> the type of NDArray
+ *
+ * @author David B. Bracewell
  */
 public interface NDArrayInitializer<T extends NDArray> extends SerializableConsumer<T> {
 
@@ -47,7 +49,7 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
    NDArrayInitializer<NumericNDArray> xavier = (m) -> {
       var limit = Math.sqrt(6.0) / Math.sqrt(m.shape().rows() + m.shape().columns());
       var rnd = new RandomDataGenerator();
-      m.mapiDouble(x -> rnd.nextUniform(-limit, limit));
+      m.mapi(x -> rnd.nextUniform(-limit, limit));
    };
 
    /**
@@ -66,7 +68,7 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
    static NDArrayInitializer<NumericNDArray> binomial(int numberOfTrials, double probabilityOfSuccess) {
       return (m) -> {
          var rnd = new RandomDataGenerator();
-         m.mapiDouble(x -> rnd.nextBinomial(numberOfTrials, probabilityOfSuccess));
+         m.mapi(x -> rnd.nextBinomial(numberOfTrials, probabilityOfSuccess));
       };
    }
 
@@ -102,7 +104,7 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
    static NDArrayInitializer<NumericNDArray> gaussian(double mu, double sigma) {
       return (m) -> {
          var rnd = new RandomDataGenerator();
-         m.mapiDouble(x -> rnd.nextGaussian(mu, sigma));
+         m.mapi(x -> rnd.nextGaussian(mu, sigma));
       };
    }
 
@@ -118,13 +120,13 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
          var rnd = new Random();
          Class<?> c = Primitives.wrap(m.getType());
          if (c == Integer.class) {
-            Cast.<NumericNDArray>as(m).mapiDouble(d -> rnd.nextInt());
+            Cast.<NumericNDArray>as(m).mapi(d -> rnd.nextInt());
          } else if (c == Long.class) {
-            Cast.<NumericNDArray>as(m).mapiDouble(d -> rnd.nextLong());
+            Cast.<NumericNDArray>as(m).mapi(d -> rnd.nextLong());
          } else if (c == String.class) {
             Cast.<ObjectNDArray<String>>as(m).mapi(d -> Strings.randomHexString(rnd.nextInt(8) + 1));
          } else {
-            Cast.<NumericNDArray>as(m).mapiDouble(n -> rnd.nextDouble());
+            Cast.<NumericNDArray>as(m).mapi(n -> rnd.nextDouble());
          }
       };
    }
@@ -150,7 +152,7 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
     */
    static NDArrayInitializer<NumericNDArray> sample(@NonNull RealDistribution distribution) {
       return (m) -> {
-         m.mapiDouble(d -> distribution.sample());
+         m.mapi(d -> distribution.sample());
       };
    }
 
@@ -162,7 +164,7 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
     */
    static NDArrayInitializer<NumericNDArray> sample(@NonNull IntegerDistribution distribution) {
       return (m) -> {
-         m.mapiDouble(d -> distribution.sample());
+         m.mapi(d -> distribution.sample());
       };
    }
 
@@ -174,7 +176,7 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
     */
    static NDArrayInitializer<NumericNDArray> sample(@NonNull IntSupplier supplier) {
       return (m) -> {
-         m.mapiDouble(d -> supplier.getAsInt());
+         m.mapi(d -> supplier.getAsInt());
       };
    }
 
@@ -186,7 +188,7 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
     */
    static NDArrayInitializer<NumericNDArray> sample(@NonNull DoubleSupplier supplier) {
       return (m) -> {
-         m.mapiDouble(d -> supplier.getAsDouble());
+         m.mapi(d -> supplier.getAsDouble());
       };
    }
 
@@ -198,7 +200,7 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
     */
    static NDArrayInitializer<NumericNDArray> sample(@NonNull LongSupplier supplier) {
       return (m) -> {
-         m.mapiDouble(d -> supplier.getAsLong());
+         m.mapi(d -> supplier.getAsLong());
       };
    }
 
@@ -228,11 +230,11 @@ public interface NDArrayInitializer<T extends NDArray> extends SerializableConsu
          var rnd = new RandomDataGenerator();
          Class<?> c = Primitives.wrap(m.getType());
          if (c == Integer.class) {
-            m.mapiDouble(d -> rnd.nextInt(low.intValue(), high.intValue()));
+            m.mapi(d -> rnd.nextInt(low.intValue(), high.intValue()));
          } else if (c == Long.class) {
-            m.mapiDouble(d -> rnd.nextLong(low.longValue(), high.longValue()));
+            m.mapi(d -> rnd.nextLong(low.longValue(), high.longValue()));
          } else {
-            m.mapiDouble(n -> rnd.nextUniform(low.doubleValue(), high.doubleValue(), true));
+            m.mapi(n -> rnd.nextUniform(low.doubleValue(), high.doubleValue(), true));
          }
       };
    }

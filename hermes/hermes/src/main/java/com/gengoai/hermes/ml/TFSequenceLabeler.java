@@ -19,12 +19,12 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.model.Model;
-import com.gengoai.apollo.ml.model.tf.TFInputVar;
-import com.gengoai.apollo.ml.model.tf.TFModel;
-import com.gengoai.apollo.ml.model.tf.TFOutputVar;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.model.Model;
+import com.gengoai.apollo.model.tf.TFInputVar;
+import com.gengoai.apollo.model.tf.TFModel;
+import com.gengoai.apollo.model.tf.TFOutputVar;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
 import lombok.NonNull;

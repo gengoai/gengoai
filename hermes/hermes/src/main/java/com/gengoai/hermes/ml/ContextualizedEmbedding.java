@@ -19,9 +19,9 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.Datum;
-import com.gengoai.apollo.ml.observation.Variable;
-import com.gengoai.apollo.ml.transform.Transform;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.data.transform.Transform;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.AnnotationType;
 import com.gengoai.hermes.HString;

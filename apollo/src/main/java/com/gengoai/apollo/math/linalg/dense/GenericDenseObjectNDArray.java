@@ -19,6 +19,8 @@
 
 package com.gengoai.apollo.math.linalg.dense;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.ObjectNDArray;
 import com.gengoai.apollo.math.linalg.ObjectNDArrayFactory;
@@ -28,15 +30,36 @@ import lombok.NonNull;
 
 import java.lang.reflect.Array;
 
+/**
+ * <p>Dense NDArray representing generic Objects values.</p>
+ *
+ * @author David B. Bracewell
+ */
 public class GenericDenseObjectNDArray<T> extends ObjectNDArray<T> {
    private static final long serialVersionUID = 1L;
    private final Class<T> dType;
    private Object[][] data;
 
-   public GenericDenseObjectNDArray(Shape shape, @NonNull Class<T> dType) {
+   protected GenericDenseObjectNDArray(Shape shape, @NonNull Class<T> dType) {
       super(shape);
       this.dType = dType;
       this.data = new Object[shape.sliceLength()][shape.matrixLength()];
+   }
+
+   @JsonCreator
+   protected GenericDenseObjectNDArray(@JsonProperty("data") T[] data,
+                                       @JsonProperty("dType") Class<T> dType,
+                                       @JsonProperty("shape") Shape shape,
+                                       @JsonProperty("label") Object label,
+                                       @JsonProperty("predicted") Object predicted,
+                                       @JsonProperty("weight") double weight) {
+      this(shape, dType);
+      for (int i = 0; i < data.length; i++) {
+         set(i, data[i]);
+      }
+      setLabel(label);
+      setPredicted(predicted);
+      setWeight(weight);
    }
 
    @Override
@@ -50,6 +73,7 @@ public class GenericDenseObjectNDArray<T> extends ObjectNDArray<T> {
    }
 
    @Override
+   @JsonProperty("dType")
    public Class<?> getType() {
       return dType;
    }
@@ -57,11 +81,6 @@ public class GenericDenseObjectNDArray<T> extends ObjectNDArray<T> {
    @Override
    public boolean isDense() {
       return true;
-   }
-
-   @Override
-   public boolean isNumeric() {
-      return Number.class.isAssignableFrom(dType);
    }
 
    @Override
@@ -106,11 +125,16 @@ public class GenericDenseObjectNDArray<T> extends ObjectNDArray<T> {
       GenericDenseObjectNDArray<T> v = new GenericDenseObjectNDArray<T>(Shape.shape(shape().rows(),
                                                                                     shape().columns()),
                                                                         dType);
-      v.data[0] = data[index];
+      if (data.length == 1) {
+         v.data[0] = data[0];
+      } else {
+         v.data[0] = data[index];
+      }
       return v;
    }
 
    @Override
+   @JsonProperty("data")
    public T[] toArray() {
       T[] out = Cast.as(Array.newInstance(getType(), (int) length()));
       for (long i = 0; i < length(); i++) {
@@ -118,4 +142,4 @@ public class GenericDenseObjectNDArray<T> extends ObjectNDArray<T> {
       }
       return out;
    }
-}
+}//END OF GenericDenseObjectNDArray

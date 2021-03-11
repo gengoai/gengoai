@@ -75,9 +75,9 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
       this.keepEmptyCells = builder.isKeepEmptyCells();
       this.reader = new BufferedReader(reader);
       this.header = builder.getHeader() == null
-                    ? Collections.emptyList()
-                    : builder.getHeader();
-      if(builder.getHasHeader() && header.isEmpty()) {
+            ? Collections.emptyList()
+            : builder.getHeader();
+      if (builder.getHasHeader() && header.isEmpty()) {
          header = nextRow();
          row.clear();
       }
@@ -85,38 +85,38 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
 
    private void addCell(boolean isQuoted) {
       String cellString = cell.toString();
-      if(STATE == IN_FIELD) {
+      if (STATE == IN_FIELD) {
          cellString = cellString.strip();
       }
-      if(keepEmptyCells || !Strings.isNullOrBlank(cellString)) {
-         if(cellString.length() > 0 && cellString.charAt(cellString.length() - 1) == escape) {
+      if (keepEmptyCells || !Strings.isNullOrBlank(cellString)) {
+         if (cellString.length() > 0 && cellString.charAt(cellString.length() - 1) == escape) {
             cellString += " ";
          }
          String cellStr = cellString.replaceAll("\\\\(.)", "$1");
          row.add(isQuoted
-                 ? cellStr
-                 : cellStr.trim());
+                       ? cellStr
+                       : cellStr.trim());
       }
       cell.setLength(0);
       wasQuoted = false;
    }
 
    private int beginOfLine(int c) throws IOException {
-      if(c == comment) {
+      if (c == comment) {
          readToEndOfLine();
          return START;
-      } else if(c == quote) {
+      } else if (c == quote) {
          wasQuoted = true;
          return IN_QUOTE;
-      } else if(c == delimiter) {
+      } else if (c == delimiter) {
          addCell(wasQuoted);
          return IN_FIELD;
-      } else if(c == escape) {
+      } else if (c == escape) {
          cell.append((char) escape).append(escape());
          return IN_FIELD;
-      } else if(c == '\n') {
+      } else if (c == '\n') {
          return END_OF_ROW;
-      } else if(!Character.isWhitespace(c)) {
+      } else if (!Character.isWhitespace(c)) {
          cell.append((char) c);
          return IN_FIELD;
       }
@@ -125,7 +125,7 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
    }
 
    private int bufferPeek() throws IOException {
-      if(buffer.isEmpty()) {
+      if (buffer.isEmpty()) {
          int next = reader.read();
          buffer.add(next);
       }
@@ -139,7 +139,7 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
 
    private char escape() throws IOException {
       int c = reader.read();
-      if(c == -1) {
+      if (c == -1) {
          throw new IOException("Premature EOF");
       }
       return (char) c;
@@ -152,7 +152,7 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
     */
    @Override
    public void forEach(Consumer<? super List<String>> consumer) {
-      try(Stream<List<String>> stream = stream()) {
+      try (Stream<List<String>> stream = stream()) {
          stream.forEach(consumer);
       }
    }
@@ -163,49 +163,51 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
     * @return The header of the CSV file
     */
    public List<String> getHeader() {
-      if(header == null) {
+      if (header == null) {
          return Collections.emptyList();
       }
       return Collections.unmodifiableList(header);
    }
 
    private void gobbleWhiteSpace() throws IOException {
-      while(bufferPeek() != -1 && Character.isWhitespace(bufferPeek()) && !CharMatcher.BreakingWhiteSpace.test(
-            (char) bufferPeek())) {
+      while (bufferPeek() != -1
+            && Character.isWhitespace(bufferPeek())
+            && bufferPeek() != '\r'
+            && bufferPeek() != '\n') {
          read();
       }
    }
 
    private int inField(int c, boolean isQuoted) throws IOException {
-      if(c == quote && isQuoted) {
-         if(bufferPeek() == quote) {
+      if (c == quote && isQuoted) {
+         if (bufferPeek() == quote) {
             read();
          } else {
             return OUT_QUOTE;
          }
-      } else if(c == quote && Strings.isNullOrBlank(cell.toString())) {
+      } else if (c == quote && Strings.isNullOrBlank(cell.toString())) {
          return IN_QUOTE;
-      } else if(c == delimiter && !isQuoted) {
+      } else if (c == delimiter && !isQuoted) {
          addCell(isQuoted);
          gobbleWhiteSpace();
          return START;
-      } else if(c == escape) {
+      } else if (c == escape) {
          cell.append((char) escape).append(escape());
          return isQuoted
-                ? IN_QUOTE
-                : IN_FIELD;
-      } else if(c == '\r' && !isQuoted) {
-         if(bufferPeek() == '\n') {
+               ? IN_QUOTE
+               : IN_FIELD;
+      } else if (c == '\r' && !isQuoted) {
+         if (bufferPeek() == '\n') {
             read();
             return END_OF_ROW;
          }
-      } else if(c == '\n' && !isQuoted) {
+      } else if (c == '\n' && !isQuoted) {
          return END_OF_ROW;
       }
       cell.append((char) c);
       return isQuoted
-             ? IN_QUOTE
-             : IN_FIELD;
+            ? IN_QUOTE
+            : IN_FIELD;
    }
 
    @Override
@@ -225,16 +227,16 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
       int c;
       int readCount = 0;
       gobbleWhiteSpace();
-      while((c = read()) != -1) {
-         if(c == '\r') {
-            if(bufferPeek() == '\n') {
+      while ((c = read()) != -1) {
+         if (c == '\r') {
+            if (bufferPeek() == '\n') {
                continue;
             } else {
                c = '\n';
             }
          }
          readCount++;
-         switch(STATE) {
+         switch (STATE) {
             case START:
                STATE = beginOfLine(c);
                break;
@@ -251,27 +253,27 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
             default:
                throw new IOException("State [" + STATE + "]");
          }
-         if(STATE == END_OF_ROW) {
+         if (STATE == END_OF_ROW) {
             break;
          }
       }
-      if(readCount > 0) {
+      if (readCount > 0) {
          addCell(wasQuoted);
       }
-      if(row.isEmpty()) {
+      if (row.isEmpty()) {
          return null;
       }
       return new ArrayList<>(row);
    }
 
    private int outQuote(int c) throws IOException {
-      if(c == '\n') {
+      if (c == '\n') {
          return END_OF_ROW;
-      } else if(c == delimiter) {
+      } else if (c == delimiter) {
          addCell(true);
          gobbleWhiteSpace();
          return IN_FIELD;
-      } else if(Character.isWhitespace(c)) {
+      } else if (Character.isWhitespace(c)) {
          gobbleWhiteSpace();
          return OUT_QUOTE;
       }
@@ -282,8 +284,8 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
       List<String> row;
       List<R> rval = new ArrayList<>();
       try {
-         while((row = nextRow()) != null) {
-            if(row.size() > 0) {
+         while ((row = nextRow()) != null) {
+            if (row.size() > 0) {
                Optional<R> r = converter.apply(row);
                r.ifPresent(rval::add);
             }
@@ -295,7 +297,7 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
    }
 
    private int read() throws IOException {
-      if(buffer.isEmpty()) {
+      if (buffer.isEmpty()) {
          return reader.read();
       }
       return buffer.remove();
@@ -314,10 +316,10 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
    private void readToEndOfLine() throws IOException {
       do {
          int c = reader.read();
-         if(c == -1 || c == '\n') {
+         if (c == -1 || c == '\n') {
             return;
          }
-      } while(true);
+      } while (true);
    }
 
    /**
@@ -333,10 +335,10 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
       private List<String> row = null;
 
       private boolean advance() {
-         if(row == null) {
+         if (row == null) {
             try {
                row = nextRow();
-            } catch(IOException e) {
+            } catch (IOException e) {
                throw new RuntimeException(e);
             }
          }
@@ -350,7 +352,7 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
 
       @Override
       public List<String> next() {
-         if(!advance()) {
+         if (!advance()) {
             throw new NoSuchElementException();
          }
          List<String> c = row;

@@ -10,6 +10,8 @@ import java.io.Serializable;
 
 /**
  * <p>Wraps an NDArray treating it as a RealMatrix for use in Apache Commons Math algorithms.</p>
+ *
+ * @author David B. Bracewell
  */
 class RealMatrixWrapper extends AbstractRealMatrix implements Serializable {
    private static final long serialVersionUID = 1L;

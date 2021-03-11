@@ -19,7 +19,7 @@
 
 package com.gengoai.hermes.ml;
 
-import com.gengoai.apollo.ml.observation.Sequence;
+import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.hermes.HString;
 import lombok.NonNull;
 

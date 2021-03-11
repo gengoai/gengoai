@@ -20,12 +20,12 @@
 package com.gengoai.hermes.tools;
 
 import com.gengoai.Stopwatch;
-import com.gengoai.apollo.ml.DataSet;
-import com.gengoai.apollo.ml.evaluation.ClassifierEvaluation;
-import com.gengoai.apollo.ml.evaluation.Evaluation;
-import com.gengoai.apollo.ml.evaluation.SequenceLabelerEvaluation;
-import com.gengoai.apollo.ml.model.FitParameters;
-import com.gengoai.apollo.ml.model.ModelIO;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.evaluation.ClassifierEvaluation;
+import com.gengoai.apollo.evaluation.Evaluation;
+import com.gengoai.apollo.evaluation.SequenceLabelerEvaluation;
+import com.gengoai.apollo.model.FitParameters;
+import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.application.Option;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;

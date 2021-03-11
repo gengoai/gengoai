@@ -25,18 +25,27 @@ import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 
+/**
+ * <p>Factory for creating Dense generic Object NDArrays</p>
+ *
+ * @author David B. Bracewell
+ */
 public class GenericDenseObjectNDArrayFactory<T> extends ObjectNDArrayFactory<T> {
    private static final long serialVersionUID = 1L;
 
-   public GenericDenseObjectNDArrayFactory(@NonNull Class<?> c) {
-      super(c);
+   /**
+    * Instantiates a new GenericDenseObjectNDArrayFactory.
+    *
+    * @param dataType the data type of the NDArray
+    */
+   public GenericDenseObjectNDArrayFactory(@NonNull Class<?> dataType) {
+      super(dataType);
    }
 
    @Override
    public ObjectNDArray<T> zeros(@NonNull Shape shape) {
       return new GenericDenseObjectNDArray<>(shape, Cast.as(getType()));
    }
-
 
 
 }//END OF GenericObjectNDArrayFactory
