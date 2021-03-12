@@ -27,7 +27,7 @@ import com.gengoai.hermes.AnnotatableType;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.ResourceType;
 import com.gengoai.hermes.Types;
-import com.gengoai.hermes.ml.IOBTagger;
+import com.gengoai.hermes.ml.model.IOBTagger;
 
 import java.util.Collections;
 import java.util.Set;

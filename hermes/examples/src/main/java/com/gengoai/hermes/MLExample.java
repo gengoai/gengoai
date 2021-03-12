@@ -35,7 +35,7 @@ import com.gengoai.apollo.data.transform.vectorizer.HashingVectorizer;
 import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.TermExtractor;
-import com.gengoai.hermes.ml.ElmoTokenEmbedding;
+import com.gengoai.hermes.ml.model.ElmoTokenEmbedding;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.feature.ValueCalculator;
 import com.gengoai.hermes.tools.HermesCLI;

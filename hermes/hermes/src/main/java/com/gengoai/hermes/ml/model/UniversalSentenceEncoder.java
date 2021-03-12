@@ -17,40 +17,36 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.encoder.NoOptEncoder;
-import com.gengoai.apollo.model.LabelType;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.Model;
-import com.gengoai.apollo.model.TFVarSpec;
-import com.gengoai.apollo.model.TensorFlowModel;
-import com.gengoai.apollo.data.observation.Observation;
-import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.model.tensorflow.TFInputVar;
+import com.gengoai.apollo.model.tensorflow.TFModel;
+import com.gengoai.apollo.model.tensorflow.TFOutputVar;
 import com.gengoai.collection.Iterators;
-import com.gengoai.collection.Maps;
-import com.gengoai.hermes.Annotation;
-import com.gengoai.hermes.HString;
-import com.gengoai.hermes.Types;
+import com.gengoai.hermes.*;
+import com.gengoai.hermes.ml.ContextualizedEmbedding;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
+import com.gengoai.hermes.ml.HStringMLModel;
 import lombok.NonNull;
-import org.tensorflow.Tensor;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import static com.gengoai.tuple.Tuples.$;
-
-public class UniversalSentenceEncoder extends TensorFlowModel implements HStringMLModel, ContextualizedEmbedding {
+public class UniversalSentenceEncoder extends TFModel implements HStringMLModel, ContextualizedEmbedding {
    public static final int DIMENSION = 512;
    private static final long serialVersionUID = 1L;
 
    public UniversalSentenceEncoder() {
-      super(Map.of(Datum.DEFAULT_INPUT, TFVarSpec.varSpec(Datum.DEFAULT_INPUT, NoOptEncoder.INSTANCE, -1)),
-            Maps.linkedHashMapOf($(Datum.DEFAULT_OUTPUT, TFVarSpec
-                  .varSpec(Datum.DEFAULT_OUTPUT, NoOptEncoder.INSTANCE, -1))));
+      super(
+            List.of(TFInputVar.sequence(Datum.DEFAULT_INPUT, NoOptEncoder.INSTANCE)),
+            List.of(TFOutputVar.embedding(Datum.DEFAULT_OUTPUT, Datum.DEFAULT_OUTPUT))
+      );
    }
 
    @Override
@@ -66,29 +62,6 @@ public class UniversalSentenceEncoder extends TensorFlowModel implements HString
    }
 
    @Override
-   protected Map<String, Tensor<?>> createTensors(DataSet batch) {
-      byte[][] input = new byte[(int) batch.size()][];
-      List<Datum> datum = batch.collect();
-      for (int i = 0; i < datum.size(); i++) {
-         input[i] = datum.get(i)
-                         .getDefaultInput()
-                         .asVariable()
-                         .getName()
-                         .toLowerCase()
-                         .replaceAll("\\p{Punct}+", " ")
-                         .replaceAll("\\s+", " ")
-                         .getBytes();
-      }
-      return Map.of(Datum.DEFAULT_INPUT, Tensor.create(input));
-   }
-
-
-   @Override
-   protected Observation decodeNDArray(String name, NumericNDArray ndArray) {
-      return ndArray;
-   }
-
-   @Override
    public Model delegate() {
       return this;
    }
@@ -96,16 +69,8 @@ public class UniversalSentenceEncoder extends TensorFlowModel implements HString
    @Override
    public HStringDataSetGenerator getDataGenerator() {
       return HStringDataSetGenerator.builder(Types.SENTENCE)
-                                    .defaultInput(h -> Variable.binary(h.toString()))
+                                    .defaultInput(h -> nd.DSTRING.scalar(h.toString()))
                                     .build();
-   }
-
-   @Override
-   public LabelType getLabelType(@NonNull String name) {
-      if (name.equals(getOutput())) {
-         return LabelType.NDArray;
-      }
-      throw new IllegalArgumentException("'" + name + "' is not a valid output for this model");
    }
 
    @Override

@@ -33,10 +33,10 @@ import com.gengoai.conversion.Converter;
 import com.gengoai.conversion.TypeConversionException;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.en.ENPOSTagger;
-import com.gengoai.hermes.ml.ElmoNERModel;
-import com.gengoai.hermes.ml.EntityTagger;
+import com.gengoai.hermes.ml.model.EntityTagger;
 import com.gengoai.hermes.ml.HStringMLModel;
-import com.gengoai.hermes.ml.PhraseChunkTagger;
+import com.gengoai.hermes.ml.model.NeuralNERModel;
+import com.gengoai.hermes.ml.model.PhraseChunkTagger;
 import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.io.resource.StringResource;
@@ -65,7 +65,7 @@ public class TaggerApp extends HermesCLI {
    private static final Map<String, HStringMLModel> NAMED_TRAINERS =
          Collections.unmodifiableMap(hashMapOf($("PHRASE_CHUNK", new PhraseChunkTagger()),
                                                $("ENTITY", new EntityTagger()),
-                                               $("TF_ENTITY", new ElmoNERModel()),
+                                               $("TF_ENTITY", new NeuralNERModel()),
                                                $("EN_POS", new ENPOSTagger())));
 
    @Option(description = "The specification or location the corpus or document collection to process.",

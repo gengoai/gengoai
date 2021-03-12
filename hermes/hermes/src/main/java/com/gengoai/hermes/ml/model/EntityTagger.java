@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
 import com.gengoai.apollo.data.DataSetType;
 import com.gengoai.apollo.data.Datum;
@@ -27,6 +27,8 @@ import com.gengoai.apollo.model.sequence.Crf;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.DocumentCollection;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
+import com.gengoai.hermes.ml.IOB;
 import lombok.NonNull;
 import lombok.extern.java.Log;
 

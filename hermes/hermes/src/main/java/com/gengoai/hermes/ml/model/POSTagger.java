@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.model.Model;
@@ -25,6 +25,8 @@ import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
+import com.gengoai.hermes.ml.HStringMLModel;
 import com.gengoai.hermes.morphology.PartOfSpeech;
 import lombok.NonNull;
 

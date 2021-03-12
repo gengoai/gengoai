@@ -29,7 +29,9 @@ import com.gengoai.stream.MStream;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -42,16 +44,10 @@ public class IndexEncoder implements Encoder {
    private static final long serialVersionUID = 1L;
    @JsonProperty("alphabet")
    private final Index<String> alphabet = new HashMapIndex<>();
+   @JsonProperty("special")
+   private final List<String> special = new ArrayList<>();
    @JsonProperty("unknown")
-   private String unknownName;
-
-   public static IndexEncoder iobLabelEncoder(){
-      return new IndexEncoder("O");
-   }
-
-   public static IndexEncoder indexEncoder(String unknownName){
-      return new IndexEncoder(unknownName);
-   }
+   private final String unknownName;
 
    /**
     * Instantiates a new IndexEncoder
@@ -68,15 +64,44 @@ public class IndexEncoder implements Encoder {
     */
    public IndexEncoder(String unknownName) {
       this.unknownName = Strings.isNullOrBlank(unknownName)
-                         ? null
-                         : unknownName;
+            ? null
+            : unknownName;
+   }
+
+   /**
+    * Instantiates a new IndexEncoder with the given unknown name (always will have index 0) which will be used when we
+    * try to encode a string not in the alphabet.
+    *
+    * @param unknownName the unknown name
+    */
+   public IndexEncoder(String unknownName, @NonNull List<String> special) {
+      this.unknownName = Strings.isNullOrBlank(unknownName)
+            ? null
+            : unknownName;
+      this.special.addAll(special);
    }
 
    @JsonCreator
    private IndexEncoder(@JsonProperty("alphabet") Iterable<String> alphabet,
-                        @JsonProperty("unknown") String unknown) {
+                        @JsonProperty("unknown") String unknown,
+                        @JsonProperty("special") List<String> special) {
       this.alphabet.addAll(alphabet);
       this.unknownName = Strings.emptyToNull(unknown);
+      if (special != null) {
+         this.special.addAll(special);
+      }
+   }
+
+   public static IndexEncoder indexEncoder(String unknownName) {
+      return new IndexEncoder(unknownName);
+   }
+
+   public static IndexEncoder indexEncoder(String unknownName, @NonNull List<String> special) {
+      return new IndexEncoder(unknownName, special);
+   }
+
+   public static IndexEncoder iobLabelEncoder() {
+      return new IndexEncoder("O");
    }
 
    @Override
@@ -87,8 +112,8 @@ public class IndexEncoder implements Encoder {
    @Override
    public int encode(String variableName) {
       int index = alphabet.getId(variableName);
-      if(index < 0 && unknownName != null) {
-         return 0;
+      if (index < 0 && unknownName != null) {
+         return encode(unknownName);
       }
       return index;
    }
@@ -96,7 +121,8 @@ public class IndexEncoder implements Encoder {
    @Override
    public void fit(@NonNull MStream<Observation> stream) {
       alphabet.clear();
-      if(unknownName != null) {
+      alphabet.addAll(special);
+      if (unknownName != null) {
          alphabet.add(unknownName);
       }
       alphabet.addAll(stream.parallel()

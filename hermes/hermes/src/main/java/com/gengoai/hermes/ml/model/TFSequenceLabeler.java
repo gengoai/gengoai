@@ -17,45 +17,36 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.model.LabelType;
 import com.gengoai.apollo.model.Model;
-import com.gengoai.apollo.model.TFVarSpec;
-import com.gengoai.apollo.model.TensorFlowModel;
-import com.gengoai.apollo.model.sequence.SequenceValidator;
-import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.model.tensorflow.TFInputVar;
+import com.gengoai.apollo.model.tensorflow.TFModel;
+import com.gengoai.apollo.model.tensorflow.TFOutputVar;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
+import com.gengoai.hermes.ml.HStringMLModel;
+import com.gengoai.hermes.ml.TagDecoder;
 import lombok.NonNull;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-/**
- * @author David B. Bracewell
- */
-public abstract class TensorFlowSequenceLabeler extends TensorFlowModel implements HStringMLModel {
+public abstract class TFSequenceLabeler extends TFModel implements HStringMLModel {
    private static final long serialVersionUID = 1L;
-   private final TagDecoder tagDecoder;
-   private final SequenceValidator validator;
+   protected final TagDecoder tagDecoder;
 
-   public TensorFlowSequenceLabeler(@NonNull Map<String, TFVarSpec> inputs,
-                                    @NonNull LinkedHashMap<String, TFVarSpec> outputs,
-                                    @NonNull SequenceValidator validator,
-                                    @NonNull TagDecoder tagDecoder) {
-      super(inputs, outputs);
-      this.validator = validator;
+   public TFSequenceLabeler(@NonNull List<TFInputVar> inputVars,
+                            @NonNull List<TFOutputVar> outputVars,
+                            @NonNull TagDecoder tagDecoder) {
+      super(inputVars, outputVars);
       this.tagDecoder = tagDecoder;
    }
 
    @Override
-   public HString apply(HString hString) {
+   public HString apply(@NonNull HString hString) {
       DataSet dataSet = getDataGenerator().generate(Collections.singleton(hString));
       List<Datum> tensors = processBatch(dataSet);
       for (int i = 0; i < tensors.size(); i++) {
@@ -66,25 +57,12 @@ public abstract class TensorFlowSequenceLabeler extends TensorFlowModel implemen
    }
 
    @Override
-   protected Observation decodeNDArray(String name, NumericNDArray ndArray) {
-      return ndArray.decodeSequence(outputs.get(name).getEncoder(), validator);
-   }
-
-   @Override
    public Model delegate() {
       return this;
-   }
-
-   @Override
-   public LabelType getLabelType(@NonNull String name) {
-      if (name.equals(getOutput())) {
-         return LabelType.Sequence;
-      }
-      throw new IllegalArgumentException("'" + name + "' is not a valid output for this model.");
    }
 
    @Override
    public void setVersion(String version) {
       throw new UnsupportedOperationException();
    }
-}//END OF TensorFlowSequenceLabeler
+}

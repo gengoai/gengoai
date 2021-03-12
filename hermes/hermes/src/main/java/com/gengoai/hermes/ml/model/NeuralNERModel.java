@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
 import com.gengoai.Language;
 import com.gengoai.apollo.model.ModelIO;
-import com.gengoai.apollo.model.tf.TFInputVar;
-import com.gengoai.apollo.model.tf.TFOutputVar;
+import com.gengoai.apollo.model.tensorflow.TFInputVar;
+import com.gengoai.apollo.model.tensorflow.TFOutputVar;
 import com.gengoai.config.Config;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.Document;
@@ -30,7 +30,10 @@ import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.feature.Features;
+import com.gengoai.hermes.ml.IOB;
+import com.gengoai.hermes.ml.IOBValidator;
 import com.gengoai.io.Resources;
 
 import java.util.List;
@@ -39,9 +42,10 @@ import static com.gengoai.apollo.encoder.FixedEncoder.fixedEncoder;
 import static com.gengoai.apollo.feature.Featurizer.booleanFeaturizer;
 import static com.gengoai.apollo.feature.Featurizer.valueFeaturizer;
 import static com.gengoai.hermes.ResourceType.WORD_LIST;
+import static com.gengoai.tuple.Tuples.$;
 import static java.util.stream.Collectors.toList;
 
-public class NeuralNERModel2 extends TFSequenceLabeler {
+public class NeuralNERModel extends TFSequenceLabeler {
    private static final long serialVersionUID = 1L;
    private static final String LABEL = "label";
    private static final String TOKENS = "words";
@@ -49,7 +53,7 @@ public class NeuralNERModel2 extends TFSequenceLabeler {
    private static final String SHAPE = "shape";
    private static final int MAX_WORD_LENGTH = 10;
 
-   public NeuralNERModel2() {
+   public NeuralNERModel() {
       super(
             List.of(
                   TFInputVar.sequence(TOKENS, fixedEncoder(WORD_LIST.locate("glove", Language.ENGLISH).orElseThrow(),
@@ -66,9 +70,11 @@ public class NeuralNERModel2 extends TFSequenceLabeler {
 
    public static void main(String[] args) throws Exception {
       Config.initialize("CNN", args, "com.gengoai.hermes");
+
+
       if (Math.random() < 0) {
          Config.setProperty("tfmodel.data", "/Users/ik/prj/gengoai/mono-repo/python/data/entity2.db");
-         NeuralNERModel2 ner = new NeuralNERModel2();
+         NeuralNERModel ner = new NeuralNERModel();
          DocumentCollection ontonotes = Corpus.open("/Volumes/ikdata-1/corpora/hermes_data/ontonotes_ner")
                                               .query("$SPLIT='TRAIN'");
          ner.estimate(ontonotes);

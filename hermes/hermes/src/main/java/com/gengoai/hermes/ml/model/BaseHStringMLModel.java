@@ -17,11 +17,13 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.model.Model;
 import com.gengoai.hermes.HString;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
+import com.gengoai.hermes.ml.HStringMLModel;
 import com.gengoai.string.Strings;
 import lombok.Getter;
 import lombok.NonNull;

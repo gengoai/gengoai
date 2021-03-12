@@ -1885,6 +1885,12 @@ public abstract class NumericNDArray extends NDArray {
       return out;
    }
 
+   @Override
+   public NumericNDArray padPostWith(@NonNull Object padValue, @NonNull Shape paddedShape){
+      Validation.checkArgument(padValue instanceof Number, "Invalid padValue type '" + padValue.getClass().getSimpleName() + "'");
+      return padPost(Cast.as(padValue,Number.class).doubleValue(), paddedShape);
+   }
+
 
    /**
     * <p>Takes the values in the left hand NDArray and divides them by the elements in this NDArray returning a new

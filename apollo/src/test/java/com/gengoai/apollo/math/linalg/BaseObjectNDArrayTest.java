@@ -411,11 +411,11 @@ public abstract class BaseObjectNDArrayTest {
       assertEquals(factory.array(new String[][]{
             {"1", "2", "3", "4", "-PAD-"},
             {"-PAD-", "-PAD-", "-PAD-", "-PAD-", "-PAD-"}
-      }).toString(), rowVector.padPost("-PAD-", Shape.ROW, 2, Shape.COLUMN, 5).toString());
+      }).toString(), rowVector.padPostWith("-PAD-", Shape.ROW, 2, Shape.COLUMN, 5).toString());
       assertEquals(factory.array(new String[][]{
             {"1", "2", "3", "4", "-PAD-"},
             {"-PAD-", "-PAD-", "-PAD-", "-PAD-", "-PAD-"}
-      }).toString(), rowVector.padPost("-PAD-", Shape.shape(2, 5)).toString());
+      }).toString(), rowVector.padPostWith("-PAD-", Shape.shape(2, 5)).toString());
    }
 
    @Test

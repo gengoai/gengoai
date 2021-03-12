@@ -33,7 +33,7 @@ import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
-import com.gengoai.hermes.ml.POSTagger;
+import com.gengoai.hermes.ml.model.POSTagger;
 import com.gengoai.hermes.ml.feature.AffixFeaturizer;
 import com.gengoai.hermes.ml.feature.Features;
 import com.gengoai.hermes.morphology.PartOfSpeech;

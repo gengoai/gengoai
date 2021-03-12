@@ -84,7 +84,7 @@ public interface Observation extends Copyable<Observation>, Serializable {
     * @return the nd array
     */
    default NumericNDArray asNumericNDArray() {
-      throw new IllegalArgumentException(getClass().getSimpleName() + " is not an NDArray.");
+      throw new IllegalArgumentException(getClass().getSimpleName() + " is not an NumericNDArray.");
    }
 
    /**

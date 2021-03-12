@@ -17,20 +17,25 @@
  * under the License.
  */
 
-package com.gengoai.apollo.model.tf;
+package com.gengoai.apollo.model.tensorflow;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import lombok.*;
 import org.tensorflow.Tensor;
 
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * <p>Describes a variable input or output in a TensorFlow model including the observation name, the TensorFlow serving
+ * model name, the shape, and associated encoder.</p>
+ *
+ * @author David B. Bracewell
+ */
 @Getter
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 public abstract class TFVar implements Serializable {
@@ -45,6 +50,14 @@ public abstract class TFVar implements Serializable {
    @Setter
    private Encoder encoder;
 
+   /**
+    * Instantiates a new TFVar.
+    *
+    * @param name        the Observation name
+    * @param servingName the serving name
+    * @param encoder     the encoder
+    * @param shape       the shape
+    */
    public TFVar(@NonNull String name,
                 @NonNull String servingName,
                 @NonNull Encoder encoder,
@@ -90,24 +103,43 @@ public abstract class TFVar implements Serializable {
       return dimensions;
    }
 
+   /**
+    * <p>Converts the list of Datum into a single TensorFlow Tensor</p>
+    *
+    * @param data the data to convert
+    * @return the tensor
+    */
    public final Tensor<?> toTensor(@NonNull List<Datum> data) {
-      int[] batch_shape = new int[shape.length + 1];
-      batch_shape[0] = data.size();
-      System.arraycopy(dimensionsOf(data), 0, batch_shape, 1, shape.length);
-      NumericNDArray batch = nd.DFLOAT32.zeros(batch_shape);
-      Shape batchShape = batch.shape();
+      boolean isScalar = data.get(0).get(name).asNDArray().shape().isScalar();
+      int[] batch_shape;
 
-      for (int i = 0; i < data.size(); i++) {
-         NumericNDArray ni = data.get(i).get(name).asNumericNDArray();
-         if (batchShape.channels() > 0) {
-            batch.setSlice(i, ni.padPost(batchShape.rows(), batchShape.columns()));
-         } else {
-            batch.setAxisDouble(Shape.ROW, i, ni.padPost(Shape.ROW, batchShape.columns()).T());
-         }
+      if (isScalar) {
+         batch_shape = new int[]{data.size()};
+      } else {
+         batch_shape = new int[shape.length + 1];
+         batch_shape[0] = data.size();
+         System.arraycopy(dimensionsOf(data), 0, batch_shape, 1, shape.length);
       }
 
+      //Create the batch NDArray
+      NDArray batch = data.get(0).get(name).asNDArray().factory().zeros(batch_shape);
+      Object padValue = batch.getType() == String.class ? "--PAD--" : 0;
+
+      for (int i = 0; i < data.size(); i++) {
+         NDArray ni = data.get(i).get(name).asNDArray();
+         if (batch.shape().isScalar()) {
+            batch.set(i, ni.scalar());
+         } else if (batch.shape().channels() > 0) {
+            batch.setSlice(i, ni.padPostWith(padValue,
+                                             Shape.ROW, batch.rows(),
+                                             Shape.COLUMN, batch.columns()));
+         } else {
+            batch.setAxis(Shape.ROW, i, ni.padPostWith(padValue,
+                                                       Shape.ROW, batch.columns()).T());
+         }
+      }
       return batch.toTensor();
    }
 
 
-}
+}//END OF TFVar

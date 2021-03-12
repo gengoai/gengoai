@@ -1,6 +1,4 @@
 /*
- * (c) 2005 David B. Bracewell
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.evaluation.Evaluation;
@@ -27,6 +25,9 @@ import com.gengoai.apollo.model.Model;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.AnnotationType;
 import com.gengoai.hermes.HString;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
+import com.gengoai.hermes.ml.IOB;
+import com.gengoai.hermes.ml.CoNLLEvaluation;
 import lombok.Getter;
 import lombok.NonNull;
 

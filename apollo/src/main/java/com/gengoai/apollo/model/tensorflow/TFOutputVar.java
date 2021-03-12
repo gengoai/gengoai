@@ -17,16 +17,17 @@
  * under the License.
  */
 
-package com.gengoai.apollo.model.tf;
+package com.gengoai.apollo.model.tensorflow;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.IndexEncoder;
+import com.gengoai.apollo.encoder.NoOptEncoder;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.model.LabelType;
 import com.gengoai.apollo.model.sequence.SequenceValidator;
-import com.gengoai.apollo.data.observation.Observation;
 import lombok.NonNull;
 
 public abstract class TFOutputVar extends TFVar {
@@ -41,6 +42,21 @@ public abstract class TFOutputVar extends TFVar {
 
    public static TFOutputVar classification(String name, String servingName) {
       return new TFClassificationOutput(name, servingName, new IndexEncoder());
+   }
+
+   public static TFOutputVar embedding(String name,
+                                       String servingName) {
+      return new TFOutputVar(name, servingName, NoOptEncoder.INSTANCE, new int[0]) {
+         @Override
+         public Observation decode(@NonNull NumericNDArray ndArray) {
+            return ndArray;
+         }
+
+         @Override
+         public LabelType getLabelType() {
+            return null;
+         }
+      };
    }
 
    public static TFOutputVar sequence(String name, String servingName, Encoder encoder) {

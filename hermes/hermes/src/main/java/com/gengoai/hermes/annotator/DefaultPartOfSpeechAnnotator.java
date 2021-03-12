@@ -27,7 +27,7 @@ import com.gengoai.hermes.AnnotatableType;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.ResourceType;
 import com.gengoai.hermes.Types;
-import com.gengoai.hermes.ml.POSTagger;
+import com.gengoai.hermes.ml.model.POSTagger;
 
 import java.util.Collections;
 import java.util.Set;

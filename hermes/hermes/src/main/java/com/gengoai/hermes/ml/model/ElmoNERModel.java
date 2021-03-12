@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
 import com.gengoai.hermes.Types;
 
@@ -27,6 +27,7 @@ public class ElmoNERModel extends ElmoSeq2SeqModel {
    public ElmoNERModel() {
       super(Types.ML_ENTITY, Types.ENTITY);
    }
+
 
    @Override
    public String getVersion() {

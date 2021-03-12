@@ -17,25 +17,25 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml;
+package com.gengoai.hermes.ml.model;
 
-import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.encoder.IndexEncoder;
 import com.gengoai.apollo.encoder.NoOptEncoder;
-import com.gengoai.apollo.model.TFVarSpec;
-import com.gengoai.apollo.model.TensorUtils;
-import com.gengoai.apollo.data.observation.Variable;
-import com.gengoai.collection.Maps;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.model.tensorflow.TFInputVar;
+import com.gengoai.apollo.model.tensorflow.TFOutputVar;
+import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.AnnotationType;
 import com.gengoai.hermes.Types;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
+import com.gengoai.hermes.ml.IOB;
 import lombok.NonNull;
-import org.tensorflow.Tensor;
 
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 
-import static com.gengoai.tuple.Tuples.$;
-
-public abstract class ElmoSeq2SeqModel extends TensorFlowSequenceLabeler {
+public abstract class ElmoSeq2SeqModel extends TFSequenceLabeler {
    public static final String LABEL = "label";
    public static final String TOKENS = "tokens";
    public static final String SEQUENCE_LENGTH = "seq_len";
@@ -45,30 +45,34 @@ public abstract class ElmoSeq2SeqModel extends TensorFlowSequenceLabeler {
 
    protected ElmoSeq2SeqModel(@NonNull AnnotationType annotationType,
                               @NonNull AnnotationType trainingAnnotationType) {
-      super(Map.of(TOKENS, TFVarSpec.varSpec(TOKENS, NoOptEncoder.INSTANCE, -1)),
-//            Maps.linkedHashMapOf($(LABEL, "label/truediv")),
-            Maps.linkedHashMapOf($(LABEL, TFVarSpec.varSpec("label_1/truediv", new IndexEncoder("O"), -1))),
-            IOBValidator.INSTANCE,
-            IOB.decoder(annotationType));
+      super(
+            List.of(
+                  TFInputVar.sequence(TOKENS, NoOptEncoder.INSTANCE, -1),
+                  TFInputVar.var(SEQUENCE_LENGTH, SEQUENCE_LENGTH, NoOptEncoder.INSTANCE)
+            ),
+            List.of(
+                  TFOutputVar
+                        .sequence(LABEL, "label_1/truediv", new IndexEncoder("0", Collections.singletonList("--PAD--")))
+            ),
+            IOB.decoder(annotationType)
+      );
       this.trainingAnnotationType = trainingAnnotationType;
    }
 
 
    @Override
-   protected Map<String, Tensor<?>> createTensors(DataSet batch) {
-      return TensorUtils.sequence2StringTensor(batch, TOKENS, TOKENS, SEQUENCE_LENGTH);
-   }
-
-//   @Override
-//   protected Transformer createTransformer() {
-//      IndexingVectorizer labelVectorizer = new IndexingVectorizer(encoders.get(LABEL)).source(LABEL);
-//      return new Transformer(List.of(labelVectorizer));
-//   }
-
-   @Override
    public HStringDataSetGenerator getDataGenerator() {
       return HStringDataSetGenerator.builder(Types.SENTENCE)
-                                    .tokenSequence(TOKENS, h -> Variable.binary(h.toString()))
+                                    .source(TOKENS, h -> {
+                                       int tokenLength = h.tokenLength();
+                                       String[] tokenStrs = h.tokens()
+                                                             .stream()
+                                                             .map(Annotation::toString)
+                                                             .toArray(String[]::new);
+                                       return nd.DSTRING.array(Shape.shape(tokenLength, 1), tokenStrs);
+                                    })
+                                    .source(SEQUENCE_LENGTH,
+                                            h -> nd.DINT32.scalar(h.tokenLength()))
                                     .source(LABEL, IOB.encoder(trainingAnnotationType))
                                     .build();
    }

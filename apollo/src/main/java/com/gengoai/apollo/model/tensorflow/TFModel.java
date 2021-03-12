@@ -17,23 +17,23 @@
  * under the License.
  */
 
-package com.gengoai.apollo.model.tf;
+package com.gengoai.apollo.model.tensorflow;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.DataSetType;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.StreamingDataSet;
+import com.gengoai.apollo.data.transform.Transformer;
+import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.FixedEncoder;
 import com.gengoai.apollo.encoder.IndexEncoder;
 import com.gengoai.apollo.encoder.NoOptEncoder;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.FitParameters;
 import com.gengoai.apollo.model.LabelType;
 import com.gengoai.apollo.model.Model;
-import com.gengoai.apollo.data.transform.Transformer;
-import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.collection.Iterables;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
@@ -47,6 +47,7 @@ import com.gengoai.reflection.Reflect;
 import com.gengoai.reflection.ReflectionException;
 import com.gengoai.stream.MStream;
 import com.gengoai.stream.StreamingContext;
+import com.gengoai.stream.Streams;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -60,6 +61,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * <p>Wrapper for using a TensorFlow model. A TFModel is comprised of a set of <code>TFInputVar</code> and
+ * <code>TFOutputVar</code> which define the observation name (in Java), its corresponding TensorFlow serving name,
+ * its shape, and associated Encoder.</p>
+ */
 public class TFModel implements Model, Serializable {
    private static final long serialVersionUID = 1L;
    private final Map<String, TFInputVar> inputs = new HashMap<>();
@@ -68,13 +74,20 @@ public class TFModel implements Model, Serializable {
    protected Resource modelFile;
    protected volatile transient Transformer transformer;
    private volatile transient MonitoredObject<SavedModelBundle> model;
-   private volatile List<TFOutputVar> outputList;
+
    @Getter
    @Setter
    private int inferenceBatchSize = 1;
 
 
-   public TFModel(@NonNull List<TFInputVar> inputVars, @NonNull List<TFOutputVar> outputVars) {
+   /**
+    * Instantiates a new Tf model.
+    *
+    * @param inputVars  the input vars
+    * @param outputVars the output vars
+    */
+   public TFModel(@NonNull List<TFInputVar> inputVars,
+                  @NonNull List<TFOutputVar> outputVars) {
       for (TFInputVar inputVar : inputVars) {
          inputs.put(inputVar.getName(), inputVar);
       }
@@ -84,9 +97,14 @@ public class TFModel implements Model, Serializable {
    }
 
    /**
-    * Reads the model from the given resource
+    * <p>Loads the TFModel from disk. The structure of a TFModel directory is as follows:</p>
+    * <ul>
+    *    <li><code>__class__</code> : Model Class information</li>
+    *    <li><code>*.encoder.json.gz</code>: Serialized Encoders for inputs and outputs</li>
+    *    <li><code>tfmodel</code>: Directory containing the TensorFlow serving model</li>
+    * </ul>
     *
-    * @param resource the resource
+    * @param resource the location containing the saved model
     * @return the model
     * @throws IOException Something went wrong reading the model
     */
@@ -99,7 +117,6 @@ public class TFModel implements Model, Serializable {
             m.setEncoder(name, Json.parse(child, Encoder.class));
             IndexEncoder ie = Json.parse(child, Encoder.class);
          }
-         m.transformer = m.createTransformer();
          m.modelFile = resource;
          return m;
       } catch (ReflectionException e) {
@@ -107,22 +124,24 @@ public class TFModel implements Model, Serializable {
       }
    }
 
-   /**
-    * Creates the required transformer for preparing inputs / outputs to pass to TensorFlow.
-    *
-    * @return the transformer
-    */
-   protected Transformer createTransformer() {
-      return new Transformer(Stream.concat(inputs.entrySet().stream(), outputs.entrySet().stream())
-                                   .filter(e -> !(e.getValue().getEncoder() instanceof NoOptEncoder))
-                                   .map(e -> new IndexingVectorizer(e.getValue().getEncoder()).source(e.getKey()))
-                                   .collect(Collectors.toList()));
+   private Transformer createTransformer() {
+      if (transformer == null) {
+         synchronized (this) {
+            if (transformer == null) {
+               this.transformer = new Transformer(Stream.concat(inputs.entrySet().stream(), outputs.entrySet().stream())
+                                                        .filter(e -> !(e.getValue()
+                                                                        .getEncoder() instanceof NoOptEncoder))
+                                                        .map(e -> new IndexingVectorizer(e.getValue().getEncoder())
+                                                              .source(e.getKey()))
+                                                        .collect(Collectors.toList()));
+            }
+         }
+      }
+      return transformer;
    }
 
    @Override
    public void estimate(@NonNull DataSet dataset) {
-      outputList = new ArrayList<>();
-      outputs.forEach((k, v) -> outputList.add(v));
       dataset = createTransformer().fitAndTransform(dataset);
       dataset.getMetadata().forEach((k, v) -> setEncoder(k, v.getEncoder()));
       Resource tmp = Resources.temporaryFile();
@@ -165,25 +184,23 @@ public class TFModel implements Model, Serializable {
                                                                               .orElseThrow()
                                                                               .getAbsolutePath(),
                                                                      "serve"));
-               transformer = createTransformer();
-               outputList = new ArrayList<>();
-               outputs.forEach((k, v) -> outputList.add(v));
             }
          }
       }
       return model.object;
    }
 
-
    protected final List<Datum> processBatch(DataSet batch) {
-      final var batchTransformed = transformer.transform(batch).collect();
+      final var batchTransformed = createTransformer().transform(batch).collect();
+
       Session.Runner runner = getTensorFlowModel().session().runner();
 
+      //Setup the inputs to feed
       Map<String, Tensor<?>> tensors = new HashMap<>();
       inputs.forEach((name, spec) -> tensors.put(spec.getServingName(), spec.toTensor(batchTransformed)));
       tensors.forEach(runner::feed);
 
-
+      //Setup the outputs to fetch
       outputs.forEach((mo, to) -> runner.fetch(to.getServingName()));
 
       List<NumericNDArray> results = new ArrayList<>();
@@ -206,7 +223,9 @@ public class TFModel implements Model, Serializable {
 
       }
 
+      //Close the input tensors
       tensors.values().forEach(Tensor::close);
+
       return batchTransformed;
    }
 
@@ -221,7 +240,7 @@ public class TFModel implements Model, Serializable {
       }
    }
 
-   protected void setEncoder(String name, Encoder encoder) {
+   private void setEncoder(String name, Encoder encoder) {
       if (inputs.containsKey(name)) {
          inputs.get(name).setEncoder(encoder);
       } else {
@@ -235,14 +254,19 @@ public class TFModel implements Model, Serializable {
          return dataset.map(this::transform);
       }
       MStream<Datum> batch = StreamingContext.local()
-                                             .stream(dataset.batchIterator(inferenceBatchSize))
+                                             .stream(Streams.reusableStream(
+                                                   () -> Streams.asStream(dataset.batchIterator(inferenceBatchSize))
+                                             ))
                                              .map(this::processBatch)
                                              .flatMap(Collection::stream);
-      return new StreamingDataSet(batch, dataset.getMetadata(), dataset.getNDArrayFactory());
+      return new StreamingDataSet(batch, dataset.getMetadata(), dataset.getNDArrayFactory()).cache();
    }
+
 
    @Override
    public Datum transform(@NonNull Datum datum) {
       return processBatch(DataSetType.InMemory.create(Stream.of(datum))).get(0);
    }
-}
+
+
+}//END OF TFModel

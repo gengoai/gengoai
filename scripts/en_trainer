@@ -16,6 +16,7 @@ tagger[PHRASE_CHUNK]="--tagger=PHRASE_CHUNK"
 tagger[ENTITY]="--tagger=ENTITY"
 tagger[TF_ENTITY]="--tagger=TF_ENTITY"
 
+
 declare -A production
 production[POS]="--df=pos_opl::/$CORPUS_DIR/$LANG/part_of_speech/combined.txt"
 production[PHRASE_CHUNK]="--df=conll::$CORPUS_DIR/$LANG/phrase_chunk/combined.txt "
@@ -41,23 +42,23 @@ ACTION=$(echo "${2:-PRODUCTION}" | tr a-z A-Z)
 case $ACTION in
 
 PRODUCTION)
-  cd hermes/tools && jexec TaggerApp TRAIN ${production[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
+  cd hermes/tools && jrun TaggerApp TRAIN ${production[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
   ;;
 
 EVALUATE)
   cd hermes/tools || exit
-  jexec TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
-  jexec TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
+  jrun TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
+  jrun TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
   ;;
 
 TEST)
   cd hermes/tools || exit
-  jexec TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
+  jrun TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
   ;;
 
 TRAIN)
   cd hermes/tools || exit
-  jexec TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
+  jrun TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
   ;;
 
 *)

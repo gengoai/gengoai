@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.apollo.model.tf;
+package com.gengoai.apollo.model.tensorflow;
 
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.Datum;

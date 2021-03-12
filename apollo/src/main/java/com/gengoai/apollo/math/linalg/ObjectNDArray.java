@@ -564,45 +564,8 @@ public abstract class ObjectNDArray<T> extends NDArray {
    }
 
 
-   /**
-    * <p>Constructs a new NDArray where the given <code>axis</code> is changed to have <code>length</code> values,
-    * where this NDArray will either be padded with the given <code>padValue</code> to extend its size to the new length
-    * or truncated to match the new length. All padding is done at the end of the axis.</p>
-    *
-    * @param padValue the padding value
-    * @param axis     the axis to pad.
-    * @param length   the new length of the given axis
-    * @return the padded NDArray.
-    */
-   public ObjectNDArray<T> padPost(T padValue, int axis, int length) {
-      return padPost(padValue, shape().with(axis, length));
-   }
-
-   /**
-    * <p>Constructs a new NDArray where the given <code>axes</code> are changed to have the given <code>length</code>
-    * values, where this NDArray will either be padded with the given <code>padValue</code> to extend its size to the
-    * new lengths or truncated to match the new lengths. All padding is done at the end of the axis. Note that the
-    * argument to this method expects (int, int) pairs where the first integer is the axis and the second the new
-    * length.</p>
-    *
-    * @param padValue        the padding value
-    * @param axisLengthPairs array of integers <code>axis1, length, axis2, length2, ... ,axisN, lengthN</code>
-    * @return the padded NDArray.
-    */
-   public ObjectNDArray<T> padPost(T padValue, @NonNull int... axisLengthPairs) {
-      return padPost(padValue, shape().with(axisLengthPairs));
-   }
-
-   /**
-    * <p>Constructs a new NDArray where  where this NDArray will either be padded with the given <code>padValue</code>
-    * to extend its size to the new length or truncated to the given Shape. All padding is done at the end of the
-    * axis.</p>
-    *
-    * @param padValue    the padding value
-    * @param paddedShape the shape of the padded NDArray
-    * @return the padded NDArray.
-    */
-   public ObjectNDArray<T> padPost(T padValue, @NonNull Shape paddedShape) {
+   @Override
+   public ObjectNDArray<T> padPostWith(Object padValue, @NonNull Shape paddedShape) {
       ObjectNDArray<T> out = factory().create(paddedShape, NDArrayInitializer.constant(padValue));
       for (Index index : shape().range()) {
          if (paddedShape.contains(index)) {
