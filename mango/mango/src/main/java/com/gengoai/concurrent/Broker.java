@@ -21,8 +21,8 @@
 
 package com.gengoai.concurrent;
 
-import com.gengoai.Validation;
 import com.gengoai.LogUtils;
+import com.gengoai.Validation;
 import lombok.extern.java.Log;
 
 import java.io.Serializable;

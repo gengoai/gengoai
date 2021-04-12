@@ -22,10 +22,10 @@
 
 package com.gengoai.apollo.evaluation;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.Split;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.model.Model;
 import com.gengoai.string.TableFormatter;
 import lombok.NonNull;

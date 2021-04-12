@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.gengoai.tuple.Tuples.$;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell
@@ -29,7 +29,7 @@ public class StreamsTest {
          assertEquals("This is a test", stream.collect(Collectors.joining()));
       }
       try {
-         int i = is.read();
+         is.read();
       } catch (Exception e) {
          assertEquals("Stream closed", e.getMessage());
       }

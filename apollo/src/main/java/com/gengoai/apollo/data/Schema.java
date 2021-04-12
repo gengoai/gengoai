@@ -19,6 +19,7 @@
 
 package com.gengoai.apollo.data;
 
+import com.gengoai.Validation;
 import com.gengoai.apollo.data.observation.Variable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,8 +42,58 @@ public class Schema extends HashMap<String, ValueType> {
    private @NonNull ValueType defaultType = ValueType.NUMERIC;
 
 
+   /**
+    * Initializing constructor
+    *
+    * @param schema map of column names and types defining the schema
+    */
    public Schema(@NonNull Map<String, ValueType> schema) {
       super(schema);
+   }
+
+   /**
+    * Static helper method for creating an empty schema.
+    *
+    * @return the schema
+    */
+   public static Schema schema() {
+      return new Schema();
+   }
+
+   /**
+    * Static helper method for creating an empty schema.
+    *
+    * @param schema map of column names and types defining the schema
+    * @return the schema
+    */
+   public static Schema schema(@NonNull Map<String, ValueType> schema) {
+      return new Schema(schema);
+   }
+
+   /**
+    * Adds a categorical column
+    *
+    * @param name the name of the column
+    * @return the schema
+    */
+   public Schema categorical(String name) {
+      Validation.notNullOrBlank(name, "Name must not be null or blank");
+      put(name, ValueType.CATEGORICAL);
+      return this;
+   }
+
+
+   /**
+    * Defines a column in the schema
+    *
+    * @param name      the name of the column
+    * @param valueType the value type of the column
+    * @return the schema
+    */
+   public Schema column(String name, @NonNull ValueType valueType) {
+      Validation.notNullOrBlank(name, "Name must not be null or blank");
+      put(name, valueType);
+      return this;
    }
 
    /**
@@ -54,6 +105,18 @@ public class Schema extends HashMap<String, ValueType> {
     */
    public Variable convert(@NonNull String name, Object value) {
       return getOrDefault(name, defaultType).createVariable(name, value);
+   }
+
+   /**
+    * Adds a numeric column
+    *
+    * @param name the name of the column
+    * @return the schema
+    */
+   public Schema numeric(String name) {
+      Validation.notNullOrBlank(name, "Name must not be null or blank");
+      put(name, ValueType.NUMERIC);
+      return this;
    }
 
 }//END OF Schema

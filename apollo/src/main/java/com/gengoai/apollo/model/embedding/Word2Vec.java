@@ -19,8 +19,8 @@
 
 package com.gengoai.apollo.model.embedding;
 
-import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.Params;
 import lombok.NonNull;
 import org.apache.spark.mllib.feature.Word2VecModel;

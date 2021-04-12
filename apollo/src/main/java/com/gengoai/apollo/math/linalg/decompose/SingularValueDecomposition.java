@@ -1,10 +1,11 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
-import com.gengoai.apollo.math.linalg.*;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.SparkLinearAlgebra;
+import com.gengoai.apollo.math.linalg.nd;
 import org.jblas.FloatMatrix;
 import org.jblas.Singular;
-
-import static com.gengoai.collection.Arrays2.arrayOf;
 
 /**
  * <p>Performs <a href="https://en.wikipedia.org/wiki/Singular_value_decomposition">Singular Value Decomposition</a> on
@@ -74,18 +75,17 @@ public class SingularValueDecomposition extends Decomposition {
       } else {
          usvT = Singular.fullSVD(input.toFloatMatrix()[0]);
       }
-      var result = arrayOf(
-            nd.DFLOAT32.array(usvT[0]),
-            nd.DFLOAT32.array(FloatMatrix.diag(usvT[1])),
-            nd.DFLOAT32.array(usvT[2])
-      );
+
+      var u = nd.DFLOAT32.array(usvT[0]);
+      var s = nd.DFLOAT32.array(FloatMatrix.diag(usvT[1]));
+      var vT = nd.DFLOAT32.array(usvT[2]);
 
       if (K > 0) {
-         result[0] = result[0].get(result[0].shape().with(Shape.COLUMN, K).range());
-         result[1] = result[1].get(result[1].shape().with(Shape.ROW, K, Shape.COLUMN, K).range());
-         result[2] = result[2].get(result[2].shape().with(Shape.COLUMN, K).range());
+         u = u.get(u.shape().with(Shape.COLUMN, K).range()).reshape(Shape.shape(u.rows(),K));
+         s = s.get(s.shape().with(Shape.ROW,K, Shape.COLUMN, K).range()).reshape(Shape.shape(K,K));
+         vT = vT.get(vT.shape().with(Shape.ROW, K).range()).reshape(Shape.shape(K, vT.columns()));
       }
 
-      return result;
+      return new NumericNDArray[]{u,s,vT};
    }
 }// END OF SingularValueDecomposition

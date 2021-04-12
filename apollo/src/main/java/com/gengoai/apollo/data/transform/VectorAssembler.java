@@ -19,70 +19,122 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NDArrayFactory;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
+ * <p>Assemblies multiple Variables or Scalar NDArray into a single NDArray. By default it will assemble all
+ * observations on the datum and store the result into <code>Datum.DEFAULT_INPUT</code>. This can be modified by setting
+ * the inputs and output of the transform.</p>
+ *
  * @author David B. Bracewell
  */
+@NoArgsConstructor
 public class VectorAssembler implements Transform {
-   private final List<String> inputs = new ArrayList<>(Collections.singleton(Datum.DEFAULT_INPUT));
-   protected NDArrayFactory ndArrayFactory;
-   private String output = Datum.DEFAULT_OUTPUT;
+   @JsonProperty
+   private final List<String> inputs = new ArrayList<>();
+   @JsonProperty
+   private NDArrayFactory ndArrayFactory;
+   @JsonProperty
+   private String output = Datum.DEFAULT_INPUT;
+   @Getter
+   @Setter
+   private boolean keepInputs = true;
 
-   public VectorAssembler() {
-   }
-
+   /**
+    * Instantiates a new Vector assembler.
+    *
+    * @param inputs the inputs
+    * @param output the output
+    */
    public VectorAssembler(@NonNull Collection<String> inputs, @NonNull String output) {
-      this.inputs.clear();
-      this.inputs.addAll(inputs);
-      this.output = output;
+      this.inputs(inputs);
+      this.output(output);
    }
 
    @Override
    public DataSet fitAndTransform(@NonNull DataSet dataset) {
+      if (inputs.isEmpty()) {
+         inputs.addAll(dataset.parallelStream()
+                              .flatMap(d -> d.keySet().stream())
+                              .distinct()
+                              .collect(Collectors.toList()));
+      }
       return transform(dataset);
    }
 
    @Override
+   @JsonIgnore
    public Set<String> getInputs() {
       return new HashSet<>(inputs);
    }
 
    @Override
+   @JsonIgnore
    public Set<String> getOutputs() {
       return Collections.singleton(output);
    }
 
+   /**
+    * Inputs transform.
+    *
+    * @param inputs the inputs
+    * @return the transform
+    */
    public Transform inputs(@NonNull String... inputs) {
       return inputs(Arrays.asList(inputs));
    }
 
+   /**
+    * Inputs transform.
+    *
+    * @param inputs the inputs
+    * @return the transform
+    */
    public Transform inputs(@NonNull Collection<String> inputs) {
-      Validation.checkArgument(inputs.size() > 0, "No sources specified");
       this.inputs.clear();
       this.inputs.addAll(inputs);
+      return this;
+   }
+
+   /**
+    * Output transform.
+    *
+    * @param outputName the output name
+    * @return the transform
+    */
+   public Transform output(@NonNull String outputName) {
+      this.output = Validation.notNullOrBlank(outputName);
       return this;
    }
 
    @Override
    public Datum transform(@NonNull Datum datum) {
       NumericNDArray out = ndArrayFactory.asNumeric().zeros(inputs.size());
-      for(int i = 0; i < inputs.size(); i++) {
+      for (int i = 0; i < inputs.size(); i++) {
          Observation o = datum.get(inputs.get(i));
-         if(o.isVariable()) {
+         if (o.isVariable()) {
             out.set(i, o.asVariable().getValue());
          } else {
             out.set(i, o.asNDArray().scalar());
          }
+      }
+      if( !keepInputs ){
+         inputs.forEach(datum::remove);
       }
       datum.put(output, out);
       return datum;

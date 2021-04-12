@@ -18,6 +18,7 @@ public class IntegerTypeConverter extends BaseNumberTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Integer.class, int.class);
    }

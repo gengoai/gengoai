@@ -19,11 +19,12 @@
 
 package com.gengoai.apollo.data.transform.vectorizer;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.IndexEncoder;
-import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 /**
@@ -35,6 +36,7 @@ import lombok.NonNull;
  *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
 public class CountVectorizer extends AbstractVariableVectorizer<CountVectorizer> {
    private static final long serialVersionUID = 1L;
 
@@ -71,4 +73,11 @@ public class CountVectorizer extends AbstractVariableVectorizer<CountVectorizer>
       }
    }
 
+   @Override
+   public String toString() {
+      return "CountVectorizer{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            '}';
+   }
 }//END OF CountVectorizer

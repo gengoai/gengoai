@@ -20,10 +20,10 @@
 package com.gengoai.apollo.model.clustering;
 
 import com.gengoai.Validation;
+import com.gengoai.apollo.evaluation.SilhouetteEvaluation;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.math.measure.Measure;
-import com.gengoai.apollo.evaluation.SilhouetteEvaluation;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.mahout.math.list.DoubleArrayList;

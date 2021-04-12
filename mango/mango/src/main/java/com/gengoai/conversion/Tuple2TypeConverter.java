@@ -51,6 +51,7 @@ public class Tuple2TypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Map.Entry.class, Tuple2.class);
    }

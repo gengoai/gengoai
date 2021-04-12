@@ -37,6 +37,7 @@
         <dependency>
             <groupId>com.gengoai</groupId>
             <artifactId>mango</artifactId>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.xerial</groupId>

@@ -19,34 +19,45 @@
 
 package com.gengoai.apollo.data.transform;
 
-import com.gengoai.apollo.math.measure.ContingencyTable;
-import com.gengoai.apollo.math.measure.ContingencyTableCalculator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.math.measure.Association;
+import com.gengoai.apollo.math.measure.ContingencyTable;
 import com.gengoai.collection.counter.HashMapMultiCounter;
 import com.gengoai.collection.counter.MultiCounter;
 import com.gengoai.stream.MCounterAccumulator;
 import com.gengoai.stream.MMultiCounterAccumulator;
 import com.gengoai.stream.MStream;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * <p>Uses a {@link ContingencyTableCalculator} to perform feature selection by taking the top N features per label
- * based on the calculator measure.</p>
+ * <p>Uses a {@link Association} to perform feature selection by taking the top N features per label
+ * based on the Association measure.</p>
  *
  * @author David B. Bracewell
  */
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = true)
 public class ContingencyFeatureSelection extends AbstractSingleSourceTransform<ContingencyFeatureSelection> {
    private static final long serialVersionUID = 1L;
    @NonNull
+   @JsonProperty
    private final String labelSource;
+   @JsonProperty
    private final int numFeaturesPerClass;
+   @JsonProperty
    private final double threshold;
    @NonNull
-   private final ContingencyTableCalculator calculator;
+   @JsonProperty
+   private final Association calculator;
+
 
    /**
     * Instantiates a new ContingencyFeatureSelection.
@@ -59,16 +70,14 @@ public class ContingencyFeatureSelection extends AbstractSingleSourceTransform<C
    public ContingencyFeatureSelection(@NonNull String labelSource,
                                       int numFeaturesPerClass,
                                       double threshold,
-                                      @NonNull ContingencyTableCalculator calculator) {
+                                      @NonNull Association calculator) {
       this.labelSource = labelSource;
       this.numFeaturesPerClass = numFeaturesPerClass;
       this.threshold = threshold;
       this.calculator = calculator;
    }
 
-   @Override
-   protected void fit(@NonNull MStream<Observation> observations) {
-   }
+
 
    @Override
    public DataSet fitAndTransform(DataSet dataset) {
@@ -88,14 +97,14 @@ public class ContingencyFeatureSelection extends AbstractSingleSourceTransform<C
       });
 
       double totalCount = labelCounts.value().sum();
-      for(String label : labelCounts.value().items()) {
+      for (String label : labelCounts.value().items()) {
          double labelCount = labelCounts.value().get(label);
          Map<String, Double> featureScores = new HashMap<>();
 
-         for(String feature : featureLabelCounts.value().firstKeys()) {
+         for (String feature : featureLabelCounts.value().firstKeys()) {
             double featureLabelCount = featureLabelCounts.value().get(feature, label);
             double featureSum = featureLabelCounts.value().get(feature).sum();
-            if(featureLabelCount > 0) {
+            if (featureLabelCount > 0) {
                double score = calculator.calculate(ContingencyTable.create2X2(featureLabelCount,
                                                                               labelCount,
                                                                               featureSum,
@@ -106,11 +115,12 @@ public class ContingencyFeatureSelection extends AbstractSingleSourceTransform<C
 
          List<Map.Entry<String, Double>> entryList = featureScores.entrySet()
                                                                   .stream()
-                                                                  .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                                                                  .sorted(Map.Entry.<String, Double>comparingByValue()
+                                                                                .reversed())
                                                                   .filter(e -> e.getValue() >= threshold)
                                                                   .collect(Collectors.toList());
 
-         if(entryList.size() > 0) {
+         if (entryList.size() > 0) {
             entryList.subList(0, Math.min(numFeaturesPerClass, entryList.size()))
                      .forEach(e -> features.add(e.getKey()));
          }
@@ -125,12 +135,34 @@ public class ContingencyFeatureSelection extends AbstractSingleSourceTransform<C
    }
 
    @Override
+   protected void fit(@NonNull MStream<Observation> observations) {
+   }
+
+   @Override
    protected Observation transform(@NonNull Observation observation) {
       return observation;
    }
 
    @Override
    protected void updateMetadata(@NonNull DataSet data) {
+
+   }
+
+   @Override
+   public String toString() {
+      return "ContingencyFeatureSelection{input='"
+            + input
+            + "', output='"
+            + output
+            + "', labelSource='"
+            + labelSource
+            +"', numFeaturesPerClass="
+            + numFeaturesPerClass
+            +", threshold="
+            + threshold
+            + ", calculator="
+            + calculator
+            +"}";
 
    }
 }//END OF ContingencyFeatureSelection

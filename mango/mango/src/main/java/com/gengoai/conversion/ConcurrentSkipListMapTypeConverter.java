@@ -20,6 +20,7 @@ public class ConcurrentSkipListMapTypeConverter extends MapTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(ConcurrentSkipListMap.class);
    }

@@ -20,6 +20,7 @@ public class WeakHashMapTypeConverter extends MapTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(WeakHashMap.class);
    }

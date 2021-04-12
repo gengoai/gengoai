@@ -19,20 +19,20 @@
 
 package com.gengoai.apollo.model.clustering;
 
-import com.gengoai.apollo.data.DataSet;
-import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.CSVDataSetReader;
-import com.gengoai.apollo.evaluation.SilhouetteEvaluation;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.Schema;
+import com.gengoai.apollo.data.ValueType;
+import com.gengoai.apollo.data.transform.ReplaceNonFinite;
 import com.gengoai.apollo.data.transform.Transformer;
 import com.gengoai.apollo.data.transform.VectorAssembler;
-import com.gengoai.collection.Sets;
+import com.gengoai.apollo.evaluation.SilhouetteEvaluation;
 import com.gengoai.io.CSV;
 import com.gengoai.io.Resources;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 
@@ -59,14 +59,20 @@ public abstract class BaseClustererTest {
    }
 
    protected DataSet loadWaterData() {
-      CSVDataSetReader csv = new CSVDataSetReader(CSV.builder());
+      var csv = new CSVDataSetReader(CSV.csv(), Schema.schema(Map.of(
+            "AutoColumn-0", ValueType.IGNORE
+      )));
       try {
-         DataSet ds = csv.read(Resources.fromClasspath("com/gengoai/apollo/ml/water-treatment.data")).probe().cache();
-         Transformer transformer = new Transformer(List.of(
-               new VectorAssembler(Sets.difference(ds.getMetadata().keySet(), Collections.singleton("AutoColumn-0")),
-                                   Datum.DEFAULT_INPUT)));
+         //Read in the DataSet and remove the first column
+         var ds = csv.read(Resources.fromClasspath("com/gengoai/apollo/ml/water-treatment.data"))
+                     .probe()
+                     .cache();
+         var transformer = new Transformer(
+               new ReplaceNonFinite(0),
+               new VectorAssembler()
+         );
          return transformer.fitAndTransform(ds);
-      } catch(IOException e) {
+      } catch (IOException e) {
          throw new RuntimeException(e);
       }
    }

@@ -102,8 +102,8 @@ public abstract class MapTypeConverter implements TypeConverter {
          Object key;
          Object value;
          if (o instanceof Map.Entry) {
-            key = Cast.<Map.Entry>as(o).getKey();
-            value = Cast.<Map.Entry>as(o).getValue();
+            key = Cast.<Map.Entry<?,?>>as(o).getKey();
+            value = Cast.<Map.Entry<?,?>>as(o).getValue();
          } else {
             key = o;
             if (!iterator.hasNext()) {

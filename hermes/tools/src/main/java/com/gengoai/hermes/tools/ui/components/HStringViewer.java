@@ -97,7 +97,7 @@ public class HStringViewer extends MangoStyledSpanTextPane {
 
    public HStringViewer(HString document) {
       this.context = document;
-      setText(document.toString());
+      setText(document.toString().replace("\r"," "));
       setAlwaysHighlight(true);
       defaultHighlightStyle.foreground(getBackground()).background(getForeground());
       var input = new InputMap();

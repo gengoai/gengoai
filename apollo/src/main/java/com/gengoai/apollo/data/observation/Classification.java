@@ -21,10 +21,10 @@ package com.gengoai.apollo.data.observation;
 
 import com.gengoai.Copyable;
 import com.gengoai.Validation;
+import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.model.Model;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;

@@ -19,9 +19,12 @@
 
 package com.gengoai.apollo.model.topic;
 
-import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.Params;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
@@ -36,9 +39,9 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static com.gengoai.apollo.data.observation.VariableCollection.mergeVariableSpace;
 import static com.gengoai.apollo.math.linalg.SparkLinearAlgebra.sparkSVD;
 import static com.gengoai.apollo.math.linalg.SparkLinearAlgebra.toMatrix;
-import static com.gengoai.apollo.data.observation.VariableCollection.mergeVariableSpace;
 import static com.gengoai.function.Functional.with;
 
 /**

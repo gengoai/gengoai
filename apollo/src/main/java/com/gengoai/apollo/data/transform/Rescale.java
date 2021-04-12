@@ -19,11 +19,15 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.math.Math2;
 import com.gengoai.stream.Streams;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.util.DoubleSummaryStatistics;
@@ -37,11 +41,17 @@ import java.util.stream.Collectors;
  *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public class Rescale extends PerPrefixTransform<Rescale> {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    private final double newMin;
+   @JsonProperty
    private final double newMaX;
+   @JsonProperty
    private final Map<String, Double> mins = new HashMap<>();
+   @JsonProperty
    private final Map<String, Double> maxs = new HashMap<>();
 
    /**
@@ -54,6 +64,20 @@ public class Rescale extends PerPrefixTransform<Rescale> {
       Validation.checkArgument(newMaX > newMin, "Max must be > min");
       this.newMin = newMin;
       this.newMaX = newMaX;
+   }
+
+
+   @Override
+   public String toString() {
+      return "Rescale{input='"
+            + input
+            + "', output='"
+            + output
+            + "', newMin="
+            + newMin
+            + ", newMax="
+            + newMaX
+            + "}";
    }
 
    @Override

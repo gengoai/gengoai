@@ -21,13 +21,12 @@ package com.gengoai.swing.component;
 
 import com.gengoai.conversion.Cast;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JList;
-import javax.swing.ListModel;
+import javax.swing.*;
 import java.util.Arrays;
 import java.util.Collection;
 
 public class MangoList<E> extends JList<E> {
+   private static final long serialVersionUID = 1L;
    private DefaultListModel<E> model;
 
    public MangoList() {

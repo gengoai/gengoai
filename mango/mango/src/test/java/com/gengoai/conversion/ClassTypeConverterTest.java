@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static com.gengoai.reflection.TypeUtils.parameterizedType;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

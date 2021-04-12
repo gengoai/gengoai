@@ -7,8 +7,8 @@ CORPUS_DIR=/data/corpora/hermes_data
 declare -A models
 models[POS]="--model=$HERMES_RESOURCE_DIR/$LANG/models/pos/"
 models[PHRASE_CHUNK]="--model=$HERMES_RESOURCE_DIR/$LANG/models/phrase_chunk"
-models[ENTITY]="--model=$HERMES_RESOURCE_DIR/$LANG/models/ner"
-models[TF_ENTITY]="--model=$HERMES_RESOURCE_DIR/$LANG/models/ner"
+models[ENTITY]="--model=$HERMES_RESOURCE_DIR/$LANG/models/ner-crf"
+models[TF_ENTITY]="--model=$HERMES_RESOURCE_DIR/$LANG/models/ner-reslstm"
 
 declare -A tagger
 tagger[POS]="--tagger=EN_POS"

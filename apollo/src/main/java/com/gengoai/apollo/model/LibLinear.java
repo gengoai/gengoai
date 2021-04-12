@@ -21,11 +21,11 @@ package com.gengoai.apollo.model;
 
 import com.gengoai.ParameterDef;
 import com.gengoai.Validation;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.data.DataSet;
-import com.gengoai.apollo.data.observation.Observation;
 import de.bwaldvogel.liblinear.*;
 import lombok.NonNull;
 

@@ -25,7 +25,6 @@ package com.gengoai.kv;
 import com.gengoai.collection.disk.NavigableDiskMap;
 import com.gengoai.io.resource.Resource;
 
-import java.io.File;
 import java.util.NavigableMap;
 
 /**

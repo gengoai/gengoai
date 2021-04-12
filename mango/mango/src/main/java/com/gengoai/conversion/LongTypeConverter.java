@@ -18,6 +18,7 @@ public class LongTypeConverter extends BaseNumberTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Long.class, long.class);
    }

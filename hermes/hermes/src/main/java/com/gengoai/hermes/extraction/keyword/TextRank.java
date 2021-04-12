@@ -98,9 +98,7 @@ public class TextRank implements KeywordExtractor {
       Counter<String> scores = pageRank.score(g);
       scores = scores.topN((int) (scores.size() * ratio));
 
-      Multimap<String, HString> lemmaToWord = new ArrayListMultimap<>();
       List<HString> keywords = new ArrayList<>();
-
       for(int i = 0; i < hString.tokenLength(); i++) {
          String tiStr = hString.tokenAt(i).getLemma();
          if(scores.contains(tiStr)) {

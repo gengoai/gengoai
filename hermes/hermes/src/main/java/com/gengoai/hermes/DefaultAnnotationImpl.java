@@ -23,10 +23,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
+import com.gengoai.collection.Lists;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class DefaultAnnotationImpl extends BaseHString implements Annotation {
@@ -48,8 +50,8 @@ class DefaultAnnotationImpl extends BaseHString implements Annotation {
       Validation.checkArgument(start <= end,
                                "Annotations must have a start character index that is less than or equal to the ending index.");
       this.annotationType = type == null
-                            ? AnnotationType.ROOT
-                            : type;
+            ? AnnotationType.ROOT
+            : type;
       this.owner = owner;
    }
 
@@ -64,10 +66,10 @@ class DefaultAnnotationImpl extends BaseHString implements Annotation {
       this.annotationType = type;
       this.owner = null;
       this.id = id;
-      if(attributeMap != null) {
+      if (attributeMap != null) {
          this.attributeMap().putAll(attributeMap);
       }
-      if(relations != null) {
+      if (relations != null) {
          relations.forEach(this::add);
       }
    }
@@ -88,14 +90,14 @@ class DefaultAnnotationImpl extends BaseHString implements Annotation {
       super(start, end);
       this.owner = null;
       this.annotationType = type == null
-                            ? AnnotationType.ROOT
-                            : type;
+            ? AnnotationType.ROOT
+            : type;
    }
 
    @Override
    public void add(@NonNull Relation relation) {
       outgoingRelations.add(relation);
-      if(!isDetached()) {
+      if (!isDetached()) {
          Cast.<DefaultAnnotationImpl>as(relation.getTarget(this)).incomingRelations
                .add(new Relation(relation.getType(), relation.getValue(), getId()));
       }
@@ -113,6 +115,11 @@ class DefaultAnnotationImpl extends BaseHString implements Annotation {
    }
 
    @Override
+   public void setId(long id) {
+      this.id = id;
+   }
+
+   @Override
    public final AnnotationType getType() {
       return annotationType;
    }
@@ -120,7 +127,7 @@ class DefaultAnnotationImpl extends BaseHString implements Annotation {
    @Override
    public Stream<Relation> incomingRelationStream(boolean includeSubAnnotations) {
       Stream<Relation> relationStream = incomingRelations.stream();
-      if(this.getType() != Types.TOKEN && includeSubAnnotations) {
+      if (this.getType() != Types.TOKEN && includeSubAnnotations) {
          relationStream = Stream.concat(relationStream,
                                         annotations().stream()
                                                      .filter(a -> a != this)
@@ -134,7 +141,7 @@ class DefaultAnnotationImpl extends BaseHString implements Annotation {
    @Override
    public Stream<Relation> outgoingRelationStream(boolean includeSubAnnotations) {
       Stream<Relation> relationStream = outgoingRelations.stream();
-      if(this.getType() != Types.TOKEN && includeSubAnnotations) {
+      if (this.getType() != Types.TOKEN && includeSubAnnotations) {
          relationStream = Stream.concat(relationStream,
                                         annotations().stream()
                                                      .filter(a -> a != this)
@@ -147,34 +154,33 @@ class DefaultAnnotationImpl extends BaseHString implements Annotation {
 
    @Override
    public void removeRelation(@NonNull Relation relation) {
-      if(outgoingRelations.remove(relation)) {
+      if (outgoingRelations.remove(relation)) {
          relation.getTarget(this).removeRelation(new Relation(relation.getType(), relation.getValue(), getId()));
       }
    }
 
-   protected void setDocument(Document d) {
-      this.owner = d;
-   }
-
-   @Override
-   public void setId(long id) {
-      this.id = id;
-   }
-
    @Override
    public List<Annotation> tokens() {
-      if(tokens == null) {
-         synchronized(this) {
-            if(tokens == null) {
+      if (tokens == null) {
+         synchronized (this) {
+            if (tokens == null) {
                List<Annotation> tokenList = super.tokens();
-               if(!tokenList.isEmpty()) {
+               if (!tokenList.isEmpty()) {
                   tokens = tokenList.toArray(new Annotation[0]);
                }
             }
          }
       }
       return tokens == null
-             ? Collections.emptyList()
-             : Arrays.asList(tokens);
+            ? Collections.emptyList()
+            : Arrays.asList(tokens);
+   }
+
+   protected void setDocument(Document d) {
+      this.owner = d;
+      for (Relation relation : this.outgoingRelations) {
+         Cast.<DefaultAnnotationImpl>as(relation.getTarget(this)).incomingRelations
+               .add(new Relation(relation.getType(), relation.getValue(), getId()));
+      }
    }
 }//END OF DefaultAnnotationImpl

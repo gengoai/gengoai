@@ -19,7 +19,7 @@
 
 package com.gengoai.swing;
 
-import javax.swing.JComponent;
+import javax.swing.*;
 
 public interface View {
 

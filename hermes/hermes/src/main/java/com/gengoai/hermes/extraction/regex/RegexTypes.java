@@ -38,6 +38,7 @@ import com.gengoai.string.Re;
 import com.gengoai.string.StringMatcher;
 import com.gengoai.string.Strings;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -102,7 +103,7 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
       @Override
       public void register(Grammar grammar) {
          grammar.prefix(this, (parser, token) -> {
-            String patternText = Strings.unescape(token.getVariable(0), '\\');
+            String patternText = token.getVariable(0);//Strings.unescape(token.getVariable(0), '\\');
             final Pattern pattern = (Strings.isNullOrBlank(token.getVariable(1)))
                                     ? Pattern.compile(patternText)
                                     : Pattern.compile(patternText, Pattern.CASE_INSENSITIVE);

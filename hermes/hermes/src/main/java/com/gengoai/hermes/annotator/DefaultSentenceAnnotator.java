@@ -21,7 +21,10 @@
 
 package com.gengoai.hermes.annotator;
 
+import com.gengoai.collection.Sets;
 import com.gengoai.hermes.*;
+import com.gengoai.hermes.en.ENLexicons;
+import com.gengoai.hermes.lexicon.TrieWordList;
 import com.gengoai.hermes.morphology.TokenType;
 import com.gengoai.string.Strings;
 
@@ -38,7 +41,7 @@ import static com.gengoai.tuple.Tuples.$;
  */
 public class DefaultSentenceAnnotator extends Annotator {
    private static final long serialVersionUID = 1L;
-
+   private final TrieWordList nonBreaking;
    private final char[] endOfSentence = new char[]{
          '\u0021',
          '\u002E',
@@ -75,7 +78,6 @@ public class DefaultSentenceAnnotator extends Annotator {
          '\uFF1F',
          '\uFF61',
    };
-
    private final char[] sContinue = new char[]{
          '\u002C',
          '\u002D',
@@ -104,155 +106,165 @@ public class DefaultSentenceAnnotator extends Annotator {
          '\uFF1A',
          '\uFF64'
    };
+   private final Set<String> noSentenceBreak = Sets.hashSetOf("admr.",
+                                                              "al.",
+                                                              "ala.",
+                                                              "jan",
+                                                              "feb",
+                                                              "mar",
+                                                              "apr",
+                                                              "jun",
+                                                              "jul",
+                                                              "aug",
+                                                              "sep",
+                                                              "sept",
+                                                              "oct",
+                                                              "nov",
+                                                              "dec",
+                                                              "alta.",
+                                                              "arc.",
+                                                              "ariz.",
+                                                              "ark.",
+                                                              "atty.",
+                                                              "attys.",
+                                                              "ave.",
+                                                              "bld.",
+                                                              "blvd.",
+                                                              "cal.",
+                                                              "calif.",
+                                                              "cl.",
+                                                              "cmdr.",
+                                                              "co.",
+                                                              "col.",
+                                                              "colo.",
+                                                              "conn.",
+                                                              "corp.",
+                                                              "cpl.",
+                                                              "cres.",
+                                                              "ct.",
+                                                              "dak.",
+                                                              "del.",
+                                                              "det.",
+                                                              "dist.",
+                                                              "dr.",
+                                                              "esp.",
+                                                              "etc.",
+                                                              "exp.",
+                                                              "expy.",
+                                                              "fed.",
+                                                              "fla.",
+                                                              "ft.",
+                                                              "fw?y.",
+                                                              "fy.",
+                                                              "ga.",
+                                                              "gen.",
+                                                              "gov.",
+                                                              "hway.",
+                                                              "hwy.",
+                                                              "ia.",
+                                                              "id.",
+                                                              "ida.",
+                                                              "ill.",
+                                                              "inc.",
+                                                              "ind.",
+                                                              "is.",
+                                                              "jr.",
+                                                              "kan.",
+                                                              "kans.",
+                                                              "ken.",
+                                                              "ky.",
+                                                              "la.",
+                                                              "lt.",
+                                                              "ltd.",
+                                                              "maj.",
+                                                              "man.",
+                                                              "mass.",
+                                                              "md.",
+                                                              "me.",
+                                                              "mex.",
+                                                              "mich.",
+                                                              "minn.",
+                                                              "miss.",
+                                                              "mo.",
+                                                              "mont.",
+                                                              "mr.",
+                                                              "mrs.",
+                                                              "ms.",
+                                                              "mt.",
+                                                              "neb.",
+                                                              "nebr.",
+                                                              "nev.",
+                                                              "ok.",
+                                                              "okla.",
+                                                              "ont.",
+                                                              "ore.",
+                                                              "p.m.",
+                                                              "pa.",
+                                                              "pd.",
+                                                              "pde?.",
+                                                              "penn.",
+                                                              "penna.",
+                                                              "pl.",
+                                                              "plz.",
+                                                              "prof.",
+                                                              "pvt.",
+                                                              "qué.",
+                                                              "rd.",
+                                                              "rep.",
+                                                              "reps.",
+                                                              "rev.",
+                                                              "sask.",
+                                                              "sen.",
+                                                              "sens.",
+                                                              "sgt.",
+                                                              "sr.",
+                                                              "supt.",
+                                                              "tce.",
+                                                              "tenn.",
+                                                              "tex.",
+                                                              "tx.",
+                                                              "u.s.",
+                                                              "u.s.a.",
+                                                              "us.",
+                                                              "usa.",
+                                                              "usafa.",
+                                                              "ut.",
+                                                              "va.",
+                                                              "vs.",
+                                                              "vt.",
+                                                              "wash.",
+                                                              "wis.",
+                                                              "wisc.",
+                                                              "wy.",
+                                                              "wyo.",
+                                                              "yuk.",
+                                                              "st.");
 
-   private final Set<String> noSentenceBreak = new HashSet<String>() {
-      {
-         add("admr.");
-         add("al.");
-         add("ala.");
-         add("jan");
-         add("feb");
-         add("mar");
-         add("apr");
-         add("jun");
-         add("jul");
-         add("aug");
-         add("sep");
-         add("sept");
-         add("oct");
-         add("nov");
-         add("dec");
-         add("alta.");
-         add("arc.");
-         add("ariz.");
-         add("ark.");
-         add("atty.");
-         add("attys.");
-         add("ave.");
-         add("bld.");
-         add("blvd.");
-         add("cal.");
-         add("calif.");
-         add("cl.");
-         add("cmdr.");
-         add("co.");
-         add("col.");
-         add("colo.");
-         add("conn.");
-         add("corp.");
-         add("cpl.");
-         add("cres.");
-         add("ct.");
-         add("dak.");
-         add("del.");
-         add("det.");
-         add("dist.");
-         add("dr.");
-         add("esp.");
-         add("etc.");
-         add("exp.");
-         add("expy.");
-         add("fed.");
-         add("fla.");
-         add("ft.");
-         add("fw?y.");
-         add("fy.");
-         add("ga.");
-         add("gen.");
-         add("gov.");
-         add("hway.");
-         add("hwy.");
-         add("ia.");
-         add("id.");
-         add("ida.");
-         add("ill.");
-         add("inc.");
-         add("ind.");
-         add("is.");
-         add("jr.");
-         add("kan.");
-         add("kans.");
-         add("ken.");
-         add("ky.");
-         add("la.");
-         add("lt.");
-         add("ltd.");
-         add("maj.");
-         add("man.");
-         add("mass.");
-         add("md.");
-         add("me.");
-         add("mex.");
-         add("mich.");
-         add("minn.");
-         add("miss.");
-         add("mo.");
-         add("mont.");
-         add("mr.");
-         add("mrs.");
-         add("ms.");
-         add("mt.");
-         add("neb.");
-         add("nebr.");
-         add("nev.");
-         add("ok.");
-         add("okla.");
-         add("ont.");
-         add("ore.");
-         add("p.m.");
-         add("pa.");
-         add("pd.");
-         add("pde?.");
-         add("penn.");
-         add("penna.");
-         add("pl.");
-         add("plz.");
-         add("prof.");
-         add("pvt.");
-         add("qué.");
-         add("rd.");
-         add("rep.");
-         add("reps.");
-         add("rev.");
-         add("sask.");
-         add("sen.");
-         add("sens.");
-         add("sgt.");
-         add("sr.");
-         add("supt.");
-         add("tce.");
-         add("tenn.");
-         add("tex.");
-         add("tx.");
-         add("u.s.");
-         add("u.s.a.");
-         add("us.");
-         add("usa.");
-         add("usafa.");
-         add("ut.");
-         add("va.");
-         add("vs.");
-         add("vt.");
-         add("wash.");
-         add("wis.");
-         add("wisc.");
-         add("wy.");
-         add("wyo.");
-         add("yuk.");
-         add("st.");
-      }
-   };
+
+   public DefaultSentenceAnnotator() {
+      this.nonBreaking = ENLexicons.ALL.get();
+   }
+
+   @Override
+   public Set<AnnotatableType> requires() {
+      return Collections.singleton(Types.TOKEN);
+   }
+
+   @Override
+   public Set<AnnotatableType> satisfies() {
+      return Collections.singleton(Types.SENTENCE);
+   }
 
    private boolean addSentence(Document doc, int start, int end, int index) {
-      while(start < doc.length() && Character.isWhitespace(doc.charAt(start))) {
+      while (start < doc.length() && Character.isWhitespace(doc.charAt(start))) {
          start++;
       }
-      if(start <= end) {
+      if (start <= end) {
          doc.createAnnotation(Types.SENTENCE,
                               start,
                               end,
                               hashMapOf($(Types.INDEX, index))
-                             );
+         );
          return true;
       }
       return false;
@@ -266,51 +278,101 @@ public class DefaultSentenceAnnotator extends Annotator {
       int lastEnd = -1;
 
       int quoteCount = 0;
-      for(int ti = 0; ti < tokens.size(); ti++) {
+      for (int ti = 0; ti < tokens.size(); ti++) {
          Annotation cToken = tokens.get(ti);
          Annotation nToken = getToken(tokens, ti + 1);
 
-         if(start == -1) {
+         if (start == -1) {
             start = cToken.start();
          }
 
          Set<InternalType> cTypes = getTypes(cToken);
          Set<InternalType> nTypes = getTypes(nToken);
 
-         if(cTypes.contains(QUOTATION_MARK)) {
+         if (cTypes.contains(QUOTATION_MARK)) {
             quoteCount++;
          }
+         if (cTypes.contains(CONTINUE_SENTENCE)) {
+            continue;
+         }
 
-         if((cTypes.contains(ABBREVIATION) && nTypes.contains(CAPITALIZED) && quoteCount % 2 == 0)
-               || (!cTypes.contains(ABBREVIATION) && cTypes.contains(END_OF_SENTENCE) && !nTypes.contains(
-               PERSON_TITLE))) {
 
-            while(nTypes.contains(END_OF_SENTENCE)) {
+         if ((cTypes.contains(ABBREVIATION) && nTypes.contains(CAPITALIZED) && quoteCount % 2 == 0)
+               || (!cTypes.contains(ABBREVIATION)
+               && cTypes.contains(END_OF_SENTENCE) &&
+               !nTypes.contains(PERSON_TITLE))) {
+
+            // Handle things like "..." or "?????" as
+            // marking the end of one sentence
+            while (nTypes.contains(END_OF_SENTENCE)) {
                ti++;
                cToken = nToken;
                nToken = getToken(tokens, ti + 1);
                nTypes = getTypes(nToken);
             }
 
-            if((nTypes.contains(END_BRACKET) || nTypes.contains(QUOTATION_MARK)) && distance(cToken, nToken) == 0) {
+            if ((nTypes.contains(END_BRACKET) || nTypes.contains(QUOTATION_MARK)) && distance(cToken, nToken) == 0) {
                ti++;
                cToken = nToken;
             }
 
-            if(!noSentenceBreak.contains(cToken.toLowerCase()) && !nTypes.contains(CONTINUE_SENTENCE) && addSentence(
-                  doc, start, cToken.end(), sentenceIndex)) {
+            switch (nToken.toString()) {
+               case "AM":
+               case "PM":
+               case "a.m.":
+               case "p.m.":
+               case "A.M.":
+               case "P.M.":
+                  Annotation nnToken = nToken.next();
+                  if (!nnToken.isEmpty() && nnToken.toUpperCase().contentEquals(nnToken)) {
+                     continue;
+                  }
+            }
+            switch (cToken.toString()) {
+               case "AM":
+               case "PM":
+               case "a.m.":
+               case "p.m.":
+               case "A.M.":
+               case "P.M.":
+                  if (!nToken.isEmpty() && nToken.toUpperCase().contentEquals(nToken)) {
+                     continue;
+                  }
+                  break;
+               case "1":
+               case "2":
+               case "3":
+               case "4":
+               case "5":
+               case "6":
+               case "7":
+               case "8":
+               case "9":
+               case "10":
+                  if (nToken.contentEquals(".")) {
+                     continue;
+                  }
+                  break;
+            }
+
+
+            if (!nonBreaking.contains(cToken)
+                  && !nTypes.contains(CONTINUE_SENTENCE)
+                  && addSentence(doc, start, cToken.end(), sentenceIndex)) {
                sentenceIndex++;
                lastEnd = cToken.end();
                start = -1;
                quoteCount = 0;
             }
+
          } else {
             int newLines = countNewLineBeforeNext(doc, cToken, nToken);
-            if(newLines > 1
+            if (newLines > 1
                   || (newLines == 1 && nTypes.contains(CAPITALIZED))
                   || (newLines == 1 && nTypes.contains(LIST_MARKER))) {
+
                //Two or more line ends typically signifies a section heading, so treat it as a sentence.
-               if(addSentence(doc, start, cToken.end(), sentenceIndex)) {
+               if (addSentence(doc, start, cToken.end(), sentenceIndex)) {
                   sentenceIndex++;
                   lastEnd = cToken.end();
                   start = -1;
@@ -319,20 +381,21 @@ public class DefaultSentenceAnnotator extends Annotator {
             }
          }
       }
-      if(tokens.size() > 0 && lastEnd < tokens.get(tokens.size() - 1).end()) {
+
+      if (tokens.size() > 0 && lastEnd < tokens.get(tokens.size() - 1).end()) {
          addSentence(doc, start, tokens.get(tokens.size() - 1).end(), sentenceIndex);
       }
 
    }
 
    private int countNewLineBeforeNext(Document doc, Annotation cToken, Annotation nToken) {
-      if(nToken.isEmpty()) {
+      if (nToken.isEmpty()) {
          return 0;
       }
       int count = 0;
       char prev = '\0';
-      for(int i = cToken.end(); i < nToken.start(); i++) {
-         if(doc.charAt(i) == '\r' || (prev != '\r' && doc.charAt(i) == '\n')) {
+      for (int i = cToken.end(); i < nToken.start(); i++) {
+         if (doc.charAt(i) == '\r' || (prev != '\r' && doc.charAt(i) == '\n')) {
             count++;
          }
          prev = doc.charAt(i);
@@ -345,7 +408,7 @@ public class DefaultSentenceAnnotator extends Annotator {
    }
 
    private Annotation getToken(List<Annotation> tokens, int index) {
-      if(index < 0 || index >= tokens.size()) {
+      if (index < 0 || index >= tokens.size()) {
          return Fragments.orphanedAnnotation(Types.TOKEN);
       }
       return tokens.get(index);
@@ -353,31 +416,31 @@ public class DefaultSentenceAnnotator extends Annotator {
 
    private Set<InternalType> getTypes(Annotation annotation) {
       Set<InternalType> types = new HashSet<>();
-      if(isQuotation(annotation)) {
+      if (isQuotation(annotation)) {
          types.add(QUOTATION_MARK);
       }
-      if(isAbbreviation(annotation)) {
+      if (isAbbreviation(annotation)) {
          types.add(ABBREVIATION);
       }
-      if(isListMarker(annotation)) {
+      if (isListMarker(annotation)) {
          types.add(LIST_MARKER);
       }
-      if(isEndOfSentenceMark(annotation)) {
+      if (isEndOfSentenceMark(annotation)) {
          types.add(END_OF_SENTENCE);
       }
-      if(isContinue(annotation)) {
+      if (isContinue(annotation)) {
          types.add(CONTINUE_SENTENCE);
       }
-      if(annotation.attribute(Types.TOKEN_TYPE, TokenType.UNKNOWN).equals(TokenType.PERSON_TITLE)) {
+      if (annotation.attribute(Types.TOKEN_TYPE, TokenType.UNKNOWN).equals(TokenType.PERSON_TITLE)) {
          types.add(PERSON_TITLE);
       }
-      if(isCapitalized(annotation)) {
+      if (isCapitalized(annotation)) {
          types.add(CAPITALIZED);
       }
-      if(isEndBracket(annotation)) {
+      if (isEndBracket(annotation)) {
          types.add(END_BRACKET);
       }
-      if(types.isEmpty()) {
+      if (types.isEmpty()) {
          types.add(OTHER);
       }
 
@@ -392,9 +455,9 @@ public class DefaultSentenceAnnotator extends Annotator {
    }
 
    private boolean isCapitalized(Annotation token) {
-      if(token.length() == 1 && token.contentEquals("I")) {
+      if (token.length() == 1 && token.contentEquals("I")) {
          return true;
-      } else if(token.length() > 1) {
+      } else if (token.length() > 1) {
          return !Strings.hasLetter(token) || Character.isUpperCase(token.charAt(0));
       }
       return false;
@@ -402,14 +465,14 @@ public class DefaultSentenceAnnotator extends Annotator {
 
    private boolean isContinue(Annotation token) {
       char c = token.isEmpty()
-               ? ' '
-               : token.charAt(token.length() - 1);
+            ? ' '
+            : token.charAt(token.length() - 1);
       return Arrays.binarySearch(sContinue, c) >= 0;
    }
 
    private boolean isEndBracket(Annotation annotation) {
-      if(annotation.length() == 1) {
-         switch(annotation.charAt(0)) {
+      if (annotation.length() == 1) {
+         switch (annotation.charAt(0)) {
             case ')':
             case ']':
             case '>':
@@ -420,7 +483,7 @@ public class DefaultSentenceAnnotator extends Annotator {
    }
 
    private boolean isEndOfSentenceMark(Annotation token) {
-      if(token.isEmpty() || token.attribute(Types.TOKEN_TYPE, TokenType.UNKNOWN).isInstance(
+      if (token.isEmpty() || token.attribute(Types.TOKEN_TYPE, TokenType.UNKNOWN).isInstance(
             TokenType.EMOTICON,
             TokenType.PERSON_TITLE)) {
          return false;
@@ -429,21 +492,25 @@ public class DefaultSentenceAnnotator extends Annotator {
       return Arrays.binarySearch(endOfSentence, c) >= 0;
    }
 
-   private boolean isEndPunctuation(Annotation token) {
-      if(token.length() != 1) {
-         return false;
-      }
-      char n = token.charAt(0);
-      int type = Character.getType(n);
-      return n == '"' || type == Character.FINAL_QUOTE_PUNCTUATION || type == Character.END_PUNCTUATION;
-   }
 
    private boolean isListMarker(Annotation token) {
-      return token.contentEquals("*") || token.contentEquals("+") || token.contentEquals(">");
+      return token.contentEquals("*") ||
+            token.contentEquals("+") ||
+            token.contentEquals("1.") ||
+            token.contentEquals("2.") ||
+            token.contentEquals("3.") ||
+            token.contentEquals("4.") ||
+            token.contentEquals("5.") ||
+            token.contentEquals("6.") ||
+            token.contentEquals("7.") ||
+            token.contentEquals("8.") ||
+            token.contentEquals("9.") ||
+            token.contentEquals("10.") ||
+            token.contentEquals(">");
    }
 
    private boolean isQuotation(Annotation annotation) {
-      if(annotation.length() == 1) {
+      if (annotation.length() == 1) {
          int type = Character.getType(annotation.charAt(0));
          return annotation.contentEquals("\"")
                || annotation.contentEquals("'")
@@ -451,16 +518,6 @@ public class DefaultSentenceAnnotator extends Annotator {
                || type == Character.FINAL_QUOTE_PUNCTUATION;
       }
       return false;
-   }
-
-   @Override
-   public Set<AnnotatableType> requires() {
-      return Collections.singleton(Types.TOKEN);
-   }
-
-   @Override
-   public Set<AnnotatableType> satisfies() {
-      return Collections.singleton(Types.SENTENCE);
    }
 
    /**

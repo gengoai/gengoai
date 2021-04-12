@@ -19,13 +19,15 @@
 
 package com.gengoai.swing.component.renderer;
 
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 public final class TableCellRenderers {
 
    public static final TableCellRenderer CENTER_ALIGN = new DefaultTableCellRenderer() {
+      private static final long serialVersionUID = 1L;
+
       {
          super.setHorizontalAlignment(SwingConstants.CENTER);
       }
@@ -36,6 +38,8 @@ public final class TableCellRenderers {
       }
    };
    public static final TableCellRenderer LEFT_ALIGN = new DefaultTableCellRenderer() {
+      private static final long serialVersionUID = 1L;
+
       {
          super.setHorizontalAlignment(SwingConstants.LEFT);
       }
@@ -46,6 +50,8 @@ public final class TableCellRenderers {
       }
    };
    public static final TableCellRenderer RIGHT_ALIGN = new DefaultTableCellRenderer() {
+      private static final long serialVersionUID = 1L;
+
       {
          super.setHorizontalAlignment(SwingConstants.RIGHT);
       }

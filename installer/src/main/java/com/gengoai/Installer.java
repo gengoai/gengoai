@@ -62,6 +62,7 @@ import java.util.*;
             " Command Line Arguments"
 )
 public class Installer extends CommandLineApplication {
+   private static final long serialVersionUID = 1L;
    private static final Resource BASE_URL = Resources.from("https://gengoai.link/");
    private static final Resource RELEASES_URL = BASE_URL.getChild("releases/");
    private static final String MANIFEST_FILE = "manifest.json";
@@ -199,6 +200,7 @@ public class Installer extends CommandLineApplication {
    }
 
    public static class ModelDefinitions implements Serializable {
+      private static final long serialVersionUID = 1L;
       Map<String, ModelEntry> models = new HashMap<>();
       Map<String, String> defaultVariants = new HashMap<>();
       private String languageDir;
@@ -273,6 +275,7 @@ public class Installer extends CommandLineApplication {
 
    @Data
    public static class ModelEntry implements Serializable {
+      private static final long serialVersionUID = 1L;
       private String description;
       private String latest;
       private List<String> versions;
@@ -281,6 +284,7 @@ public class Installer extends CommandLineApplication {
 
    @Data
    public static class PackageList implements Serializable {
+      private static final long serialVersionUID = 1L;
       private Map<String, List<String>> packages;
 
       public List<String> expand(String model) {

@@ -19,9 +19,10 @@
 
 package com.gengoai.apollo.data.transform.vectorizer;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.encoder.IndexEncoder;
 import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.encoder.IndexEncoder;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import lombok.EqualsAndHashCode;
 
 /**
  * <p>
@@ -31,6 +32,7 @@ import com.gengoai.apollo.data.observation.Variable;
  *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
 public class OneHotVectorizer extends AbstractVariableVectorizer<OneHotVectorizer> {
 
    /**
@@ -38,6 +40,14 @@ public class OneHotVectorizer extends AbstractVariableVectorizer<OneHotVectorize
     */
    public OneHotVectorizer() {
       super(new IndexEncoder());
+   }
+
+   @Override
+   public String toString() {
+      return "OneHotVectorizer{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            '}';
    }
 
    /**

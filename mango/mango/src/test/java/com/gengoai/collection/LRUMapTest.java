@@ -21,7 +21,6 @@
 
 package com.gengoai.collection;
 
-import com.gengoai.collection.LRUMap;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

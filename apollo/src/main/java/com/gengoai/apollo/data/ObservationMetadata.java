@@ -20,8 +20,8 @@
 package com.gengoai.apollo.data;
 
 import com.gengoai.Copyable;
-import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.encoder.Encoder;
 import lombok.Data;
 
 import java.io.Serializable;

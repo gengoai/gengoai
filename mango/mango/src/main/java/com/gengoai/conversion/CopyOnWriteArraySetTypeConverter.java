@@ -16,6 +16,7 @@ import static com.gengoai.collection.Arrays2.arrayOf;
 public class CopyOnWriteArraySetTypeConverter extends CollectionTypeConverter {
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(CopyOnWriteArraySet.class);
    }

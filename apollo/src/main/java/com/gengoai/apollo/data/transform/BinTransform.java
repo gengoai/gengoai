@@ -19,10 +19,13 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.stream.Streams;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.util.DoubleSummaryStatistics;
@@ -36,10 +39,14 @@ import java.util.stream.Collectors;
  *
  * @author David B. Bracewell
  */
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public class BinTransform extends PerPrefixTransform<BinTransform> {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    private final int numberOfBins;
+   @JsonProperty
    private final Map<String, double[]> prefixBinMap = new HashMap<>();
+   @JsonProperty
    private final boolean includeSuffix;
 
    /**
@@ -53,6 +60,17 @@ public class BinTransform extends PerPrefixTransform<BinTransform> {
       this.includeSuffix = includeSuffix;
    }
 
+
+   @Override
+   public String toString() {
+      return "BinTransform{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            ", numberOfBins=" + numberOfBins +
+            ", includeSuffix=" + includeSuffix +
+            '}';
+   }
+
    @Override
    protected void fit(@NonNull String prefix, @NonNull Iterable<Variable> variables) {
       double[] bins = new double[numberOfBins];
@@ -62,7 +80,7 @@ public class BinTransform extends PerPrefixTransform<BinTransform> {
       double min = statistics.getMin();
       double binSize = ((max - min) / numberOfBins);
       double sum = min;
-      for(int i = 0; i < bins.length; i++) {
+      for (int i = 0; i < bins.length; i++) {
          sum += binSize;
          bins[i] = sum;
       }
@@ -72,8 +90,8 @@ public class BinTransform extends PerPrefixTransform<BinTransform> {
    private int getBin(String prefix, double value) {
       int bin = 0;
       double[] bins = prefixBinMap.get(prefix);
-      for(; bin < bins.length - 1; bin++) {
-         if(value < bins[bin]) {
+      for (; bin < bins.length - 1; bin++) {
+         if (value < bins[bin]) {
             break;
          }
       }
@@ -87,7 +105,7 @@ public class BinTransform extends PerPrefixTransform<BinTransform> {
 
    @Override
    protected Variable transform(@NonNull Variable variable) {
-      if(includeSuffix) {
+      if (includeSuffix) {
          return Variable.binary(variable.getPrefix(),
                                 variable.getSuffix() + "-Bin[" + getBin(variable.getPrefix(),
                                                                         variable.getValue()) + "]");

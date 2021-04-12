@@ -31,15 +31,13 @@ import java.util.Set;
 
 /**
  * <p>
- * An encoder represents a maps variable names to indexes. They are typically used in conjunction with a {@link
- * Vectorizer} in order to convert {@link Observation}s into a vector ({@link com.gengoai.apollo.math.linalg.NDArray})
- * representation.
+ * An encoder maps variable names to indices. They are typically used in conjunction with a {@link Vectorizer} in order
+ * to convert {@link Observation}s into a vector ({@link com.gengoai.apollo.math.linalg.NDArray}) representation.
  * </p>
  * <p>
- * Encoders need to learn its mapping during training through calls to the {@link #fit(MStream)} method which processes
- * a stream of Observation learning to how encode its name space. However, an encoder can be <code>fixed</code> meaning
- * that the mapping vocabulary is static, i.e. known beforehand. This is the case when using pre-trained embeddings,
- * like Glove and Word2Vec.
+ * Encoders (typically) need to learn the mapping during training through calls to the {@link #fit(MStream)} method
+ * which processes a stream of Observation learning to how encode its name space. However, an encoder can be
+ * <code>fixed</code> meaning that the mapping vocabulary is static, i.e. known beforehand.
  * </p>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)

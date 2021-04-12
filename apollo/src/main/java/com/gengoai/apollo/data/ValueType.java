@@ -33,6 +33,12 @@ public enum ValueType {
    /**
     * Numeric variables where if the given value is null or cannot be parsed will result in <code>NaN</code>.
     */
+   IGNORE{
+      @Override
+      public Variable createVariable(@NonNull String name, Object value) {
+         return null;
+      }
+   },
    NUMERIC {
       @Override
       public Variable createVariable(@NonNull String name, Object value) {

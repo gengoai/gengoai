@@ -146,7 +146,6 @@ public class Shape extends Coordinate implements Copyable<Shape> {
       ) {
          return Broadcast.ERROR;
       }
-
       if (isMatrix() && rhs.rows() == rows() && rhs.columns() <= 1) {
          return Broadcast.MATRIX_COLUMN;
       }
@@ -319,6 +318,13 @@ public class Shape extends Coordinate implements Copyable<Shape> {
          return false;
       }
       return (point[2] > 0 && point[3] <= 1);
+   }
+
+   public boolean isRowVector() {
+      if (point[0] > 0 || point[1] > 0) {
+         return false;
+      }
+      return (point[2] <= 1 && point[3] >0);
    }
 
    /**

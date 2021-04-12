@@ -22,8 +22,8 @@ package com.gengoai.swing.component.listener;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 
-import javax.swing.JComponent;
-import java.awt.Component;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;

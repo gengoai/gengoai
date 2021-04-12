@@ -19,6 +19,7 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.gengoai.Copyable;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
@@ -44,6 +45,7 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface Transform extends Serializable, Copyable<Transform> {
 
    @Override

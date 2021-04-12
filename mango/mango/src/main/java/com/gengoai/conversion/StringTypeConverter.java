@@ -50,7 +50,7 @@ public class StringTypeConverter implements TypeConverter {
       } else if(object instanceof Map) {
          return Json.dumps(object);
       } else if(object instanceof Enum) {
-         Enum e = Cast.as(object);
+         Enum<?> e = Cast.as(object);
          return e.getDeclaringClass().getName() + "." + e.name();
       } else if(object instanceof EnumValue) {
          return Cast.<EnumValue>as(object).canonicalName();
@@ -61,6 +61,7 @@ public class StringTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(String.class, CharSequence.class);
    }

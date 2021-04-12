@@ -19,11 +19,15 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.stream.MStream;
 import com.gengoai.string.Strings;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.util.HashSet;
@@ -36,10 +40,15 @@ import java.util.stream.Collectors;
  * A {@link Transform} that filters out {@link Variable}s whose name occurs less than the given count.
  * </p>
  */
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = true)
 public class MinCountFilter extends AbstractSingleSourceTransform<MinCountFilter> {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    private final int minCount;
+   @JsonProperty
    private final Set<String> vocab = new HashSet<>();
+   @JsonProperty
    private final String unknown;
 
    /**
@@ -50,6 +59,7 @@ public class MinCountFilter extends AbstractSingleSourceTransform<MinCountFilter
    public MinCountFilter(int minCount) {
       this(minCount, null);
    }
+
 
    /**
     * Instantiates a new MinCountFilter.
@@ -63,6 +73,31 @@ public class MinCountFilter extends AbstractSingleSourceTransform<MinCountFilter
    }
 
    @Override
+   public String toString() {
+      return "MinCountFilter{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            ", minCount=" + minCount +
+            ", unknown='" + unknown + '\'' +
+            '}';
+   }
+
+   @Override
+   public Observation transform(Observation o) {
+      if (unknown == null) {
+         o.removeVariables(v -> !vocab.contains(v.getName()));
+      } else {
+         o.mapVariables(v -> {
+            if (vocab.contains(v.getName())) {
+               return v;
+            }
+            return Variable.real(unknown, v.getValue());
+         });
+      }
+      return o;
+   }
+
+   @Override
    protected void fit(@NonNull MStream<Observation> observations) {
       Map<String, Long> m = observations.flatMap(Observation::getVariableSpace)
                                         .map(Variable::getName)
@@ -70,21 +105,6 @@ public class MinCountFilter extends AbstractSingleSourceTransform<MinCountFilter
       m.values().removeIf(v -> v < minCount);
       vocab.clear();
       vocab.addAll(m.keySet());
-   }
-
-   @Override
-   public Observation transform(Observation o) {
-      if(unknown == null) {
-         o.removeVariables(v -> !vocab.contains(v.getName()));
-      } else {
-         o.mapVariables(v -> {
-            if(vocab.contains(v.getName())) {
-               return v;
-            }
-            return Variable.real(unknown, v.getValue());
-         });
-      }
-      return o;
    }
 
    @Override

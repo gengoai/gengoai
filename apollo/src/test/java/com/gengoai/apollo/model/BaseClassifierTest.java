@@ -19,16 +19,16 @@
 
 package com.gengoai.apollo.model;
 
+import com.gengoai.apollo.data.CSVDataSetReader;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.data.CSVDataSetReader;
-import com.gengoai.apollo.evaluation.ClassifierEvaluation;
-import com.gengoai.apollo.evaluation.MultiClassEvaluation;
 import com.gengoai.apollo.data.transform.Merge;
 import com.gengoai.apollo.data.transform.Transform;
 import com.gengoai.apollo.data.transform.Transformer;
 import com.gengoai.apollo.data.transform.VectorAssembler;
 import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
+import com.gengoai.apollo.evaluation.ClassifierEvaluation;
+import com.gengoai.apollo.evaluation.MultiClassEvaluation;
 import com.gengoai.collection.Sets;
 import com.gengoai.io.CSV;
 import com.gengoai.io.Resources;

@@ -27,14 +27,9 @@ import com.gengoai.swing.component.listener.FocusListeners;
 import com.gengoai.swing.component.listener.SwingListeners;
 import lombok.NonNull;
 
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.border.Border;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -48,6 +43,7 @@ import static javax.swing.BorderFactory.*;
  * A panel implementation that allows for a title at the top with an optional close button.
  */
 public class MangoTitlePane extends MangoPanel {
+   private static final long serialVersionUID = 1L;
    private final Color bgColor = FlatLafColors.inactiveCaption.color();
    private final Color bgFocus = FlatLafColors.activeCaption.color();
    private final Color fgColor = FlatLafColors.inactiveCaptionText.color();

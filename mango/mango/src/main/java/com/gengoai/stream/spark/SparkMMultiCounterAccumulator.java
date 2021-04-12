@@ -21,8 +21,8 @@ package com.gengoai.stream.spark;
 
 import com.gengoai.collection.counter.MultiCounter;
 import com.gengoai.conversion.Cast;
-import com.gengoai.stream.local.LocalMMultiCounterAccumulator;
 import com.gengoai.stream.MMultiCounterAccumulator;
+import com.gengoai.stream.local.LocalMMultiCounterAccumulator;
 import com.gengoai.tuple.Tuple2;
 
 /**

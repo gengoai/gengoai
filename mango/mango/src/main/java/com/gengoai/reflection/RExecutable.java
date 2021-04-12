@@ -24,9 +24,9 @@ package com.gengoai.reflection;
 
 import com.gengoai.Lazy;
 import com.gengoai.collection.Lists;
-import com.gengoai.stream.Streams;
 import com.gengoai.conversion.Converter;
 import com.gengoai.conversion.TypeConversionException;
+import com.gengoai.stream.Streams;
 import lombok.NonNull;
 
 import java.lang.reflect.Executable;

@@ -27,13 +27,13 @@ import cc.mallet.types.Alphabet;
 import cc.mallet.types.InstanceList;
 import cc.mallet.types.Labeling;
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.encoder.MalletEncoder;
 import com.gengoai.apollo.data.observation.Classification;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.encoder.MalletEncoder;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 

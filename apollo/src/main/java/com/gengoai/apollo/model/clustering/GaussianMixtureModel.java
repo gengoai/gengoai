@@ -22,8 +22,10 @@
 
 package com.gengoai.apollo.model.clustering;
 
-import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.Params;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;

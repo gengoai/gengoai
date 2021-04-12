@@ -5,7 +5,7 @@ import java.util.Collection;
 /**
  * @author David B. Bracewell
  */
-public final class RanksEnum extends HierarchicalEnumValue<RanksEnum> implements Comparable<RanksEnum> {
+public final class RanksEnum extends HierarchicalEnumValue<RanksEnum>  {
    private static final long serialVersionUID = 1L;
    private static final HierarchicalRegistry<RanksEnum> registry = new HierarchicalRegistry<>(RanksEnum::new,
                                                                                               RanksEnum.class,

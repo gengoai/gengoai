@@ -19,12 +19,14 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Copyable;
-import com.gengoai.apollo.math.linalg.NDArrayFactory;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.ObservationMetadata;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.math.linalg.NDArrayFactory;
 import com.gengoai.conversion.Cast;
 import com.gengoai.stream.MStream;
 import com.gengoai.string.Strings;
@@ -54,11 +56,13 @@ public abstract class AbstractSingleSourceTransform<T extends AbstractSingleSour
     * The name of the input source
     */
    @NonNull
+   @JsonProperty
    protected String input = Datum.DEFAULT_INPUT;
    /**
     * The name of the output source
     */
    @NonNull
+   @JsonProperty
    protected String output = Datum.DEFAULT_INPUT;
    protected NDArrayFactory ndArrayFactory;
 
@@ -71,13 +75,6 @@ public abstract class AbstractSingleSourceTransform<T extends AbstractSingleSour
       return Cast.as(Copyable.deepCopy(this));
    }
 
-   /**
-    * fits the transform to a stream of {@link Observation} from its input source
-    *
-    * @param observations the stream of observations from the input source
-    */
-   protected abstract void fit(@NonNull MStream<Observation> observations);
-
    @Override
    public DataSet fitAndTransform(DataSet dataset) {
       ndArrayFactory = dataset.getNDArrayFactory();
@@ -86,11 +83,13 @@ public abstract class AbstractSingleSourceTransform<T extends AbstractSingleSour
    }
 
    @Override
+   @JsonIgnore
    public final Set<String> getInputs() {
       return Collections.singleton(input);
    }
 
    @Override
+   @JsonIgnore
    public final Set<String> getOutputs() {
       return Collections.singleton(output);
    }
@@ -126,9 +125,21 @@ public abstract class AbstractSingleSourceTransform<T extends AbstractSingleSour
 
    @Override
    public Datum transform(@NonNull Datum datum) {
-      datum.put(output, transform(datum.get(input)));
+      Observation observation = transform(datum.get(input));
+      if (observation == null) {
+         datum.remove(output);
+      } else {
+         datum.put(output, observation);
+      }
       return datum;
    }
+
+   /**
+    * fits the transform to a stream of {@link Observation} from its input source
+    *
+    * @param observations the stream of observations from the input source
+    */
+   protected abstract void fit(@NonNull MStream<Observation> observations);
 
    /**
     * Transforms the given observation.

@@ -19,11 +19,14 @@
 
 package com.gengoai.apollo.data.transform.vectorizer;
 
-import com.gengoai.apollo.math.linalg.*;
+import com.gengoai.apollo.data.observation.*;
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.IndexEncoder;
-import com.gengoai.apollo.data.observation.*;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.conversion.Cast;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import org.apache.mahout.math.list.DoubleArrayList;
 
@@ -44,8 +47,10 @@ import java.util.List;
  *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
 public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
    private static final long serialVersionUID = 1L;
+
 
    /**
     * Instantiates a new IndexingVectorizer with a specified {@link Encoder}
@@ -70,6 +75,15 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
     */
    public IndexingVectorizer(String unknownName) {
       super(new IndexEncoder(unknownName));
+   }
+
+
+   @Override
+   public String toString() {
+      return "IndexingVectorizer{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            '}';
    }
 
    @Override

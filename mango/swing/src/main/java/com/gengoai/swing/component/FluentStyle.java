@@ -19,12 +19,11 @@
 
 package com.gengoai.swing.component;
 
-import javax.swing.Icon;
+import javax.swing.*;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.TabSet;
-import java.awt.Color;
-import java.awt.Component;
+import java.awt.*;
 
 public class FluentStyle {
    private final Style style;

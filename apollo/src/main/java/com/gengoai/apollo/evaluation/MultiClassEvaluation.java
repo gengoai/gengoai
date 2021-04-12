@@ -20,13 +20,13 @@
 package com.gengoai.apollo.evaluation;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.Split;
-import com.gengoai.apollo.encoder.Encoder;
-import com.gengoai.apollo.model.Model;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.model.Model;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.collection.counter.MultiCounter;

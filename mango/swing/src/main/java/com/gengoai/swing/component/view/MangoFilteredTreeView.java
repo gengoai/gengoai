@@ -29,13 +29,10 @@ import com.gengoai.swing.component.listener.SwingListeners;
 import com.gengoai.swing.component.model.AutoCompleteDocument;
 import lombok.NonNull;
 
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.KeyStroke;
+import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.Enumeration;
 import java.util.List;
@@ -46,6 +43,7 @@ import static com.gengoai.swing.component.Components.scrollPaneNoBorder;
 import static com.gengoai.swing.component.listener.SwingListeners.removeAllKeyListeners;
 
 public class MangoFilteredTreeView extends MangoTreeView implements View {
+   private static final long serialVersionUID = 1L;
    private final JPanel panel;
    private final MangoButtonedTextField filterField = new MangoButtonedTextField(15,
                                                                                  FontAwesome.BACKSPACE,

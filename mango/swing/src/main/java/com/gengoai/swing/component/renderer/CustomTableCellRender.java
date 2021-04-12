@@ -21,12 +21,12 @@ package com.gengoai.swing.component.renderer;
 
 import com.gengoai.swing.Fonts;
 
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
-import java.awt.Color;
-import java.awt.Component;
+import java.awt.*;
 
 public class CustomTableCellRender extends DefaultTableCellRenderer {
+   private static final long serialVersionUID = 1L;
    private Integer fontStyle = null;
    private Float fontSize = null;
 

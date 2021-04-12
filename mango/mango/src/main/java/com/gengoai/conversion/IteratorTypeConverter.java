@@ -22,6 +22,7 @@ public class IteratorTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Iterator.class);
    }

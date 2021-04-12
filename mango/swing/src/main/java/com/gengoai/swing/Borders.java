@@ -20,8 +20,7 @@
 package com.gengoai.swing;
 
 import javax.swing.border.Border;
-import java.awt.Color;
-import java.awt.Insets;
+import java.awt.*;
 
 import static javax.swing.BorderFactory.*;
 

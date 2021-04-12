@@ -19,11 +19,11 @@
 
 package com.gengoai.apollo.math.linalg;
 
+import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.FixedEncoder;
 import com.gengoai.apollo.model.sequence.SequenceValidator;
-import com.gengoai.apollo.data.observation.Observation;
-import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.conversion.Cast;
 import com.gengoai.json.Json;
 import com.gengoai.math.Operator;

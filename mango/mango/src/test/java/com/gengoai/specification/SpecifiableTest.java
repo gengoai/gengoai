@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell
@@ -51,7 +51,7 @@ public class SpecifiableTest {
 
    @Test(expected = IllegalArgumentException.class)
    public void testWrongSchema() {
-      TestBean specification = Specification.parse(
+      Specification.parse(
          "testBean2:protocol:subProtocol0:subProtocol1::~/path;q=1;f=1.2;b=true;b=false",
          TestBean.class);
    }

@@ -78,8 +78,20 @@ public enum DataSetType {
 
    };
 
+   /**
+    * <p>Creates a new DataSet from the given MStream of data/</p>
+    *
+    * @param stream the stream of data
+    * @return the DataSet
+    */
    public abstract DataSet create(@NonNull MStream<Datum> stream);
 
+   /**
+    * <p>Creates a new DataSet from the given Stream of data/</p>
+    *
+    * @param stream the stream of data
+    * @return the DataSet
+    */
    public DataSet create(@NonNull Stream<Datum> stream) {
       return create(getStreamingContext().stream(stream));
    }

@@ -29,6 +29,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class StyledSpan extends SimpleSpan {
+   private static final long serialVersionUID = 1L;
    /**
     * The Style.
     */

@@ -19,16 +19,16 @@
 
 package com.gengoai.apollo.model.embedding;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.transform.SingleSourceTransform;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,18 +43,6 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
    private String output = Datum.DEFAULT_OUTPUT;
 
    /**
-    * Loads a pre-trained embedding in Word2Vec text format from the given resource. Will check for an unknown word
-    * specified on the first line followed by a hash, e.g. <code>#UNKNOWN</code>
-    *
-    * @param resource the resource to read from
-    * @return the PreTrainedWordEmbedding
-    * @throws IOException Something went wrong reading the file
-    */
-   public static PreTrainedWordEmbedding readWord2VecTextFormat(@NonNull Resource resource) throws IOException {
-      return readWord2VecTextFormat(resource, VSTextUtils.determineUnknownWord(resource));
-   }
-
-   /**
     * Loads a pre-trained embedding in Word2Vec text format from the given resource.
     *
     * @param resource    the resource to read from
@@ -66,17 +54,30 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
                                                                 String unknownWord) throws IOException {
       PreTrainedWordEmbedding e = new PreTrainedWordEmbedding();
       e.vectorStore = new InMemoryVectorStore(VSTextUtils.determineDimension(resource), unknownWord, null);
-      try(BufferedReader reader = new BufferedReader(resource.reader())) {
-         String line = reader.readLine();
-         while((line = reader.readLine()) != null) {
-            if(Strings.isNotNullOrBlank(line) && !line.startsWith("#")) {
-               NumericNDArray v = VSTextUtils.convertLineToVector(line, e.dimension());
+      List<String> lines = resource.readLines();
+      lines = lines.subList(1, lines.size());
+      lines.parallelStream().forEach(line -> {
+         if (Strings.isNotNullOrBlank(line) && !line.startsWith("#")) {
+            NumericNDArray v = VSTextUtils.convertLineToVector(line, e.dimension());
+            synchronized (e) {
                int index = e.vectorStore.addOrGetIndex(v.getLabel());
                e.vectorStore.updateVector(index, v);
             }
          }
-      }
+      });
       return e;
+   }
+
+   /**
+    * Loads a pre-trained embedding in Word2Vec text format from the given resource. Will check for an unknown word
+    * specified on the first line followed by a hash, e.g. <code>#UNKNOWN</code>
+    *
+    * @param resource the resource to read from
+    * @return the PreTrainedWordEmbedding
+    * @throws IOException Something went wrong reading the file
+    */
+   public static PreTrainedWordEmbedding readWord2VecTextFormat(@NonNull Resource resource) throws IOException {
+      return readWord2VecTextFormat(resource, VSTextUtils.determineUnknownWord(resource));
    }
 
    @Override
@@ -108,4 +109,10 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
       return this;
    }
 
-}//END OF FixedInMemoryEmbedding
+   @Override
+   public Datum transform(@NonNull Datum datum) {
+      datum.put(this.output, transform(datum.get(this.input)));
+      return datum;
+   }
+
+}//END OF PreTrainedWordEmbedding

@@ -21,8 +21,6 @@
 
 package com.gengoai;
 
-import java.util.Locale;
-
 /**
  * <p>Common system properties accessed via the runtime or system classes.</p>
  *

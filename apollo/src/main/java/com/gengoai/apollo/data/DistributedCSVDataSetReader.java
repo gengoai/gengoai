@@ -97,7 +97,9 @@ public class DistributedCSVDataSetReader implements DataSetReader {
          String column = headers.get(i);
          Object o = row.get(i);
          if(schema != null) {
-            datum.put(column, schema.convert(column, o.toString()));
+            if (schema.get(column) != ValueType.IGNORE) {
+               datum.put(column, schema.convert(column, o.toString()));
+            }
          } else {
             Double d = Math2.tryParseDouble(o.toString());
             if(d != null) {

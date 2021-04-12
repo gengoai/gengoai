@@ -22,10 +22,10 @@
 
 package com.gengoai.apollo.model.clustering;
 
-import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.math.measure.Distance;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.measure.Distance;
 import com.gengoai.apollo.model.Params;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;

@@ -19,16 +19,17 @@
 
 package com.gengoai.apollo.model.embedding;
 
-import com.gengoai.apollo.math.linalg.*;
-import com.gengoai.apollo.math.linalg.compose.VectorComposition;
-import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.apollo.data.DataSet;
-import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.encoder.NoOptEncoder;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.transform.Transform;
+import com.gengoai.apollo.encoder.NoOptEncoder;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.compose.VectorComposition;
+import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
+import com.gengoai.apollo.math.linalg.nd;
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -88,6 +89,13 @@ public abstract class WordEmbedding implements Transform {
     * @return the NDArray for the given feature, zero vector or unknown vector if feature is not valid.
     */
    public final NumericNDArray embed(@NonNull String feature) {
+      if (vectorStore.getAlphabet().contains(feature)) {
+         return vectorStore.getVector(feature);
+      } else if (feature.contains(" ")) {
+         String[] parts = feature.split("\\s+");
+         return VectorCompositions.Average.compose(Arrays.stream(parts)
+                                                         .map(this::embed).collect(Collectors.toList()));
+      }
       return vectorStore.getVector(feature);
    }
 
@@ -137,13 +145,6 @@ public abstract class WordEmbedding implements Transform {
       return vectorStore.size();
    }
 
-   @Override
-   public Datum transform(@NonNull Datum datum) {
-      for (String source : getInputs()) {
-         datum.put(source, transform(datum.get(source)));
-      }
-      return datum;
-   }
 
    protected NumericNDArray transform(Observation o) {
       if (o.isVariable()) {

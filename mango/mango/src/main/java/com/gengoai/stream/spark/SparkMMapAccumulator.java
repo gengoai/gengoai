@@ -20,8 +20,8 @@
 package com.gengoai.stream.spark;
 
 import com.gengoai.conversion.Cast;
-import com.gengoai.stream.local.LocalMMapAccumulator;
 import com.gengoai.stream.MMapAccumulator;
+import com.gengoai.stream.local.LocalMMapAccumulator;
 import com.gengoai.tuple.Tuple2;
 
 import java.util.Map;

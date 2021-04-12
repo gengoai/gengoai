@@ -21,8 +21,6 @@
 
 package com.gengoai.collection;
 
-import com.gengoai.json.JsonEntry;
-
 /**
  * @author David B. Bracewell
  */

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.gengoai.collection.Sets.hashSetOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

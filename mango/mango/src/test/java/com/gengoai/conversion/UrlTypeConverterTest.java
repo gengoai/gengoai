@@ -6,7 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

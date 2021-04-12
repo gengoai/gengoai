@@ -193,7 +193,7 @@ public class JsonEntry implements Serializable {
          n.add((BigInteger) o);
       } else if(o.getClass().isArray()) {
          int length = Array.getLength(o);
-         ArrayNode array = JsonNodeFactory.instance.arrayNode(length);
+//         ArrayNode array = JsonNodeFactory.instance.arrayNode(length);
          for(int i = 0; i < length; i++) {
             addValue(n, Array.get(o, i));
          }

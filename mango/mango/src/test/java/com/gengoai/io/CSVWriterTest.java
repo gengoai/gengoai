@@ -31,7 +31,7 @@ import java.util.Map;
 
 import static com.gengoai.collection.Maps.mapOf;
 import static com.gengoai.tuple.Tuples.$;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * @author David B. Bracewell

@@ -28,7 +28,7 @@ import lombok.NonNull;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentListener;
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 
@@ -39,6 +39,7 @@ import static javax.swing.BorderFactory.*;
  * A JTextField with optional JButtons on the left and right side.
  */
 public class MangoButtonedTextField extends JTextField implements View {
+   private static final long serialVersionUID = 1L;
    static final ComponentStyle<JButton> buttonStyle = defineStyle($ -> {
       $.setBorder(createEmptyBorder(1, 1, 1, 1));
       $.setOpaque(false);

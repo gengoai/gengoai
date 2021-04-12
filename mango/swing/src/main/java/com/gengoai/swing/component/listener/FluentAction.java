@@ -24,10 +24,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.Icon;
-import javax.swing.KeyStroke;
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -37,6 +34,7 @@ import java.awt.event.ActionListener;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class FluentAction extends AbstractAction {
+   private static final long serialVersionUID = 1L;
    private final ActionListener listener;
 
    /**

@@ -31,10 +31,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.Writer;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -52,7 +49,7 @@ public class CSV implements Serializable {
    private boolean keepEmptyCells = true;
    private char quote = '\"';
    private boolean hasHeader = false;
-   private List<String> header = null;
+   private List<String> header = new ArrayList<>();
 
    /**
     * <p>Creates a CSV builder object</p>

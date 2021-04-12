@@ -21,17 +21,19 @@ package com.gengoai.apollo.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.gengoai.apollo.data.transform.Transform;
 import com.gengoai.apollo.math.linalg.NDArrayFactory;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.data.transform.Transform;
 import com.gengoai.collection.Lists;
 import com.gengoai.function.SerializableFunction;
+import com.gengoai.io.SaveMode;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.stream.MStream;
 import com.gengoai.stream.StreamingContext;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -232,7 +234,18 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     * @param resource the resource location to persist the dataset to
     * @return the persisted version of the dataset
     */
-   public DataSet persist(@NonNull Resource resource) {
+   public DataSet persist(@NonNull Resource resource) throws IOException {
+      return persist(resource, SaveMode.OVERWRITE);
+   }
+
+   /**
+    * Persists the DataSet to disk
+    *
+    * @param resource the resource location to persist the dataset to
+    * @return the persisted version of the dataset
+    */
+   public DataSet persist(@NonNull Resource resource, @NonNull SaveMode saveMode) throws IOException {
+      saveMode.validate(resource);
       DataSet ds = new SQLiteDataSet(resource, stream().javaStream());
       ds.putAllMetadata(getMetadata());
       ds.setNDArrayFactory(getNDArrayFactory());
@@ -244,7 +257,7 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     *
     * @return the persisted version of the dataset
     */
-   public DataSet persist() {
+   public DataSet persist() throws IOException {
       DataSet ds = new SQLiteDataSet(stream().javaStream());
       ds.putAllMetadata(getMetadata());
       ds.setNDArrayFactory(getNDArrayFactory());

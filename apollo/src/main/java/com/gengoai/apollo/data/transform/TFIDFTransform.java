@@ -19,6 +19,7 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.observation.*;
@@ -27,6 +28,7 @@ import com.gengoai.collection.counter.Counters;
 import com.gengoai.collection.counter.MultiCounter;
 import com.gengoai.stream.MCounterAccumulator;
 import com.gengoai.stream.MMultiCounterAccumulator;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 import java.util.List;
@@ -36,23 +38,14 @@ import java.util.stream.Collectors;
 /**
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
 public class TFIDFTransform extends PerPrefixTransform<TFIDFTransform> {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    private MultiCounter<String, String> prefixWordDocumentCounts;
+   @JsonProperty
    private Counter<String> totalDocuments;
 
-   protected double calculateTFIDF(String prefix, String suffix, double value) {
-      if(prefixWordDocumentCounts.contains(prefix, suffix)) {
-         return value * prefixWordDocumentCounts.get(prefix, suffix);
-      } else {
-         return value * totalDocuments.get(prefix);
-      }
-   }
-
-   @Override
-   protected void fit(@NonNull String prefix, @NonNull Iterable<Variable> variables) {
-
-   }
 
    @Override
    public DataSet fitAndTransform(DataSet dataset) {
@@ -65,7 +58,7 @@ public class TFIDFTransform extends PerPrefixTransform<TFIDFTransform> {
       // Calculate Label-Feature Coccurrences
       dataset.parallelStream().forEach(d -> {
          Map<String, List<Variable>> m = splitIntoPrefixes(d.get(input));
-         for(String prefix : m.keySet()) {
+         for (String prefix : m.keySet()) {
             totalDocumentAccumulator.increment(prefix, 1d);
             m.get(prefix)
              .stream()
@@ -76,13 +69,49 @@ public class TFIDFTransform extends PerPrefixTransform<TFIDFTransform> {
       });
       totalDocuments = totalDocumentAccumulator.value();
       prefixWordDocumentCounts = prefixWordAccumulator.value();
-      for(String prefix : prefixWordDocumentCounts.firstKeys()) {
+      for (String prefix : prefixWordDocumentCounts.firstKeys()) {
          double total = totalDocuments.get(prefix);
          prefixWordDocumentCounts.get(prefix)
                                  .adjustValuesSelf(v -> Math.log((total + 0.5) / (v + 0.5)));
          totalDocuments.set(prefix, Math.log((total + 0.5) / 0.5));
       }
       return transform(dataset);
+   }
+
+   @Override
+   public String toString() {
+      return "TFIDFTransform{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            '}';
+   }
+
+   @Override
+   public Datum transform(@NonNull Datum datum) {
+      Observation o = datum.get(input);
+      if (o.isSequence()) {
+         VariableCollectionSequence out = new VariableCollectionSequence();
+         for (int i = 0; i < o.asSequence().size(); i++) {
+            out.add(transform(o.asSequence().get(i)));
+         }
+         datum.put(output, out);
+      } else {
+         datum.put(output, transform(o));
+      }
+      return datum;
+   }
+
+   protected double calculateTFIDF(String prefix, String suffix, double value) {
+      if (prefixWordDocumentCounts.contains(prefix, suffix)) {
+         return value * prefixWordDocumentCounts.get(prefix, suffix);
+      } else {
+         return value * totalDocuments.get(prefix);
+      }
+   }
+
+   @Override
+   protected void fit(@NonNull String prefix, @NonNull Iterable<Variable> variables) {
+
    }
 
    @Override
@@ -99,7 +128,7 @@ public class TFIDFTransform extends PerPrefixTransform<TFIDFTransform> {
    protected VariableCollection transform(Observation o) {
       Map<String, List<Variable>> m = splitIntoPrefixes(o);
       VariableCollection vc = new VariableList();
-      for(String prefix : m.keySet()) {
+      for (String prefix : m.keySet()) {
          Counter<String> suffixCount = Counters.newCounter(m.get(prefix)
                                                             .stream()
                                                             .map(Variable::getSuffix));
@@ -109,21 +138,6 @@ public class TFIDFTransform extends PerPrefixTransform<TFIDFTransform> {
          });
       }
       return vc;
-   }
-
-   @Override
-   public Datum transform(@NonNull Datum datum) {
-      Observation o = datum.get(input);
-      if(o.isSequence()) {
-         VariableCollectionSequence out = new VariableCollectionSequence();
-         for(int i = 0; i < o.asSequence().size(); i++) {
-            out.add(transform(o.asSequence().get(i)));
-         }
-         datum.put(output, out);
-      } else {
-         datum.put(output, transform(o));
-      }
-      return datum;
    }
 
    @Override

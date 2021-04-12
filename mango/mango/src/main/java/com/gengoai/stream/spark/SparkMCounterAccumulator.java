@@ -21,8 +21,8 @@ package com.gengoai.stream.spark;
 
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.conversion.Cast;
-import com.gengoai.stream.local.LocalMCounterAccumulator;
 import com.gengoai.stream.MCounterAccumulator;
+import com.gengoai.stream.local.LocalMCounterAccumulator;
 
 /**
  * <p>Counter accumulator implementation for Spark streams</p>

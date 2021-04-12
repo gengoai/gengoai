@@ -6,15 +6,17 @@ import org.junit.Test;
 import java.util.Map;
 
 import static com.gengoai.collection.Arrays2.arrayOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell
  */
 public abstract class BaseMapConversionTest {
 
+   @SuppressWarnings("rawtypes")
    private final Class<? extends Map> aClass;
 
+   @SuppressWarnings("rawtypes")
    protected BaseMapConversionTest(Class<? extends Map> aClass) {
       this.aClass = aClass;
    }

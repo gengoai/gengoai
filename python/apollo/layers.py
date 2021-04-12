@@ -7,6 +7,14 @@ import tensorflow as tf
 import tensorflow_hub as hub
 
 
+def sequence_input(name: str = None) -> K.layers.Layer:
+    return K.layers.Input(shape=(None,), name=name)
+
+
+def char_sequence_input(max_characters_per_word: int, name: str = None) -> K.layers.Layer:
+    return K.layers.Input(shape=(None, max_characters_per_word), name=name)
+
+
 class ElmoEmbeddingLayer(K.layers.Layer):
     def __init__(self, trainable=True, **kwargs):
         self.dimensions = 1024
@@ -35,19 +43,40 @@ class ElmoEmbeddingLayer(K.layers.Layer):
         return (input_shape[0][0], input_shape[0][1], self.dimensions)
 
 
+class CharEmbedding(K.Model):
+
+    def __init__(self, input_dim, output_dim, input_length):
+        super(CharEmbedding, self).__init__(name="char_embedding")
+        self.c_embedding = K.layers.TimeDistributed(K.layers.Embedding(input_dim=input_dim,
+                                                                       output_dim=int(output_dim / 2),
+                                                                       mask_zero=True,
+                                                                       input_length=input_length))
+        self.c_lstm = K.layers.TimeDistributed(K.layers.Bidirectional(K.layers.LSTM(output_dim,
+                                                                                    return_sequences=False,
+                                                                                    recurrent_dropout=0.5)))
+
+    def call(self, inputs, training=None, mask=None):
+        x = self.c_embedding(inputs)
+        x = self.c_lstm(x)
+        return x
+
+    def compute_output_shape(self, input_shape):
+        return self.c_lstm.compute_output_shape(self.c_embedding.compute_output_shape(input_shape))
+
+
 class GloveEmbedding(K.layers.Embedding):
     __glove_weights: DefaultDict[str, np.ndarray] = defaultdict(lambda: None)
 
     @classmethod
-    def __get_weights(cls, dimension: int, path: str) -> np.ndarray:
+    def __get_weights(cls, dimension: int, path) -> np.ndarray:
         if not cls.__glove_weights[dimension]:
             cls.__glove_weights[dimension] = np.load(path % dimension)
         return cls.__glove_weights[dimension]
 
     def __init__(self,
                  dimension: int,
-                 glove_path: str,
-                 mask_zero: bool = False):
+                 glove_path: str = "embeddings/glove%s.npy",
+                 mask_zero: bool = True):
         weights = GloveEmbedding.__get_weights(dimension, glove_path)
         super(GloveEmbedding, self).__init__(input_dim=weights.shape[0],
                                              output_dim=weights.shape[1],
@@ -80,4 +109,52 @@ class MeanPool(K.layers.Layer):
 
     def compute_output_shape(self, input_shape):
         # remove temporal dimension
+        return (input_shape[0], input_shape[2])
+
+
+class MaxPool(K.layers.Layer):
+    def __init__(self, **kwargs):
+        self.supports_masking = True
+        super(MaxPool, self).__init__(**kwargs)
+
+    def compute_mask(self, input, input_mask=None):
+        # do not pass the mask to the next layers
+        return None
+
+    def call(self, x, mask=None):
+        if mask is not None:
+            # mask (batch, time)
+            mask = K.backend.cast(mask, K.backend.floatx())
+            # mask (batch, x_dim, time)
+            mask = K.backend.repeat(mask, x.shape[-1])
+            # mask (batch, time, x_dim)
+            mask = tf.transpose(mask, [0, 2, 1])
+            x = x * mask
+        return K.backend.max(x, axis=1)
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], input_shape[2])
+
+
+class Sum(K.layers.Layer):
+    def __init__(self, **kwargs):
+        self.supports_masking = True
+        super(Sum, self).__init__(**kwargs)
+
+    def compute_mask(self, input, input_mask=None):
+        # do not pass the mask to the next layers
+        return None
+
+    def call(self, x, mask=None):
+        if mask is not None:
+            # mask (batch, time)
+            mask = K.backend.cast(mask, K.backend.floatx())
+            # mask (batch, x_dim, time)
+            mask = K.backend.repeat(mask, x.shape[-1])
+            # mask (batch, time, x_dim)
+            mask = tf.transpose(mask, [0, 2, 1])
+            x = x * mask
+        return K.backend.sum(x, axis=1)
+
+    def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[2])

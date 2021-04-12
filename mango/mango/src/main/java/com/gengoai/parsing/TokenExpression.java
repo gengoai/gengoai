@@ -23,10 +23,8 @@ import com.gengoai.Tag;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
-import java.io.Serializable;
-
 @EqualsAndHashCode(callSuper = false)
-public class TokenExpression implements Expression, Serializable {
+public class TokenExpression implements Expression {
    private static final long serialVersionUID = 1L;
    private final ParserToken token;
 

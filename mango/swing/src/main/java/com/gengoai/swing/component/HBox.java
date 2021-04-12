@@ -21,7 +21,7 @@ package com.gengoai.swing.component;
 
 import com.gengoai.swing.View;
 
-import javax.swing.JPanel;
+import javax.swing.*;
 import java.awt.*;
 
 /**
@@ -29,6 +29,7 @@ import java.awt.*;
  * resized to take up any extra space within the panel
  */
 public class HBox extends JPanel {
+   private static final long serialVersionUID = 1L;
    private final GridBagLayout layout = new GridBagLayout();
    private final GridBagConstraints gbc = new GridBagConstraints();
    private final Insets firstColInsets = new Insets(0, 0, 0, 0);

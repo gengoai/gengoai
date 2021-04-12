@@ -31,6 +31,7 @@ import java.io.Writer;
 import java.util.Properties;
 
 public class SwingApplicationConfig implements Serializable {
+   private static final long serialVersionUID = 1L;
    protected final Properties properties = new Properties();
    protected Resource file;
 

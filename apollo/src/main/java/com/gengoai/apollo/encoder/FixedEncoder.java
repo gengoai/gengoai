@@ -28,6 +28,7 @@ import com.gengoai.collection.Iterables;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.stream.MStream;
 import com.gengoai.string.Strings;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -39,11 +40,12 @@ import java.util.Set;
  *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode
 public class FixedEncoder implements Encoder {
    private static final long serialVersionUID = 1L;
-   @JsonProperty("alphabet")
+   @JsonProperty
    private final Index<String> alphabet = new HashMapIndex<>();
-   @JsonProperty("unknown")
+   @JsonProperty
    private final String unknown;
 
    /**
@@ -108,6 +110,16 @@ public class FixedEncoder implements Encoder {
          index = alphabet.getId(unknown);
       }
       return index;
+   }
+
+   @Override
+   public String toString() {
+      return "FixedEncoder{size=" +
+            alphabet.size() +
+            ", unknown='" +
+            unknown
+            + "'}";
+
    }
 
    @Override

@@ -19,10 +19,10 @@
 
 package com.gengoai.stream.spark;
 
-import com.gengoai.math.EnhancedDoubleStatistics;
 import com.gengoai.conversion.Cast;
-import com.gengoai.stream.local.LocalMStatisticsAccumulator;
+import com.gengoai.math.EnhancedDoubleStatistics;
 import com.gengoai.stream.MStatisticsAccumulator;
+import com.gengoai.stream.local.LocalMStatisticsAccumulator;
 
 /**
  * <p>An implementation of a {@link MStatisticsAccumulator} for Spark streams</p>

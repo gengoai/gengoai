@@ -20,11 +20,11 @@
 package com.gengoai.apollo.model;
 
 import com.gengoai.ParameterDef;
+import com.gengoai.apollo.data.observation.VariableNameSpace;
 import com.gengoai.apollo.math.linalg.compose.VectorComposition;
 import com.gengoai.apollo.math.measure.Measure;
 import com.gengoai.apollo.model.clustering.Linkage;
 import com.gengoai.apollo.model.sequence.SequenceValidator;
-import com.gengoai.apollo.data.observation.VariableNameSpace;
 
 import java.util.Set;
 

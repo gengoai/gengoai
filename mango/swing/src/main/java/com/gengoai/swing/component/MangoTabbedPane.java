@@ -27,15 +27,13 @@ import com.gengoai.swing.component.listener.TabClosedListener;
 import lombok.NonNull;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.*;
 import java.util.Vector;
 
 import static com.gengoai.function.Functional.with;
 
 public class MangoTabbedPane extends JTabbedPane {
+   private static final long serialVersionUID = 1L;
    @NonNull
    private Vector<TabClosedListener> tabClosedListeners = new Vector<>();
    private boolean closeButtonsVisible = true;
@@ -103,6 +101,7 @@ public class MangoTabbedPane extends JTabbedPane {
    }
 
    protected class CloseButtonTab extends JPanel {
+      private static final long serialVersionUID = 1L;
       private final JLabel label;
       private final JButton button;
       private Component tab;

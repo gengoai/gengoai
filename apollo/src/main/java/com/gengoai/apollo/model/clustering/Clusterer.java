@@ -22,10 +22,10 @@
 
 package com.gengoai.apollo.model.clustering;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.model.LabelType;
 import com.gengoai.apollo.model.SingleSourceModel;
 import com.gengoai.string.Strings;

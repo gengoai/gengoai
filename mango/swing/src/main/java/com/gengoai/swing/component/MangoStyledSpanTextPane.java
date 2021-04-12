@@ -46,6 +46,7 @@ import static com.gengoai.function.Functional.with;
 import static com.gengoai.swing.component.listener.SwingListeners.mouseWheelMoved;
 
 public class MangoStyledSpanTextPane extends JComponent {
+   private static final long serialVersionUID = 1L;
    public static final String DEFAULT_HIGHLIGHT_STYLE_NAME = "**DEFAULT_HIGHLIGHT**";
    protected final FluentStyle defaultHighlightStyle;
    private final IntervalTree<StyledSpan> range2Style = new IntervalTree<>();

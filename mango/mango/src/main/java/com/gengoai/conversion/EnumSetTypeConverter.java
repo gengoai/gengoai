@@ -24,6 +24,7 @@ public class EnumSetTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(EnumSet.class);
    }

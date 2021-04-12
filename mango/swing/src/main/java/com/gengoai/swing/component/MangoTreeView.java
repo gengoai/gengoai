@@ -25,7 +25,7 @@ import com.gengoai.swing.component.listener.SwingListeners;
 import com.gengoai.swing.component.listener.TreeViewItemSelectionListener;
 import lombok.NonNull;
 
-import javax.swing.JTree;
+import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
@@ -36,6 +36,7 @@ import java.util.Vector;
 import java.util.function.BiPredicate;
 
 public class MangoTreeView extends JTree {
+   private static final long serialVersionUID = 1L;
    protected final DefaultTreeModel baseModel;
    @NonNull
    protected final BiPredicate<String, Object> itemMatcher;

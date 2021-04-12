@@ -41,6 +41,7 @@ public class BooleanTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Boolean.class, boolean.class);
    }

@@ -22,9 +22,9 @@ package com.gengoai.swing.component;
 import com.gengoai.collection.tree.Span;
 import lombok.NonNull;
 
-import javax.swing.JTextPane;
+import javax.swing.*;
 import javax.swing.text.*;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineBreakMeasurer;
 import java.text.AttributedCharacterIterator;
@@ -36,6 +36,7 @@ import java.util.function.Consumer;
 import static com.gengoai.swing.component.listener.SwingListeners.mouseReleased;
 
 public class MangoTextPane extends JTextPane {
+   private static final long serialVersionUID = 1L;
    private final Style DEFAULT;
    private final AtomicBoolean alwaysHighlight = new AtomicBoolean(false);
    private final AtomicReference<Span> selection = new AtomicReference<>();
@@ -47,6 +48,7 @@ public class MangoTextPane extends JTextPane {
    public MangoTextPane(@NonNull StyledDocument document) {
       super(document);
       setCaret(new DefaultCaret() {
+         private static final long serialVersionUID = 1L;
          @Override
          public void setSelectionVisible(boolean visible) {
             super.setSelectionVisible(visible || alwaysHighlight.get());
@@ -60,12 +62,26 @@ public class MangoTextPane extends JTextPane {
       return this;
    }
 
+   public MangoTextPane addSelectionChangeListener(@NonNull Consumer<SelectionChangeEvent> listener) {
+      addMouseListener(mouseReleased(e -> {
+         Span newSelection = null;
+         if (getSelectionStart() < getSelectionEnd()) {
+            newSelection = Span.of(getSelectionStart(), getSelectionEnd());
+         }
+         if (selection.get() == null || newSelection == null || !selection.get().equals(newSelection)) {
+            listener.accept(new SelectionChangeEvent(selection.get(), newSelection));
+         }
+         selection.set(newSelection);
+      }));
+      return this;
+   }
+
    public FluentStyle addStyle(String name) {
       return new FluentStyle(super.addStyle(name, null));
    }
 
    public int calculateMinimumHeight() {
-      if(getText().length() == 0) {
+      if (getText().length() == 0) {
          return 0;
       }
       AttributedString text = new AttributedString(getText());
@@ -75,7 +91,7 @@ public class MangoTextPane extends JTextPane {
       float formatWidth = (float) getSize().width;
       lineMeasurer.setPosition(charIt.getBeginIndex());
       int noLines = 0;
-      while(lineMeasurer.getPosition() < charIt.getEndIndex()) {
+      while (lineMeasurer.getPosition() < charIt.getEndIndex()) {
          lineMeasurer.nextLayout(formatWidth);
          noLines++;
       }
@@ -101,20 +117,6 @@ public class MangoTextPane extends JTextPane {
 
    public boolean isAlwaysHighlight() {
       return alwaysHighlight.get();
-   }
-
-   public MangoTextPane addSelectionChangeListener(@NonNull Consumer<SelectionChangeEvent> listener) {
-      addMouseListener(mouseReleased(e -> {
-         Span newSelection = null;
-         if(getSelectionStart() < getSelectionEnd()) {
-            newSelection = Span.of(getSelectionStart(), getSelectionEnd());
-         }
-         if(selection.get() == null || newSelection == null || !selection.get().equals(newSelection)) {
-            listener.accept(new SelectionChangeEvent(selection.get(), newSelection));
-         }
-         selection.set(newSelection);
-      }));
-      return this;
    }
 
    public MangoTextPane setAlwaysHighlight(boolean value) {

@@ -37,6 +37,7 @@ public class Tuple3TypeConverter extends Tuple2TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Tuple3.class);
    }

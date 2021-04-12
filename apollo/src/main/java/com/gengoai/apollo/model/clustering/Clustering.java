@@ -19,9 +19,9 @@
 
 package com.gengoai.apollo.model.clustering;
 
+import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.measure.Measure;
-import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.stream.Streams;
 import lombok.NonNull;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;

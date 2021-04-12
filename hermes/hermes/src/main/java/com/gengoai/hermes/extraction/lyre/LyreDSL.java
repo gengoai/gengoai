@@ -421,6 +421,7 @@ public final class LyreDSL {
       return annotation(type, $_, tag);
    }
 
+
    /**
     * Returns all annotations of the given type overlapping with the HString resulting from the given expression.
     * <pre>
@@ -622,79 +623,6 @@ public final class LyreDSL {
     */
    public static LyreExpression binary(@NonNull LyreExpression expression) {
       return feature(ValueCalculator.Binary, expression);
-   }
-
-   private static boolean compareObjectPredicate(Object l, Object r, NumericComparison comparison) {
-      if (l == null || r == null) {
-         switch (comparison) {
-            case EQ:
-               return l == r;
-            case NE:
-               return l != r;
-            default:
-               return false;
-         }
-      }
-      if (l instanceof Number && r instanceof Number) {
-         return comparison.compare(Cast.<Number>as(l).doubleValue(),
-                                   Cast.<Number>as(r).doubleValue());
-      }
-      if (l instanceof Tag && r instanceof Tag) {
-         Tag lTag = Cast.as(l);
-         Tag rTag = Cast.as(r);
-         switch (comparison) {
-            case EQ:
-               return lTag.isInstance(rTag);
-            case NE:
-               return !lTag.isInstance(rTag);
-            default:
-               return comparison.compare(Sorting.compare(lTag.name(), rTag.name()), 0);
-         }
-      }
-
-      if (l.getClass().isInstance(r) || r.getClass().isInstance(l)) {
-         if (comparison == NumericComparison.EQ) {
-            return l.equals(r);
-         }
-         if (comparison == NumericComparison.NE) {
-            return !l.equals(r);
-         }
-         return comparison.compare(Sorting.compare(l, r), 0);
-      }
-
-      if ((l instanceof CharSequence) && (r instanceof CharSequence)) {
-         String lStr = l.toString();
-         String rStr = r.toString();
-         if (comparison == NumericComparison.EQ) {
-            return Objects.equals(lStr, rStr);
-         }
-         if (comparison == NumericComparison.NE) {
-            return !Objects.equals(lStr, rStr);
-         }
-         return comparison.compare(Sorting.compare(lStr, rStr), 0);
-      }
-
-      if (!(r instanceof CharSequence)) {
-         Object lConv = Converter.convertSilently(l, r.getClass());
-         if (lConv != null) {
-            return compareObjectPredicate(lConv, r, comparison);
-         }
-         if (r instanceof Number) {
-            return compareObjectPredicate(Double.NaN, r, comparison);
-         }
-      }
-
-      if (!(l instanceof CharSequence)) {
-         Object rConv = Converter.convertSilently(r, l.getClass());
-         if (rConv != null) {
-            return compareObjectPredicate(l, rConv, comparison);
-         }
-         if (l instanceof Number) {
-            return compareObjectPredicate(l, Double.NaN, comparison);
-         }
-      }
-
-      return false;
    }
 
    /**
@@ -1050,20 +978,6 @@ public final class LyreDSL {
                                            .collect(Collectors.toList()));
    }
 
-   static Object filter(Object o, SerializablePredicate<Object> function) {
-      if (o instanceof Collection) {
-         return postProcess(Cast.<Collection<?>>as(o)
-                                  .stream()
-                                  .map(o2 -> filter(o2, function))
-                                  .filter(Objects::nonNull)
-                                  .collect(Collectors.toList())
-         );
-      }
-      return function.test(o)
-            ? o
-            : null;
-   }
-
    /**
     * Return the first element of a list expression or null if none.
     * <pre>
@@ -1094,27 +1008,6 @@ public final class LyreDSL {
    public static LyreExpression flatten(@NonNull LyreExpression list) {
       return new LyreExpression(formatMethod("flatten", list),
                                 list.getType(), o -> flatten(list.applyAsList(o)));
-   }
-
-   private static List<Object> flatten(Collection<Object> list) {
-      List<Object> output = new ArrayList<>();
-      for (Object o : list) {
-         if (o instanceof Collection) {
-            output.addAll(flatten(Cast.<Collection<Object>>as(o)));
-         } else {
-            output.add(o);
-         }
-      }
-      return output;
-   }
-
-   private static String formatMethod(String methodName, LyreExpression... arguments) {
-      if (arguments == null || arguments.length < 1 || (arguments.length == 1 && arguments[0] == $_)) {
-         return methodName;
-      }
-      return String.format("%s(%s)", methodName, Stream.of(arguments)
-                                                       .map(Object::toString)
-                                                       .collect(Collectors.joining(", ")));
    }
 
    /**
@@ -1631,22 +1524,6 @@ public final class LyreDSL {
                                                               .map(Object::toString)
                                                               .map(Strings::isLowerCase)
                                                               .orElse(false)));
-   }
-
-   private static boolean isNullOrEmpty(Object o) {
-      if (o == null) {
-         return true;
-      }
-      if (o instanceof Collection) {
-         return Cast.<Collection<?>>as(o).isEmpty();
-      }
-      if (o instanceof CharSequence) {
-         return Strings.isNullOrBlank(o.toString());
-      }
-      if (o instanceof Number) {
-         return Double.isFinite(Cast.<Number>as(o).doubleValue());
-      }
-      return false;
    }
 
    /**
@@ -2483,71 +2360,6 @@ public final class LyreDSL {
                                 o -> process(true, expression.applyAsObject(o), a -> toHString(a).pos()));
    }
 
-   private static Object postProcess(Object o) {
-      if (o instanceof Collection) {
-         Collection<?> c = Cast.<Collection<?>>as(o)
-               .stream()
-               .filter(Objects::nonNull)
-               .filter(h -> !(h instanceof HString) || !Cast.<HString>as(h).isEmpty())
-               .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(cs.toString()))
-               .collect(Collectors.toList());
-         if (c.isEmpty()) {
-            return null;
-         }
-         if (c.size() == 1) {
-            return c.iterator().next();
-         }
-      }
-      return o;
-   }
-
-   private static Object process(boolean ignoreNulls, Object o, SerializableFunction<Object, ?> function) {
-      if (ignoreNulls && o == null) {
-         return null;
-      }
-      if (o instanceof Collection) {
-         return postProcess(Cast.<Collection<?>>as(o)
-                                  .stream()
-                                  .map(v -> postProcess(function.apply(v)))
-                                  .filter(Objects::nonNull)
-                                  .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(Cast.as(cs)))
-                                  .collect(Collectors.toList()));
-      }
-      return postProcess(function.apply(o));
-   }
-
-   private static Object processPred(Object o, SerializablePredicate<Object> function) {
-      if (o instanceof Collection) {
-         return postProcess(Cast.<Collection<?>>as(o)
-                                  .stream()
-                                  .filter(Objects::nonNull)
-                                  .map(o2 -> filter(o2, function))
-                                  .filter(Objects::nonNull)
-                                  .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(Cast.as(cs)))
-                                  .collect(Collectors.toList()));
-      }
-      return function.test(o);
-   }
-
-   private static List<?> recursiveListApply(Collection<?> c, Function<Object, ?> operator) {
-      if (c == null) {
-         return null;
-      }
-      List<Object> output = new ArrayList<>();
-      for (Object o : c) {
-         Object toAdd;
-         if (o instanceof Collection) {
-            toAdd = postProcess(recursiveListApply(Cast.as(o), operator));
-         } else {
-            toAdd = postProcess(operator.apply(o));
-         }
-         if (toAdd != null) {
-            output.add(toAdd);
-         }
-      }
-      return output;
-   }
-
    /**
     * Creates a predicate expression to be applied to Strings testing them against the given regular expression
     * pattern.
@@ -2935,6 +2747,20 @@ public final class LyreDSL {
                                 o -> process(true, expression.applyAsObject(o), Object::toString));
    }
 
+   public static LyreExpression subTree(@NonNull LyreExpression expression) {
+      return new LyreExpression(formatMethod("@<<", expression),
+                                HSTRING,
+                                o -> {
+                                   HString h = expression.applyAsHString(toHString(o));
+                                   RelationGraph g = h.sentence().dependencyGraph();
+                                   List<HString> subs = new ArrayList<>();
+                                   for (Annotation token : h.tokens()) {
+                                      subs.add(g.getSubTreeText(token,true));
+                                   }
+                                   return HString.union(subs);
+                                });
+   }
+
    /**
     * Checks if the Tag on the current HString is of the given Tag value.
     * <pre>
@@ -3163,6 +2989,195 @@ public final class LyreDSL {
       return new LyreExpression(String.format("%s ^ %s", left, right),
                                 PREDICATE,
                                 o -> left.testObject(o) ^ right.testObject(o));
+   }
+
+   private static boolean compareObjectPredicate(Object l, Object r, NumericComparison comparison) {
+      if (l == null || r == null) {
+         switch (comparison) {
+            case EQ:
+               return l == r;
+            case NE:
+               return l != r;
+            default:
+               return false;
+         }
+      }
+      if (l instanceof Number && r instanceof Number) {
+         return comparison.compare(Cast.<Number>as(l).doubleValue(),
+                                   Cast.<Number>as(r).doubleValue());
+      }
+      if (l instanceof Tag && r instanceof Tag) {
+         Tag lTag = Cast.as(l);
+         Tag rTag = Cast.as(r);
+         switch (comparison) {
+            case EQ:
+               return lTag.isInstance(rTag);
+            case NE:
+               return !lTag.isInstance(rTag);
+            default:
+               return comparison.compare(Sorting.compare(lTag.name(), rTag.name()), 0);
+         }
+      }
+
+      if (l.getClass().isInstance(r) || r.getClass().isInstance(l)) {
+         if (comparison == NumericComparison.EQ) {
+            return l.equals(r);
+         }
+         if (comparison == NumericComparison.NE) {
+            return !l.equals(r);
+         }
+         return comparison.compare(Sorting.compare(l, r), 0);
+      }
+
+      if ((l instanceof CharSequence) && (r instanceof CharSequence)) {
+         String lStr = l.toString();
+         String rStr = r.toString();
+         if (comparison == NumericComparison.EQ) {
+            return Objects.equals(lStr, rStr);
+         }
+         if (comparison == NumericComparison.NE) {
+            return !Objects.equals(lStr, rStr);
+         }
+         return comparison.compare(Sorting.compare(lStr, rStr), 0);
+      }
+
+      if (!(r instanceof CharSequence)) {
+         Object lConv = Converter.convertSilently(l, r.getClass());
+         if (lConv != null) {
+            return compareObjectPredicate(lConv, r, comparison);
+         }
+         if (r instanceof Number) {
+            return compareObjectPredicate(Double.NaN, r, comparison);
+         }
+      }
+
+      if (!(l instanceof CharSequence)) {
+         Object rConv = Converter.convertSilently(r, l.getClass());
+         if (rConv != null) {
+            return compareObjectPredicate(l, rConv, comparison);
+         }
+         if (l instanceof Number) {
+            return compareObjectPredicate(l, Double.NaN, comparison);
+         }
+      }
+
+      return false;
+   }
+
+   static Object filter(Object o, SerializablePredicate<Object> function) {
+      if (o instanceof Collection) {
+         return postProcess(Cast.<Collection<?>>as(o)
+                                  .stream()
+                                  .map(o2 -> filter(o2, function))
+                                  .filter(Objects::nonNull)
+                                  .collect(Collectors.toList())
+         );
+      }
+      return function.test(o)
+            ? o
+            : null;
+   }
+
+   private static List<Object> flatten(Collection<Object> list) {
+      List<Object> output = new ArrayList<>();
+      for (Object o : list) {
+         if (o instanceof Collection) {
+            output.addAll(flatten(Cast.<Collection<Object>>as(o)));
+         } else {
+            output.add(o);
+         }
+      }
+      return output;
+   }
+
+   private static String formatMethod(String methodName, LyreExpression... arguments) {
+      if (arguments == null || arguments.length < 1 || (arguments.length == 1 && arguments[0] == $_)) {
+         return methodName;
+      }
+      return String.format("%s(%s)", methodName, Stream.of(arguments)
+                                                       .map(Object::toString)
+                                                       .collect(Collectors.joining(", ")));
+   }
+
+   private static boolean isNullOrEmpty(Object o) {
+      if (o == null) {
+         return true;
+      }
+      if (o instanceof Collection) {
+         return Cast.<Collection<?>>as(o).isEmpty();
+      }
+      if (o instanceof CharSequence) {
+         return Strings.isNullOrBlank(o.toString());
+      }
+      if (o instanceof Number) {
+         return Double.isFinite(Cast.<Number>as(o).doubleValue());
+      }
+      return false;
+   }
+
+   private static Object postProcess(Object o) {
+      if (o instanceof Collection) {
+         Collection<?> c = Cast.<Collection<?>>as(o)
+               .stream()
+               .filter(Objects::nonNull)
+               .filter(h -> !(h instanceof HString) || !Cast.<HString>as(h).isEmpty())
+               .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(cs.toString()))
+               .collect(Collectors.toList());
+         if (c.isEmpty()) {
+            return null;
+         }
+         if (c.size() == 1) {
+            return c.iterator().next();
+         }
+      }
+      return o;
+   }
+
+   private static Object process(boolean ignoreNulls, Object o, SerializableFunction<Object, ?> function) {
+      if (ignoreNulls && o == null) {
+         return null;
+      }
+      if (o instanceof Collection) {
+         return postProcess(Cast.<Collection<?>>as(o)
+                                  .stream()
+                                  .map(v -> postProcess(function.apply(v)))
+                                  .filter(Objects::nonNull)
+                                  .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(Cast.as(cs)))
+                                  .collect(Collectors.toList()));
+      }
+      return postProcess(function.apply(o));
+   }
+
+   private static Object processPred(Object o, SerializablePredicate<Object> function) {
+      if (o instanceof Collection) {
+         return postProcess(Cast.<Collection<?>>as(o)
+                                  .stream()
+                                  .filter(Objects::nonNull)
+                                  .map(o2 -> filter(o2, function))
+                                  .filter(Objects::nonNull)
+                                  .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(Cast.as(cs)))
+                                  .collect(Collectors.toList()));
+      }
+      return function.test(o);
+   }
+
+   private static List<?> recursiveListApply(Collection<?> c, Function<Object, ?> operator) {
+      if (c == null) {
+         return null;
+      }
+      List<Object> output = new ArrayList<>();
+      for (Object o : c) {
+         Object toAdd;
+         if (o instanceof Collection) {
+            toAdd = postProcess(recursiveListApply(Cast.as(o), operator));
+         } else {
+            toAdd = postProcess(operator.apply(o));
+         }
+         if (toAdd != null) {
+            output.add(toAdd);
+         }
+      }
+      return output;
    }
 
 }//END OF LyreDSL

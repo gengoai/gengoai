@@ -43,6 +43,7 @@ public class CharacterTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Character.class, char.class);
    }

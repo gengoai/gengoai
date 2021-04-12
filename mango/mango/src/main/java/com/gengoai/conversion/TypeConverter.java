@@ -26,6 +26,7 @@ public interface TypeConverter {
     *
     * @return the classes that this converter can convert to
     */
+   @SuppressWarnings("rawtypes")
    Class[] getConversionType();
 
 

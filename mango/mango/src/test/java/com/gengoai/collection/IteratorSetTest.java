@@ -9,7 +9,7 @@ import java.util.Set;
 
 import static com.gengoai.collection.Lists.arrayListOf;
 import static com.gengoai.collection.Sets.hashSetOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

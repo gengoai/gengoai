@@ -17,3 +17,5 @@ model = SequenceLabeler(inputs=input_blocks, label="label", architecture=arch)
 dataset = ApolloSQLDataSet('data/entity2.db')
 model.fit(dataset, epochs=10,  validation_split=0, batch_size=100)
 model.save('models/ner', overwrite=True)
+
+

@@ -28,8 +28,7 @@ import lombok.Setter;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
-import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -39,6 +38,7 @@ import java.util.logging.Logger;
 import static com.gengoai.function.Functional.with;
 
 public class MangoLoggingWindow extends JComponent {
+   private static final long serialVersionUID = 1L;
    private static final Color LIGHT_SEVERE = new Color(116, 58, 58);
    private static final Color DARK_SEVERE = new Color(197, 75, 75);
    private static final Color LIGHT_WARNING = new Color(189, 170, 0);

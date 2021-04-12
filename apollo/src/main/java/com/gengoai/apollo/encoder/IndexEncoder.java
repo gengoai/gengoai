@@ -19,7 +19,6 @@
 
 package com.gengoai.apollo.encoder;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
@@ -27,6 +26,7 @@ import com.gengoai.collection.HashMapIndex;
 import com.gengoai.collection.Index;
 import com.gengoai.stream.MStream;
 import com.gengoai.string.Strings;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -40,13 +40,14 @@ import java.util.Set;
  * pre-defined unknown name.
  * </p>
  */
+@EqualsAndHashCode
 public class IndexEncoder implements Encoder {
    private static final long serialVersionUID = 1L;
-   @JsonProperty("alphabet")
+   @JsonProperty
    private final Index<String> alphabet = new HashMapIndex<>();
-   @JsonProperty("special")
+   @JsonProperty
    private final List<String> special = new ArrayList<>();
-   @JsonProperty("unknown")
+   @JsonProperty
    private final String unknownName;
 
    /**
@@ -81,16 +82,6 @@ public class IndexEncoder implements Encoder {
       this.special.addAll(special);
    }
 
-   @JsonCreator
-   private IndexEncoder(@JsonProperty("alphabet") Iterable<String> alphabet,
-                        @JsonProperty("unknown") String unknown,
-                        @JsonProperty("special") List<String> special) {
-      this.alphabet.addAll(alphabet);
-      this.unknownName = Strings.emptyToNull(unknown);
-      if (special != null) {
-         this.special.addAll(special);
-      }
-   }
 
    public static IndexEncoder indexEncoder(String unknownName) {
       return new IndexEncoder(unknownName);
@@ -104,6 +95,7 @@ public class IndexEncoder implements Encoder {
       return new IndexEncoder("O");
    }
 
+
    @Override
    public String decode(double index) {
       return alphabet.get((int) index);
@@ -113,7 +105,7 @@ public class IndexEncoder implements Encoder {
    public int encode(String variableName) {
       int index = alphabet.getId(variableName);
       if (index < 0 && unknownName != null) {
-         return encode(unknownName);
+         return alphabet.getId(unknownName);
       }
       return index;
    }
@@ -145,5 +137,16 @@ public class IndexEncoder implements Encoder {
    @Override
    public int size() {
       return alphabet.size();
+   }
+
+   @Override
+   public String toString() {
+      return "IndexEncoder{size=" +
+            alphabet.size() +
+            ", unknown='" +
+            unknownName +
+            "', special=" +
+            special +
+            "}";
    }
 }//END OF IndexEncoder

@@ -24,7 +24,7 @@ package com.gengoai.parsing;
 import com.gengoai.collection.Lists;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

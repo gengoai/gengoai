@@ -19,10 +19,6 @@
 
 package com.gengoai.apollo.math.linalg;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-
 public class DenseFloat64NDArrayTest extends BaseNumericNDArrayTest {
    public DenseFloat64NDArrayTest() {
       super(nd.DFLOAT64);

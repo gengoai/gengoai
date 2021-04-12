@@ -19,11 +19,11 @@
 
 package com.gengoai.apollo.model.tensorflow;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.model.LabelType;
 import com.gengoai.apollo.model.sequence.SequenceValidator;
-import com.gengoai.apollo.data.observation.Observation;
 import lombok.NonNull;
 
 public class TFSequenceOutputVar extends TFOutputVar {

@@ -22,9 +22,9 @@
 
 package com.gengoai.apollo.model.clustering;
 
+import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.data.observation.Observation;
 import lombok.NonNull;
 
 /**

@@ -21,6 +21,7 @@ package com.gengoai.hermes.extraction.caduceus;
 
 import com.gengoai.hermes.AnnotationType;
 import com.gengoai.hermes.AttributeMap;
+import com.gengoai.hermes.extraction.lyre.LyreExpression;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
@@ -40,4 +41,5 @@ class AnnotationProvider implements Serializable {
    Set<String> required;
    @NonNull
    AnnotationType type;
+   LyreExpression expand;
 }//END OF AnnotationProvider

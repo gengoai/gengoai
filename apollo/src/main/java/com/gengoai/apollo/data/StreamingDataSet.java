@@ -26,6 +26,7 @@ import com.gengoai.stream.MStream;
 import com.gengoai.stream.StorageLevel;
 import lombok.NonNull;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -104,7 +105,7 @@ public final class StreamingDataSet extends DataSet {
    }
 
    @Override
-   public DataSet persist() {
+   public DataSet persist() throws IOException {
       if (stream.isDistributed()) {
          stream.persist(StorageLevel.OnDisk);
          return this;

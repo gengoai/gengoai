@@ -26,7 +26,6 @@ package com.gengoai.parsing;
 import com.gengoai.Tag;
 import com.gengoai.conversion.Cast;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +38,8 @@ import java.util.List;
  *
  * @author David B. Bracewell
  */
-public class Parser implements TokenStream, Serializable {
+public class Parser implements TokenStream {
+   private static final long serialVersionUID = 1L;
    private final Grammar grammar;
    private final TokenStream tokenStream;
 
@@ -186,8 +186,8 @@ public class Parser implements TokenStream, Serializable {
       ParserToken token = consume();
       Expression left = grammar.getPrefixHandler(token)
                                .orElseThrow(() -> new IllegalStateException("Parsing Error: Unable to parse '" +
-                                                                               token().getType() +
-                                                                               "', no prefix handler registered"))
+                                                                                  token().getType() +
+                                                                                  "', no prefix handler registered"))
                                .handle(this, token);
 
       grammar.validatePrefix(left);
@@ -196,8 +196,8 @@ public class Parser implements TokenStream, Serializable {
          token = consume();
          left = grammar.getPostfixHandler(token)
                        .orElseThrow(() -> new IllegalStateException("Parsing Error: Unable to parse '" +
-                                                                       token().getType() +
-                                                                       "', no postfix handler registered"))
+                                                                          token().getType() +
+                                                                          "', no postfix handler registered"))
                        .handle(this, token, left);
          grammar.validatePostfix(left);
          skip();
@@ -268,15 +268,15 @@ public class Parser implements TokenStream, Serializable {
       return tokenStream.peek();
    }
 
+   @Override
+   public ParserToken token() {
+      return tokenStream.token();
+   }
+
    private void skip() {
       while (grammar.isIgnored(tokenStream.peek())) {
          tokenStream.consume();
       }
-   }
-
-   @Override
-   public ParserToken token() {
-      return tokenStream.token();
    }
 
 

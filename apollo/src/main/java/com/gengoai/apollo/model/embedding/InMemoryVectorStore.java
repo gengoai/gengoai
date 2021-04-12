@@ -19,9 +19,9 @@
 
 package com.gengoai.apollo.model.embedding;
 
+import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.collection.HashMapIndex;
 import com.gengoai.collection.Index;
 import com.gengoai.collection.Lists;

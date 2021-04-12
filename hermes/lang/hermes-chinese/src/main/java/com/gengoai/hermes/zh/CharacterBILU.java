@@ -70,7 +70,7 @@ public class CharacterBILU {
                  .end(end)
                  .attribute(Types.PART_OF_SPEECH, PartOfSpeech.valueOf(tag))
                  .attribute(Types.LEMMA, document.substring(start, end).toString())
-                 .createAttached().pos();
+                 .createAttached();
       }
    }
 

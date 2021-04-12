@@ -43,6 +43,8 @@ class RelationProvider implements Serializable {
    Tuple2<String, LyreExpression> source;
    @NonNull
    Tuple2<String, LyreExpression> target;
+   LyreExpression sourceFilter;
+   LyreExpression targetFilter;
    @NonNull
    RelationType type;
    @NonNull

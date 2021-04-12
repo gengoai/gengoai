@@ -8,7 +8,7 @@ import java.util.EnumMap;
 import static com.gengoai.collection.Maps.hashMapOf;
 import static com.gengoai.reflection.TypeUtils.parameterizedType;
 import static com.gengoai.tuple.Tuples.$;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

@@ -18,6 +18,7 @@ public class ByteTypeConverter extends BaseNumberTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(byte.class, Byte.class);
    }

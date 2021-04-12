@@ -23,6 +23,7 @@ public class BigIntegerTypeConverter extends BaseNumberTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(BigInteger.class);
    }

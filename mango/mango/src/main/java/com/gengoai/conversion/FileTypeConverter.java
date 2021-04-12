@@ -22,6 +22,7 @@ public class FileTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(File.class);
    }

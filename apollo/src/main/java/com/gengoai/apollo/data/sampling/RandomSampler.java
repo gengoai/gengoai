@@ -28,6 +28,10 @@ import lombok.NonNull;
 
 import java.io.Serializable;
 
+
+/**
+ * <p>Randomly samples examples from the DataSet</p>
+ */
 @Data
 public class RandomSampler implements DataSetSampler, Serializable {
    private boolean withReplacement;

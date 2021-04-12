@@ -29,6 +29,7 @@ public class ReaderTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Reader.class, BufferedReader.class);
    }

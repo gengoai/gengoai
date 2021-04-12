@@ -97,7 +97,7 @@ public class Annotate implements Action {
       public String description() {
          return "Action to annotate the document collection with a set of AnnotatableTypes. " +
                "To specify add a 'types' property to your json definition with an array of AnnotatableType names " +
-               "or set the context value 'ANNOTATE_TYPES' on the command line (command separated list). " +
+               "or set the context value 'ANNOTATE_TYPES' on the command line (comma separated list). " +
                "If no types are specified, then the types defined in `Types.BASE_ANNOTATIONS` are used. " +
                "\n\nVia Workflow Json:\n" +
                "--------------------------------------\n" +

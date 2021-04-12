@@ -29,8 +29,6 @@ import lombok.NonNull;
 import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
 
-import java.util.Arrays;
-
 /**
  * <p>Dense NDArray representing String values.</p>
  *
@@ -255,7 +253,12 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
          byte[][][] b = new byte[(int) shape().rows()][(int) shape().columns()][];
          for (int row = 0; row < shape().rows(); row++) {
             for (int col = 0; col < shape().columns(); col++) {
-               b[row][col] = get(row, col).getBytes();
+               String s = get(row,col);
+               if( s == null){
+                  b[row][col] = new byte[0];
+               } else {
+                  b[row][col] = s.getBytes();
+               }
             }
          }
          return Cast.as(Tensor.create(b));

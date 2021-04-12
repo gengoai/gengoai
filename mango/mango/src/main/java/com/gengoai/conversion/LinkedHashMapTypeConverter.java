@@ -20,6 +20,7 @@ public class LinkedHashMapTypeConverter extends MapTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(LinkedHashMap.class);
    }

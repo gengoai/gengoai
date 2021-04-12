@@ -51,6 +51,7 @@ public class LevelTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return new Class[]{Level.class};
    }

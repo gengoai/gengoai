@@ -51,6 +51,7 @@ import com.gengoai.stream.Streams;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.extern.java.Log;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
@@ -66,6 +67,7 @@ import java.util.stream.Stream;
  * <code>TFOutputVar</code> which define the observation name (in Java), its corresponding TensorFlow serving name,
  * its shape, and associated Encoder.</p>
  */
+@Log
 public class TFModel implements Model, Serializable {
    private static final long serialVersionUID = 1L;
    private final Map<String, TFInputVar> inputs = new HashMap<>();
@@ -148,7 +150,11 @@ public class TFModel implements Model, Serializable {
       if (Config.hasProperty("tfmodel.data")) {
          tmp = Config.get("tfmodel.data").asResource();
       }
-      dataset.shuffle().persist(tmp);
+      try {
+         dataset.shuffle().persist(tmp);
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
       System.err.println("DataSet saved to: " + tmp.descriptor());
    }
 

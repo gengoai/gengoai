@@ -83,6 +83,10 @@ public final class EntityType extends HierarchicalEnumValue<EntityType> {
    }
 
 
+   public static EntityType valueOf(String name){
+      return registry.valueOf(name);
+   }
+
    /**
     * The type Converter.
     */

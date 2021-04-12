@@ -19,11 +19,11 @@
 
 package com.gengoai.apollo.model;
 
-import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.data.observation.Classification;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableSequence;
+import com.gengoai.apollo.encoder.Encoder;
 import lombok.NonNull;
 
 /**

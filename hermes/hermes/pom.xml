@@ -31,10 +31,25 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <dependencies>
+        <!-- ======================================================================== -->
+        <!-- GengoAI Dependencies -->
+        <!-- ======================================================================== -->
         <dependency>
             <groupId>com.gengoai</groupId>
             <artifactId>mango</artifactId>
+            <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.gengoai</groupId>
+            <artifactId>apollo</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+
+
+        <!-- ======================================================================== -->
+        <!-- 3rd Party Dependencies -->
+        <!-- ======================================================================== -->
         <dependency>
             <groupId>com.ibm.icu</groupId>
             <artifactId>icu4j</artifactId>
@@ -47,10 +62,7 @@
             <groupId>org.kohsuke.metainf-services</groupId>
             <artifactId>metainf-services</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.gengoai</groupId>
-            <artifactId>apollo</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.12</artifactId>

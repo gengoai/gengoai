@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml.model;
+package com.gengoai.hermes.ml.model.embedding;
 
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;

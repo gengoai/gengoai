@@ -22,11 +22,11 @@
 
 package com.gengoai.apollo.model.clustering;
 
+import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.apollo.math.measure.Measure;
-import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.model.Params;
 import com.gengoai.apollo.model.StoppingCriteria;
 import com.gengoai.concurrent.AtomicDouble;

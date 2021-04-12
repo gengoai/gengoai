@@ -20,12 +20,15 @@
 package com.gengoai.hermes.extraction.regex;
 
 
+import com.gengoai.LogUtils;
 import com.gengoai.collection.multimap.ArrayListMultimap;
 import com.gengoai.collection.multimap.ListMultimap;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
 import com.gengoai.tuple.Tuple2;
 import com.gengoai.tuple.Tuples;
+import lombok.ToString;
+import lombok.extern.java.Log;
 
 import java.io.Serializable;
 import java.util.*;
@@ -35,6 +38,7 @@ import static com.gengoai.string.Strings.safeEquals;
 /**
  * Implementation of a non-deterministic finite state automata that works on a Text
  */
+@Log(topic = "TokenRegex")
 public final class NFA implements Serializable {
 
    private static final long serialVersionUID = 1L;
@@ -70,12 +74,19 @@ public final class NFA implements Serializable {
 
       while (!states.isEmpty()) {
          Set<State> newStates = new HashSet<>(); //states after the next consumption
-
          for (State s : states) {
+            LogUtils.logFine(log, "Processing State: token={0}, state={1}, allTokens={2}", s.inputPosition < tokens.size()
+                  ? tokens.get(s.inputPosition)
+                  : null, s, tokens);
 
             if (s.node.accepts()) {
                if (s.stack.isEmpty() ||
-                  (s.stack.size() == 1 && s.node.consumes && safeEquals(s.node.name, s.stack.peek().v1, true))) {
+                     (s.stack.size() == 1 && s.node.consumes && safeEquals(s.node.name, s.stack.peek().v1, true))) {
+                  if (s.stack.size() > 0) {
+                     Tuple2<String, Integer> ng = s.stack.pop();
+                     s.namedGroups.put(ng.getKey(), HString.union(tokens.subList(ng.v2, s.inputPosition)));
+                  }
+                  LogUtils.logFine(log, "Accepting State: state={0}", s);
                   accepts.add(s);
                }
             }
@@ -86,26 +97,32 @@ public final class NFA implements Serializable {
             }
 
             for (Node n : s.node.epsilons) {
+
                if (s.node.consumes) {
                   State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
                   Tuple2<String, Integer> ng = next.stack.pop();
                   next.namedGroups.put(ng.getKey(), HString.union(tokens.subList(ng.v2, s.inputPosition)));
                   newStates.add(next);
+                  LogUtils.logFine(log, "Processing consuming epsilon: state={0}, adding new state={1}", s, next);
                }
 
                State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
                newStates.add(next);
+               LogUtils.logFine(log, "Processing epsilon: state={0}, adding new state={1}", s, next);
             }
 
             if (s.inputPosition >= input.tokenLength()) {
+               LogUtils.logFine(log, "Ending Matching because input position is > token length.");
                continue;
             }
 
             for (Transition t : s.node.transitions) {
-               int len = t.transitionFunction.matches(tokens.get(s.inputPosition),s.namedGroups);
+               int len = t.transitionFunction.matches(tokens.get(s.inputPosition), s.namedGroups);
+               LogUtils.logFine(log, "Processing transition: transition={0}, matchedLength={1}", t, len);
                if (len > 0) {
                   State next = new State(s.inputPosition + len, t.destination, currentStack, s.namedGroups);
                   newStates.add(next);
+                  LogUtils.logFine(log, "Processing passed transition: adding new state={0}",next);
                }
             }
          }
@@ -205,7 +222,12 @@ public final class NFA implements Serializable {
 
       @Override
       public String toString() {
-         return super.toString() + "[" + accepts() + "]";
+         return "Node{"
+               + "accepts="
+               + accepts()
+               + ", transitions="
+               + transitions
+               + "}";
       }
 
    }//END OF NFA$Node
@@ -213,6 +235,7 @@ public final class NFA implements Serializable {
    /**
     * The type State.
     */
+   @ToString
    static class State implements Comparable<State> {
       /**
        * The Input position.

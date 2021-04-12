@@ -27,10 +27,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -55,6 +52,15 @@ public class Transformer implements Serializable, Transform {
     */
    public Transformer(@NonNull List<? extends Transform> transforms) {
       this.transforms = transforms.stream().map(Transform::copy).collect(Collectors.toList());
+   }
+
+   /**
+    * Instantiates a new Transformer.
+    *
+    * @param transforms the transforms
+    */
+   public Transformer(@NonNull Transform... transforms){
+      this(Arrays.asList(transforms));
    }
 
    @Override

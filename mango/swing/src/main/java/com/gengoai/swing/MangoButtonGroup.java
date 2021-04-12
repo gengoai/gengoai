@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 public class MangoButtonGroup extends ButtonGroup implements Iterable<AbstractButton> {
+   private static final long serialVersionUID = 1L;
 
    public HBox createHorizontalView(int gap) {
       HBox hBox = new HBox(gap, 0);

@@ -25,6 +25,7 @@ import com.gengoai.cache.Cache;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.function.Unchecked;
+import com.gengoai.hermes.annotator.NerPatterns;
 import com.gengoai.hermes.extraction.caduceus.CaduceusProgram;
 import com.gengoai.hermes.lexicon.LexiconManager;
 import com.gengoai.hermes.lexicon.TrieWordList;
@@ -89,6 +90,14 @@ public enum ResourceType {
       public <T> T load(@NonNull String configKey, @NonNull String resourceName, @NonNull Language language) {
          return Cast.as(locate(configKey, resourceName, language)
                               .map(Unchecked.function(CaduceusProgram::read))
+                              .orElseThrow(() -> new RuntimeException(resourceName + " does not exist.")));
+      }
+   },
+   NER_PATTERNS("lexicons", ".patterns") {
+      @Override
+      public <T> T load(@NonNull String configKey, @NonNull String resourceName, @NonNull Language language) {
+         return Cast.as(locate(configKey, resourceName, language)
+                              .map(Unchecked.function(NerPatterns::load))
                               .orElseThrow(() -> new RuntimeException(resourceName + " does not exist.")));
       }
    },
@@ -247,33 +256,36 @@ public enum ResourceType {
       Resource classpathDir = Resources.fromClasspath(HERMES_PACKAGE.replace('.', '/') + "/");
       for (String ext : fileExtensions) {
          String nameWithExt = Strings.appendIfNotPresent(resourceName, ext);
-         for (Resource r : Arrays.asList(
-               Config.get(configKey, language, type).asResource(),
-               baseDir.getChild(langCode).getChild(type).getChild(nameWithExt),
-               classpathDir.getChild(langCode).getChild(type).getChild(nameWithExt),
-               Config.get(configKey, language).asResource(),
-               Config.get(configKey).asResource(),
-               Config.get(configKey, type).asResource(),
-               baseDir.getChild("default").getChild(type).getChild(nameWithExt),
-               classpathDir.getChild("default").getChild(type).getChild(nameWithExt))) {
-            if (r != null && r.exists()) {
-               if (resourceName.equalsIgnoreCase(configKey)) {
-                  logFinest(log, "Found resource ''{0}'' for language ''{1}'': {2}",
-                            resourceName,
-                            language,
-                            r);
-               } else {
-                  logFinest(log, "Found resource ''{0}'' for language ''{1}'' with given config property ''{2}'': {3}",
-                            resourceName,
-                            language,
-                            configKey,
-                            r);
+         for (String fileName : new String[]{nameWithExt, Strings.appendIfNotPresent(nameWithExt, ".gz")}) {
+            for (Resource r : Arrays.asList(
+                  Config.get(configKey, language, type).asResource(),
+                  baseDir.getChild(langCode).getChild(type).getChild(fileName),
+                  classpathDir.getChild(langCode).getChild(type).getChild(fileName),
+                  Config.get(configKey, language).asResource(),
+                  Config.get(configKey).asResource(),
+                  Config.get(configKey, type).asResource(),
+                  baseDir.getChild("default").getChild(type).getChild(fileName),
+                  classpathDir.getChild("default").getChild(type).getChild(fileName))) {
+               if (r != null && r.exists()) {
+                  if (resourceName.equalsIgnoreCase(configKey)) {
+                     logFinest(log, "Found resource ''{0}'' for language ''{1}'': {2}",
+                               resourceName,
+                               language,
+                               r);
+                  } else {
+                     logFinest(log, "Found resource ''{0}'' for language ''{1}'' with given config property ''{2}'': {3}",
+                               resourceName,
+                               language,
+                               configKey,
+                               r);
+                  }
+                  return Optional.of(r);
                }
-               return Optional.of(r);
             }
          }
       }
       return Optional.empty();
    }
+
 
 }//END OF ResourceType

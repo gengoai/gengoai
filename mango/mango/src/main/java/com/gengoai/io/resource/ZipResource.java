@@ -19,6 +19,7 @@ import java.util.zip.ZipFile;
  * @author David B. Bracewell
  */
 public class ZipResource extends BaseResource implements ReadOnlyResource {
+   private static final long serialVersionUID = 1L;
    private ZipEntry entry;
    private ZipFile zipFile;
 

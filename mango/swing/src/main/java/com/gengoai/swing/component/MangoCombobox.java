@@ -24,14 +24,14 @@ import com.gengoai.string.Strings;
 import com.gengoai.swing.component.listener.SwingListeners;
 import lombok.NonNull;
 
-import javax.swing.JComboBox;
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
 import javax.swing.text.BadLocationException;
 import java.util.Objects;
 import java.util.function.Function;
 
 public class MangoCombobox<E> extends JComboBox<E> {
+   private static final long serialVersionUID = 1L;
    private final AutoCompleteEditor autoCompleteEditor = new AutoCompleteEditor();
    private final JTextField textField;
    private final Function<E, String> toStringFunction;

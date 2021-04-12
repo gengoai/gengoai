@@ -10,7 +10,7 @@ import static com.gengoai.collection.Maps.hashMapOf;
 import static com.gengoai.tuple.Tuples.$;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * @author David B. Bracewell

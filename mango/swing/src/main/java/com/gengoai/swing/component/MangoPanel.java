@@ -22,11 +22,11 @@ package com.gengoai.swing.component;
 import com.gengoai.conversion.Cast;
 import com.gengoai.swing.View;
 
-import javax.swing.JPanel;
-import java.awt.BorderLayout;
-import java.awt.Component;
+import javax.swing.*;
+import java.awt.*;
 
 public class MangoPanel extends JPanel {
+   private static final long serialVersionUID = 1L;
 
    public MangoPanel() {
       super(true);

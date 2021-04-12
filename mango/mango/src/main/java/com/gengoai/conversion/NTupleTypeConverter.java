@@ -30,6 +30,7 @@ public class NTupleTypeConverter extends Tuple2TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(NTuple.class, Tuple.class);
    }

@@ -47,6 +47,7 @@ public class ClassTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Class.class);
    }

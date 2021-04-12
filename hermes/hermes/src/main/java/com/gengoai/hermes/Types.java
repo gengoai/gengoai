@@ -134,6 +134,10 @@ public interface Types {
     */
    AnnotationType ML_ENTITY = AnnotationType.make(ENTITY, "ML_ENTITY");
    /**
+    * Machine learning provided Entities
+    */
+   AnnotationType RULE_BASED_ENTITY = AnnotationType.make(ENTITY, "RULE_BASED_ENTITY");
+   /**
     * Attribute defining the Morphological Features for a given span of text.
     */
    AttributeType<UniversalFeatureSet> MORPHOLOGICAL_FEATURES = AttributeType.make("MORPHO_FEATURES",

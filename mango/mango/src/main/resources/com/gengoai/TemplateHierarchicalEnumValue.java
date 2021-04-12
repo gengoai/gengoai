@@ -1,7 +1,3 @@
-
-import java.util.Collection;
-import com.gengoai.HierarchicalRegistry;
-
 /**
  * The type ${TEMPLATE}.
  */

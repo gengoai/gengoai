@@ -57,6 +57,7 @@ public class ResourceTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Resource.class);
    }

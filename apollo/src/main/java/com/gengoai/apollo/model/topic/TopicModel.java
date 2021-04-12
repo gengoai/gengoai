@@ -19,8 +19,8 @@
 
 package com.gengoai.apollo.model.topic;
 
-import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.model.LabelType;
 import com.gengoai.apollo.model.MultiInputModel;
 import com.gengoai.collection.Iterators;

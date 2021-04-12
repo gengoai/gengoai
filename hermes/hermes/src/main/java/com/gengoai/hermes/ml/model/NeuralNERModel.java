@@ -72,13 +72,13 @@ public class NeuralNERModel extends TFSequenceLabeler {
       Config.initialize("CNN", args, "com.gengoai.hermes");
 
 
-      if (Math.random() < 0) {
+      if (Math.random() > 0) {
          Config.setProperty("tfmodel.data", "/Users/ik/prj/gengoai/mono-repo/python/data/entity2.db");
          NeuralNERModel ner = new NeuralNERModel();
-         DocumentCollection ontonotes = Corpus.open("/Volumes/ikdata-1/corpora/hermes_data/ontonotes_ner")
+         DocumentCollection ontonotes = Corpus.open("/Volumes/ikdata/corpora/hermes_data/ontonotes_ner")
                                               .query("$SPLIT='TRAIN'");
          ner.estimate(ontonotes);
-         ModelIO.save(ner, Resources.from("/Volumes/ikdata-1/hermes/en/models/ner-tmp"));
+         ModelIO.save(ner, Resources.from("/Volumes/ikdata/hermes/en/models/ner-tmp"));
       } else {
 //         NeuralNERModel2 ner = ModelIO.load(Resources.from("/Volumes/ikdata-1/hermes/en/models/ner-tmp/"));
 //         DocumentCollection ontonotes = Corpus.open("/Users/ik/hermes_data/ontonotes_ner")

@@ -24,7 +24,6 @@ package com.gengoai.io;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.function.Unchecked;
 import com.gengoai.stream.Streams;
-import com.gengoai.string.CharMatcher;
 import com.gengoai.string.Strings;
 
 import java.io.BufferedReader;
@@ -277,6 +276,7 @@ public class CSVReader implements Closeable, AutoCloseable, Iterable<List<String
          gobbleWhiteSpace();
          return OUT_QUOTE;
       }
+      System.out.println(cell);
       throw new IOException("Illegal character [" + (char) c + "] outside of the end quote of a cell.");
    }
 

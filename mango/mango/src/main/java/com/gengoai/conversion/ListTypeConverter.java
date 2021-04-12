@@ -17,6 +17,7 @@ import static com.gengoai.collection.Arrays2.arrayOf;
 public class ListTypeConverter extends CollectionTypeConverter {
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(List.class, ArrayList.class, Iterable.class, Collection.class);
    }

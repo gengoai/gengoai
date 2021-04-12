@@ -19,8 +19,8 @@
 
 package com.gengoai.apollo.model.clustering;
 
-import com.gengoai.apollo.math.measure.Measure;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.math.measure.Measure;
 import com.gengoai.math.Optimum;
 import lombok.Getter;
 import lombok.NonNull;

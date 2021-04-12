@@ -19,6 +19,7 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Observation;
@@ -26,20 +27,44 @@ import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.collection.Sets;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.stream.MStream;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.util.Set;
 
 /**
+ * The type Top n.
+ *
  * @author David B. Bracewell
  */
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = true)
 public class TopN extends AbstractSingleSourceTransform<TopN> {
+   @JsonProperty
    private final int topN;
+   @JsonProperty
    private Set<String> selected;
 
+   /**
+    * Instantiates a new Top n.
+    *
+    * @param topN the top n
+    */
    public TopN(int topN) {
       Validation.checkArgument(topN > 0, "TopN must be > 0");
       this.topN = topN;
+   }
+
+
+   @Override
+   public String toString() {
+      return "TopN{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            ", topN=" + topN +
+            '}';
    }
 
    @Override

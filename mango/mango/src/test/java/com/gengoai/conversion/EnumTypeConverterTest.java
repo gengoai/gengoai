@@ -3,7 +3,7 @@ package com.gengoai.conversion;
 import com.gengoai.Language;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

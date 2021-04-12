@@ -1,7 +1,6 @@
 package com.gengoai.conversion;
 
 import com.gengoai.json.JsonEntry;
-import com.gengoai.math.Math2;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;

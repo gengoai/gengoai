@@ -34,6 +34,7 @@ import java.util.stream.Stream;
  * The type Mango table model.
  */
 public class MangoTableModel extends DefaultTableModel {
+   private static final long serialVersionUID = 1L;
    private Map<Integer, Class<?>> columnClasses = new HashMap<>();
    private Map<Integer, Boolean> columnEditable = new HashMap<>();
 
@@ -111,7 +112,7 @@ public class MangoTableModel extends DefaultTableModel {
       super.addRow(new Vector<>(row));
    }
 
-   public void addRow(Object... row) {
+   public void addRow(Object... row){
       super.addRow(row);
    }
 

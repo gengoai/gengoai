@@ -22,7 +22,6 @@ package com.gengoai.apollo.math.linalg;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.DoubleBinaryOperator;
 

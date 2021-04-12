@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

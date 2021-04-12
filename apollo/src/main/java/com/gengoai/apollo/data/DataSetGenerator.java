@@ -20,8 +20,8 @@
 package com.gengoai.apollo.data;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.feature.ObservationExtractor;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.feature.ObservationExtractor;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.stream.MStream;
 import lombok.NonNull;

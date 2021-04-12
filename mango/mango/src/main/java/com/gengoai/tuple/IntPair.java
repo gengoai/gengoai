@@ -29,6 +29,7 @@ import java.io.Serializable;
  */
 @Value(staticConstructor = "of")
 public class IntPair implements Serializable, Comparable<IntPair> {
+   private static final long serialVersionUID = 1L;
    /**
     * The first value
     */

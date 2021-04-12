@@ -35,6 +35,7 @@ public class StringTagConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return new Class[]{StringTag.class};
    }

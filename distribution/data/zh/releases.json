@@ -1,0 +1,77 @@
+{
+  "lexicons": {
+    "description": "Core Lexicons",
+    "latest": "1.1",
+    "target": "lexicons",
+    "versions": [
+      "1.1"
+    ]
+  },
+  "pos": {
+    "description": "Perceptron-based POS Tagger using Penn TreeBank tagset",
+    "latest": "1.1",
+    "target": "models/pos",
+    "versions": [
+      "1.1"
+    ]
+  },
+  "phrase_chunk": {
+    "description": "CRF-based Shallow Parser",
+    "latest": "1.1",
+    "target": "models/phrase_chunk",
+    "versions": [
+      "1.1"
+    ]
+  },
+  "dependency": {
+    "description": "MaltParser English Dependency Model",
+    "latest": "1.1",
+    "target": "models/",
+    "versions": [
+      "1.1"
+    ]
+  },
+  "elmo": {
+    "description": "Elmo Contextual Token Embedding Model",
+    "latest": "1.1",
+    "target": "models/elmo",
+    "versions": [
+      "1.1"
+    ]
+  },
+  "sentence_encoder": {
+    "description": "Universal Sentence Encoder Model",
+    "latest": "1.1",
+    "target": "models/sentence_encoder",
+    "versions": [
+      "1.1"
+    ]
+  },
+  "ner": {
+    "default": "crf",
+    "target": "models/ner",
+    "variants": {
+      "crf": {
+        "description": "CRF-based NER. Will provide faster inference, but at the cost of accuracy",
+        "latest": "1.1",
+        "versions": [
+          "1.1"
+        ]
+      },
+      "elmo": {
+        "description": "Neural NER model using Elmo embeddings. Will provide increased accuracy, but is about 30x slower than the CRF model",
+        "latest": "1.1",
+        "versions": [
+          "1.1"
+        ]
+      },
+      "reslstm": {
+        "description": "Neural NER model using Glove with character and shape embeddings.",
+        "latest": "1.1",
+        "versions": [
+          "1.1"
+        ]
+      }
+    }
+  }
+}

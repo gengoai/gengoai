@@ -19,16 +19,16 @@
 
 package com.gengoai.apollo.model.topic;
 
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.encoder.Encoder;
-import com.gengoai.apollo.encoder.IndexEncoder;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableNameSpace;
+import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.encoder.IndexEncoder;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 

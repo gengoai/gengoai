@@ -19,13 +19,14 @@
 
 package com.gengoai.apollo.data.transform.vectorizer;
 
-import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.data.DataSet;
-import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.transform.AbstractSingleSourceTransform;
 import com.gengoai.apollo.data.transform.Transform;
+import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.stream.MStream;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -37,10 +38,15 @@ import lombok.NonNull;
  *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
 public abstract class Vectorizer<T extends Vectorizer<T>> extends AbstractSingleSourceTransform<T> {
    private static final long serialVersionUID = 1L;
    @Getter
    protected final Encoder encoder;
+
+   protected Vectorizer() {
+      this.encoder = null;
+   }
 
    protected Vectorizer(@NonNull Encoder encoder) {
       this.encoder = encoder;
@@ -48,7 +54,7 @@ public abstract class Vectorizer<T extends Vectorizer<T>> extends AbstractSingle
 
    @Override
    protected void fit(@NonNull MStream<Observation> observations) {
-      if(!encoder.isFixed()) {
+      if (!encoder.isFixed()) {
          encoder.fit(observations);
       }
    }

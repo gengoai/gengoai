@@ -18,6 +18,7 @@ public class FloatTypeConverter extends BaseNumberTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Float.class, float.class);
    }

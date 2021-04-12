@@ -29,7 +29,7 @@ import lombok.NonNull;
 import java.io.Serializable;
 
 @Data
-public abstract class BaseObservationDataSetSampler implements DataSetSampler, Serializable {
+abstract class BaseObservationDataSetSampler implements DataSetSampler, Serializable {
    private static final long serialVersionUID = 1L;
    @NonNull
    private String observationName;

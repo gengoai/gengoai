@@ -16,6 +16,7 @@ import static com.gengoai.collection.Arrays2.arrayOf;
 public class PriorityQueueTypeConverter extends CollectionTypeConverter {
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(PriorityQueue.class);
    }

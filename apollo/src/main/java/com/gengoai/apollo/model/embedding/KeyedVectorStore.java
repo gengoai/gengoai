@@ -19,9 +19,9 @@
 
 package com.gengoai.apollo.model.embedding;
 
+import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.encoder.Encoder;
 import lombok.NonNull;
 
 import java.io.Serializable;

@@ -19,12 +19,12 @@
 
 package com.gengoai.apollo.model.tensorflow;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.encoder.Encoder;
-import com.gengoai.apollo.model.LabelType;
 import com.gengoai.apollo.data.observation.Classification;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.model.LabelType;
 import lombok.NonNull;
 
 import java.util.List;

@@ -22,7 +22,6 @@
 
 package com.gengoai.parsing;
 
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,7 +30,7 @@ import java.util.List;
  *
  * @author David B. Bracewell
  */
-public abstract class AbstractTokenStream implements TokenStream, Serializable {
+public abstract class AbstractTokenStream implements TokenStream {
    private static final long serialVersionUID = 1L;
    private ParserToken current;
    private LinkedList<ParserToken> buffer = new LinkedList<>();
@@ -48,13 +47,6 @@ public abstract class AbstractTokenStream implements TokenStream, Serializable {
       return current;
    }
 
-   /**
-    * Gets the next available token.
-    *
-    * @return the next {@link ParserToken}
-    */
-   protected abstract List<ParserToken> next();
-
    @Override
    public final ParserToken peek() {
       if (current != null && current.isInstance(EOF)) {
@@ -70,4 +62,11 @@ public abstract class AbstractTokenStream implements TokenStream, Serializable {
    public final ParserToken token() {
       return current;
    }
+
+   /**
+    * Gets the next available token.
+    *
+    * @return the next {@link ParserToken}
+    */
+   protected abstract List<ParserToken> next();
 }//END OF AbstractTokenStream

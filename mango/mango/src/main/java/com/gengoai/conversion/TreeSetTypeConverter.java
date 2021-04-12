@@ -17,6 +17,7 @@ import static com.gengoai.collection.Arrays2.arrayOf;
 public class TreeSetTypeConverter extends CollectionTypeConverter {
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(SortedSet.class, TreeSet.class);
    }

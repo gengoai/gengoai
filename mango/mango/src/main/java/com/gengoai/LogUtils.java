@@ -21,6 +21,7 @@ package com.gengoai;
 
 import com.gengoai.config.Config;
 import com.gengoai.io.Resources;
+import com.gengoai.reflection.Reflect;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
@@ -390,6 +391,18 @@ public final class LogUtils {
    public static void setLevel(String logger, Level level) {
       Logger log = Logger.getLogger(logger);
       log.setLevel(level);
+      Class<?> c = Reflect.getClassForNameQuietly(logger);
+      if (c != null) {
+         try {
+            Logger clog = Reflect.onClass(c)
+                                 .allowPrivilegedAccess()
+                                 .getField("log")
+                                 .get();
+            clog.setLevel(level);
+         } catch (Exception e) {
+            //ignore
+         }
+      }
       LogManager.getLogManager()
                 .getLoggerNames()
                 .asIterator()

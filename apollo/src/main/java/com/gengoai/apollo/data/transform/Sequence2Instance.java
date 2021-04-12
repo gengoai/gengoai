@@ -24,13 +24,24 @@ import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.VariableCollection;
 import com.gengoai.apollo.data.observation.VariableList;
 import com.gengoai.stream.MStream;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 /**
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
 public class Sequence2Instance extends AbstractSingleSourceTransform<Sequence2Instance> {
    private static final long serialVersionUID = 1L;
+
+
+   @Override
+   public String toString() {
+      return "Sequence2Instance{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            '}';
+   }
 
    @Override
    protected void fit(@NonNull MStream<Observation> observations) {

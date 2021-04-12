@@ -20,13 +20,13 @@
 package com.gengoai.apollo.evaluation;
 
 import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.data.DataSet;
-import com.gengoai.apollo.model.Model;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableSequence;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.model.Model;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 

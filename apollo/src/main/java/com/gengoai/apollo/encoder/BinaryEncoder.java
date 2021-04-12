@@ -19,21 +19,29 @@
 
 package com.gengoai.apollo.encoder;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.stream.MStream;
 import com.gengoai.string.Strings;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 
 import java.util.Set;
 
 /**
- * <p>An {@link Encoder} for binary values where the true and false are specified.</p>
+ * <p>An {@link Encoder} for binary values where the true and false are specified. The false label is always encoded as
+ * <code>0</code> and the true label as <code>1</code>.</p>
  *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode
+@ToString
 public class BinaryEncoder implements Encoder {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    private final String trueLabel;
+   @JsonProperty
    private final String falseLabel;
 
 
@@ -43,6 +51,7 @@ public class BinaryEncoder implements Encoder {
    public BinaryEncoder() {
       this("false", "true");
    }
+
 
    /**
     * Instantiates a new BinaryEncoder.

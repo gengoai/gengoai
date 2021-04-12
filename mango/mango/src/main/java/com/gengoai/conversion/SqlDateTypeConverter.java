@@ -25,6 +25,7 @@ public class SqlDateTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Date.class);
    }

@@ -30,6 +30,7 @@ import com.gengoai.sql.constraint.Constraint;
 import com.gengoai.sql.operator.SQLOperable;
 import com.gengoai.sql.statement.*;
 import lombok.*;
+import lombok.experimental.Accessors;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,7 +54,6 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
    private final SQLElement type;
    private final SQLElement using;
 
-
    /**
     * Instantiates a new Table.
     *
@@ -61,8 +61,9 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
     * @param tableType RDMS specific string defining type of table
     */
    public Table(String name, SQLElement tableType) {
-      this(name, tableType, null,Collections.emptyList(), Collections.emptyList());
+      this(name, tableType, null, Collections.emptyList(), Collections.emptyList());
    }
+
 
    /**
     * Instantiates a new Table.
@@ -71,7 +72,7 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
     * @param tableType RDMS specific string defining type of table
     */
    public Table(String name, SQLElement tableType, SQLElement using) {
-      this(name, tableType,using, Collections.emptyList(), Collections.emptyList());
+      this(name, tableType, using, Collections.emptyList(), Collections.emptyList());
    }
 
    /**
@@ -102,7 +103,6 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       this.constraints.addAll(constraints);
       this.using = using;
    }
-
 
    /**
     * Adds the given column to the table definition generating an {@link AlterTable} statement to perform on the
@@ -517,6 +517,40 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
                      .onConflict(upsertClause)
                      .update(context, values) > 0;
    }
+
+   public static Builder builder(@NonNull String name){
+      return new Builder(name);
+   }
+
+   @Data
+   @Accessors(fluent = true)
+   public static class Builder {
+      protected final String name;
+      protected List<Column> columns = new ArrayList<>();
+      protected List<Constraint> constraints = new ArrayList<>();
+      protected SQLElement type;
+      protected SQLElement using;
+
+
+      public Builder(String name) {
+         this.name = Validation.notNullOrBlank(name);
+      }
+
+      public Table build() {
+         return new Table(name, type, using, columns, constraints);
+      }
+
+      public Builder column(@NonNull Column column) {
+         this.columns.add(column);
+         return this;
+      }
+
+      public Builder constraint(@NonNull Constraint constraint) {
+         this.constraints.add(constraint);
+         return this;
+      }
+
+   }//END OF Builder
 
 
 }//END OF Table

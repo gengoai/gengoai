@@ -19,14 +19,15 @@
 
 package com.gengoai.apollo.data.transform.vectorizer;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableCollection;
+import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.conversion.Cast;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -42,7 +43,11 @@ import java.util.List;
  *
  * @author David B. Bracewell
  */
+@EqualsAndHashCode(callSuper = true)
 public abstract class AbstractVariableVectorizer<T extends AbstractVariableVectorizer<T>> extends Vectorizer<T> {
+
+   protected AbstractVariableVectorizer() {
+   }
 
    protected AbstractVariableVectorizer(@NonNull Encoder encoder) {
       super(encoder);

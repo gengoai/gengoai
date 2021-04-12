@@ -28,9 +28,7 @@ import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.*;
 import java.util.function.Consumer;
 
 /**

@@ -19,73 +19,61 @@
 
 package com.gengoai.apollo.data.transform;
 
-import com.gengoai.Validation;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.data.observation.VariableCollection;
 import com.gengoai.apollo.data.observation.VariableNameSpace;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.collection.Sets;
 import com.gengoai.conversion.Cast;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Singular;
+import lombok.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
  * A transform that merges multiple non-NDArray {@link Observation}.
  * </p>
  */
-@Builder
+@ToString
+@EqualsAndHashCode(callSuper = false)
 public class Merge implements Transform {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    @Singular
    private final List<String> inputs;
-   private final String output;
+   @JsonProperty
+   private final String output ;
+   @JsonProperty
    private final boolean prependSourceName;
+   @JsonProperty
    private final boolean keepInputs;
+   @JsonProperty
    private final VariableNameSpace nameSpace;
 
-   /**
-    * Instantiates a new Merge transform.
-    *
-    * @param inputs            the names of the observation sources to merge
-    * @param output            the name of the source to output the merge to
-    * @param prependSourceName True - prepends the source name to Variables in each observation, False - keep Variable
-    *                          names as is.
-    * @param keepInputs        True - keep the input sources, False - remove the input sources from the Datum.
-    * @param nameSpace         the {@link VariableNameSpace} to use when merging.
-    */
-   private Merge(@NonNull Collection<String> inputs,
-                 @NonNull String output,
-                 boolean prependSourceName,
-                 boolean keepInputs, VariableNameSpace nameSpace) {
+
+   @JsonCreator
+   @Builder
+   protected Merge(@JsonProperty("inputs") Collection<String> inputs,
+                   @JsonProperty("output") String output,
+                   @JsonProperty("prependSourceName") boolean prependSourceName,
+                   @JsonProperty("keepInputs") boolean keepInputs,
+                   @JsonProperty("nameSpace") VariableNameSpace nameSpace) {
       this.nameSpace = nameSpace;
-      Validation.checkArgument(inputs.size() >= 2, "Must specify two or more sources to merge.");
       this.output = output;
-      this.inputs = new ArrayList<>(inputs);
+      this.inputs = new ArrayList<>();
+      if( inputs != null ){
+         this.inputs.addAll(inputs);
+      }
       this.keepInputs = keepInputs;
       this.prependSourceName = prependSourceName;
-   }
-
-   private void assertCanMerge(List<Observation> obs) {
-      if (obs.stream().anyMatch(Sequence.class::isInstance)) {
-         if (!obs.stream().allMatch(Sequence.class::isInstance)) {
-            throw new IllegalStateException("Cannot merge non-sequences with sequences");
-         }
-      } else if (obs.stream().anyMatch(NDArray.class::isInstance)) {
-         if (!obs.stream().allMatch(NDArray.class::isInstance)) {
-            throw new IllegalStateException("Cannot merge non-NDArray with NDArray");
-         }
-         if (obs.stream().map(o -> o.asNDArray().shape()).distinct().count() > 1) {
-            throw new IllegalStateException("Cannot merge NDArray of different shapes");
-         }
-      }
    }
 
    @Override
@@ -95,15 +83,23 @@ public class Merge implements Transform {
 
    @Override
    public DataSet fitAndTransform(@NonNull DataSet dataset) {
+      if (inputs.isEmpty()) {
+         inputs.addAll(dataset.parallelStream()
+                              .flatMap(d -> d.keySet().stream())
+                              .distinct()
+                              .collect(Collectors.toList()));
+      }
       return transform(dataset);
    }
 
    @Override
+   @JsonIgnore
    public Set<String> getInputs() {
       return Sets.asHashSet(inputs);
    }
 
    @Override
+   @JsonIgnore
    public Set<String> getOutputs() {
       return Collections.singleton(Datum.DEFAULT_INPUT);
    }
@@ -163,10 +159,27 @@ public class Merge implements Transform {
       return datum;
    }
 
+   private void assertCanMerge(List<Observation> obs) {
+      if (obs.stream().anyMatch(Sequence.class::isInstance)) {
+         if (!obs.stream().allMatch(Sequence.class::isInstance)) {
+            throw new IllegalStateException("Cannot merge non-sequences with sequences");
+         }
+      } else if (obs.stream().anyMatch(NDArray.class::isInstance)) {
+         if (!obs.stream().allMatch(NDArray.class::isInstance)) {
+            throw new IllegalStateException("Cannot merge non-NDArray with NDArray");
+         }
+         if (obs.stream().map(o -> o.asNDArray().shape()).distinct().count() > 1) {
+            throw new IllegalStateException("Cannot merge NDArray of different shapes");
+         }
+      }
+   }
+
    public static class MergeBuilder {
       private boolean isKeepInputs = true;
       private boolean isPrependSourceName = false;
       private VariableNameSpace nameSpace = VariableNameSpace.Full;
+      private String output = Datum.DEFAULT_INPUT;
+
    }
 
 }//END OF MergePreprocessor

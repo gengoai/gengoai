@@ -19,11 +19,12 @@
 
 package com.gengoai.apollo.encoder;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.math.HashingFunctions;
 import com.gengoai.stream.MStream;
-import lombok.NonNull;
+import lombok.*;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,8 +35,12 @@ import java.util.stream.IntStream;
  *
  * @author David B. Bracewell
  */
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
+@EqualsAndHashCode
+@ToString
 public class HashingEncoder implements Encoder {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    private final int numberOfFeatures;
 
    /**

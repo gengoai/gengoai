@@ -19,7 +19,7 @@
 
 package com.gengoai.swing.component.listener;
 
-import java.awt.Component;
+import java.awt.*;
 
 @FunctionalInterface
 public interface TabClosedListener {

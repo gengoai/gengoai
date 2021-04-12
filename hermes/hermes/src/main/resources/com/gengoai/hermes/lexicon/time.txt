@@ -45,3 +45,7 @@ Min.
 Hr.
 Sec.
 Msec.
+pm
+am
+et
+ct

@@ -25,10 +25,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.gengoai.Copyable;
 import com.gengoai.Primitives;
-import com.gengoai.apollo.math.linalg.dense.*;
-import com.gengoai.apollo.math.linalg.sparse.*;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.math.linalg.dense.*;
+import com.gengoai.apollo.math.linalg.sparse.*;
 import com.gengoai.collection.Sorting;
 import com.gengoai.conversion.Cast;
 import com.gengoai.string.Strings;
@@ -969,8 +969,12 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public NDArray setRange(@NonNull IndexRange indexRange, @NonNull NDArray rhs) {
       for (Index index : indexRange) {
-         if (rhs.shape().isVector()) {
-            set(index, rhs.get(Math.max(index.getRow(), index.getColumn())));
+         if (rhs.shape.isScalar()) {
+            set(index, rhs.scalar());
+         } else if (rhs.shape().isColumnVector()) {
+            set(index, rhs.get(index.getRow()));
+         } else if (rhs.shape().isRowVector()) {
+            set(index, rhs.get(index.getColumn()));
          } else {
             set(index, rhs.get(rhs.shape().broadcast(index)));
          }

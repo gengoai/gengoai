@@ -22,8 +22,18 @@ package com.gengoai.apollo.data.sampling;
 import com.gengoai.apollo.data.DataSet;
 import lombok.NonNull;
 
+/**
+ * <p>Defines a methodology for sampling the datum in a DataSet in some manner. This is typically done to balance the
+ * distribution of class labels.</p>
+ */
 public interface DataSetSampler {
 
+   /**
+    * <p>Sample the given DataSet</p>
+    *
+    * @param dataSet the DataSet to sample
+    * @return the sampled DataSet
+    */
    DataSet sample(@NonNull DataSet dataSet);
 
 }//END OF DataSetSampler

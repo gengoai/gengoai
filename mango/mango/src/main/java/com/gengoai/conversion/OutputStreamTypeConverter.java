@@ -35,6 +35,7 @@ public class OutputStreamTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(OutputStream.class);
    }

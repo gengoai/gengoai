@@ -23,6 +23,7 @@ public class BigDecimalTypeConverter extends BaseNumberTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(BigDecimal.class);
    }

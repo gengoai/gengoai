@@ -17,20 +17,16 @@
  * under the License.
  */
 
-package com.gengoai.apollo.model.embedding;
+package com.gengoai.documentdb.lucene;
 
-import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import org.apache.lucene.analysis.*;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.util.CharTokenizer;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.*;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Map;
 
 public class LuceneEmbeddingAnalyzer extends Analyzer {
    public static final int DEFAULT_QUANTIZATION_LEVEL = 80;
@@ -47,6 +43,8 @@ public class LuceneEmbeddingAnalyzer extends Analyzer {
       this.quantizationLevel = quantizationLevel;
       this.set.add(SKIP);
    }
+
+
 
    public Counter<String> analyze(String s) {
       Counter<String> c = Counters.newCounter();
@@ -81,27 +79,6 @@ public class LuceneEmbeddingAnalyzer extends Analyzer {
       return new TokenStreamComponents(tokenizer, filter);
    }
 
-   public String encode(NDArray v) {
-      StringBuilder ndStr = new StringBuilder();
-      for (long i = 0; i < v.length(); i++) {
-         if (ndStr.length() > 0) {
-            ndStr.append(' ');
-         }
-         ndStr.append(v.get(i));
-      }
-      return ndStr.toString();
-   }
-
-   public Query toQuery(NDArray v, String field) {
-      Counter<String> tf = analyze(encode(v));
-      BooleanQuery.Builder q = new BooleanQuery.Builder();
-      for (Map.Entry<String, Double> e : tf.entries()) {
-         var tq = new BoostQuery(new TermQuery(new Term(field, e.getKey())), e.getValue().floatValue());
-         var bc = new BooleanClause(tq, BooleanClause.Occur.SHOULD);
-         q.add(bc);
-      }
-      return q.build();
-   }
 
    private static class DelimiterTokenizer extends CharTokenizer {
       @Override

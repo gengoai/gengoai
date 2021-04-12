@@ -323,7 +323,7 @@ public abstract class BaseMStreamTest {
 
    @Test
    public void partitionAndSplit() throws Exception {
-      MStream<String> stream = sc.stream("A", "B", "C", "D", "E", "F", "G", "H", "I", "J");
+      // MStream<String> stream = sc.stream("A", "B", "C", "D", "E", "F", "G", "H", "I", "J");
 //      List<Iterable<String>> partitions = stream.split(3).collect();
 //      assertEquals(3, partitions.size());
 //      Assert.assertEquals(Lists.arrayListOf("A", "B", "C"), Lists.asArrayList(partitions.get(0)));

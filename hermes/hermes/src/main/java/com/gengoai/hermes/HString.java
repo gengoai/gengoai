@@ -1124,7 +1124,7 @@ public interface HString extends Span, StringLike, Serializable {
    default Annotation next(@NonNull AnnotationType type) {
       return document() == null
             ? Fragments.orphanedAnnotation(type)
-            : document().next(asAnnotation(), type);
+            : document().next(Iterables.getLast(annotations(type), asAnnotation()), type);
    }
 
    /**

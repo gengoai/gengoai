@@ -22,16 +22,12 @@ package com.gengoai.apollo.model.sequence;
 import com.gengoai.Stopwatch;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.encoder.IndexEncoder;
-import com.gengoai.apollo.model.LabelType;
-import com.gengoai.apollo.model.Params;
-import com.gengoai.apollo.model.SingleSourceFitParameters;
-import com.gengoai.apollo.model.SingleSourceModel;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableSequence;
-import com.gengoai.apollo.model.StoppingCriteria;
+import com.gengoai.apollo.encoder.IndexEncoder;
+import com.gengoai.apollo.model.*;
 import com.gengoai.collection.HashBasedTable;
 import com.gengoai.collection.Iterables;
 import com.gengoai.collection.Table;
@@ -88,35 +84,6 @@ public class GreedyAvgPerceptron extends SingleSourceModel<GreedyAvgPerceptron.P
       super(with(new Parameters(), updater));
    }
 
-   private void average(int finalIteration,
-                        MultiCounter<String, String> weights,
-                        Table<String, String, Integer> timeStamp,
-                        MultiCounter<String, String> totals
-                       ) {
-      for(String feature : new HashSet<>(weights.firstKeys())) {
-         Counter<String> newWeights = Counters.newCounter();
-         weights.get(feature)
-                .forEach((cls, value) -> {
-                   double total = totals.get(feature, cls);
-                   total += (finalIteration - timeStamp.getOrDefault(feature, cls, 0)) * value;
-                   double v = total / finalIteration;
-                   if(Math.abs(v) >= 0.001) {
-                      newWeights.set(cls, v);
-                   }
-                });
-         weights.set(feature, newWeights);
-      }
-   }
-
-   private Counter<String> distribution(Observation example, String pLabel) {
-      Counter<String> scores = Counters.newCounter(transitionWeights.get(pLabel));
-      for(Variable feature : expandFeatures(example)) {
-         scores.merge(featureWeights.get(feature.getName())
-                                    .adjustValues(v -> v * feature.getValue()));
-      }
-      return scores;
-   }
-
    @Override
    public void estimate(DataSet preprocessed) {
       IndexEncoder encoder = new IndexEncoder();
@@ -132,27 +99,27 @@ public class GreedyAvgPerceptron extends SingleSourceModel<GreedyAvgPerceptron.P
       final String defaultLabel = encoder.decode(0);
       int instances = 0;
       StoppingCriteria stoppingCriteria = StoppingCriteria.create("pct_error", parameters);
-      for(int i = 0; i < stoppingCriteria.maxIterations(); i++) {
+      for (int i = 0; i < stoppingCriteria.maxIterations(); i++) {
          Stopwatch sw = Stopwatch.createStarted();
          double total = 0;
          double correct = 0;
 
-         for(Datum datum : preprocessed.shuffle().stream()) {
+         for (Datum datum : preprocessed.shuffle().stream()) {
             String pLabel = "<BOS>";
             Sequence<?> sequence = datum.get(parameters.input.value()).asSequence();
             Sequence<?> labels = datum.get(parameters.output.value()).asSequence();
 
-            for(int j = 0; j < sequence.size(); j++) {
+            for (int j = 0; j < sequence.size(); j++) {
                total++;
                instances++;
                Observation instance = sequence.get(j);
                String y = labels.get(j).asVariable().getName();
                String predicted = distribution(instance, pLabel).max();
-               if(predicted == null) {
+               if (predicted == null) {
                   predicted = defaultLabel;
                }
-               if(!y.equals(predicted)) {
-                  for(Variable feature : expandFeatures(instance)) {
+               if (!y.equals(predicted)) {
+                  for (Variable feature : expandFeatures(instance)) {
                      update(y, feature.getName(), 1.0, instances, featureWeights, fTimestamps, fTotals);
                      update(predicted, feature.getName(), -1.0, instances, featureWeights, fTimestamps, fTotals);
                   }
@@ -167,24 +134,17 @@ public class GreedyAvgPerceptron extends SingleSourceModel<GreedyAvgPerceptron.P
          double error = 1d - (correct / total);
 
          sw.stop();
-         if(parameters.verbose.value()) {
+         if (parameters.verbose.value()) {
             logInfo(log, "Iteration {0}: Accuracy={1,number,#.####}, time to complete={2}", i + 1, (1d - error), sw);
          }
 
-         if(stoppingCriteria.check(error)) {
+         if (stoppingCriteria.check(error)) {
             break;
          }
       }
 
       average(instances, featureWeights, fTimestamps, fTotals);
       average(instances, transitionWeights, tTimestamps, tTotals);
-   }
-
-   private Iterable<Variable> expandFeatures(Observation example) {
-      if(example.isVariableCollection()) {
-         return Iterables.concat(example.asVariableCollection(), Collections.singleton(BIAS_FEATURE));
-      }
-      return Arrays.asList(example.asVariable(), BIAS_FEATURE);
    }
 
    @Override
@@ -194,10 +154,45 @@ public class GreedyAvgPerceptron extends SingleSourceModel<GreedyAvgPerceptron.P
 
    @Override
    public LabelType getLabelType(@NonNull String name) {
-      if(parameters.output.value().equals(name)) {
+      if (parameters.output.value().equals(name)) {
          return LabelType.Sequence;
       }
       throw new IllegalArgumentException("'" + name + "' is not a valid output for this model.");
+   }
+
+   private void average(int finalIteration,
+                        MultiCounter<String, String> weights,
+                        Table<String, String, Integer> timeStamp,
+                        MultiCounter<String, String> totals) {
+      for (String feature : new HashSet<>(weights.firstKeys())) {
+         Counter<String> newWeights = Counters.newCounter();
+         weights.get(feature)
+                .forEach((cls, value) -> {
+                   double total = totals.get(feature, cls);
+                   total += (finalIteration - timeStamp.getOrDefault(feature, cls, 0)) * value;
+                   double v = total / finalIteration;
+                   if (Math.abs(v) >= 0.001) {
+                      newWeights.set(cls, v);
+                   }
+                });
+         weights.set(feature, newWeights);
+      }
+   }
+
+   private Counter<String> distribution(Observation example, String pLabel) {
+      Counter<String> scores = Counters.newCounter(transitionWeights.get(pLabel));
+      for (Variable feature : expandFeatures(example)) {
+         scores.merge(featureWeights.get(feature.getName())
+                                    .adjustValues(v -> v * feature.getValue()));
+      }
+      return scores;
+   }
+
+   private Iterable<Variable> expandFeatures(Observation example) {
+      if (example.isVariableCollection()) {
+         return Iterables.concat(example.asVariableCollection(), Collections.singleton(BIAS_FEATURE));
+      }
+      return Arrays.asList(example.asVariable(), BIAS_FEATURE);
    }
 
    @Override
@@ -205,12 +200,12 @@ public class GreedyAvgPerceptron extends SingleSourceModel<GreedyAvgPerceptron.P
       Sequence<?> sequence = observation.asSequence();
       VariableSequence out = new VariableSequence();
       String pLabel = "<BOS>";
-      for(Observation instance : sequence) {
+      for (Observation instance : sequence) {
          Counter<String> distribution = distribution(instance, pLabel);
          String cLabel = distribution.max();
          double score = distribution.get(cLabel);
          distribution.remove(cLabel);
-         while(!parameters.validator.value().isValid(cLabel, pLabel, instance)) {
+         while (!parameters.validator.value().isValid(cLabel, pLabel, instance)) {
             cLabel = distribution.max();
             score = distribution.get(cLabel);
             distribution.remove(cLabel);
@@ -225,7 +220,7 @@ public class GreedyAvgPerceptron extends SingleSourceModel<GreedyAvgPerceptron.P
                        MultiCounter<String, String> weights,
                        Table<String, String, Integer> timeStamp,
                        MultiCounter<String, String> totals
-                      ) {
+   ) {
       int iterAt = iteration - timeStamp.getOrDefault(feature, cls, 0);
       totals.increment(feature, cls, iterAt * weights.get(feature, cls));
       weights.increment(feature, cls, value);

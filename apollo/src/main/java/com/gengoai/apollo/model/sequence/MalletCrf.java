@@ -29,13 +29,13 @@ import cc.mallet.util.MalletLogger;
 import com.gengoai.ParameterDef;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.data.observation.VariableSequence;
 import com.gengoai.apollo.model.LabelType;
 import com.gengoai.apollo.model.Params;
 import com.gengoai.apollo.model.SingleSourceFitParameters;
 import com.gengoai.apollo.model.SingleSourceModel;
-import com.gengoai.apollo.data.observation.Observation;
-import com.gengoai.apollo.data.observation.Variable;
-import com.gengoai.apollo.data.observation.VariableSequence;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 

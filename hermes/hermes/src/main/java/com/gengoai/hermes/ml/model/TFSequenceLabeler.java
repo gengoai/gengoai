@@ -48,10 +48,12 @@ public abstract class TFSequenceLabeler extends TFModel implements HStringMLMode
    @Override
    public HString apply(@NonNull HString hString) {
       DataSet dataSet = getDataGenerator().generate(Collections.singleton(hString));
-      List<Datum> tensors = processBatch(dataSet);
-      for (int i = 0; i < tensors.size(); i++) {
-         Annotation sentence = hString.sentences().get(i);
-         tagDecoder.decode(sentence, tensors.get(i).get(getOutput()).asSequence());
+      if( dataSet.size() > 0 ) {
+         List<Datum> tensors = processBatch(dataSet);
+         for (int i = 0; i < tensors.size(); i++) {
+            Annotation sentence = hString.sentences().get(i);
+            tagDecoder.decode(sentence, tensors.get(i).get(getOutput()).asSequence());
+         }
       }
       return hString;
    }

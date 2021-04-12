@@ -17,6 +17,7 @@ import static com.gengoai.collection.Arrays2.arrayOf;
 public class SetTypeConverter extends CollectionTypeConverter {
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Set.class, HashSet.class);
    }

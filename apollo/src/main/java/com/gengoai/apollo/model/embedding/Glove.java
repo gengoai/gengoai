@@ -21,11 +21,11 @@ package com.gengoai.apollo.model.embedding;
 
 import com.gengoai.ParameterDef;
 import com.gengoai.Stopwatch;
-import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.data.DataSet;
-import com.gengoai.apollo.model.Params;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Sequence;
+import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.model.Params;
 import com.gengoai.collection.disk.DiskMap;
 import com.gengoai.concurrent.AtomicDouble;
 import com.gengoai.io.Resources;

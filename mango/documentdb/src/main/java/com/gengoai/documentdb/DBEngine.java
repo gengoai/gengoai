@@ -17,13 +17,31 @@
  * under the License.
  */
 
-package com.gengoai.apollo.data.observation;
+package com.gengoai.documentdb;
 
-public enum ObservationType {
-   Variable,
-   VariableCollection,
-   Sequence,
-   VariableCollectionSequence,
-   NDArray,
-   Classification
-}
+import com.gengoai.io.resource.Resource;
+import lombok.NonNull;
+
+import java.io.Serializable;
+import java.util.Set;
+
+/**
+ * <p></p>
+ *
+ * @author David B. Bracewell
+ */
+public interface DBEngine extends Serializable {
+
+   Set<FieldType> getSupportedFieldTypes();
+
+   boolean isSupportedFieldType(@NonNull FieldType fieldType);
+
+   DBTable open(@NonNull Resource dbFile);
+
+   DBTable openOrCreate(@NonNull Resource dbFile,
+                        @NonNull DocumentDBSchema schema);
+
+   boolean requiresSchema();
+
+
+}//END OF DBEngine

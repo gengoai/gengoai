@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.util.EnumSet;
 
 import static com.gengoai.collection.Arrays2.arrayOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * @author David B. Bracewell

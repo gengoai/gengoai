@@ -31,6 +31,7 @@ public class CharsetTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Charset.class);
    }

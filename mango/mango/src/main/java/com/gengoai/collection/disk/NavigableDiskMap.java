@@ -288,7 +288,7 @@ public final class NavigableDiskMap<K, V> implements NavigableMap<K, V>, Seriali
 
    @Override
    public String toString() {
-      return map.toString();
+      return delegate().toString();
    }
 
    @Override

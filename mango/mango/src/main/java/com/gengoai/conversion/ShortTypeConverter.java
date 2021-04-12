@@ -18,6 +18,7 @@ public class ShortTypeConverter extends BaseNumberTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Short.class, short.class);
    }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.apollo.model.embedding;
+package com.gengoai.documentdb.lucene;
 
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
@@ -26,7 +26,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import static com.gengoai.apollo.model.embedding.LuceneEmbeddingAnalyzer.SKIP;
+import static com.gengoai.documentdb.lucene.LuceneEmbeddingAnalyzer.SKIP;
 
 
 public class LuceneEmbeddingFilter extends TokenFilter {

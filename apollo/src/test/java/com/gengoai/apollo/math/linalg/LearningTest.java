@@ -19,7 +19,6 @@
 
 package com.gengoai.apollo.math.linalg;
 
-import com.gengoai.Stopwatch;
 import com.gengoai.math.NumericComparison;
 import org.junit.Test;
 

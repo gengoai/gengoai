@@ -25,12 +25,14 @@ import com.gengoai.io.Resources;
 import com.gengoai.stream.Streams;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import static com.gengoai.tuple.Tuples.$;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public abstract class BaseDataSetTest {
    final DataSetType dataSetType;
@@ -123,7 +125,7 @@ public abstract class BaseDataSetTest {
    }
 
    @Test
-   public void persist() {
+   public void persist() throws IOException {
       DataSet dataSet = dataSetType.create(Streams.reusableStream(Datum.of($("A", 1.0),
                                                               $("B", List.of("A", "B", "C")),
                                                               $("C", $("word", 4)),

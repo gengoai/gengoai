@@ -259,6 +259,10 @@ public final class nd {
          return a.dot(b.T(), Shape.COLUMN).reshape(a.shape().with(Shape.COLUMN, 1));
       }
 
+      if( a.shape().isMatrix() && b.shape().isMatrix() && a.columns() == b.rows()){
+         return a.mmul(b);
+      }
+
       throw new IllegalArgumentException(NDArrayOps.unableToBroadcast(b.shape(), a.shape(), broadCast));
    }
 

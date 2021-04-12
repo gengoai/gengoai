@@ -62,9 +62,13 @@ public final class SQLiteDataSet extends DataSet {
    private static final Column json = new Column("json", "JSON");
    private static final Column name = new Column("name", "TEXT").primaryKey();
    private static final Column value = new Column("value", "BLOB");
-   private static final Table dataTable = new Table("data", null, null, List.of(json), Collections.emptyList());
-   private static final Table metadataTable = new Table("metadata", null, null, List.of(name, value), Collections
-         .emptyList());
+   private static final Table dataTable = Table.builder("data")
+                                               .column(json)
+                                               .build();
+   private static final Table metadataTable = Table.builder("metadata")
+                                                   .column(name)
+                                                   .column(value)
+                                                   .build();
    private final SQLContext executor;
    private boolean isShuffled = false;
 

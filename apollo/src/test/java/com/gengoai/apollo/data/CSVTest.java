@@ -35,18 +35,18 @@ public class CSVTest {
       String csv = "\"x\",\"z\",\"y\"\n" +
             "23, \"A\", \"ALPHA\"   \n" +
             "32, \"Z\", \"BETA\"";
-      CSVDataSetReader reader = new CSVDataSetReader(CSV.csv().hasHeader(), new Schema(Map.of("x", ValueType.NUMERIC,
-                                                                                  "z", ValueType.CATEGORICAL,
-                                                                                  "y", ValueType.CATEGORICAL)));
+      CSVDataSetReader reader = new CSVDataSetReader(CSV.csv().hasHeader(), Schema.schema(Map.of("x", ValueType.NUMERIC,
+                                                                                                 "z", ValueType.CATEGORICAL,
+                                                                                                 "y", ValueType.CATEGORICAL)));
       DataSet ds = reader.read(Resources.fromString(csv));
       List<Datum> data = ds.collect();
 
-      assertEquals(23, data.get(0).get("x").asVariable().getValue(),0d);
+      assertEquals(23, data.get(0).get("x").asVariable().getValue(), 0d);
       assertEquals("z=A", data.get(0).get("z").asVariable().getName());
       assertEquals("y=ALPHA", data.get(0).get("y").asVariable().getName());
 
 
-      assertEquals(32, data.get(1).get("x").asVariable().getValue(),0d);
+      assertEquals(32, data.get(1).get("x").asVariable().getValue(), 0d);
       assertEquals("z=Z", data.get(1).get("z").asVariable().getName());
       assertEquals("y=BETA", data.get(1).get("y").asVariable().getName());
    }

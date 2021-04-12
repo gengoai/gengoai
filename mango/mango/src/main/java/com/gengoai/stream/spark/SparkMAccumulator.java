@@ -20,8 +20,8 @@
 package com.gengoai.stream.spark;
 
 import com.gengoai.conversion.Cast;
-import com.gengoai.stream.local.LocalMAccumulator;
 import com.gengoai.stream.MAccumulator;
+import com.gengoai.stream.local.LocalMAccumulator;
 import org.apache.spark.util.AccumulatorV2;
 import scala.runtime.AbstractFunction0;
 

@@ -27,7 +27,7 @@ import com.gengoai.stream.StreamingContext;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.io.Serializable;
+import java.util.Map;
 
 /**
  * <p>
@@ -38,7 +38,7 @@ import java.io.Serializable;
  *
  * @author David B. Bracewell
  */
-public class CSVDataSetReader implements DataSetReader, Serializable {
+public class CSVDataSetReader implements DataSetReader {
    private static final long serialVersionUID = 1L;
    private final CSV csv;
    private final Schema schema;
@@ -63,9 +63,13 @@ public class CSVDataSetReader implements DataSetReader, Serializable {
                            @NonNull Schema schema) {
       this.csv = csv;
       this.schema = schema;
-      if (!csv.getHasHeader() && csv.getHeader().isEmpty()) {
-         throw new IllegalArgumentException("Either the CSV must have a header or one must be defined.");
-      }
+   }
+
+   @Override
+   public DataSet read(@NonNull Resource dataResource) throws IOException {
+      return new StreamingDataSet(StreamingContext.local()
+                                                  .stream(csv.rowMapStream(dataResource)
+                                                             .map(this::readRow))).probe();
    }
 
    private Variable guess(String column, String value) {
@@ -76,23 +80,18 @@ public class CSVDataSetReader implements DataSetReader, Serializable {
       return Variable.real(column, d);
    }
 
-   @Override
-   public DataSet read(@NonNull Resource dataResource) throws IOException {
-      return new StreamingDataSet(StreamingContext.local()
-                                                  .stream(csv.rowMapStream(dataResource)
-                                                             .map(m -> {
-                                                                Datum datum = new Datum();
-                                                                for (String column : m.keySet()) {
-                                                                   if (schema != null) {
-                                                                      datum.put(column,
-                                                                                schema.convert(column, m.get(column)));
-                                                                   } else {
-                                                                      datum.put(column, guess(column, m.get(column)));
-                                                                   }
-                                                                }
-                                                                return datum;
-                                                             })))
-            .probe();
+   private Datum readRow(Map<String, String> m) {
+      Datum datum = new Datum();
+      for (String column : m.keySet()) {
+         if (schema != null) {
+            if (schema.get(column) != ValueType.IGNORE) {
+               datum.put(column, schema.convert(column, m.get(column)));
+            }
+         } else {
+            datum.put(column, guess(column, m.get(column)));
+         }
+      }
+      return datum;
    }
 
 }//END OF CSVDataSetReader

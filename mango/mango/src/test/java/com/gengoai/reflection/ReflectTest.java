@@ -39,13 +39,14 @@ public class ReflectTest {
       @Path
       public int age;
 
+
+      private TestClass(){
+
+      }
+
       public TestClass(String name, int age) {
          this.name = name;
          this.age = age;
-      }
-
-      private TestClass() {
-
       }
 
       public void setFullName(String value) {
@@ -60,9 +61,9 @@ public class ReflectTest {
          this.name = name;
       }
 
-      private String makeme() {
-         return name + " := " + age;
-      }
+       private String makeme() {
+          return name + " := " + age;
+       }
 
    }
 

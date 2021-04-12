@@ -20,6 +20,7 @@ public class HashMapTypeConverter extends MapTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(HashMap.class, Map.class);
    }

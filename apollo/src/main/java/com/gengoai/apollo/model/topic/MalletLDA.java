@@ -30,15 +30,15 @@ import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
 import com.gengoai.ParameterDef;
 import com.gengoai.SystemInfo;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.model.Params;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableList;
 import com.gengoai.apollo.data.observation.VariableNameSpace;
+import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.model.Params;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.string.Strings;
@@ -176,16 +176,16 @@ public class MalletLDA extends TopicModel {
    }
 
    @Override
-   public NDArray getTopicDistribution(String feature) {
+   public NDArray getTopicDistribution(@NonNull String feature) {
       final Alphabet alphabet = pipes.getDataAlphabet();
       int index = alphabet.lookupIndex(feature, false);
       if(index == -1) {
          return nd.DFLOAT32.zeros(topicModel.numTopics);
       }
-      double[] dist = new double[topicModel.numTopics];
+      float[] dist = new float[topicModel.numTopics];
       double[][] termScores = topicModel.getTopicWords(true, true);
       for(int i = 0; i < topicModel.numTopics; i++) {
-         dist[i] = termScores[i][index];
+         dist[i] = (float)termScores[i][index];
       }
       return nd.DFLOAT32.array(dist);
    }

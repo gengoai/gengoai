@@ -19,9 +19,13 @@
 
 package com.gengoai.apollo.data.transform.vectorizer;
 
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.encoder.HashingEncoder;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.encoder.HashingEncoder;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * <p>
@@ -31,9 +35,13 @@ import com.gengoai.apollo.data.observation.Variable;
  *
  * @author David B. Bracewell
  */
+@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(callSuper = true)
 public class HashingVectorizer extends AbstractVariableVectorizer<HashingVectorizer> {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    private final boolean isBinary;
+
 
    /**
     * Instantiates a new HashingVectorizer
@@ -47,11 +55,22 @@ public class HashingVectorizer extends AbstractVariableVectorizer<HashingVectori
       this.isBinary = isBinary;
    }
 
+
+   @Override
+   public String toString() {
+      return "HashingVectorizer{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            ", isBinary=" + isBinary +
+            ", numFeatures=" + encoder.size() +
+            '}';
+   }
+
    @Override
    protected void encodeVariableInto(Variable v, NumericNDArray ndArray) {
       int index = encoder.encode(v.getName());
-      if(index >= 0) {
-         if(isBinary) {
+      if (index >= 0) {
+         if (isBinary) {
             ndArray.set(index, 1.0);
          } else {
             ndArray.set(index, ndArray.getDouble(index) + v.getValue());

@@ -20,9 +20,9 @@
 package com.gengoai.apollo.evaluation;
 
 import com.gengoai.LogUtils;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Observation;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.io.resource.StringResource;
 import lombok.NonNull;

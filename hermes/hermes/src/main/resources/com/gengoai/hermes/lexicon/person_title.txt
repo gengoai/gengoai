@@ -48,3 +48,5 @@ BA.
 BS.
 grad.
 St.
+Rep.
+Sen.

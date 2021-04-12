@@ -23,7 +23,7 @@ import com.gengoai.collection.tree.Trie;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
@@ -35,6 +35,7 @@ import java.util.List;
  * method.
  */
 public class AutoCompleteDocument extends PlainDocument {
+   private static final long serialVersionUID = 1L;
    private final Trie<String> items = new Trie<>();
    private final JTextField owner;
 

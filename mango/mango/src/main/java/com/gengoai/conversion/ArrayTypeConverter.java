@@ -32,6 +32,7 @@ public class ArrayTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(Object[].class);
    }

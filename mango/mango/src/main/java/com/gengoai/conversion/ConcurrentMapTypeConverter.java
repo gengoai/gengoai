@@ -21,6 +21,7 @@ public class ConcurrentMapTypeConverter extends MapTypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(ConcurrentHashMap.class, ConcurrentMap.class);
    }

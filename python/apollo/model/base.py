@@ -88,9 +88,10 @@ class SequenceLabeler(ApolloModel):
         super(SequenceLabeler, self).__init__(inputs,
                                               OutputBlockList([CRFSequenceOutput(label)]))
         self._arch = architecture
+        self.label = label
         assert self._arch.returns_sequences(), "Sequence Labeler requires an architecture that returns sequences"
 
     def _build(self) -> List[Tensor]:
         out = self._arch(self.inputs.concatenated_model_layer())
-        out = self.outputs.output_layer(label)(out)
+        out = self.outputs.output_layer(self.label)(out)
         return [out]

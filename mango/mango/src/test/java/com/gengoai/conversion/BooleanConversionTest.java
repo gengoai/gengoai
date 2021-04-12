@@ -4,7 +4,8 @@ import com.gengoai.json.JsonEntry;
 import org.junit.Test;
 
 import static com.gengoai.collection.Arrays2.arrayOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author David B. Bracewell

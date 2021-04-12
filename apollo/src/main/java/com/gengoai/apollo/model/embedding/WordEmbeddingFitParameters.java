@@ -19,13 +19,13 @@
 
 package com.gengoai.apollo.model.embedding;
 
-import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
-import com.gengoai.apollo.math.linalg.compose.VectorComposition;
 import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.data.observation.VariableNameSpace;
+import com.gengoai.apollo.math.linalg.compose.VectorComposition;
+import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.apollo.model.CombinableOutputFitParameters;
 import com.gengoai.apollo.model.FitParameters;
 import com.gengoai.apollo.model.Params;
-import com.gengoai.apollo.data.observation.VariableNameSpace;
 
 import java.util.Collections;
 import java.util.Set;

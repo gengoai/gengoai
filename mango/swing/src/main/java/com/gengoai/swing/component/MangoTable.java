@@ -39,6 +39,7 @@ import java.util.function.Function;
  * The type Mango table.
  */
 public class MangoTable extends JTable {
+   private static final long serialVersionUID = 1L;
    @Getter
    private Color alternateRowColor;
    @Getter

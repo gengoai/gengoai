@@ -17,6 +17,7 @@ import static com.gengoai.collection.Arrays2.arrayOf;
 public class LinkedBlockingDequeTypeConverter extends CollectionTypeConverter {
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(LinkedBlockingDeque.class, BlockingDeque.class);
    }

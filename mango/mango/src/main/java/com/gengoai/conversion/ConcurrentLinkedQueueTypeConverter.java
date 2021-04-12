@@ -15,6 +15,7 @@ import static com.gengoai.collection.Arrays2.arrayOf;
 @MetaInfServices(value = TypeConverter.class)
 public class ConcurrentLinkedQueueTypeConverter extends CollectionTypeConverter {
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(ConcurrentLinkedQueue.class);
    }

@@ -5,7 +5,8 @@ import com.gengoai.tuple.Tuple1;
 import org.junit.Test;
 
 import static com.gengoai.collection.Arrays2.arrayOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author David B. Bracewell

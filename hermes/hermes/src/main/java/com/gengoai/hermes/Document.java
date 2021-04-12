@@ -22,6 +22,8 @@ package com.gengoai.hermes;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gengoai.Language;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.collection.Collect;
 import com.gengoai.collection.tree.Span;
 import com.gengoai.json.Json;
@@ -32,6 +34,7 @@ import lombok.experimental.Accessors;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -159,7 +162,7 @@ public interface Document extends HString {
    static Document fromJson(@NonNull String jsonString) {
       try {
          return Json.parse(jsonString, Document.class);
-      } catch(IOException e) {
+      } catch (IOException e) {
          throw new RuntimeException(e);
       }
    }
@@ -275,6 +278,26 @@ public interface Document extends HString {
    }
 
    @Override
+   default NumericNDArray embedding() {
+      if (hasAttribute(Types.EMBEDDING)) {
+         return attribute(Types.EMBEDDING);
+      }
+      return VectorCompositions.Average.compose(sentenceStream().map(HString::embedding)
+                                                                .filter(Objects::nonNull)
+                                                                .collect(Collectors.toList()));
+   }
+
+   default NumericNDArray embedding(@NonNull Predicate<HString> filter) {
+      if (hasAttribute(Types.EMBEDDING)) {
+         return attribute(Types.EMBEDDING);
+      }
+      return VectorCompositions.Average.compose(sentenceStream().filter(filter)
+                                                                .map(HString::embedding)
+                                                                .filter(Objects::nonNull)
+                                                                .collect(Collectors.toList()));
+   }
+
+   @Override
    default List<Annotation> enclosedAnnotations() {
       return annotations();
    }
@@ -294,9 +317,16 @@ public interface Document extends HString {
     */
    String getId();
 
+   /**
+    * Sets the id of the document. If a null or blank id is given a random id will generated.
+    *
+    * @param id The new id of the document
+    */
+   void setId(String id);
+
    @Override
    default Language getLanguage() {
-      if(hasAttribute(Types.LANGUAGE)) {
+      if (hasAttribute(Types.LANGUAGE)) {
          return attribute(Types.LANGUAGE);
       }
       return Hermes.defaultLanguage();
@@ -405,13 +435,6 @@ public interface Document extends HString {
     * @param provider The provided that satisfied the given AnnotatableType
     */
    void setCompleted(AnnotatableType type, String provider);
-
-   /**
-    * Sets the id of the document. If a null or blank id is given a random id will generated.
-    *
-    * @param id The new id of the document
-    */
-   void setId(String id);
 
    /**
     * Marks the given AnnotatableType as not being completed. Useful for reannotating for a given type.

@@ -26,6 +26,7 @@ import java.awt.*;
  * resized to take up any extra space within the panel
  */
 public class VBox extends MangoPanel {
+   private static final long serialVersionUID = 1L;
    private final GridBagLayout layout = new GridBagLayout();
    private final GridBagConstraints gbc = new GridBagConstraints();
    private final Insets firstRowInsets = new Insets(0, 0, 0, 0);

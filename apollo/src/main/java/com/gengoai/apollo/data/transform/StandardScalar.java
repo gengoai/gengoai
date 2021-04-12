@@ -19,12 +19,16 @@
 
 package com.gengoai.apollo.data.transform;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableNameSpace;
 import com.gengoai.stream.MStream;
 import com.gengoai.stream.Streams;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
@@ -33,16 +37,38 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * The type Standard scalar.
+ *
  * @author David B. Bracewell
  */
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = true)
 public class StandardScalar extends AbstractSingleSourceTransform<StandardScalar> {
    private static final long serialVersionUID = 1L;
+   @JsonProperty
    private final Map<String, Double> means = new HashMap<>();
+   @JsonProperty
    private final Map<String, Double> standardDeviations = new HashMap<>();
+   @JsonProperty
    private final VariableNameSpace namingPattern;
 
+   /**
+    * Instantiates a new Standard scalar.
+    *
+    * @param namingPattern the naming pattern
+    */
    public StandardScalar(@NonNull VariableNameSpace namingPattern) {
       this.namingPattern = namingPattern;
+   }
+
+
+   @Override
+   public String toString() {
+      return "StandardScalar{" +
+            "input='" + input + '\'' +
+            ", output='" + output + '\'' +
+            ", namingPattern=" + namingPattern +
+            '}';
    }
 
    @Override
@@ -62,7 +88,7 @@ public class StandardScalar extends AbstractSingleSourceTransform<StandardScalar
 
    @Override
    protected Observation transform(@NonNull Observation observation) {
-      if(observation.isVariable()) {
+      if (observation.isVariable()) {
          return updateVariable(observation.asVariable());
       }
       observation.mapVariables(this::updateVariable);

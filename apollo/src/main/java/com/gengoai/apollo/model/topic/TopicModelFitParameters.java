@@ -19,10 +19,10 @@
 
 package com.gengoai.apollo.model.topic;
 
+import com.gengoai.apollo.data.observation.VariableNameSpace;
 import com.gengoai.apollo.model.FitParameters;
 import com.gengoai.apollo.model.MultiInputFitParameters;
 import com.gengoai.apollo.model.Params;
-import com.gengoai.apollo.data.observation.VariableNameSpace;
 
 /**
  * <p>Specialized {@link FitParameters} for {@link TopicModel}s.</p>

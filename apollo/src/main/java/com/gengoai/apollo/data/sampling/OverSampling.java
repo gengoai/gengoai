@@ -28,12 +28,21 @@ import lombok.NonNull;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * <p>Generates copies of classes in order to balance the distribution of labels in the data set.</p>
+ */
 public class OverSampling extends BaseObservationDataSetSampler implements Serializable {
    private static final long serialVersionUID = 1L;
 
+   /**
+    * Instantiates a new OverSampling.
+    *
+    * @param observationName the name of the label observation we want to balance.
+    */
    public OverSampling(@NonNull String observationName) {
       super(observationName);
    }
+
 
    @Override
    public DataSet sample(@NonNull DataSet dataSet) {

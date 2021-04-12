@@ -69,6 +69,7 @@ public class DynamicEnumTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(EnumValue.class, HierarchicalEnumValue.class);
    }

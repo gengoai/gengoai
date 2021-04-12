@@ -8,7 +8,8 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 import static com.gengoai.collection.Sets.hashSetOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author David B. Bracewell

@@ -36,25 +36,30 @@
 
 
     <dependencies>
+        <!-- ======================================================================== -->
+        <!-- GengoAI Dependencies -->
+        <!-- ======================================================================== -->
+        <dependency>
+            <groupId>com.gengoai</groupId>
+            <artifactId>jcrfsuite</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gengoai</groupId>
+            <artifactId>mango</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+
+        <!-- ======================================================================== -->
+        <!-- 3rd Party Dependencies -->
+        <!-- ======================================================================== -->
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-analyzers-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.tensorflow</groupId>
             <artifactId>tensorflow</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.gengoai</groupId>
-            <artifactId>mango</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -71,10 +76,6 @@
         <dependency>
             <groupId>de.bwaldvogel</groupId>
             <artifactId>liblinear</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.gengoai</groupId>
-            <artifactId>jcrfsuite</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jblas</groupId>

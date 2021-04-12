@@ -37,6 +37,7 @@ final class MapRegistry {
       throw new IllegalAccessError();
    }
 
+   @SuppressWarnings("rawtypes")
    private static final Map<String, WeakReference<Map>> stores = new ConcurrentHashMap<>();
 
    static <K, V> ConcurrentSkipListMap<K, V> getNavigable(String namespace) {

@@ -19,7 +19,6 @@ import static com.gengoai.reflection.TypeUtils.isAssignable;
 public class EnumMapTypeConverter implements TypeConverter {
 
    @Override
-   @SuppressWarnings("unchecked")
    public Object convert(Object object, Type... parameters) throws TypeConversionException {
       Type enumClass = getOrObject(0, parameters);
       Type valueType = getOrObject(1, parameters);
@@ -30,6 +29,7 @@ public class EnumMapTypeConverter implements TypeConverter {
    }
 
    @Override
+   @SuppressWarnings("rawtypes")
    public Class[] getConversionType() {
       return arrayOf(EnumMap.class);
    }

@@ -23,8 +23,8 @@
 package com.gengoai.apollo.model.clustering;
 
 import com.gengoai.ParameterDef;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;

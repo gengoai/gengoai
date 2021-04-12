@@ -19,7 +19,6 @@
 
 package com.gengoai.swing;
 
-import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.UIManager;
 import java.awt.*;
@@ -72,7 +71,7 @@ public enum FlatLafColors {
    public Color color() {
       Color clr = UIManager.getColor(key);
       if (clr == null) {
-         return Color.BLACK;
+         return defaultColor;
       }
       return clr;
    }

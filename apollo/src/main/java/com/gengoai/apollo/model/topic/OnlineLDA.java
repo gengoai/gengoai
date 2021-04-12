@@ -20,11 +20,11 @@
 package com.gengoai.apollo.model.topic;
 
 import com.gengoai.ParameterDef;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.data.DataSet;
-import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.model.Params;
 import com.gengoai.collection.Iterables;
 import com.gengoai.collection.counter.Counter;

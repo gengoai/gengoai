@@ -81,6 +81,17 @@ enum LyreType implements TokenDef, GrammarRegistrable {
          grammar.prefix(this, (parser, token) -> LyreDSL.literal(token.getVariable(0)));
       }
    },
+   SUBTREE(re(e('@'), e('<'), e('<'))         ){
+      @Override
+      public void register(Grammar grammar) {
+         method(grammar, (parser, token, arguments) -> {
+            return arguments.size() > 0
+                  ? LyreDSL.subTree(arguments.get(0))
+                  : LyreDSL.subTree(LyreDSL.$_);
+         });
+      }
+   },
+
    OUTGOING_RELATION(re(e('@'), e('>'), namedGroup("", IDENTIFIER),
                         zeroOrOne(e('{'), LITERAL.pattern, e('}')))) {
       @Override
