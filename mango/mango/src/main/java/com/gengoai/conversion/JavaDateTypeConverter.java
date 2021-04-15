@@ -7,8 +7,10 @@ import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 import static com.gengoai.collection.Arrays2.arrayOf;
 
@@ -19,6 +21,7 @@ import static com.gengoai.collection.Arrays2.arrayOf;
  */
 @MetaInfServices(value = TypeConverter.class)
 public class JavaDateTypeConverter implements TypeConverter {
+   private static final Pattern mm_dd_yyyy = Pattern.compile("\\d{1,2}-\\d{1,2}-\\d{4}");
 
    @Override
    public Object convert(Object object, Type... parameters) throws TypeConversionException {
@@ -34,14 +37,23 @@ public class JavaDateTypeConverter implements TypeConverter {
       if (string != null) {
          string = string.replaceAll(Re.MULTIPLE_WHITESPACE, " ").strip();
 
+         if (mm_dd_yyyy.matcher(string).matches()) {
+            try {
+               return new SimpleDateFormat("MM-dd-yyyy").parse(string);
+            } catch (ParseException e) {
+               //no op
+            }
+         }
+
          for (DateFormat format : new DateFormat[]{
-            SimpleDateFormat.getDateTimeInstance(),
-            DateFormat.getDateInstance(DateFormat.SHORT),
-            DateFormat.getDateInstance(DateFormat.MEDIUM),
-            DateFormat.getDateInstance(DateFormat.LONG),
-            DateFormat.getDateInstance(DateFormat.FULL),
-            new SimpleDateFormat("yyyy-MM-dd"),
-            new SimpleDateFormat("MM/dd/yyyy")}
+               new SimpleDateFormat("yyyy-MM-dd"),
+               new SimpleDateFormat("MM/dd/yyyy"),
+               SimpleDateFormat.getDateTimeInstance(),
+               DateFormat.getDateInstance(DateFormat.SHORT),
+               DateFormat.getDateInstance(DateFormat.MEDIUM),
+               DateFormat.getDateInstance(DateFormat.LONG),
+               DateFormat.getDateInstance(DateFormat.FULL)
+         }
          ) {
             try {
                return format.parse(string);

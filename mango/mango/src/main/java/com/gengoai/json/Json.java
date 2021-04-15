@@ -5,8 +5,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gengoai.conversion.Cast;
 import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
@@ -34,7 +36,9 @@ public final class Json {
 
    static {
       MAPPER.registerModule(new Jdk8Module());
+      MAPPER.registerModule(new JavaTimeModule());
       MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+      MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
       MAPPER.addMixIn(Type.class, Mixins.TypeMixin.class);
       MAPPER.addMixIn(ParameterizedType.class, Mixins.TypeMixin.class);
    }

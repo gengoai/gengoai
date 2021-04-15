@@ -22,6 +22,7 @@ package com.gengoai.documentdb;
 import lombok.NonNull;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,17 +37,19 @@ public interface DBTable extends AutoCloseable, Iterable<DBDocument> {
     * Add.
     *
     * @param document the document
-    * @throws IOException the io exception
+    * @throws DocumentDBException the io exception
     */
-   void add(@NonNull DBDocument document) throws IOException;
+   default void add(@NonNull DBDocument document) throws DocumentDBException{
+      addAll(Collections.singleton(document));
+   }
 
    /**
     * Add all.
     *
     * @param documents the documents
-    * @throws IOException the io exception
+    * @throws DocumentDBException the io exception
     */
-   void addAll(@NonNull Iterable<DBDocument> documents) throws IOException;
+   void addAll(@NonNull Iterable<DBDocument> documents) throws DocumentDBException;
 
    void addIndex(@NonNull IndexedField... indexedFields) throws DocumentDBException;
 
@@ -63,7 +66,7 @@ public interface DBTable extends AutoCloseable, Iterable<DBDocument> {
     * @param id the id
     * @return the db document
     */
-   DBDocument get(@NonNull Object id);
+   DBDocument get(@NonNull Object id) throws DocumentDBException;
 
    long numberOfDocuments() throws DocumentDBException;
 
@@ -72,18 +75,18 @@ public interface DBTable extends AutoCloseable, Iterable<DBDocument> {
     *
     * @param document the document
     * @return the boolean
-    * @throws IOException the io exception
+    * @throws DocumentDBException the io exception
     */
-   boolean remove(@NonNull DBDocument document) throws IOException;
+   boolean remove(@NonNull DBDocument document) throws DocumentDBException;
 
    /**
     * Search list.
     *
     * @param query the query
     * @return the list
-    * @throws IOException the io exception
+    * @throws DocumentDBException the io exception
     */
-   default List<DBDocument> search(String query) throws IOException {
+   default List<DBDocument> search(String query) throws DocumentDBException {
       return search(query, Integer.MAX_VALUE);
    }
 
@@ -93,9 +96,9 @@ public interface DBTable extends AutoCloseable, Iterable<DBDocument> {
     * @param field  the field
     * @param vector the vector
     * @return the list
-    * @throws IOException the io exception
+    * @throws DocumentDBException the io exception
     */
-   default List<DBDocument> search(String field, float... vector) throws IOException {
+   default List<DBDocument> search(String field, float... vector) throws DocumentDBException {
       return search(field, Integer.MAX_VALUE, vector);
    }
 
@@ -105,9 +108,9 @@ public interface DBTable extends AutoCloseable, Iterable<DBDocument> {
     * @param query   the query
     * @param numHits the num hits
     * @return the list
-    * @throws IOException the io exception
+    * @throws DocumentDBException the io exception
     */
-   List<DBDocument> search(String query, int numHits) throws IOException;
+   List<DBDocument> search(String query, int numHits) throws DocumentDBException;
 
    /**
     * Search list.
@@ -118,15 +121,15 @@ public interface DBTable extends AutoCloseable, Iterable<DBDocument> {
     * @return the list
     * @throws IOException the io exception
     */
-   List<DBDocument> search(String field, int numHits, float... vector) throws IOException;
+   List<DBDocument> search(String field, int numHits, float... vector) throws DocumentDBException;
 
    /**
     * Update.
     *
     * @param document the document
-    * @throws IOException the io exception
+    * @throws DocumentDBException the io exception
     */
-   default void update(@NonNull DBDocument document) throws IOException {
+   default void update(@NonNull DBDocument document) throws DocumentDBException {
       add(document);
    }
 
@@ -134,9 +137,9 @@ public interface DBTable extends AutoCloseable, Iterable<DBDocument> {
     * Update all.
     *
     * @param documents the documents
-    * @throws IOException the io exception
+    * @throws DocumentDBException the io exception
     */
-   default void updateAll(@NonNull Iterable<DBDocument> documents) throws IOException {
+   default void updateAll(@NonNull Iterable<DBDocument> documents) throws DocumentDBException {
       addAll(documents);
    }
 
