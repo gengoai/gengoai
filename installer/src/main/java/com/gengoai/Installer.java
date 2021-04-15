@@ -82,9 +82,7 @@ public class Installer extends CommandLineApplication {
    }
 
    private void download(Resource url, Resource out) throws IOException {
-      URLConnection connection = url.asURL()
-                                    .orElseThrow()
-                                    .openConnection();
+      URLConnection connection = url.asURL().orElseThrow().openConnection();
       Resource tmpFile = Resources.temporaryFile();
       try (InputStream is = connection.getInputStream()) {
          FileUtils.copyWithProgress(is,

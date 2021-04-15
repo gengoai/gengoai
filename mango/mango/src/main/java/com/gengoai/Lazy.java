@@ -1,8 +1,7 @@
 package com.gengoai;
 
 import com.gengoai.function.SerializableSupplier;
-
-import static com.gengoai.Validation.notNull;
+import lombok.NonNull;
 
 /**
  * <p>Lazily create a value in a thread safe manner. Common usage is as follows:</p>
@@ -24,16 +23,16 @@ import static com.gengoai.Validation.notNull;
  */
 public final class Lazy<T> implements SerializableSupplier<T> {
    private static final long serialVersionUID = 1L;
-   private volatile transient T object;
    private final SerializableSupplier<? extends T> supplier;
+   private volatile transient T object;
 
    /**
     * Instantiates a new Lazy created object.
     *
     * @param supplier the supplier used to create the object
     */
-   public Lazy(SerializableSupplier<? extends T> supplier) {
-      this.supplier = notNull(supplier);
+   public Lazy(@NonNull SerializableSupplier<? extends T> supplier) {
+      this.supplier = supplier;
    }
 
    @Override

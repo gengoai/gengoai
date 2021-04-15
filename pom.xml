@@ -71,7 +71,7 @@
         <module>hermes/wordnet</module>
         <module>installer</module>
         <module>hermes/lang/hermes-chinese</module>
-    </modules>
+     </modules>
 
     <dependencyManagement>
         <dependencies>
