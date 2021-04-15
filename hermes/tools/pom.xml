@@ -23,6 +23,7 @@
     <parent>
         <groupId>com.gengoai</groupId>
         <artifactId>gengoai</artifactId>
+        <relativePath>../../pom.xml</relativePath>
         <version>1.2-SNAPSHOT</version>
     </parent>
     <artifactId>hermes-tools</artifactId>
@@ -40,12 +41,12 @@
         </dependency>
         <dependency>
             <groupId>com.gengoai</groupId>
-            <artifactId>mango</artifactId>
+            <artifactId>commons-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.gengoai</groupId>
-            <artifactId>mango-swing</artifactId>
+            <artifactId>commons-swing</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

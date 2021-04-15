@@ -25,17 +25,14 @@
     <parent>
         <groupId>com.gengoai</groupId>
         <artifactId>gengoai</artifactId>
+        <relativePath>../../pom.xml</relativePath>
         <version>1.2-SNAPSHOT</version>
     </parent>
-    <artifactId>mango</artifactId>
+    <artifactId>commons-core</artifactId>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
 
     <dependencies>
-        <dependency>
-            <groupId>org.xerial</groupId>
-            <artifactId>sqlite-jdbc</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>

@@ -50,7 +50,7 @@ public final class Validation {
       }
    }
 
-   public static void checkArgumentIsInstanceOf(Object p, Type... types) {
+   public static void checkArgumentIsInstanceOf(Object p, Class<?>... types) {
       if(p != null && types != null && types.length > 0) {
          Type pType = p.getClass();
          boolean isInstance = false;

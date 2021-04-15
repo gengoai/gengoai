@@ -492,12 +492,6 @@ public final class Strings {
                     .collect(Collectors.joining(delimiter, prefix, suffix));
    }
 
-   public static void main(String[] args) {
-      System.out.println(escape("MY @ time is great.",
-                                "\\x",
-                                c -> !Character.isLetter(c) && !Character.isWhitespace(c),
-                                Integer::toHexString));
-   }
 
    public static Iterator<IntPair> matchIterator(@NonNull String input, @NonNull Pattern pattern) {
       return new MatcherIterator(pattern.matcher(input));

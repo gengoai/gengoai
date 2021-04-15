@@ -25,34 +25,30 @@
         <artifactId>gengoai</artifactId>
         <groupId>com.gengoai</groupId>
         <version>1.2-SNAPSHOT</version>
-        <relativePath>../../../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>hermes-chinese</artifactId>
+    <artifactId>commons-graph</artifactId>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
 
     <dependencies>
-        <!-- ======================================================================== -->
-        <!-- GengoAI Dependencies -->
-        <!-- ======================================================================== -->
         <dependency>
             <groupId>com.gengoai</groupId>
-            <artifactId>hermes</artifactId>
+            <artifactId>commons-core</artifactId>
             <version>${project.version}</version>
         </dependency>
-
 
         <!-- ======================================================================== -->
         <!-- 3rd Party Dependencies -->
         <!-- ======================================================================== -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.huaban</groupId>
-            <artifactId>jieba-analysis</artifactId>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
 </project>

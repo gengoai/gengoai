@@ -25,6 +25,7 @@
         <groupId>com.gengoai</groupId>
         <artifactId>gengoai</artifactId>
         <version>1.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>apollo</artifactId>
     <packaging>jar</packaging>
@@ -45,7 +46,12 @@
         </dependency>
         <dependency>
             <groupId>com.gengoai</groupId>
-            <artifactId>mango</artifactId>
+            <artifactId>commons-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gengoai</groupId>
+            <artifactId>commons-sql</artifactId>
             <version>${project.version}</version>
         </dependency>
 

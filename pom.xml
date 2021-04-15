@@ -61,9 +61,11 @@
     </licenses>
 
     <modules>
-        <module>mango/mango</module>
-        <module>mango/swing</module>
-        <module>mango/documentdb</module>
+        <module>commons/core</module>
+        <module>commons/swing</module>
+        <module>commons/documentdb</module>
+        <module>commons/sql</module>
+        <module>commons/graph</module>
         <module>apollo</module>
         <module>hermes/hermes</module>
         <module>hermes/examples</module>
@@ -71,7 +73,9 @@
         <module>hermes/wordnet</module>
         <module>installer</module>
         <module>hermes/lang/hermes-chinese</module>
-     </modules>
+
+
+    </modules>
 
     <dependencyManagement>
         <dependencies>

@@ -18,26 +18,24 @@
      ~ specific language governing permissions and limitations
      ~ under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.gengoai</groupId>
         <artifactId>gengoai</artifactId>
+        <relativePath>../../pom.xml</relativePath>
         <version>1.2-SNAPSHOT</version>
     </parent>
-    <artifactId>mango-documentdb</artifactId>
+    <artifactId>commons-swing</artifactId>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
-
     <dependencies>
         <!-- ======================================================================== -->
         <!-- GengoAI Dependencies -->
         <!-- ======================================================================== -->
         <dependency>
             <groupId>com.gengoai</groupId>
-            <artifactId>mango</artifactId>
+            <artifactId>commons-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -46,25 +44,12 @@
         <!-- 3rd Party Dependencies -->
         <!-- ======================================================================== -->
         <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-analyzers-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-queryparser</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-queries</artifactId>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
-
 </project>

@@ -24,35 +24,36 @@
     <parent>
         <artifactId>gengoai</artifactId>
         <groupId>com.gengoai</groupId>
+        <relativePath>../../pom.xml</relativePath>
         <version>1.2-SNAPSHOT</version>
-        <relativePath>../../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>hermes-chinese</artifactId>
+    <artifactId>commons-sql</artifactId>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
 
     <dependencies>
-        <!-- ======================================================================== -->
-        <!-- GengoAI Dependencies -->
-        <!-- ======================================================================== -->
         <dependency>
             <groupId>com.gengoai</groupId>
-            <artifactId>hermes</artifactId>
+            <artifactId>commons-core</artifactId>
             <version>${project.version}</version>
         </dependency>
-
 
         <!-- ======================================================================== -->
         <!-- 3rd Party Dependencies -->
         <!-- ======================================================================== -->
         <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.huaban</groupId>
-            <artifactId>jieba-analysis</artifactId>
-        </dependency>
     </dependencies>
+
 </project>
