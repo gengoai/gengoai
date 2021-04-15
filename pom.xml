@@ -28,7 +28,7 @@
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Parent POM for the GengoAI Mono repo.</description>
-    <url>http://www.gengoai.com</url>
+    <url>https://www.gengoai.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -47,14 +47,14 @@
             <name>David B. Bracewell</name>
             <email>david@gengoai.com</email>
             <organization>GengoAI</organization>
-            <organizationUrl>http://www.gengoai.com</organizationUrl>
+            <organizationUrl>https://www.gengoai.com</organizationUrl>
         </developer>
     </developers>
 
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
             <comments>A business-friendly OSS license</comments>
         </license>
@@ -299,11 +299,9 @@
                             </execution>
                         </executions>
                     </plugin>
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.0</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -316,7 +314,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.1.1</version>
                         <configuration>
                             <doclint>none</doclint>
                             <failOnError>false</failOnError>
@@ -337,6 +334,21 @@
     </profiles>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.1.1</version>
+                </plugin>
+            </plugins>
+
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.jacoco</groupId>

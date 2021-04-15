@@ -9,7 +9,7 @@ mvn clean install || exit
 mkdir -p "$OUT_DIR" &>/dev/null
 
 #Copy over the scripts and resources
-cp "${BUILD_DIR:?}/scripts/*" "$OUT_DIR" || exit
+cp "${BUILD_DIR}/scripts/"* "$OUT_DIR" || exit
 cp -r "${BUILD_DIR}/resources/"* "$OUT_DIR" || exit
 cd "$BUILD_DIR" || exit
 
