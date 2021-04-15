@@ -19,12 +19,12 @@
 
 package com.gengoai.apollo.model.embedding;
 
+import com.gengoai.Primitives;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.collection.Sets;
 import com.gengoai.collection.multimap.HashSetMultimap;
 import com.gengoai.collection.multimap.Multimap;
 import com.gengoai.io.resource.Resource;
-import com.gengoai.math.Math2;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
@@ -118,7 +118,7 @@ public class FaruquiRetrofitting implements Retrofitting {
    }
 
    private String norm(String string) {
-      if(Math2.tryParseDouble(string) != null) {
+      if(Primitives.tryParseDouble(string) != null) {
          return "---num---";
       } else if(Strings.isPunctuation(string)) {
          return "---punc---";

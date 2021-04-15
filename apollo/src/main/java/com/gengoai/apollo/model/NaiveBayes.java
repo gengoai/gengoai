@@ -30,7 +30,7 @@ import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import lombok.NonNull;
 import lombok.extern.java.Log;
 import org.apache.commons.math3.util.FastMath;

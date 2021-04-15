@@ -25,7 +25,7 @@ import com.gengoai.collection.Sets;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.io.resource.StringResource;
 import com.gengoai.json.Json;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import com.gengoai.tuple.Tuple3;
 import org.junit.Assert;
 import org.junit.Test;

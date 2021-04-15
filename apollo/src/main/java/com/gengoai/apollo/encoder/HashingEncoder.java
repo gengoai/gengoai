@@ -22,7 +22,7 @@ package com.gengoai.apollo.encoder;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
 import com.gengoai.apollo.data.observation.Observation;
-import com.gengoai.math.HashingFunctions;
+import com.gengoai.HashingFunctions;
 import com.gengoai.stream.MStream;
 import lombok.*;
 

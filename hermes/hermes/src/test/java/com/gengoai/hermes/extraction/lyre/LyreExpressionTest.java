@@ -22,6 +22,7 @@
 
 package com.gengoai.hermes.extraction.lyre;
 
+import com.gengoai.Primitives;
 import com.gengoai.collection.tree.Span;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
@@ -34,7 +35,6 @@ import com.gengoai.hermes.lexicon.TrieLexicon;
 import com.gengoai.hermes.morphology.PartOfSpeech;
 import com.gengoai.hermes.morphology.PennTreeBank;
 import com.gengoai.hermes.morphology.StopWords;
-import com.gengoai.math.Math2;
 import com.gengoai.string.Strings;
 import org.junit.Before;
 import org.junit.Test;
@@ -682,7 +682,7 @@ public class LyreExpressionTest {
                  h -> true,
                  h -> h.substring(0, 1).toString(),
                  h -> h.substring(0, 1),
-                 h -> Math2.tryParseDouble(h.substring(0, 1).toString()) == null
+                 h -> Primitives.tryParseDouble(h.substring(0, 1).toString()) == null
                       ? Double.NaN
                       : Double.parseDouble(h.substring(0, 1).toString())
                 );
@@ -691,7 +691,7 @@ public class LyreExpressionTest {
                  h -> true,
                  h -> h.substring(0, 1).toString(),
                  h -> h.substring(0, 1),
-                 h -> Math2.tryParseDouble(h.substring(0, 1).toString()) == null
+                 h -> Primitives.tryParseDouble(h.substring(0, 1).toString()) == null
                       ? Double.NaN
                       : Double.parseDouble(h.substring(0, 1).toString())
                 );

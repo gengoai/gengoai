@@ -23,9 +23,9 @@ import com.gengoai.Validation;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Split;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.measure.Correlation;
 import com.gengoai.apollo.model.Model;
 import com.gengoai.conversion.Cast;
-import com.gengoai.math.Math2;
 import com.gengoai.string.TableFormatter;
 import lombok.NonNull;
 import org.apache.mahout.math.list.DoubleArrayList;
@@ -118,8 +118,7 @@ public class BinaryEvaluation extends ClassifierEvaluation {
     * @return the AUC
     */
    public double auc() {
-      return Math2.auc(prob[0].elements(),
-                       prob[1].elements());
+      return Correlation.AUC.calculate(prob[0].elements(), prob[1].elements());
    }
 
    /**

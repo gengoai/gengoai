@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.Validation;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Variable;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import com.gengoai.stream.Streams;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;

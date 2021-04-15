@@ -19,8 +19,8 @@
 
 package com.gengoai.apollo.data;
 
+import com.gengoai.Primitives;
 import com.gengoai.apollo.data.observation.Variable;
-import com.gengoai.math.Math2;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
@@ -48,7 +48,7 @@ public enum ValueType {
          } else if(value instanceof Number) {
             v = ((Number) value).doubleValue();
          } else {
-            Double temp = Math2.tryParseDouble(value.toString());
+            Double temp = Primitives.tryParseDouble(value.toString());
             v = temp == null
                 ? Double.NaN
                 : temp;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.math;
+package com.gengoai;
 
 /**
  * Taken from <a href="https://commons.apache.org/proper/commons-codec/">commons-codec</a> MurmurHash3.java

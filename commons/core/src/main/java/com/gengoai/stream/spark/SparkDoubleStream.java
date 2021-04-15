@@ -25,7 +25,7 @@ import com.gengoai.config.Config;
 import com.gengoai.config.Configurator;
 import com.gengoai.conversion.Cast;
 import com.gengoai.function.*;
-import com.gengoai.math.EnhancedDoubleStatistics;
+import com.gengoai.EnhancedDoubleStatistics;
 import com.gengoai.stream.MDoubleStream;
 import com.gengoai.stream.MStatisticsAccumulator;
 import com.gengoai.stream.MStream;

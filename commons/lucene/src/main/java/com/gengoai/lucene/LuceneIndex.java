@@ -17,29 +17,13 @@
  * under the License.
  */
 
-package com.gengoai.stream;
-
-import com.gengoai.EnhancedDoubleStatistics;
+package com.gengoai.lucene;
 
 /**
- * Accumulator for calculating descriptive statistics
+ * <p></p>
  *
  * @author David B. Bracewell
  */
-public interface MStatisticsAccumulator extends MAccumulator<Double, EnhancedDoubleStatistics> {
+public class LuceneIndex {
 
-   /**
-    * Adds a value to the statistics accumulator.
-    *
-    * @param value the value to add
-    */
-   void add(double value);
-
-   /**
-    * Combines the given statistics with this one.
-    *
-    * @param statistics the statistics to combine
-    */
-   void combine(EnhancedDoubleStatistics statistics);
-
-}//END OF MStatisticsAccumulator
+}//END OF LuceneIndex

@@ -19,10 +19,10 @@
 
 package com.gengoai.apollo.data;
 
+import com.gengoai.Primitives;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.io.CSV;
 import com.gengoai.io.resource.Resource;
-import com.gengoai.math.Math2;
 import com.gengoai.stream.StreamingContext;
 import com.gengoai.stream.spark.SparkStream;
 import lombok.NonNull;
@@ -101,7 +101,7 @@ public class DistributedCSVDataSetReader implements DataSetReader {
                datum.put(column, schema.convert(column, o.toString()));
             }
          } else {
-            Double d = Math2.tryParseDouble(o.toString());
+            Double d = Primitives.tryParseDouble(o.toString());
             if(d != null) {
                datum.put(column, Variable.real(column, d));
             } else {

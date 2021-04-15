@@ -20,10 +20,11 @@
 package com.gengoai.apollo.math.linalg;
 
 import com.gengoai.Validation;
+import com.gengoai.apollo.math.NumericComparison;
 import com.gengoai.apollo.math.linalg.dense.*;
 import com.gengoai.apollo.math.linalg.sparse.*;
 import com.gengoai.conversion.Cast;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import com.gengoai.math.NumericComparison;
 import lombok.NonNull;
 import org.tensorflow.Tensor;

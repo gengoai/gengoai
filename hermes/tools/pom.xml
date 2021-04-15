@@ -54,14 +54,5 @@
             <artifactId>hermes</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-        <!-- ======================================================================== -->
-        <!-- 3rd Party Dependencies -->
-        <!-- ======================================================================== -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-        </dependency>
-
     </dependencies>
 </project>

@@ -31,7 +31,7 @@ import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.math.measure.Similarity;
 import com.gengoai.apollo.model.Params;
 import com.gengoai.concurrent.Threads;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
 

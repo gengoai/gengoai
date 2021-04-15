@@ -23,6 +23,7 @@
 package com.gengoai.hermes.extraction.lyre;
 
 import com.fasterxml.jackson.annotation.*;
+import com.gengoai.Primitives;
 import com.gengoai.Validation;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.collection.Lists;
@@ -38,7 +39,6 @@ import com.gengoai.hermes.extraction.Extraction;
 import com.gengoai.hermes.extraction.FeaturizingExtractor;
 import com.gengoai.hermes.lexicon.WordList;
 import com.gengoai.hermes.morphology.PartOfSpeech;
-import com.gengoai.math.Math2;
 import com.gengoai.parsing.*;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
@@ -133,7 +133,7 @@ public final class LyreExpression extends FeaturizingExtractor implements Expres
          return Cast.<Number>as(o).doubleValue();
       }
       if(o instanceof CharSequence) {
-         Double d = Math2.tryParseDouble(o.toString());
+         Double d = Primitives.tryParseDouble(o.toString());
          return d == null
                 ? Double.NaN
                 : d;

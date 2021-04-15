@@ -24,6 +24,7 @@ import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableSequence;
 import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.math.Operator;
 import com.gengoai.apollo.model.sequence.SequenceValidator;
 import com.gengoai.conversion.Cast;
 import com.gengoai.math.Operator;

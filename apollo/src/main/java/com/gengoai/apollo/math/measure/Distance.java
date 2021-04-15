@@ -24,7 +24,7 @@ package com.gengoai.apollo.math.measure;
 
 
 import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import lombok.NonNull;
 
 /**

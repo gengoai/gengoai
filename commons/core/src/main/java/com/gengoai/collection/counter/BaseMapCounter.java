@@ -21,8 +21,7 @@
 
 package com.gengoai.collection.counter;
 
-import com.gengoai.math.Math2;
-import com.gengoai.math.Operator;
+import com.gengoai.Math2;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
@@ -100,7 +99,7 @@ public abstract class BaseMapCounter<T> implements Counter<T>, Serializable {
 
    @Override
    public Counter<T> divideBySum() {
-      if(map.isEmpty()) {
+      if (map.isEmpty()) {
          return this;
       }
       final double tmpSum = sum();
@@ -140,11 +139,11 @@ public abstract class BaseMapCounter<T> implements Counter<T>, Serializable {
 
    @Override
    public Counter<T> increment(T item, double amount) {
-      if(amount == 0) {
+      if (amount == 0) {
          return this;
       }
-      map.merge(item, amount, Operator::add);
-      if(map.get(item) == 0) {
+      map.merge(item, amount, Double::sum);
+      if (map.get(item) == 0) {
          map.remove(item);
       }
       return this;
@@ -165,8 +164,8 @@ public abstract class BaseMapCounter<T> implements Counter<T>, Serializable {
       return map.entrySet()
                 .stream()
                 .sorted((e1, e2) -> (ascending
-                                     ? 1
-                                     : -1) * Double.compare(e1.getValue(), e2.getValue()))
+                      ? 1
+                      : -1) * Double.compare(e1.getValue(), e2.getValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
    }
@@ -180,7 +179,7 @@ public abstract class BaseMapCounter<T> implements Counter<T>, Serializable {
 
    @Override
    public Counter<T> merge(Counter<? extends T> other) {
-      if(other != null) {
+      if (other != null) {
          other.forEach(this::increment);
       }
       return this;
@@ -188,25 +187,17 @@ public abstract class BaseMapCounter<T> implements Counter<T>, Serializable {
 
    @Override
    public Counter<T> merge(Map<? extends T, ? extends Number> other) {
-      if(other != null) {
-         for(Map.Entry<? extends T, ? extends Number> entry : other.entrySet()) {
+      if (other != null) {
+         for (Map.Entry<? extends T, ? extends Number> entry : other.entrySet()) {
             increment(entry.getKey(), entry.getValue().doubleValue());
          }
       }
       return this;
    }
 
-   /**
-    * New instance counter.
-    *
-    * @param <R> the type parameter
-    * @return the counter
-    */
-   protected abstract <R> Counter<R> newInstance();
-
    @Override
    public double remove(T item) {
-      if(item == null) {
+      if (item == null) {
          return 0d;
       }
       double value = map.getOrDefault(item, 0d);
@@ -216,7 +207,7 @@ public abstract class BaseMapCounter<T> implements Counter<T>, Serializable {
 
    @Override
    public Counter<T> removeAll(Iterable<T> items) {
-      if(items != null) {
+      if (items != null) {
          items.forEach(this::remove);
       }
       return this;
@@ -224,7 +215,7 @@ public abstract class BaseMapCounter<T> implements Counter<T>, Serializable {
 
    @Override
    public Counter<T> set(T item, double count) {
-      if(count == 0) {
+      if (count == 0) {
          remove(item);
          return this;
       }
@@ -260,5 +251,13 @@ public abstract class BaseMapCounter<T> implements Counter<T>, Serializable {
    public Collection<Double> values() {
       return map.values();
    }
+
+   /**
+    * New instance counter.
+    *
+    * @param <R> the type parameter
+    * @return the counter
+    */
+   protected abstract <R> Counter<R> newInstance();
 
 }//END OF BaseMapCounter

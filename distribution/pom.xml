@@ -30,9 +30,6 @@
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <dependencies>
-        <!-- ======================================================================== -->
-        <!-- GengoAI Dependencies -->
-        <!-- ======================================================================== -->
         <dependency>
             <groupId>com.gengoai</groupId>
             <artifactId>hermes</artifactId>
@@ -49,24 +46,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.gengoai</groupId>
+            <artifactId>commons-spark</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
-        <!-- ======================================================================== -->
-        <!-- 3rd Party Dependencies -->
-        <!-- ======================================================================== -->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.12</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.12</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-mllib_2.12</artifactId>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>

@@ -21,7 +21,7 @@ package com.gengoai.stream.local;
 
 import com.gengoai.conversion.Cast;
 import com.gengoai.function.*;
-import com.gengoai.math.EnhancedDoubleStatistics;
+import com.gengoai.EnhancedDoubleStatistics;
 import com.gengoai.stream.MDoubleStream;
 import com.gengoai.stream.MStream;
 import com.gengoai.stream.StreamingContext;

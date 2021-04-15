@@ -66,6 +66,10 @@
         <module>commons/documentdb</module>
         <module>commons/sql</module>
         <module>commons/graph</module>
+        <module>commons/spark</module>
+        <module>commons/lucene</module>
+
+
         <module>apollo</module>
         <module>hermes/hermes</module>
         <module>hermes/examples</module>
@@ -75,7 +79,35 @@
         <module>hermes/lang/hermes-chinese</module>
 
 
+
     </modules>
+
+    <dependencies>
+        <!-- ======================================================================== -->
+        <!-- Compile Time 3rd Party Dependencies -->
+        <!-- ======================================================================== -->
+
+        <dependency>
+            <groupId>org.kohsuke.metainf-services</groupId>
+            <artifactId>metainf-services</artifactId>
+            <version>1.8</version>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.16</version>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
     <dependencyManagement>
         <dependencies>
@@ -119,34 +151,6 @@
                 <groupId>com.ibm.icu</groupId>
                 <artifactId>icu4j</artifactId>
                 <version>67.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-mllib_2.12</artifactId>
-                <version>3.0.1</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-core_2.12</artifactId>
-                <version>3.0.1</version>
-                <scope>provided</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>xerces</groupId>
-                        <artifactId>xercesImpl</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.xml.stream</groupId>
-                        <artifactId>stax-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-sql_2.12</artifactId>
-                <version>3.0.1</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.lucene</groupId>
@@ -276,30 +280,7 @@
                 <version>1.2.5</version>
             </dependency>
 
-            <!-- ======================================================================== -->
-            <!-- Compile Time 3rd Party Dependencies -->
-            <!-- ======================================================================== -->
 
-            <dependency>
-                <groupId>org.kohsuke.metainf-services</groupId>
-                <artifactId>metainf-services</artifactId>
-                <version>1.8</version>
-                <optional>true</optional>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.13.1</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.18.16</version>
-                <optional>true</optional>
-                <scope>provided</scope>
-            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -324,6 +305,7 @@
                             </execution>
                         </executions>
                     </plugin>
+                    
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>

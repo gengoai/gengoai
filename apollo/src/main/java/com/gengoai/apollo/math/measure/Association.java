@@ -23,7 +23,7 @@
 package com.gengoai.apollo.math.measure;
 
 import com.gengoai.Validation;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.TDistribution;

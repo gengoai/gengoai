@@ -22,9 +22,9 @@
 
 package com.gengoai.apollo.math.measure;
 
+import com.gengoai.apollo.math.Optimum;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.math.Optimum;
 
 import java.io.Serializable;
 

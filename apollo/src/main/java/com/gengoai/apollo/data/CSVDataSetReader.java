@@ -19,10 +19,10 @@
 
 package com.gengoai.apollo.data;
 
+import com.gengoai.Primitives;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.io.CSV;
 import com.gengoai.io.resource.Resource;
-import com.gengoai.math.Math2;
 import com.gengoai.stream.StreamingContext;
 import lombok.NonNull;
 
@@ -73,7 +73,7 @@ public class CSVDataSetReader implements DataSetReader {
    }
 
    private Variable guess(String column, String value) {
-      Double d = Math2.tryParseDouble(value);
+      Double d = Primitives.tryParseDouble(value);
       if (d == null) {
          return Variable.binary(column, value);
       }

@@ -1,6 +1,4 @@
 /*
- * (c) 2005 David B. Bracewell
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.math;
+package com.gengoai.apollo.math;
 
 import com.gengoai.function.SerializableToDoubleFunction;
 import com.gengoai.stream.MStream;

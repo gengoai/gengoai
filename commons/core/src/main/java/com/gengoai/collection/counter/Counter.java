@@ -29,7 +29,7 @@ import com.gengoai.conversion.Converter;
 import com.gengoai.io.CSV;
 import com.gengoai.io.CSVWriter;
 import com.gengoai.io.resource.Resource;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 
 import java.io.IOException;
 import java.text.DecimalFormat;

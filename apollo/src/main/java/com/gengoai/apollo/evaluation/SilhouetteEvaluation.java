@@ -31,7 +31,7 @@ import com.gengoai.apollo.model.clustering.Cluster;
 import com.gengoai.apollo.model.clustering.Clusterer;
 import com.gengoai.apollo.model.clustering.Clustering;
 import com.gengoai.conversion.Cast;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import com.gengoai.stream.StreamingContext;
 import com.gengoai.string.TableFormatter;
 import lombok.NonNull;

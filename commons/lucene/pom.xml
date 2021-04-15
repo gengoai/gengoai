@@ -18,38 +18,44 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.gengoai</groupId>
         <artifactId>gengoai</artifactId>
+        <groupId>com.gengoai</groupId>
         <relativePath>../../pom.xml</relativePath>
         <version>1.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>hermes-examples</artifactId>
+    <artifactId>commons-lucene</artifactId>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <dependencies>
         <dependency>
             <groupId>com.gengoai</groupId>
-            <artifactId>hermes</artifactId>
+            <artifactId>commons-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- ======================================================================== -->
+        <!-- 3rd Party Dependencies -->
+        <!-- ======================================================================== -->
         <dependency>
-            <groupId>com.gengoai</groupId>
-            <artifactId>hermes-wordnet</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.gengoai</groupId>
-            <artifactId>hermes-tools</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.gengoai</groupId>
-            <artifactId>commons-spark</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queries</artifactId>
         </dependency>
     </dependencies>
-
 </project>

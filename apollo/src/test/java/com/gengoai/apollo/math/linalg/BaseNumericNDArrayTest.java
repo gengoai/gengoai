@@ -23,10 +23,10 @@ import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.FixedEncoder;
+import com.gengoai.apollo.math.Operator;
 import com.gengoai.apollo.model.sequence.SequenceValidator;
 import com.gengoai.conversion.Cast;
 import com.gengoai.json.Json;
-import com.gengoai.math.Operator;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -591,9 +591,9 @@ public abstract class BaseNumericNDArrayTest {
       assertEquals(factory.empty(), factory.empty().map((a) -> a + 1));
       assertEquals(factory.empty(), factory.empty().map(factory.empty(), Operator::add));
 
-      assertEquals(factory.array(new double[]{2,2,2,2}),
+      assertEquals(factory.array(new double[]{2, 2, 2, 2}),
                    rowVector.add(COLUMN, 0, factory.ones(4)));
-      assertEquals(factory.array(new double[]{2,1,1,1}),
+      assertEquals(factory.array(new double[]{2, 1, 1, 1}),
                    rowVector.add(COLUMN, 0, factory.ones(1)));
 
       assertEquals(factory.array(new double[][]{{2.000000, 3.000000, 4.000000, 5.000000},

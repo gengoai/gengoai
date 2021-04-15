@@ -31,7 +31,7 @@ import com.gengoai.io.CSV;
 import com.gengoai.io.CSVWriter;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.json.JsonEntry;
-import com.gengoai.math.Math2;
+import com.gengoai.Math2;
 import com.gengoai.tuple.Tuple3;
 
 import java.io.IOException;

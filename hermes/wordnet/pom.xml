@@ -33,28 +33,11 @@
     <name>${project.groupId}:${project.artifactId}</name>
 
     <dependencies>
-        <!-- ======================================================================== -->
-        <!-- GengoAI Dependencies -->
-        <!-- ======================================================================== -->
         <dependency>
             <groupId>com.gengoai</groupId>
             <artifactId>hermes</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-
-        <!-- ======================================================================== -->
-        <!-- 3rd Party Dependencies -->
-        <!-- ======================================================================== -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.kohsuke.metainf-services</groupId>
-            <artifactId>metainf-services</artifactId>
-        </dependency>
-
     </dependencies>
 
 </project>

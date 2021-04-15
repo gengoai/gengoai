@@ -19,9 +19,9 @@
 
 package com.gengoai.hermes.ml.feature;
 
+import com.gengoai.Primitives;
 import com.gengoai.hermes.*;
 import com.gengoai.hermes.morphology.PennTreeBank;
-import com.gengoai.math.Math2;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
@@ -107,7 +107,7 @@ public final class LexicalFeatures {
             cardinalNames.contains(norm) ||
             word.pos().isInstance(PennTreeBank.CD) ||
             Strings.isDigit(word.replaceAll("\\W+", "")) ||
-            Math2.tryParseDouble(norm) != null) {
+            Primitives.tryParseDouble(norm) != null) {
          return true;
       }
       if(norm.contains("-") && norm.length() > 1) {

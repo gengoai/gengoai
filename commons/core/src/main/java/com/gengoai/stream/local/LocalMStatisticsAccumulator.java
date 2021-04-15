@@ -19,7 +19,7 @@
 
 package com.gengoai.stream.local;
 
-import com.gengoai.math.EnhancedDoubleStatistics;
+import com.gengoai.EnhancedDoubleStatistics;
 import com.gengoai.stream.MAccumulator;
 import com.gengoai.stream.MStatisticsAccumulator;
 

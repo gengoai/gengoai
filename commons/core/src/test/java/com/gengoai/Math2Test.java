@@ -22,7 +22,6 @@
 package com.gengoai;
 
 import com.gengoai.collection.Lists;
-import com.gengoai.math.Math2;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
