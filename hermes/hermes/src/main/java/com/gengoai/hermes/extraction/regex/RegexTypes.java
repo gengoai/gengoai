@@ -21,6 +21,7 @@ package com.gengoai.hermes.extraction.regex;
 
 import com.gengoai.Tag;
 import com.gengoai.Validation;
+import com.gengoai.apollo.math.NumericComparison;
 import com.gengoai.collection.multimap.ListMultimap;
 import com.gengoai.conversion.Cast;
 import com.gengoai.conversion.Converter;
@@ -28,17 +29,15 @@ import com.gengoai.conversion.TypeConversionException;
 import com.gengoai.function.SerializableBiFunction;
 import com.gengoai.hermes.*;
 import com.gengoai.hermes.lexicon.LexiconManager;
+import com.gengoai.hermes.morphology.PartOfSpeech;
 import com.gengoai.hermes.morphology.StopWords;
 import com.gengoai.hermes.morphology.TokenType;
-import com.gengoai.hermes.morphology.PartOfSpeech;
-import com.gengoai.math.NumericComparison;
 import com.gengoai.parsing.*;
 import com.gengoai.reflection.TypeUtils;
 import com.gengoai.string.Re;
 import com.gengoai.string.StringMatcher;
 import com.gengoai.string.Strings;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -105,9 +104,9 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
          grammar.prefix(this, (parser, token) -> {
             String patternText = token.getVariable(0);//Strings.unescape(token.getVariable(0), '\\');
             final Pattern pattern = (Strings.isNullOrBlank(token.getVariable(1)))
-                                    ? Pattern.compile(patternText)
-                                    : Pattern.compile(patternText, Pattern.CASE_INSENSITIVE);
-            if(Strings.isNullOrBlank(token.getVariable(2))) {
+                  ? Pattern.compile(patternText)
+                  : Pattern.compile(patternText, Pattern.CASE_INSENSITIVE);
+            if (Strings.isNullOrBlank(token.getVariable(2))) {
                return new PredicateTransition(token.getText(), regex(pattern), this);
             }
             return new PredicateTransition(token.getText(), h -> pattern.matcher(h).matches(), this);
@@ -146,16 +145,17 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
             final AttributeType<?> type = Types.attribute(token.getVariable(0));
             Validation.checkArgument(TypeUtils.isPrimitive(type.getValueType())
                                            || TypeUtils.isAssignable(Number.class, type.getValueType()),
-                                     () -> "Cannot do numeric comparison with attribute of type: " + type.getValueType());
+                                     () -> "Cannot do numeric comparison with attribute of type: " + type
+                                           .getValueType());
             final double value = Double.parseDouble(token.getVariable(2));
             final NumericComparison nc = NumericComparison.fromString(token.getVariable(1));
             return new PredicateTransition(token.getText(), h -> {
-               if(!h.hasAttribute(type)) {
+               if (!h.hasAttribute(type)) {
                   return false;
                }
                try {
                   return nc.compare(Converter.convert(h.attribute(type), double.class), value);
-               } catch(TypeConversionException e) {
+               } catch (TypeConversionException e) {
                   throw new RuntimeException(e);
                }
             }, this);
@@ -174,22 +174,22 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
             final AttributeType<?> type = Types.attribute(token.getVariable(0));
             final String value = Strings.unescape(token.getVariable(2), '\\');
             final String operator = token.getVariable(1);
-            switch(operator) {
+            switch (operator) {
                case "=":
-                  if(TypeUtils.isAssignable(Tag.class, type.getValueType())) {
+                  if (TypeUtils.isAssignable(Tag.class, type.getValueType())) {
                      return new PredicateTransition(token.getText(), h -> h.attributeIsA(type, value), this);
                   }
                   return new PredicateTransition(token.getText(), h -> h.attributeEquals(type, value), this);
                case "!=":
-                  if(TypeUtils.isAssignable(Tag.class, type.getValueType())) {
+                  if (TypeUtils.isAssignable(Tag.class, type.getValueType())) {
                      return new PredicateTransition(token.getText(), h -> !h.attributeIsA(type, value), this);
                   }
                   return new PredicateTransition(token.getText(), h -> !h.attributeEquals(type, value), this);
                case "~":
                   return new PredicateTransition(token.getText(), h -> {
-                     if(TypeUtils.isCollection(type.getValueType())) {
+                     if (TypeUtils.isCollection(type.getValueType())) {
                         Collection<?> c = Cast.as(h.attribute(type));
-                        if(c == null) {
+                        if (c == null) {
                            return false;
                         }
                         Object t = Converter.convertSilently(value, TypeUtils.getOrObject(1, type.getValueType()));
@@ -321,7 +321,8 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
       public void register(Grammar grammar) {
          grammar.prefix(this, (parser, token) -> new PredicateTransition(token.getText(),
                                                                          a -> Strings.isDigit(a) ||
-                                                                               a.pos().isInstance(PartOfSpeech.NUMERAL) ||
+                                                                               a.pos()
+                                                                                .isInstance(PartOfSpeech.NUMERAL) ||
                                                                                TokenType.NUMBER
                                                                                      .equals(a.attribute(Types.TOKEN_TYPE)),
                                                                          this));
@@ -458,15 +459,15 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
                       namedGroup("", or(e('*'), oneOrMore(Re.DIGIT)))),
             zeroOrMore(WHITESPACE),
             e('}')
-           )) {
+   )) {
       @Override
       public void register(Grammar grammar) {
          grammar.postfix(this, (parser, token, left) -> {
             int low = Integer.parseInt(token.getVariable(0));
             int high;
-            if(token.getVariable(1) == null) {
+            if (token.getVariable(1) == null) {
                high = -1;
-            } else if(token.getVariable(1).equals("*")) {
+            } else if (token.getVariable(1).equals("*")) {
                high = Integer.MAX_VALUE;
             } else {
                high = Integer.parseInt(token.getVariable(1));
@@ -499,38 +500,6 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
       this.pattern = pattern;
    }
 
-   static TransitionFunction asSequence(List<TransitionFunction> transitionFunctions) {
-      TransitionFunction tf = null;
-      for(TransitionFunction transitionFunction : transitionFunctions) {
-         tf = (tf == null)
-              ? transitionFunction
-              : new SequenceTransition(tf, transitionFunction);
-      }
-      return tf;
-   }
-
-   private static TransitionFunction getChildTransition(Parser parser,
-                                                        ParserToken token) throws ParseException {
-      ParserToken next = parser.peek();
-      if(next.isInstance(OPEN_PARENS) && next.getStartOffset() == token.getEndOffset()) {
-         return asSequence(parser.parseExpressionList(OPEN_PARENS, CLOSE_PARENS, null));
-      }
-      return new PredicateTransition(".", h -> true, ANY);
-   }
-
-   private static SerializableBiFunction<HString, ListMultimap<String, HString>, Integer> getRelationMatcher(Parser parser,
-                                                                                                             ParserToken token) throws
-                                                                                                                                ParseException {
-      ParserToken next = parser.peek();
-      SerializableBiFunction<HString, ListMultimap<String, HString>, Integer> matcher;
-      if(next.isInstance(OPEN_PARENS) && next.getStartOffset() == token.getEndOffset()) {
-         matcher = asSequence(parser.parseExpressionList(OPEN_PARENS, CLOSE_PARENS, null))::matches;
-      } else {
-         matcher = (h, m) -> 1;
-      }
-      return matcher;
-   }
-
    @Override
    public String getPattern() {
       return pattern;
@@ -539,6 +508,38 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
    @Override
    public void register(Grammar grammar) {
 
+   }
+
+   static TransitionFunction asSequence(List<TransitionFunction> transitionFunctions) {
+      TransitionFunction tf = null;
+      for (TransitionFunction transitionFunction : transitionFunctions) {
+         tf = (tf == null)
+               ? transitionFunction
+               : new SequenceTransition(tf, transitionFunction);
+      }
+      return tf;
+   }
+
+   private static TransitionFunction getChildTransition(Parser parser,
+                                                        ParserToken token) throws ParseException {
+      ParserToken next = parser.peek();
+      if (next.isInstance(OPEN_PARENS) && next.getStartOffset() == token.getEndOffset()) {
+         return asSequence(parser.parseExpressionList(OPEN_PARENS, CLOSE_PARENS, null));
+      }
+      return new PredicateTransition(".", h -> true, ANY);
+   }
+
+   private static SerializableBiFunction<HString, ListMultimap<String, HString>, Integer> getRelationMatcher(Parser parser,
+                                                                                                             ParserToken token) throws
+         ParseException {
+      ParserToken next = parser.peek();
+      SerializableBiFunction<HString, ListMultimap<String, HString>, Integer> matcher;
+      if (next.isInstance(OPEN_PARENS) && next.getStartOffset() == token.getEndOffset()) {
+         matcher = asSequence(parser.parseExpressionList(OPEN_PARENS, CLOSE_PARENS, null))::matches;
+      } else {
+         matcher = (h, m) -> 1;
+      }
+      return matcher;
    }
 
 }//END OF RegexTypes

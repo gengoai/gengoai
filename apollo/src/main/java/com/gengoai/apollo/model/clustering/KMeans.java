@@ -23,6 +23,7 @@
 package com.gengoai.apollo.model.clustering;
 
 import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.math.Optimum;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
@@ -31,7 +32,6 @@ import com.gengoai.apollo.model.Params;
 import com.gengoai.apollo.model.StoppingCriteria;
 import com.gengoai.concurrent.AtomicDouble;
 import com.gengoai.conversion.Cast;
-import com.gengoai.math.Optimum;
 import com.gengoai.stream.MStream;
 import lombok.NonNull;
 import lombok.extern.java.Log;

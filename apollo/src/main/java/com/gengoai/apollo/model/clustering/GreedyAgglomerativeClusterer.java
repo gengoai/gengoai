@@ -20,10 +20,10 @@
 package com.gengoai.apollo.model.clustering;
 
 import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.math.Optimum;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.measure.Measure;
 import com.gengoai.collection.Iterables;
-import com.gengoai.math.Optimum;
 import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
 

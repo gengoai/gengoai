@@ -19,13 +19,12 @@
 
 package com.gengoai.apollo.math.linalg;
 
+import com.gengoai.Math2;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.NumericComparison;
 import com.gengoai.apollo.math.linalg.dense.*;
 import com.gengoai.apollo.math.linalg.sparse.*;
 import com.gengoai.conversion.Cast;
-import com.gengoai.Math2;
-import com.gengoai.math.NumericComparison;
 import lombok.NonNull;
 import org.tensorflow.Tensor;
 
@@ -260,7 +259,7 @@ public final class nd {
          return a.dot(b.T(), Shape.COLUMN).reshape(a.shape().with(Shape.COLUMN, 1));
       }
 
-      if( a.shape().isMatrix() && b.shape().isMatrix() && a.columns() == b.rows()){
+      if (a.shape().isMatrix() && b.shape().isMatrix() && a.columns() == b.rows()) {
          return a.mmul(b);
       }
 

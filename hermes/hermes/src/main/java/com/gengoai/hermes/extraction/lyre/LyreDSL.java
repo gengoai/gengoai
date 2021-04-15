@@ -25,6 +25,7 @@ package com.gengoai.hermes.extraction.lyre;
 import com.gengoai.Tag;
 import com.gengoai.Validation;
 import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.math.NumericComparison;
 import com.gengoai.collection.Iterables;
 import com.gengoai.collection.Lists;
 import com.gengoai.collection.Sets;
@@ -41,7 +42,6 @@ import com.gengoai.hermes.lexicon.WordList;
 import com.gengoai.hermes.ml.feature.ValueCalculator;
 import com.gengoai.hermes.morphology.PartOfSpeech;
 import com.gengoai.hermes.morphology.StopWords;
-import com.gengoai.math.NumericComparison;
 import com.gengoai.reflection.TypeUtils;
 import com.gengoai.stream.Streams;
 import com.gengoai.string.Re;
@@ -2079,7 +2079,7 @@ public final class LyreDSL {
                                          .stream()
                                          .max(Comparator.comparingDouble(h -> (h instanceof HString)
                                                ? Cast.<HString>as(h)
-                                               .attribute(Types.CONFIDENCE, 0.0)
+                                                     .attribute(Types.CONFIDENCE, 0.0)
                                                : 0.0
                                          ))
                                          .orElse(null));
@@ -2755,7 +2755,7 @@ public final class LyreDSL {
                                    RelationGraph g = h.sentence().dependencyGraph();
                                    List<HString> subs = new ArrayList<>();
                                    for (Annotation token : h.tokens()) {
-                                      subs.add(g.getSubTreeText(token,true));
+                                      subs.add(g.getSubTreeText(token, true));
                                    }
                                    return HString.union(subs);
                                 });
@@ -3067,10 +3067,10 @@ public final class LyreDSL {
    static Object filter(Object o, SerializablePredicate<Object> function) {
       if (o instanceof Collection) {
          return postProcess(Cast.<Collection<?>>as(o)
-                                  .stream()
-                                  .map(o2 -> filter(o2, function))
-                                  .filter(Objects::nonNull)
-                                  .collect(Collectors.toList())
+                                .stream()
+                                .map(o2 -> filter(o2, function))
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList())
          );
       }
       return function.test(o)
@@ -3118,11 +3118,11 @@ public final class LyreDSL {
    private static Object postProcess(Object o) {
       if (o instanceof Collection) {
          Collection<?> c = Cast.<Collection<?>>as(o)
-               .stream()
-               .filter(Objects::nonNull)
-               .filter(h -> !(h instanceof HString) || !Cast.<HString>as(h).isEmpty())
-               .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(cs.toString()))
-               .collect(Collectors.toList());
+                               .stream()
+                               .filter(Objects::nonNull)
+                               .filter(h -> !(h instanceof HString) || !Cast.<HString>as(h).isEmpty())
+                               .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(cs.toString()))
+                               .collect(Collectors.toList());
          if (c.isEmpty()) {
             return null;
          }
@@ -3139,11 +3139,11 @@ public final class LyreDSL {
       }
       if (o instanceof Collection) {
          return postProcess(Cast.<Collection<?>>as(o)
-                                  .stream()
-                                  .map(v -> postProcess(function.apply(v)))
-                                  .filter(Objects::nonNull)
-                                  .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(Cast.as(cs)))
-                                  .collect(Collectors.toList()));
+                                .stream()
+                                .map(v -> postProcess(function.apply(v)))
+                                .filter(Objects::nonNull)
+                                .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(Cast.as(cs)))
+                                .collect(Collectors.toList()));
       }
       return postProcess(function.apply(o));
    }
@@ -3151,12 +3151,12 @@ public final class LyreDSL {
    private static Object processPred(Object o, SerializablePredicate<Object> function) {
       if (o instanceof Collection) {
          return postProcess(Cast.<Collection<?>>as(o)
-                                  .stream()
-                                  .filter(Objects::nonNull)
-                                  .map(o2 -> filter(o2, function))
-                                  .filter(Objects::nonNull)
-                                  .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(Cast.as(cs)))
-                                  .collect(Collectors.toList()));
+                                .stream()
+                                .filter(Objects::nonNull)
+                                .map(o2 -> filter(o2, function))
+                                .filter(Objects::nonNull)
+                                .filter(cs -> !(cs instanceof CharSequence) || Strings.isNotNullOrBlank(Cast.as(cs)))
+                                .collect(Collectors.toList()));
       }
       return function.test(o);
    }

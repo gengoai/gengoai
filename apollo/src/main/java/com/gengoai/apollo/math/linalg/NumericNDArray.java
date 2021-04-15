@@ -27,7 +27,6 @@ import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.math.Operator;
 import com.gengoai.apollo.model.sequence.SequenceValidator;
 import com.gengoai.conversion.Cast;
-import com.gengoai.math.Operator;
 import lombok.NonNull;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.jblas.DoubleMatrix;
@@ -1351,29 +1350,6 @@ public abstract class NumericNDArray extends NDArray {
       return NDArrayOps.mapDouble(this, value, operator, this);
    }
 
-   /**
-    * Matrix multiplication numeric nd array.
-    *
-    * @param rhs the rhs
-    * @return the numeric nd array
-    */
-   protected NumericNDArray matrixMultiplicationImpl(NumericNDArray rhs) {
-      checkArgument(shape().columns() == rhs.shape().rows(),
-                    () -> "Cannot multiply NDArray of shape " + shape() + " by NDArray of shape " + rhs
-                          .shape());
-      NumericNDArray out = factory().zeros(Shape.shape(shape().rows(), rhs.shape().columns()));
-      for (int row = 0; row < shape().rows(); row++) {
-         for (int lhsColumn = 0; lhsColumn < shape().columns(); lhsColumn++) {
-            for (int rhsColumn = 0; rhsColumn < rhs.shape().columns(); rhsColumn++) {
-               out.set(row, rhsColumn,
-                       out.getDouble(row, rhsColumn) +
-                             getDouble(row, lhsColumn) * rhs.getDouble(lhsColumn, rhsColumn));
-            }
-         }
-      }
-      return out;
-   }
-
    @Override
    public Number max() {
       return Cast.as(super.max());
@@ -1816,7 +1792,6 @@ public abstract class NumericNDArray extends NDArray {
       return Math.sqrt(l2);
    }
 
-
    @Override
    public NumericNDArray padPost(int axis, int length) {
       return padPost(shape().with(axis, length));
@@ -1887,11 +1862,11 @@ public abstract class NumericNDArray extends NDArray {
    }
 
    @Override
-   public NumericNDArray padPostWith(@NonNull Object padValue, @NonNull Shape paddedShape){
-      Validation.checkArgument(padValue instanceof Number, "Invalid padValue type '" + padValue.getClass().getSimpleName() + "'");
-      return padPost(Cast.as(padValue,Number.class).doubleValue(), paddedShape);
+   public NumericNDArray padPostWith(@NonNull Object padValue, @NonNull Shape paddedShape) {
+      Validation.checkArgument(padValue instanceof Number, "Invalid padValue type '" + padValue.getClass()
+                                                                                               .getSimpleName() + "'");
+      return padPost(Cast.as(padValue, Number.class).doubleValue(), paddedShape);
    }
-
 
    /**
     * <p>Takes the values in the left hand NDArray and divides them by the elements in this NDArray returning a new
@@ -3053,48 +3028,6 @@ public abstract class NumericNDArray extends NDArray {
    }
 
    /**
-    * <p>Converts this NDArray into a float array. The array is encoded using column major order for matrices and
-    * kernel-major order for slices.</p>
-    *
-    * @return the float array
-    */
-   public float[] toFloatArray() {
-      float[] out = new float[(int) length()];
-      for (long i = 0; i < length(); i++) {
-         out[(int) i] = (float)getDouble(i);
-      }
-      return out;
-   }
-
-   /**
-    * <p>Converts this NDArray into a long array. The array is encoded using column major order for matrices and
-    * kernel-major order for slices.</p>
-    *
-    * @return the long array
-    */
-   public long[] toLongArray() {
-      long[] out = new long[(int) length()];
-      for (long i = 0; i < length(); i++) {
-         out[(int) i] = get(i).longValue();
-      }
-      return out;
-   }
-
-   /**
-    * <p>Converts this NDArray into a int array. The array is encoded using column major order for matrices and
-    * kernel-major order for slices.</p>
-    *
-    * @return the int array
-    */
-   public int[] toIntArray() {
-      int[] out = new int[(int) length()];
-      for (long i = 0; i < length(); i++) {
-         out[(int) i] = (int)getDouble(i);
-      }
-      return out;
-   }
-
-   /**
     * <p>Converts the NDArray into an array of DoubleMatrix. (one per slice)</p>
     *
     * @return the array of DoubleMatrix
@@ -3119,6 +3052,20 @@ public abstract class NumericNDArray extends NDArray {
    }
 
    /**
+    * <p>Converts this NDArray into a float array. The array is encoded using column major order for matrices and
+    * kernel-major order for slices.</p>
+    *
+    * @return the float array
+    */
+   public float[] toFloatArray() {
+      float[] out = new float[(int) length()];
+      for (long i = 0; i < length(); i++) {
+         out[(int) i] = (float) getDouble(i);
+      }
+      return out;
+   }
+
+   /**
     * <p>Converts the NDArray into an array of FloatMatrix. (one per slice)</p>
     *
     * @return the array of FloatMatrix
@@ -3140,6 +3087,34 @@ public abstract class NumericNDArray extends NDArray {
          m[i] = v;
       }
       return m;
+   }
+
+   /**
+    * <p>Converts this NDArray into a int array. The array is encoded using column major order for matrices and
+    * kernel-major order for slices.</p>
+    *
+    * @return the int array
+    */
+   public int[] toIntArray() {
+      int[] out = new int[(int) length()];
+      for (long i = 0; i < length(); i++) {
+         out[(int) i] = (int) getDouble(i);
+      }
+      return out;
+   }
+
+   /**
+    * <p>Converts this NDArray into a long array. The array is encoded using column major order for matrices and
+    * kernel-major order for slices.</p>
+    *
+    * @return the long array
+    */
+   public long[] toLongArray() {
+      long[] out = new long[(int) length()];
+      for (long i = 0; i < length(); i++) {
+         out[(int) i] = get(i).longValue();
+      }
+      return out;
    }
 
    @Override
@@ -3167,5 +3142,28 @@ public abstract class NumericNDArray extends NDArray {
    @Override
    public NumericNDArray zeroLike() {
       return factory().zeros(shape());
+   }
+
+   /**
+    * Matrix multiplication numeric nd array.
+    *
+    * @param rhs the rhs
+    * @return the numeric nd array
+    */
+   protected NumericNDArray matrixMultiplicationImpl(NumericNDArray rhs) {
+      checkArgument(shape().columns() == rhs.shape().rows(),
+                    () -> "Cannot multiply NDArray of shape " + shape() + " by NDArray of shape " + rhs
+                          .shape());
+      NumericNDArray out = factory().zeros(Shape.shape(shape().rows(), rhs.shape().columns()));
+      for (int row = 0; row < shape().rows(); row++) {
+         for (int lhsColumn = 0; lhsColumn < shape().columns(); lhsColumn++) {
+            for (int rhsColumn = 0; rhsColumn < rhs.shape().columns(); rhsColumn++) {
+               out.set(row, rhsColumn,
+                       out.getDouble(row, rhsColumn) +
+                             getDouble(row, lhsColumn) * rhs.getDouble(lhsColumn, rhsColumn));
+            }
+         }
+      }
+      return out;
    }
 }//END OF NumericNDArray
