@@ -21,10 +21,7 @@ package com.gengoai.apollo.math.linalg.sparse;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.NumericNDArrayFactory;
-import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.apache.mahout.math.list.LongArrayList;
@@ -40,7 +37,7 @@ import static com.gengoai.Validation.checkArgument;
  *
  * @author David B. Bracewell
  */
-public class SparseInt32NDArray extends NumericNDArray {
+public class SparseInt32NDArray extends Int32NDArray {
    private static final long serialVersionUID = 1L;
    private OpenIntIntHashMap[] data;
 
@@ -218,9 +215,5 @@ public class SparseInt32NDArray extends NumericNDArray {
       return out;
    }
 
-   @Override
-   public Tensor<?> toTensor() {
-      return nd.DINT32.array(shape(), toIntArray()).toTensor();
-   }
 
 }//END OF SparseInt32NDArray

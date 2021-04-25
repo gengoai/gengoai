@@ -62,7 +62,11 @@ public class NeuralNERModel extends TFSequenceLabeler {
                   TFInputVar.sequence(CHARS, -1, MAX_WORD_LENGTH)
             ),
             List.of(
-                  TFOutputVar.sequence(LABEL, "label/truediv", "O", IOBValidator.INSTANCE)
+                  TFOutputVar.sequence(LABEL,
+"time_distributed_3/Reshape_1:0",
+//                                       "label/truediv",
+
+                                       "O", IOBValidator.INSTANCE)
             ),
             IOB.decoder(Types.ML_ENTITY)
       );

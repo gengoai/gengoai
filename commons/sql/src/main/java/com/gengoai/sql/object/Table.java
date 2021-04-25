@@ -64,7 +64,6 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       this(name, tableType, null, Collections.emptyList(), Collections.emptyList());
    }
 
-
    /**
     * Instantiates a new Table.
     *
@@ -102,6 +101,10 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
       this.columns.addAll(columns);
       this.constraints.addAll(constraints);
       this.using = using;
+   }
+
+   public static Builder builder(@NonNull String name) {
+      return new Builder(name);
    }
 
    /**
@@ -293,6 +296,10 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
                                  .getTables(null, null, getName(), new String[]{"TABLE"})) {
          return rs.next();
       }
+   }
+
+   public Column getColumn(@NonNull String name) {
+      return columns.stream().filter(c -> c.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
    }
 
    @Override
@@ -516,10 +523,6 @@ public class Table extends SQLObject implements NamedSQLElement, SQLOperable {
                      .namedParameters()
                      .onConflict(upsertClause)
                      .update(context, values) > 0;
-   }
-
-   public static Builder builder(@NonNull String name){
-      return new Builder(name);
    }
 
    @Data

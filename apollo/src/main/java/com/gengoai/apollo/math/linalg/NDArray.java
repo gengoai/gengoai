@@ -1134,9 +1134,7 @@ public abstract class NDArray implements Serializable, Observation {
     *
     * @return the tensor
     */
-   public Tensor<?> toTensor() {
-      return Cast.as(Tensor.create(arrayForTensor()));
-   }
+   public abstract Tensor<?> toTensor();
 
 
    /**

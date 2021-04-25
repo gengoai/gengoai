@@ -117,7 +117,6 @@ public class TFModel implements Model, Serializable {
          for (Resource child : resource.getChildren("*.encoder.json.gz")) {
             String name = child.baseName().replace(".encoder.json.gz", "").strip();
             m.setEncoder(name, Json.parse(child, Encoder.class));
-            IndexEncoder ie = Json.parse(child, Encoder.class);
          }
          m.modelFile = resource;
          return m;

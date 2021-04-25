@@ -22,11 +22,11 @@ from keras_contrib.layers import CRF
 from keras_contrib.losses import crf_loss
 from keras_contrib.metrics import crf_marginal_accuracy
 import tensorflow as tf
-
+from apollo.model.sequence_labeling import BiLstmCRF
 
 data = ApolloSQLDataSet('data/entity2.db')
 
-max_sequence_length = 512
+max_sequence_length = 128
 max_word_length = 10
 word_dimensions = 50
 shape_dimensions = 50
@@ -39,6 +39,21 @@ input_data = {
     "shape": pad(data["shape"], max_sequence_length)
 }
 y = K.utils.to_categorical(pad(data['label'], max_sequence_length), data.dimension('label'))
+
+# model = BiLstmCRF(lstm_units=lstm_units,
+#                   number_of_labels=data.dimension('label'),
+#                   word_embedding_dim=word_dimensions,
+#                   use_chars=True,
+#                   char_input_dim=data.dimension('chars'),
+#                   char_embedding_dim=char_dimensions,
+#                   max_word_length=max_word_length,
+#                   use_shape=True,
+#                   shape_input_dim=data.dimension('shape'),
+#                   shape_embedding_dim=shape_dimensions)
+#
+# print(model.summary())
+# model.fit(x=input_data, y=[y], epochs=50, batch_size=256, validation_split=0.3)
+# model.save('models/tfmodel')
 
 input_layers = {
     "words": sequence_input("words"),
@@ -57,26 +72,29 @@ shape_embedding = K.layers.Embedding(output_dim=shape_dimensions,
 
 concat = K.layers.concatenate([word_embedding, char_embedding, shape_embedding])
 x = concat
-for i in range(2):
+for i in range(1):
     lstm = K.layers.Bidirectional(K.layers.LSTM(lstm_units, return_sequences=True, recurrent_dropout=0.5))(x)
     x = K.layers.concatenate([concat, lstm])
 
-x = CRF(data.dimension('label'), learn_mode="marginal", name='label')(x)
+#x = CRF(data.dimension('label'), learn_mode="marginal", name='label')(x)
+x = K.layers.LSTM(data.dimension('label'), return_sequences=True)(x)
+x = K.layers.TimeDistributed(K.layers.Dense(data.dimension('label'), activation="softmax"))(x)
 
 model = K.Model(inputs=[input_layers["words"], input_layers["chars"], input_layers["shape"]],
                 outputs=[x])
 
 model.compile(optimizer=K.optimizers.Adam(),
-              loss=crf_loss,
-              metrics=[crf_marginal_accuracy])
+              loss=K.losses.categorical_crossentropy)
+              #loss=crf_loss,
+              #metrics=[crf_marginal_accuracy])
 print(model.summary())
 
 model.fit(x=input_data,
           y=[y],
-          validation_split=0,
+          validation_split=0.3,
           shuffle=True,
           batch_size=100,
-          epochs=20,
+          epochs=1,
           callbacks=[K.callbacks.EarlyStopping(monitor="loss", patience=4)])
 with K.backend.get_session() as sess:
     tf.saved_model.simple_save(

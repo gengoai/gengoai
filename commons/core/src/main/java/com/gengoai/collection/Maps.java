@@ -21,6 +21,8 @@
 
 package com.gengoai.collection;
 
+import com.gengoai.collection.multimap.ArrayListMultimap;
+import com.gengoai.collection.multimap.Multimap;
 import com.gengoai.conversion.Cast;
 import com.gengoai.reflection.Reflect;
 import com.gengoai.reflection.ReflectionException;
@@ -97,6 +99,11 @@ public final class Maps {
       return mapOf(HashMap::new, objects);
    }
 
+   @SafeVarargs
+   public static <K, V> LinkedHashMap<K, V> linkedHashMapOf(@NonNull Map.Entry<? extends K, ? extends V>... objects) {
+      return Cast.as(mapOf(LinkedHashMap::new, objects));
+   }
+
    /**
     * Creates a map of type returned via the givne supplier from the given entries
     *
@@ -115,6 +122,15 @@ public final class Maps {
          map.put(entry.getKey(), entry.getValue());
       }
       return map;
+   }
+
+   @SafeVarargs
+   public static <K, V> Multimap<K, V> multimapOf(@NonNull Map.Entry<K, V>... entries) {
+      Multimap<K, V> mmap = new ArrayListMultimap<>();
+      for (Map.Entry<K, V> entry : entries) {
+         mmap.put(entry.getKey(), entry.getValue());
+      }
+      return mmap;
    }
 
    /**
@@ -194,11 +210,6 @@ public final class Maps {
    @SafeVarargs
    public static <K, V> Map<K, V> sortedMapOf(@NonNull Map.Entry<? extends K, ? extends V>... objects) {
       return mapOf(TreeMap::new, objects);
-   }
-
-   @SafeVarargs
-   public static <K, V> LinkedHashMap<K, V> linkedHashMapOf(@NonNull Map.Entry<? extends K, ? extends V>... objects) {
-      return Cast.as(mapOf(LinkedHashMap::new, objects));
    }
 
    /**

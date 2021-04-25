@@ -183,8 +183,6 @@ public final class nd {
             return Cast.as(DenseInt64NDArray.fromTensor(tensor));
          case STRING:
             return Cast.as(DenseStringNDArray.fromTensor(tensor));
-         case BOOL:
-
       }
       throw new IllegalArgumentException("Cannot create NDArray from Tensor of type '" + tensor.dataType() + "'");
    }

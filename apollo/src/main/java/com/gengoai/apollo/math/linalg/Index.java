@@ -45,6 +45,9 @@ public class Index extends Coordinate implements Copyable<Index> {
       super(axesValues);
    }
 
+
+
+
    /**
     * Copy Constructor
     *
@@ -63,6 +66,20 @@ public class Index extends Coordinate implements Copyable<Index> {
     */
    public static Index index(int... axesValues) {
       return new Index(axesValues);
+   }
+
+   /**
+    * Static Index constructor
+    *
+    * @param axesValues axis values with the last given value starting at <code>Coordinate.MAX_DIMENSIONS - 1</code>
+    * @return the Index
+    */
+   public static Index index(long... axesValues) {
+      int[] intD = new int[axesValues.length];
+      for (int i = 0; i < axesValues.length; i++) {
+         intD[i] = (int) axesValues[i];
+      }
+      return new Index(intD);
    }
 
    /**

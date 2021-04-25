@@ -20,6 +20,7 @@
 package com.gengoai.apollo.math.linalg;
 
 import com.gengoai.Validation;
+import com.gengoai.apollo.data.observation.Classification;
 import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.data.observation.Variable;
 import com.gengoai.apollo.data.observation.VariableSequence;

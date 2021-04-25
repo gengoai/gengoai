@@ -64,12 +64,12 @@
         <!-- 3rd Party Dependencies -->
         <!-- ======================================================================== -->
         <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
+            <groupId>org.tensorflow</groupId>
+            <artifactId>tensorflow</artifactId>
         </dependency>
         <dependency>
             <groupId>org.tensorflow</groupId>
-            <artifactId>tensorflow</artifactId>
+            <artifactId>libtensorflow_jni_gpu</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

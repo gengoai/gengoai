@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.ObjectNDArray;
 import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.StringNDArray;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.tensorflow.DataType;
@@ -34,7 +35,7 @@ import org.tensorflow.Tensor;
  *
  * @author David B. Bracewell
  */
-public class DenseStringNDArray extends ObjectNDArray<String> {
+public class DenseStringNDArray extends StringNDArray {
    private static final long serialVersionUID = 1L;
    private String[][] data;
 
@@ -236,7 +237,7 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
    }
 
    @Override
-   public Tensor<String> toTensor()    {
+   public Tensor<?> toTensor() {
       if (shape().rank() == 0) {
          return Cast.as(Tensor.create(new byte[0][0]));
       }
@@ -253,12 +254,7 @@ public class DenseStringNDArray extends ObjectNDArray<String> {
          byte[][][] b = new byte[(int) shape().rows()][(int) shape().columns()][];
          for (int row = 0; row < shape().rows(); row++) {
             for (int col = 0; col < shape().columns(); col++) {
-               String s = get(row,col);
-               if( s == null){
-                  b[row][col] = new byte[0];
-               } else {
-                  b[row][col] = s.getBytes();
-               }
+               b[row][col] = get(row, col).getBytes();
             }
          }
          return Cast.as(Tensor.create(b));

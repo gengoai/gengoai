@@ -21,14 +21,10 @@ package com.gengoai.apollo.math.linalg.sparse;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gengoai.apollo.math.linalg.ObjectNDArray;
-import com.gengoai.apollo.math.linalg.ObjectNDArrayFactory;
-import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.apollo.math.linalg.*;
 import lombok.NonNull;
 import org.apache.mahout.math.list.LongArrayList;
 import org.apache.mahout.math.map.OpenIntObjectHashMap;
-import org.tensorflow.Tensor;
 
 import java.util.Arrays;
 
@@ -37,7 +33,7 @@ import java.util.Arrays;
  *
  * @author David B. Bracewell
  */
-public class SparseStringNDArray extends ObjectNDArray<String> {
+public class SparseStringNDArray extends StringNDArray {
    private static final long serialVersionUID = 1L;
    private OpenIntObjectHashMap<String>[] data;
 
@@ -59,10 +55,10 @@ public class SparseStringNDArray extends ObjectNDArray<String> {
 
    @JsonCreator
    protected SparseStringNDArray(@JsonProperty("data") String[] data,
-                                @JsonProperty("shape") Shape shape,
-                                @JsonProperty("label") Object label,
-                                @JsonProperty("predicted") Object predicted,
-                                @JsonProperty("weight") double weight) {
+                                 @JsonProperty("shape") Shape shape,
+                                 @JsonProperty("label") Object label,
+                                 @JsonProperty("predicted") Object predicted,
+                                 @JsonProperty("weight") double weight) {
       this(shape, data);
       setLabel(label);
       setPredicted(predicted);
@@ -149,7 +145,7 @@ public class SparseStringNDArray extends ObjectNDArray<String> {
    public ObjectNDArray<String> slice(int index) {
       SparseStringNDArray v = new SparseStringNDArray(Shape.shape(shape().rows(),
                                                                   shape().columns()));
-      if(  data.length == 1) {
+      if (data.length == 1) {
          v.data[0] = data[0];
       } else {
          v.data[0] = data[index];
@@ -187,9 +183,5 @@ public class SparseStringNDArray extends ObjectNDArray<String> {
       return out;
    }
 
-   @Override
-   public Tensor<?> toTensor() {
-      return nd.DSTRING.array(shape(), toArray()).toTensor();
-   }
 
 }//END OF SparseStringNDArray

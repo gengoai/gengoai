@@ -21,6 +21,7 @@ package com.gengoai.apollo.math.linalg;
 
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
+import org.tensorflow.Tensor;
 
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
@@ -32,7 +33,6 @@ import java.util.function.UnaryOperator;
  * functions.</p>
  *
  * @param <T> the type parameter
- *
  * @author David B. Bracewell
  */
 public abstract class ObjectNDArray<T> extends NDArray {
@@ -563,18 +563,6 @@ public abstract class ObjectNDArray<T> extends NDArray {
       return Cast.as(super.min());
    }
 
-
-   @Override
-   public ObjectNDArray<T> padPostWith(Object padValue, @NonNull Shape paddedShape) {
-      ObjectNDArray<T> out = factory().create(paddedShape, NDArrayInitializer.constant(padValue));
-      for (Index index : shape().range()) {
-         if (paddedShape.contains(index)) {
-            out.set(index, get(index));
-         }
-      }
-      return out;
-   }
-
    @Override
    public ObjectNDArray<T> padPost(int axis, int length) {
       return padPost(shape().with(axis, length));
@@ -588,6 +576,17 @@ public abstract class ObjectNDArray<T> extends NDArray {
    @Override
    public ObjectNDArray<T> padPost(@NonNull Shape paddedShape) {
       ObjectNDArray<T> out = factory().zeros(paddedShape);
+      for (Index index : shape().range()) {
+         if (paddedShape.contains(index)) {
+            out.set(index, get(index));
+         }
+      }
+      return out;
+   }
+
+   @Override
+   public ObjectNDArray<T> padPostWith(Object padValue, @NonNull Shape paddedShape) {
+      ObjectNDArray<T> out = factory().create(paddedShape, NDArrayInitializer.constant(padValue));
       for (Index index : shape().range()) {
          if (paddedShape.contains(index)) {
             out.set(index, get(index));
@@ -689,6 +688,11 @@ public abstract class ObjectNDArray<T> extends NDArray {
    }
 
    public abstract T[] toArray();
+
+   @Override
+   public Tensor toTensor() {
+      throw new UnsupportedOperationException();
+   }
 
    @Override
    public ObjectNDArray<T> transpose(@NonNull int... newAxes) {

@@ -10,6 +10,8 @@ import tensorflow_hub as hub
 def sequence_input(name: str = None) -> K.layers.Layer:
     return K.layers.Input(shape=(None,), name=name)
 
+def instance_input(size, name: str = None) -> K.layers.Layer:
+    return K.layers.Input(shape=(size,), name=name)
 
 def char_sequence_input(max_characters_per_word: int, name: str = None) -> K.layers.Layer:
     return K.layers.Input(shape=(None, max_characters_per_word), name=name)
@@ -51,7 +53,7 @@ class CharEmbedding(K.Model):
                                                                        output_dim=int(output_dim / 2),
                                                                        mask_zero=True,
                                                                        input_length=input_length))
-        self.c_lstm = K.layers.TimeDistributed(K.layers.Bidirectional(K.layers.LSTM(output_dim,
+        self.c_lstm = K.layers.TimeDistributed(K.layers.Bidirectional(K.layers.LSTM(int(output_dim / 2),
                                                                                     return_sequences=False,
                                                                                     recurrent_dropout=0.5)))
 

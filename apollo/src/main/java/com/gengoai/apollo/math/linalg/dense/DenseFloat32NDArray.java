@@ -21,10 +21,7 @@ package com.gengoai.apollo.math.linalg.dense;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gengoai.apollo.math.linalg.Index;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.NumericNDArray;
-import com.gengoai.apollo.math.linalg.Shape;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.jblas.DoubleMatrix;
@@ -42,7 +39,7 @@ import static com.gengoai.Validation.checkArgument;
  *
  * @author David B. Bracewell
  */
-public final class DenseFloat32NDArray extends NumericNDArray {
+public final class DenseFloat32NDArray extends FloatNDArray {
    private static final long serialVersionUID = 1L;
    private FloatMatrix[] matrices;
 
@@ -155,22 +152,6 @@ public final class DenseFloat32NDArray extends NumericNDArray {
       return forEachMatrix(value, (a, b) -> a.fill((float) value));
    }
 
-   private NumericNDArray forEachMatrix(DenseFloat32NDArray rhs, BiMatrixConsumer op) {
-      for (Index index : shape().sliceIterator()) {
-         int ti = shape().calculateSliceIndex(index);
-         int ri = rhs.shape().calculateSliceIndex(rhs.shape().broadcast(index));
-         op.accept(matrices[ti], rhs.matrices[ri]);
-      }
-      return this;
-   }
-
-   private NumericNDArray forEachMatrix(double value, MatrixDoubleConsumer op) {
-      for (FloatMatrix matrix : matrices) {
-         op.accept(matrix, value);
-      }
-      return this;
-   }
-
    @Override
    public Float get(int kernel, int channel, int row, int col) {
       return matrices[shape().calculateSliceIndex(kernel, channel)].get(row, col);
@@ -189,29 +170,6 @@ public final class DenseFloat32NDArray extends NumericNDArray {
    @Override
    public boolean isDense() {
       return true;
-   }
-
-   private NumericNDArray mapSlices(UnaryOperator<FloatMatrix> op) {
-      if (matrices.length == 0) {
-         return factory().empty();
-      }
-      FloatMatrix[] fm = new FloatMatrix[matrices.length];
-      for (int i = 0; i < matrices.length; i++) {
-         fm[i] = op.apply(matrices[i]);
-      }
-      return new DenseFloat32NDArray(shape().with(Shape.ROW, fm[0].rows,
-                                                  Shape.COLUMN, fm[0].columns),
-                                     fm);
-   }
-
-   @Override
-   protected NumericNDArray matrixMultiplicationImpl(NumericNDArray rhs) {
-      if (rhs instanceof DenseFloat32NDArray) {
-         DenseFloat32NDArray n = Cast.as(rhs);
-         return new DenseFloat32NDArray(matrices[0].mmul(n.matrices[0]));
-      } else {
-         return new DenseFloat32NDArray(matrices[0].mmul(rhs.toFloatMatrix()[0]));
-      }
    }
 
    @Override
@@ -322,6 +280,45 @@ public final class DenseFloat32NDArray extends NumericNDArray {
    @Override
    public FloatMatrix[] toFloatMatrix() {
       return matrices;
+   }
+
+   private NumericNDArray forEachMatrix(DenseFloat32NDArray rhs, BiMatrixConsumer op) {
+      for (Index index : shape().sliceIterator()) {
+         int ti = shape().calculateSliceIndex(index);
+         int ri = rhs.shape().calculateSliceIndex(rhs.shape().broadcast(index));
+         op.accept(matrices[ti], rhs.matrices[ri]);
+      }
+      return this;
+   }
+
+   private NumericNDArray forEachMatrix(double value, MatrixDoubleConsumer op) {
+      for (FloatMatrix matrix : matrices) {
+         op.accept(matrix, value);
+      }
+      return this;
+   }
+
+   private NumericNDArray mapSlices(UnaryOperator<FloatMatrix> op) {
+      if (matrices.length == 0) {
+         return factory().empty();
+      }
+      FloatMatrix[] fm = new FloatMatrix[matrices.length];
+      for (int i = 0; i < matrices.length; i++) {
+         fm[i] = op.apply(matrices[i]);
+      }
+      return new DenseFloat32NDArray(shape().with(Shape.ROW, fm[0].rows,
+                                                  Shape.COLUMN, fm[0].columns),
+                                     fm);
+   }
+
+   @Override
+   protected NumericNDArray matrixMultiplicationImpl(NumericNDArray rhs) {
+      if (rhs instanceof DenseFloat32NDArray) {
+         DenseFloat32NDArray n = Cast.as(rhs);
+         return new DenseFloat32NDArray(matrices[0].mmul(n.matrices[0]));
+      } else {
+         return new DenseFloat32NDArray(matrices[0].mmul(rhs.toFloatMatrix()[0]));
+      }
    }
 
    @FunctionalInterface
