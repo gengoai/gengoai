@@ -1,6 +1,6 @@
 BASE_DIR=$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)")
 OUT_DIR="$BASE_DIR/target/hermes/"
-BUILD_DIR="$BASE_DIR/distribution"
+BUILD_DIR="$BASE_DIR/release/distribution"
 
 # Make sure everything is building and tests pass
 mvn clean install || exit
@@ -9,7 +9,7 @@ mvn clean install || exit
 mkdir -p "$OUT_DIR" &>/dev/null
 
 #Copy over the scripts and resources
-cp "${BASE_DIR:?}/scripts/hermes" "$OUT_DIR" || exit
+cp "${BUILD_DIR}/scripts/"* "$OUT_DIR" || exit
 cp -r "${BUILD_DIR}/resources/"* "$OUT_DIR" || exit
 cd "$BUILD_DIR" || exit
 

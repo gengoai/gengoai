@@ -1,8 +1,9 @@
 package com.gengoai.apollo.math.linalg.decompose;
 
-import com.gengoai.apollo.math.linalg.DenseMatrix;
-import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.apollo.math.linalg.Shape;
 import com.gengoai.apollo.math.linalg.SparkLinearAlgebra;
+import com.gengoai.apollo.math.linalg.nd;
 import org.jblas.FloatMatrix;
 import org.jblas.Singular;
 
@@ -60,33 +61,31 @@ public class SingularValueDecomposition extends Decomposition {
    }
 
    @Override
-   protected NDArray[] onMatrix(NDArray input) {
-      if(distributed) {
+   protected NumericNDArray[] onMatrix(NumericNDArray input) {
+      if (distributed) {
          return SparkLinearAlgebra.svd(input,
                                        K <= 0
-                                       ? input.columns()
-                                       : K);
+                                             ? input.shape().columns()
+                                             : K);
       }
 
-      NDArray[] result;
-      FloatMatrix[] r;
-      if(sparse) {
-         r = Singular.sparseSVD(input.toFloatMatrix()[0]);
+      FloatMatrix[] usvT;
+      if (sparse) {
+         usvT = Singular.sparseSVD(input.toFloatMatrix()[0]);
       } else {
-         r = Singular.fullSVD(input.toFloatMatrix()[0]);
-      }
-      result = new NDArray[]{
-            new DenseMatrix(r[0]),
-            new DenseMatrix(FloatMatrix.diag(r[1])),
-            new DenseMatrix(r[2]),
-      };
-
-      if(K > 0) {
-         result[0] = result[0].getSubMatrix(0, result[0].rows(), 0, K);
-         result[1] = result[1].getSubMatrix(0, K, 0, K);
-         result[2] = result[2].getSubMatrix(0, result[2].rows(), 0, K);
+         usvT = Singular.fullSVD(input.toFloatMatrix()[0]);
       }
 
-      return result;
+      var u = nd.DFLOAT32.array(usvT[0]);
+      var s = nd.DFLOAT32.array(FloatMatrix.diag(usvT[1]));
+      var vT = nd.DFLOAT32.array(usvT[2]);
+
+      if (K > 0) {
+         u = u.get(u.shape().with(Shape.COLUMN, K).range()).reshape(Shape.shape(u.rows(),K));
+         s = s.get(s.shape().with(Shape.ROW,K, Shape.COLUMN, K).range()).reshape(Shape.shape(K,K));
+         vT = vT.get(vT.shape().with(Shape.ROW, K).range()).reshape(Shape.shape(K, vT.columns()));
+      }
+
+      return new NumericNDArray[]{u,s,vT};
    }
 }// END OF SingularValueDecomposition

@@ -1,20 +1,21 @@
 #!/bin/bash
 
 LANG=en
-HERMES_RESOURCE_DIR=/data/hermes/
-CORPUS_DIR=/data/corpora/hermes_data
+HERMES_RESOURCE_DIR=/Volumes/ikdata/hermes/
+CORPUS_DIR=/Volumes/ikdata/corpora/hermes_data
 
 declare -A models
 models[POS]="--model=$HERMES_RESOURCE_DIR/$LANG/models/pos/"
 models[PHRASE_CHUNK]="--model=$HERMES_RESOURCE_DIR/$LANG/models/phrase_chunk"
-models[ENTITY]="--model=$HERMES_RESOURCE_DIR/$LANG/models/ner"
-models[TF_ENTITY]="--model=$HERMES_RESOURCE_DIR/$LANG/models/ner"
+models[ENTITY]="--model=$HERMES_RESOURCE_DIR/$LANG/models/ner-crf"
+models[TF_ENTITY]="--model=$HERMES_RESOURCE_DIR/$LANG/models/ner-reslstm"
 
 declare -A tagger
 tagger[POS]="--tagger=EN_POS"
 tagger[PHRASE_CHUNK]="--tagger=PHRASE_CHUNK"
 tagger[ENTITY]="--tagger=ENTITY"
 tagger[TF_ENTITY]="--tagger=TF_ENTITY"
+
 
 declare -A production
 production[POS]="--df=pos_opl::/$CORPUS_DIR/$LANG/part_of_speech/combined.txt"
@@ -41,23 +42,23 @@ ACTION=$(echo "${2:-PRODUCTION}" | tr a-z A-Z)
 case $ACTION in
 
 PRODUCTION)
-  cd tools && jexec TaggerApp TRAIN ${production[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
+  cd hermes/tools && jrun TaggerApp TRAIN ${production[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
   ;;
 
 EVALUATE)
-  cd tools || exit
-  jexec TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
-  jexec TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
+  cd hermes/tools || exit
+  jrun TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
+  jrun TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
   ;;
 
 TEST)
-  cd tools || exit
-  jexec TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
+  cd hermes/tools || exit
+  jrun TaggerApp TEST ${testd[$model]} ${tagger[$model]} ${models[$model]} --printCM=true "${@:2}"
   ;;
 
 TRAIN)
-  cd tools || exit
-  jexec TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
+  cd hermes/tools || exit
+  jrun TaggerApp TRAIN ${train[$model]} ${tagger[$model]} ${models[$model]} "${@:2}"
   ;;
 
 *)

@@ -18,26 +18,30 @@
      ~ specific language governing permissions and limitations
      ~ under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.gengoai</groupId>
     <artifactId>gengoai</artifactId>
-    <version>1.1</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Parent POM for the GengoAI Mono repo.</description>
-    <url>http://www.gengoai.com</url>
+    <url>https://www.gengoai.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
+        <javacpp.platform.extension>-mkl</javacpp.platform.extension>
+        <tensorflow.version>1.15.0</tensorflow.version>
+        <lucene.version>8.1.1</lucene.version>
     </properties>
 
     <scm>
-        <connection>scm:git:git@gengoai.github.com:gengoai/mono-repo.git</connection>
-        <developerConnection>scm:git:git@gengoai.github.com:gengoai/mono-repo.git</developerConnection>
-        <url>git@gengoai.github.com:gengoai/mono-repo.git</url>
+        <connection>scm:git:git@github.com:gengoai/gengoai.git</connection>
+        <developerConnection>scm:git:git@github.com:gengoai/gengoai.git</developerConnection>
+        <url>git@github.com:gengoai/gengoai.git</url>
         <tag>gengoai-1.1</tag>
     </scm>
 
@@ -46,65 +50,69 @@
             <name>David B. Bracewell</name>
             <email>david@gengoai.com</email>
             <organization>GengoAI</organization>
-            <organizationUrl>http://www.gengoai.com</organizationUrl>
+            <organizationUrl>https://www.gengoai.com</organizationUrl>
         </developer>
     </developers>
 
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
             <comments>A business-friendly OSS license</comments>
         </license>
     </licenses>
 
     <modules>
-        <module>mango</module>
-        <module>mango-swing</module>
+        <module>commons/core</module>
+        <module>commons/swing</module>
+        <module>commons/documentdb</module>
+        <module>commons/sql</module>
+        <module>commons/graph</module>
+        <module>commons/spark</module>
+        <module>commons/lucene</module>
+        <module>release/installer</module>
         <module>apollo</module>
-        <module>hermes</module>
-        <module>hermes-examples</module>
-        <module>hermes-tools</module>
-        <module>hermes-wordnet</module>
-        <module>installer</module>
+        <module>hermes/hermes</module>
+        <module>hermes/examples</module>
+        <module>hermes/tools</module>
+        <module>hermes/wordnet</module>
+        <module>hermes/lang/hermes-chinese</module>
     </modules>
+
+    <dependencies>
+        <!-- ======================================================================== -->
+        <!-- Compile Time 3rd Party Dependencies -->
+        <!-- ======================================================================== -->
+
+        <dependency>
+            <groupId>org.kohsuke.metainf-services</groupId>
+            <artifactId>metainf-services</artifactId>
+            <version>1.8</version>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.20</version>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
     <dependencyManagement>
         <dependencies>
-            <!-- ======================================================================== -->
-            <!-- GengoAI Dependencies -->
-            <!-- ======================================================================== -->
-
             <dependency>
                 <groupId>com.gengoai</groupId>
-                <artifactId>hermes</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>hermes-tools</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>hermes-wordnet</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>mango</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>mango-swing</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>apollo</artifactId>
-                <version>${project.version}</version>
+                <artifactId>jcrfsuite</artifactId>
+                <version>0.6.1</version>
             </dependency>
 
 
@@ -113,37 +121,74 @@
             <!-- ======================================================================== -->
 
             <dependency>
+                <groupId>org.tensorflow</groupId>
+                <artifactId>tensorflow</artifactId>
+                <version>${tensorflow.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.tensorflow</groupId>
+                <artifactId>libtensorflow_jni_gpu</artifactId>
+                <version>${tensorflow.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.9</version>
+            </dependency>
+            <dependency>
+                <groupId>org.deeplearning4j</groupId>
+                <artifactId>deeplearning4j-core</artifactId>
+                <version>1.0.0-beta7</version>
+            </dependency>
+            <dependency>
+                <groupId>org.nd4j</groupId>
+                <artifactId>nd4j-native-platform</artifactId>
+                <version>1.0.0-beta7</version>
+            </dependency>
+            <dependency>
+                <groupId>org.deeplearning4j</groupId>
+                <artifactId>deeplearning4j-nlp</artifactId>
+                <version>1.0.0-beta7</version>
+            </dependency>
+            <dependency>
+                <groupId>com.huaban</groupId>
+                <artifactId>jieba-analysis</artifactId>
+                <version>1.0.2</version>
+            </dependency>
+            <dependency>
                 <groupId>com.ibm.icu</groupId>
                 <artifactId>icu4j</artifactId>
-                <version>63.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-mllib_2.12</artifactId>
-                <version>3.0.1</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-core_2.12</artifactId>
-                <version>3.0.1</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-sql_2.12</artifactId>
-                <version>3.0.1</version>
-                <scope>provided</scope>
+                <version>67.1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-core</artifactId>
-                <version>8.1.0</version>
+                <version>${lucene.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-common</artifactId>
-                <version>8.1.0</version>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-join</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-queries</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-facet</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-queryparser</artifactId>
+                <version>${lucene.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.maltparser</groupId>
@@ -159,7 +204,7 @@
             <dependency>
                 <groupId>org.xerial</groupId>
                 <artifactId>sqlite-jdbc</artifactId>
-                <version>3.32.3</version>
+                <version>3.32.3.2</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -169,6 +214,11 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-jdk8</artifactId>
+                <version>2.10.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
                 <version>2.10.0</version>
             </dependency>
             <dependency>
@@ -184,7 +234,7 @@
             <dependency>
                 <groupId>com.formdev</groupId>
                 <artifactId>flatlaf</artifactId>
-                <version>0.26</version>
+                <version>0.43</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -195,16 +245,6 @@
                 <groupId>org.tukaani</groupId>
                 <artifactId>xz</artifactId>
                 <version>1.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.tensorflow</groupId>
-                <artifactId>tensorflow</artifactId>
-                <version>1.15.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.tensorflow</groupId>
-                <artifactId>libtensorflow_jni_gpu</artifactId>
-                <version>1.15.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -236,41 +276,13 @@
                 <artifactId>liblinear</artifactId>
                 <version>2.30</version>
             </dependency>
-            <dependency>
-                <groupId>com.gengoai</groupId>
-                <artifactId>jcrfsuite</artifactId>
-                <version>0.6.1</version>
-            </dependency>
+
             <dependency>
                 <groupId>org.jblas</groupId>
                 <artifactId>jblas</artifactId>
-                <version>1.2.4</version>
+                <version>1.2.5</version>
             </dependency>
 
-            <!-- ======================================================================== -->
-            <!-- Compile Time 3rd Party Dependencies -->
-            <!-- ======================================================================== -->
-
-            <dependency>
-                <groupId>org.kohsuke.metainf-services</groupId>
-                <artifactId>metainf-services</artifactId>
-                <version>1.8</version>
-                <optional>true</optional>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.13.1</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.18.10</version>
-                <optional>true</optional>
-                <scope>provided</scope>
-            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -296,6 +308,7 @@
                         </executions>
                     </plugin>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>3.2.0</version>
                         <executions>
@@ -308,10 +321,11 @@
                         </executions>
                     </plugin>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.1.1</version>
+                        <version>3.2.0</version>
                         <configuration>
-                            <additionalparam>-Xdoclint:none</additionalparam>
+                            <doclint>none</doclint>
                             <failOnError>false</failOnError>
                             <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
                         </configuration>
@@ -331,6 +345,38 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.6</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

@@ -1,5 +1,6 @@
 package com.gengoai.apollo.math.linalg;
 
+import lombok.NonNull;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.apache.commons.math3.exception.OutOfRangeException;
 import org.apache.commons.math3.linear.AbstractRealMatrix;
@@ -8,20 +9,20 @@ import org.apache.commons.math3.linear.RealMatrix;
 import java.io.Serializable;
 
 /**
- * Wraps an NDArray treating it as a RealMatrix for use in Apache Commons Math algorithms.
+ * <p>Wraps an NDArray treating it as a RealMatrix for use in Apache Commons Math algorithms.</p>
  *
  * @author David B. Bracewell
  */
-public class RealMatrixWrapper extends AbstractRealMatrix implements Serializable {
+class RealMatrixWrapper extends AbstractRealMatrix implements Serializable {
    private static final long serialVersionUID = 1L;
-   private final NDArray array;
+   private final NumericNDArray array;
 
    /**
-    * Instantiates a new Real matrix wrapper.
+    * Instantiates a new RealMatrixWrapper.
     *
-    * @param array the array
+    * @param array the NDArray to wrap
     */
-   public RealMatrixWrapper(NDArray array) {
+   public RealMatrixWrapper(@NonNull NumericNDArray array) {
       this.array = array;
    }
 
@@ -32,22 +33,22 @@ public class RealMatrixWrapper extends AbstractRealMatrix implements Serializabl
 
    @Override
    public RealMatrix createMatrix(int i, int i1) throws NotStrictlyPositiveException {
-      return new RealMatrixWrapper(NDArrayFactory.ND.array(i, i1));
+      return new RealMatrixWrapper(array.factory().zeros(i, i1));
    }
 
    @Override
    public int getColumnDimension() {
-      return array.columns();
+      return array.shape().columns();
    }
 
    @Override
    public double getEntry(int i, int i1) throws OutOfRangeException {
-      return array.get(i, i1);
+      return array.getDouble(i, i1);
    }
 
    @Override
    public int getRowDimension() {
-      return array.rows();
+      return array.shape().rows();
    }
 
    @Override
