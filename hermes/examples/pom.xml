@@ -49,6 +49,8 @@
             <groupId>com.gengoai</groupId>
             <artifactId>commons-spark</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
