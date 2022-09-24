@@ -66,7 +66,7 @@ public class TaggerApp extends HermesCLI {
          Collections.unmodifiableMap(hashMapOf($("PHRASE_CHUNK", new PhraseChunkTagger()),
                                                $("ENTITY", new EntityTagger()),
 //                                               $("TF_ENTITY", new NeuralNERModel()),
-                                               $("EN_POS", new ENPOSTagger())));
+                                               $("EN_POS", new ENPOSTagger()))); 
 
    @Option(description = "The specification or location the corpus or document collection to process.",
          name = "docFormat",

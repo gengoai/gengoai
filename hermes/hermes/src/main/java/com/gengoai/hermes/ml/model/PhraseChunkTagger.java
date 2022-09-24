@@ -23,6 +23,8 @@ import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.feature.FeatureExtractor;
 import com.gengoai.apollo.feature.Featurizer;
 import com.gengoai.apollo.model.sequence.Crf;
+import com.gengoai.apollo.model.sequence.MalletCrf;
+import com.gengoai.apollo.model.sequence.MalletSequenceValidator;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
@@ -44,8 +46,11 @@ public class PhraseChunkTagger extends IOBTagger {
                                    .tokenSequence(Datum.DEFAULT_INPUT, getFeaturizer())
                                    .build(),
             Types.PHRASE_CHUNK,
-            new Crf(p -> {
-               p.minFeatureFreq.set(5);
+            new MalletCrf(p -> {
+               //p.minFeatureFreq.set(5);
+               p.fullyConnected.set(true);
+               p.validator.set(MalletSequenceValidator.BASIC_IOB_VALIDATOR);
+               p.maxIterations.set(500);
             }));
    }
 

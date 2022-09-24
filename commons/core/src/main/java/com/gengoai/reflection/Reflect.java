@@ -42,6 +42,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.gengoai.LogUtils.logFinest;
+import static com.gengoai.LogUtils.logInfo;
 
 /**
  * Wrapper around an object or class allowing easy access to reflection operations.
