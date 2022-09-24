@@ -249,7 +249,6 @@ public class DenseStringNDArray extends StringNDArray {
          }
          return Cast.as(Tensor.create(b));
       }
-
       if (shape().rank() == 2) {
          byte[][][] b = new byte[(int) shape().rows()][(int) shape().columns()][];
          for (int row = 0; row < shape().rows(); row++) {

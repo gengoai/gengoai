@@ -55,7 +55,7 @@ public class ElmoTokenEmbedding extends TFModel implements HStringMLModel, Conte
    public ElmoTokenEmbedding() {
       super(
             List.of(
-                  TFInputVar.sequence(TOKENS, NoOptEncoder.INSTANCE, -1),
+                  TFInputVar.sequence(TOKENS, NoOptEncoder.INSTANCE, -1,1),
                   TFInputVar.var(SEQUENCE_LENGTH, SEQUENCE_LENGTH, NoOptEncoder.INSTANCE)
             ),
             List.of(

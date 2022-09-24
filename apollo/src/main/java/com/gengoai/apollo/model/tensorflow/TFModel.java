@@ -197,7 +197,6 @@ public class TFModel implements Model, Serializable {
 
    protected final List<Datum> processBatch(DataSet batch) {
       final var batchTransformed = createTransformer().transform(batch).collect();
-
       Session.Runner runner = getTensorFlowModel().session().runner();
 
       //Setup the inputs to feed
