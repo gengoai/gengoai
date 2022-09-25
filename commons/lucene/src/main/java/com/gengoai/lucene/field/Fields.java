@@ -56,6 +56,7 @@ public final class Fields {
    public static final FieldType LOWER_STRING = new TransformedStringFieldType(StringFunctions.LOWER_CASE);
    public static final FieldType LOCAL_DATE = new LocalDateFieldType();
    public static final FieldType OFFSET_DATE_TIME = new OffsetDateTimeFieldType();
+   public static final FieldType EMBEDDING = new EmbeddingFieldType();
    public static final FieldType BLOB = new BlobFieldType(Object.class);
    public static final String STORED_FIELD_SUFFIX = ".stored";
 
