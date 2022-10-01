@@ -82,6 +82,14 @@ public class TFModel implements Model, Serializable {
    private int inferenceBatchSize = 1;
 
 
+   public Collection<TFInputVar> getInputVars(){
+      return Collections.unmodifiableCollection(inputs.values());
+   }
+
+   public Collection<TFOutputVar> getOutputVars(){
+      return Collections.unmodifiableCollection(outputs.values());
+   }
+
    /**
     * Instantiates a new Tf model.
     *

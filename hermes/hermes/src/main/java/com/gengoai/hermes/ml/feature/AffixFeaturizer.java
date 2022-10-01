@@ -50,6 +50,11 @@ public class AffixFeaturizer extends Featurizer<HString> {
    }
 
    @Override
+   public String toString(){
+      return "AffixFeaturizer(prefix=" + prefixSize + ", suffix=" + suffixSize + ")";
+   }
+
+   @Override
    public List<Variable> applyAsFeatures(HString word) {
       List<Variable> features = new ArrayList<>();
       for(int i = 1; word.length() > i && i <= suffixSize; i++) {

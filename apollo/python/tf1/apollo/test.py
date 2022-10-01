@@ -22,7 +22,7 @@ import tensorflow as tf
 from apollo.data import ApolloSQLDataSet, pad
 from apollo.layers import sequence_input, char_sequence_input, GloveEmbedding, CharEmbedding
 
-data = ApolloSQLDataSet("data/snli.db")
+data = ApolloSQLDataSet("../data/snli.db")
 
 max_sequence_length = 128
 max_word_length = 10
@@ -50,7 +50,7 @@ input_layers = {
 }
 
 w_embedding = GloveEmbedding(dimension=word_dimensions,
-                             glove_path="embeddings/glove%s.npy",
+                             glove_path="../embeddings/glove%s.npy",
                              mask_zero=True)
 w_translate = K.layers.TimeDistributed(K.layers.Dense(word_dimensions, activation='relu'), name="word_embedding")
 
@@ -98,7 +98,7 @@ model.fit(x=input_data,
           validation_split=0.2,
           batch_size=512,
           epochs=20,
-          callbacks=[K.callbacks.EarlyStopping(monitor='val_loss')])
+          callbacks=[K.callbacks.EarlyStopping(monitor='val_loss',patience=3,restore_best_weights=True)])
 # callbacks=[es])
 
 # words = sequence_input("words")

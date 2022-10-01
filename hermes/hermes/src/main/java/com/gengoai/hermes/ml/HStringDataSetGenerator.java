@@ -28,6 +28,7 @@ import com.gengoai.function.SerializableFunction;
 import com.gengoai.hermes.AnnotationType;
 import com.gengoai.hermes.HString;
 import com.gengoai.stream.MStream;
+import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.Collection;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
  */
 public class HStringDataSetGenerator extends DataSetGenerator<HString> {
    private static final long serialVersionUID = 1L;
+   @Getter
    private final AnnotationType datumAnnotationType;
 
    /**

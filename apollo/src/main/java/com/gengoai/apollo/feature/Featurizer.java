@@ -143,8 +143,8 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
    }
 
    /**
-    * Creates a feature extractor that returns a single feature of the form <code>featurePrefix=function.apply(input)</code>.
-    * If the function returns a null value no feature is generated.
+    * Creates a feature extractor that returns a single feature of the form
+    * <code>featurePrefix=function.apply(input)</code>. If the function returns a null value no feature is generated.
     *
     * @param <I>           the type parameter
     * @param featurePrefix the feature prefix
@@ -157,7 +157,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
    }
 
    public static <I> Featurizer<I> valueFeaturizer(@NonNull SerializableFunction<? super I, String> function) {
-      return new ValueExtractor<>(null, function);
+      return new ValueExtractor<>(function.toString(), function);
    }
 
    /**
@@ -249,6 +249,11 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
       private final Variable feature;
       private final SerializablePredicate<? super I> predicate;
 
+      @Override
+      public String toString() {
+         return feature.getName();
+      }
+
       private PredicateExtractor(String featureName, SerializablePredicate<? super I> predicate) {
          this.predicate = predicate;
          this.feature = Variable.binary(featureName);
@@ -284,6 +289,11 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
       private static final long serialVersionUID = 1L;
       private final String featurePrefix;
       private final SerializableFunction<? super I, String> function;
+
+      @Override
+      public String toString() {
+         return featurePrefix;
+      }
 
       private ValueExtractor(String featurePrefix, SerializableFunction<? super I, String> function) {
          this.function = function;

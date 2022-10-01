@@ -30,6 +30,7 @@ import lombok.Value;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -80,6 +81,10 @@ public class DataSetGenerator<T> implements SerializableFunction<T, Datum> {
       this.generators.addAll(generators);
    }
 
+   public List<GeneratorInfo<T>> getGenerators(){
+      return Collections.unmodifiableList(generators);
+   }
+
    @Override
    public Datum apply(T input) {
       Datum datum = new Datum();
@@ -116,7 +121,7 @@ public class DataSetGenerator<T> implements SerializableFunction<T, Datum> {
    }
 
    @Value
-   protected static class GeneratorInfo<T> implements Serializable {
+   public static class GeneratorInfo<T> implements Serializable {
       private static final long serialVersionUID = 1L;
       @NonNull String name;
       @NonNull ObservationExtractor<? super T> extractor;

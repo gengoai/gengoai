@@ -58,6 +58,8 @@ public final class Fields {
    public static final FieldType OFFSET_DATE_TIME = new OffsetDateTimeFieldType();
    public static final FieldType EMBEDDING = new EmbeddingFieldType();
    public static final FieldType BLOB = new BlobFieldType(Object.class);
+
+   public static final FieldType LAT_LONG = new LatLongFieldType();
    public static final String STORED_FIELD_SUFFIX = ".stored";
 
    private static final Map<Class<?>, FieldType> classToFieldType = new ConcurrentHashMap<>();

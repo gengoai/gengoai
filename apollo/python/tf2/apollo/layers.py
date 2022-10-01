@@ -77,9 +77,10 @@ class GloveEmbedding(K.layers.Embedding):
 
     def __init__(self,
                  dimension: int,
-                 glove_path: str = "../embeddings/glove%s.npy",
+                 glove_path: str = "./embeddings/glove%s.npy",
                  trainable: bool = False,
                  mask_zero: bool = True):
+        print(glove_path)
         weights = GloveEmbedding.__get_weights(dimension, glove_path)
         super(GloveEmbedding, self).__init__(input_dim=weights.shape[0],
                                              output_dim=weights.shape[1],

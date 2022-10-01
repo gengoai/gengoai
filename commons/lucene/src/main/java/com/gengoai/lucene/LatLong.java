@@ -17,20 +17,16 @@
  * under the License.
  */
 
-package com.gengoai.documentdb.lucene;
+package com.gengoai.lucene;
 
-import com.gengoai.documentdb.DocumentDBException;
-import org.apache.lucene.search.IndexSearcher;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.io.IOException;
-
-/**
- * <p></p>
- *
- * @author David B. Bracewell
- */
-interface SearchFunction<T> {
-
-   T apply(IndexSearcher searcher) throws IOException, DocumentDBException;
-
-}
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class LatLong {
+   private long latitude;
+   private long longitude;
+}//END OF LatLong

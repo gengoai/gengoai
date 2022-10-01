@@ -31,6 +31,7 @@ import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.NoOptEncoder;
 import com.gengoai.collection.Sets;
 import com.gengoai.conversion.Cast;
+import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -66,6 +67,7 @@ public class PipelineModel implements Model {
    private static final long serialVersionUID = 1L;
    private Model model;
    @NonNull
+   @Getter
    private Transformer transformer;
 
    private PipelineModel(@NonNull Model model, @NonNull Transformer preprocessors) {
