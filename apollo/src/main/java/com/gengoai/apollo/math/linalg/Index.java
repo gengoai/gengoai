@@ -156,7 +156,7 @@ public class Index extends Coordinate implements Copyable<Index> {
    /**
     * <p>Gets the value of the channel axis.</p>
     *
-    * @return the the value of the channel axis
+    * @return the value of the channel axis
     */
    public int getChannel() {
       return get(Shape.CHANNEL);
@@ -165,7 +165,7 @@ public class Index extends Coordinate implements Copyable<Index> {
    /**
     * <p>Gets the value of the column axis.</p>
     *
-    * @return the the value of the column axis
+    * @return the value of the column axis
     */
    public int getColumn() {
       return get(Shape.COLUMN);
@@ -174,7 +174,7 @@ public class Index extends Coordinate implements Copyable<Index> {
    /**
     * <p>Gets the value of the kernel axis.</p>
     *
-    * @return the the value of the kernel axis
+    * @return the value of the kernel axis
     */
    public int getKernel() {
       return get(Shape.KERNEL);
@@ -183,7 +183,7 @@ public class Index extends Coordinate implements Copyable<Index> {
    /**
     * <p>Gets the value of the row axis.</p>
     *
-    * @return the the value of the row axis
+    * @return the value of the row axis
     */
    public int getRow() {
       return get(Shape.ROW);

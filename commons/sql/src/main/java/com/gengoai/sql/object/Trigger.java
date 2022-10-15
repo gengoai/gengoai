@@ -31,6 +31,7 @@ import java.io.Serializable;
  */
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @ToString
 @Builder
 @Data
@@ -49,7 +50,9 @@ public class Trigger extends SQLObject {
                    @NonNull TriggerTime when,
                    @NonNull SQLDMLOperation operation,
                    @NonNull SQLElement table,
-                   @NonNull UpdateStatement updateStatement, boolean isRowLevelTrigger, SQLElement where) {
+                   @NonNull UpdateStatement updateStatement,
+                   boolean isRowLevelTrigger,
+                   SQLElement where) {
       super(name);
       this.isTemporary = isTemporary;
       this.when = when;

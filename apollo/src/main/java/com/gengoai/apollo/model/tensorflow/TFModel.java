@@ -48,9 +48,7 @@ import com.gengoai.reflection.ReflectionException;
 import com.gengoai.stream.MStream;
 import com.gengoai.stream.StreamingContext;
 import com.gengoai.stream.Streams;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.java.Log;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
@@ -68,6 +66,7 @@ import java.util.stream.Stream;
  * its shape, and associated Encoder.</p>
  */
 @Log
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TFModel implements Model, Serializable {
    private static final long serialVersionUID = 1L;
    private final Map<String, TFInputVar> inputs = new HashMap<>();

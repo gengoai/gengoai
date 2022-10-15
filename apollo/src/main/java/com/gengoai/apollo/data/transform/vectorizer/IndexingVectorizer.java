@@ -88,6 +88,9 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
 
    @Override
    public NumericNDArray transform(Observation observation) {
+      if( observation == null ){
+         return null;
+      }
       if (observation instanceof Variable) {
          return transform(observation, null);
       } else if (observation instanceof VariableCollection) {
