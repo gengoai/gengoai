@@ -8,3 +8,11 @@
 /apollo/python/.keras
 **/__pycache__/**
 /apollo/python/.vscode/
+**/target/**
+*.iml
+.project
+.idea/
+/apollo/python/tf1/models/
+Sandbox.java
+*.releaseBackup
+*.h5
