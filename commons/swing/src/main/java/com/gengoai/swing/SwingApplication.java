@@ -20,6 +20,7 @@
 package com.gengoai.swing;
 
 
+import com.gengoai.SystemInfo;
 import com.gengoai.application.Application;
 import com.gengoai.conversion.Cast;
 import com.gengoai.io.Resources;
@@ -78,16 +79,18 @@ public abstract class SwingApplication extends Application {
       this.mainWindowFrame = new JFrame();
    }
 
-   public void setIcon(Image icon){
+   public void setIcon(Image icon) {
       mainWindowFrame.setIconImage(icon);
-      final Taskbar taskbar = Taskbar.getTaskbar();
-      try {
-         //set icon for mac os (and other systems which do support this method)
-         taskbar.setIconImage(icon);
-      } catch (final UnsupportedOperationException e) {
-         System.out.println("The os does not support: 'taskbar.setIconImage'");
-      } catch (final SecurityException e) {
-         System.out.println("There was a security exception for: 'taskbar.setIconImage'");
+      if (SystemInfo.isMacOs()) {
+         final Taskbar taskbar = Taskbar.getTaskbar();
+         try {
+            //set icon for mac os (and other systems which do support this method)
+            taskbar.setIconImage(icon);
+         } catch (final UnsupportedOperationException e) {
+            System.out.println("The os does not support: 'taskbar.setIconImage'");
+         } catch (final SecurityException e) {
+            System.out.println("There was a security exception for: 'taskbar.setIconImage'");
+         }
       }
    }
 

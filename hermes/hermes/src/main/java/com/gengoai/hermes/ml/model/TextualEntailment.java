@@ -158,6 +158,42 @@ public class TextualEntailment implements Serializable {
       dataSet.persist(Resources.from("/Volumes/Work/gengoai/mono-repo/apollo/python/data/snli_data.db"));
    }
 
+   public void test(Resource snliData) throws Exception {
+      int i = 0;
+      List<Datum> data = new ArrayList<>();
+      for (String line : snliData.readLines()) {
+         JsonEntry e = Json.parse(line);
+         String label = e.getStringProperty("gold_label");
+         if (!label2Id.containsKey(label)) {
+            continue;
+         }
+         String sentence1 = e.getStringProperty("sentence1");
+         String sentence2 = e.getStringProperty("sentence2");
+         com.gengoai.hermes.Document d1 = com.gengoai.hermes.Document.create(sentence1);
+         com.gengoai.hermes.Document d2 = com.gengoai.hermes.Document.create(sentence2);
+         d1.annotate(Types.TOKEN);
+         d2.annotate(Types.TOKEN);
+         data.add(Datum.of(
+               $("w1", words(d1)),
+               $("w2", words(d2)),
+               $("label", nd.DFLOAT32.scalar(label2Id.get(label)))));
+         i++;
+         System.out.println(i);
+      }
+      DataSet dataSet = new InMemoryDataSet(data);
+      Map<String, Encoder> vars = this.model.getInputVars().stream().collect(Collectors.toMap(TFInputVar::getName,
+                                                                                              TFInputVar::getEncoder));
+      Vectorizer<?>[] vs = {
+            new IndexingVectorizer(vars.get("w1")).source("w1"),
+            new IndexingVectorizer(vars.get("w1")).source("w2")
+      };
+      for (Vectorizer<?> v : vs) {
+         dataSet = v.transform(dataSet);
+      }
+      ModelIO.save(model, Resources.from("/Users/ik/snl"));
+      dataSet.persist(Resources.from("/Volumes/Work/gengoai/mono-repo/apollo/python/data/snli_test.db"));
+   }
+
 
    public static void main(String[] args) throws Exception {
       TextualEntailment textualEntailment = new TextualEntailment();
@@ -177,6 +213,7 @@ public class TextualEntailment implements Serializable {
       System.out.println(textualEntailment.predict(d1, d2));
 
 
+//      textualEntailment.test(Resources.from("/Users/ik/Downloads/snli_1.0/snli_1.0_test.jsonl"));
 //      textualEntailment.train(Resources.from("/Users/ik/Downloads/snli_1.0/snli_1.0_train.jsonl"));
    }
 
