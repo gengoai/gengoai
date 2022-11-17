@@ -25,7 +25,7 @@ from keras_self_attention import SeqSelfAttention
 from apollo.data import ApolloSQLDataSet, pad
 from apollo.layers import sequence_input, char_sequence_input, GloveEmbedding, CharEmbedding
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 data = ApolloSQLDataSet('../data/entity2.db')
 
