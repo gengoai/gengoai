@@ -60,29 +60,27 @@ import static java.util.stream.Collectors.toList;
 
 public class TextualEntailment implements Serializable {
    private static final long serialVersionUID = 1L;
-   private static final int MAX_WORD_LENGTH = 20;
-   public static final Map<String, Integer> label2Id = Map.of("neutral", 0,
-                                                              "contradiction", 1,
+   public static final Map<String, Integer> label2Id = Map.of("neutral", 1,
+                                                              "contradiction", 0,
                                                               "entailment", 2);
-   public static final Map<Integer, String> id2Label = Map.of(0, "neutral",
-                                                              1, "contradiction",
+   public static final Map<Integer, String> id2Label = Map.of(0, "contradiction",
+                                                              1, "neutral",
                                                               2, "entailment");
    private TFModel model;
 
 
    public static class TEModel extends TFModel {
-      static final Encoder glove = fixedEncoder(WORD_LIST.locate("glove", Language.ENGLISH)
+      static final Encoder glove = fixedEncoder(WORD_LIST.locate("glove_large", Language.ENGLISH)
                                                          .orElseThrow(),
                                                 "--UNKNOWN--");
-      static final Encoder chars = new IndexEncoder("--UNKNOWN--", List.of("--PAD--"));
-      static final Encoder shape = new IndexEncoder("--UNKNOWN--", List.of("--PAD--"));
+
 
       /**
        * Instantiates a new Tf model.
        */
       public TEModel() {
-         super(List.of(TFInputVar.sequence("w1", glove, 512),
-                       TFInputVar.sequence("w2", glove, 512)),
+         super(List.of(TFInputVar.sequence("input_1", glove, 42),
+                       TFInputVar.sequence("input_2", glove, 42)),
                List.of(TFOutputVar.classification("output", "dense_5/Softmax:0")));
       }
    }
@@ -97,27 +95,7 @@ public class TextualEntailment implements Serializable {
    protected static VariableSequence words(com.gengoai.hermes.HString d) {
       VariableSequence vl = new VariableSequence();
       for (Annotation token : d.tokens()) {
-         vl.add(Variable.binary(token.toLowerCase()));
-      }
-      return vl;
-   }
-
-   protected static VariableSequence shape(com.gengoai.hermes.HString d) {
-      VariableSequence vl = new VariableSequence();
-      for (Annotation token : d.tokens()) {
-         vl.add(Features.WordShape.applyAsFeatures(token).get(0));
-      }
-      return vl;
-   }
-
-   protected static VariableCollectionSequence chars(HString hString) {
-      VariableCollectionSequence vl = new VariableCollectionSequence();
-      for (Annotation token : hString.tokens()) {
-         vl.add(new VariableList((Featurizer.<HString>booleanFeaturizer(h -> h.charNGrams(1)
-                                                                              .stream()
-                                                                              .map(HString::toLowerCase)
-                                                                              .collect(toList()))
-                                            .applyAsFeatures(token))));
+         vl.add(Variable.binary(token.toString()));
       }
       return vl;
    }
@@ -142,6 +120,7 @@ public class TextualEntailment implements Serializable {
                $("w2", words(d2)),
                $("label", nd.DFLOAT32.scalar(label2Id.get(label)))));
          i++;
+         if (i > 1) break;
          System.out.println(i);
       }
       DataSet dataSet = new InMemoryDataSet(data);
@@ -154,8 +133,8 @@ public class TextualEntailment implements Serializable {
       for (Vectorizer<?> v : vs) {
          dataSet = v.transform(dataSet);
       }
-      ModelIO.save(model, Resources.from("/Users/ik/snl"));
-      dataSet.persist(Resources.from("/Volumes/Work/gengoai/mono-repo/apollo/python/data/snli_data.db"));
+      ModelIO.save(model, Resources.from("/home/ik/snl"));
+      dataSet.persist(Resources.from("/home/ik/snl/snli_data.db"));
    }
 
    public void test(Resource snliData) throws Exception {
@@ -190,18 +169,17 @@ public class TextualEntailment implements Serializable {
       for (Vectorizer<?> v : vs) {
          dataSet = v.transform(dataSet);
       }
-      ModelIO.save(model, Resources.from("/Users/ik/snl"));
-      dataSet.persist(Resources.from("/Volumes/Work/gengoai/mono-repo/apollo/python/data/snli_test.db"));
+      ModelIO.save(model, Resources.from("/home/ik/snl"));
+      dataSet.persist(Resources.from("/homes/ik/snl/snli_test.db"));
    }
 
 
    public static void main(String[] args) throws Exception {
       TextualEntailment textualEntailment = new TextualEntailment();
-      textualEntailment.model = ModelIO.load("/Users/ik/snl/");
+      textualEntailment.model = ModelIO.load("/home/ik/snl/");
 
-      Document d1 = Document.create("A man is surfing in a bodysuit in beautiful water");
-      Document d2 = Document.create("A man in a business suit is heading to the office");
-
+      Document d1 = Document.create("A man is alive");
+      Document d2 = Document.create("A man is dead");
       d1.annotate(Types.SENTENCE, Types.TOKEN);
       d2.annotate(Types.SENTENCE, Types.TOKEN);
       System.out.println(textualEntailment.predict(d1, d2));
@@ -214,12 +192,12 @@ public class TextualEntailment implements Serializable {
 
 
 //      textualEntailment.test(Resources.from("/Users/ik/Downloads/snli_1.0/snli_1.0_test.jsonl"));
-//      textualEntailment.train(Resources.from("/Users/ik/Downloads/snli_1.0/snli_1.0_train.jsonl"));
+//      textualEntailment.train(Resources.from("/home/ik/snli_1.0/snli_1.0_train.jsonl"));
    }
 
 
    public String predict(HString hypothesis, HString statement) {
-      Datum datum = model.transform(Datum.of($("w1", words(hypothesis)), $("w2", words(statement))));
+      Datum datum = model.transform(Datum.of($("input_1", words(hypothesis)), $("input_2", words(statement))));
       var result = datum.get("output").asNDArray();
       System.out.println(result);
       return id2Label.get(result.argMax().get(-1));

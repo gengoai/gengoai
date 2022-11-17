@@ -375,12 +375,6 @@ public interface Resource {
     * @throws IOException Something went wrong reading from the resource
     */
    default MStream<String> lines() throws IOException {
-      if (asFile().isPresent()) {
-         final Path file = asFile().orElseThrow().toPath();
-         guessCharset();
-         return LocalStreamingContext.INSTANCE.stream(
-               Streams.reusableStream(Unchecked.supplier(() -> Files.lines(file, getCharset()))));
-      }
       return LocalStreamingContext.INSTANCE.stream(
             Streams.reusableStream(Unchecked.supplier(() -> new BufferedReader(reader()).lines()))
       );

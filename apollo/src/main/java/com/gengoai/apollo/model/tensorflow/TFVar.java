@@ -128,7 +128,7 @@ public abstract class TFVar implements Serializable {
 
       for (int i = 0; i < data.size(); i++) {
          NDArray ni = data.get(i).get(name).asNDArray();
-         if (batch.shape().isScalar() || batch.shape().isVector()) {
+         if (batch.shape().isScalar()){
             batch.set(i, ni.scalar());
          } else if (batch.shape().channels() > 0) {
             batch.setSlice(i, ni.padPostWith(padValue,

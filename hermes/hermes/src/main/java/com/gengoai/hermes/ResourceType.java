@@ -58,7 +58,7 @@ public enum ResourceType {
          return Cast.as(LexiconManager.getLexicon(resourceName, language));
       }
    },
-   WORD_LIST("lexicons", ".txt", ".dic") {
+   WORD_LIST("lexicons", ".txt", ".dic", ".txt.gz", ".dic.gz") {
       @Override
       public <T> T load(@NonNull String configKey, @NonNull String resourceName, @NonNull Language language) {
          try {
