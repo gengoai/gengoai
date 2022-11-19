@@ -24,8 +24,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
-import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
+import org.tensorflow.proto.framework.DataType;
+import org.tensorflow.types.TInt64;
 
 import static com.gengoai.Validation.checkArgument;
 
@@ -78,19 +79,11 @@ public class DenseInt64NDArray extends Int64NDArray {
     * @param tensor the tensor
     * @return the converted Tensor
     */
-   public static NumericNDArray fromTensor(@NonNull Tensor<?> tensor) {
-      if (tensor.dataType() == DataType.INT64) {
-         Shape s = Shape.shape(tensor.shape());
-         switch (s.rank()) {
-            case 1:
-               return nd.DINT64.array(tensor.copyTo(new long[s.columns()]));
-            case 2:
-               return nd.DINT64.array(tensor.copyTo(new long[s.rows()][s.columns()]));
-            case 3:
-               return nd.DINT64.array(tensor.copyTo(new long[s.channels()][s.rows()][s.columns()]));
-            default:
-               return nd.DINT64.array(tensor.copyTo(new long[s.kernels()][s.channels()][s.rows()][s.columns()]));
-         }
+   public static NumericNDArray fromTensor(@NonNull Tensor tensor) {
+      if (tensor.dataType() == DataType.DT_INT64) {
+         TInt64 ndarray = Cast.as(tensor);
+         NumericNDArray rval = nd.DINT64.zeros(Shape.shape(tensor.shape().asArray()));
+         ndarray.scalars().forEachIndexed((coords, value) -> rval.set(coords, value.getLong()));
       }
       throw new IllegalArgumentException("Unsupported type '" + tensor.dataType().name() + "'");
    }

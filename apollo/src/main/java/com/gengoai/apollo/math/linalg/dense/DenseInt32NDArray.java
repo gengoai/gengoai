@@ -24,8 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
-import org.tensorflow.DataType;
-import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.IntNdArray;
 
 import static com.gengoai.Validation.checkArgument;
 
@@ -75,21 +74,10 @@ public class DenseInt32NDArray extends Int32NDArray {
     * @param tensor the tensor
     * @return the converted Tensor
     */
-   public static NumericNDArray fromTensor(@NonNull Tensor<?> tensor) {
-      if (tensor.dataType() == DataType.INT32) {
-         Shape s = Shape.shape(tensor.shape());
-         switch (s.rank()) {
-            case 1:
-               return nd.DINT32.array(tensor.copyTo(new int[s.columns()]));
-            case 2:
-               return nd.DINT32.array(tensor.copyTo(new int[s.rows()][s.columns()]));
-            case 3:
-               return nd.DINT32.array(tensor.copyTo(new int[s.channels()][s.rows()][s.columns()]));
-            default:
-               return nd.DINT32.array(tensor.copyTo(new int[s.kernels()][s.channels()][s.rows()][s.columns()]));
-         }
-      }
-      throw new IllegalArgumentException("Unsupported type '" + tensor.dataType().name() + "'");
+   public static NumericNDArray fromTensor(@NonNull IntNdArray ndarray) {
+      NumericNDArray rval = nd.DINT32.zeros(Shape.shape(ndarray.shape().asArray()));
+      ndarray.scalars().forEachIndexed((coords, value) -> rval.set(coords, value.getInt()));
+      return rval;
    }
 
    @Override
@@ -116,10 +104,10 @@ public class DenseInt32NDArray extends Int32NDArray {
    public NumericNDArray reshape(@NonNull Shape newShape) {
       if (shape().length() != newShape.length()) {
          throw new IllegalArgumentException("Cannot change the total number of elements from " +
-                                                  shape().length() +
-                                                  " to " +
-                                                  newShape.length() +
-                                                  " on reshape");
+                                            shape().length() +
+                                            " to " +
+                                            newShape.length() +
+                                            " on reshape");
       }
       int[][] temp = new int[newShape.sliceLength()][newShape.matrixLength()];
       for (int i = 0; i < length(); i++) {

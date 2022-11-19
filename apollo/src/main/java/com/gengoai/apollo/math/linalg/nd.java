@@ -171,18 +171,18 @@ public final class nd {
     * @param tensor the TensorFlow Tensor
     * @return the NDArray
     */
-   public static NDArray convertTensor(@NonNull Tensor<?> tensor) {
+   public static NDArray convertTensor(@NonNull Tensor tensor) {
       switch (tensor.dataType()) {
-         case FLOAT:
-            return Cast.as(DenseFloat32NDArray.fromTensor(tensor));
-         case DOUBLE:
-            return Cast.as(DenseFloat64NDArray.fromTensor(tensor));
-         case INT32:
-            return Cast.as(DenseInt32NDArray.fromTensor(tensor));
-         case INT64:
-            return Cast.as(DenseInt64NDArray.fromTensor(tensor));
-         case STRING:
-            return Cast.as(DenseStringNDArray.fromTensor(tensor));
+         case DT_FLOAT:
+            return Cast.as(DenseFloat32NDArray.fromTensor(Cast.as(tensor)));
+         case DT_DOUBLE:
+            return Cast.as(DenseFloat64NDArray.fromTensor(Cast.as(tensor)));
+         case DT_INT32:
+            return Cast.as(DenseInt32NDArray.fromTensor(Cast.as(tensor)));
+         case DT_INT64:
+            return Cast.as(DenseInt64NDArray.fromTensor(Cast.as(tensor)));
+         case DT_STRING:
+            return Cast.as(DenseStringNDArray.fromTensor(Cast.as(tensor)));
       }
       throw new IllegalArgumentException("Cannot create NDArray from Tensor of type '" + tensor.dataType() + "'");
    }

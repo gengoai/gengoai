@@ -207,7 +207,7 @@ public class TFModel implements Model, Serializable {
       Session.Runner runner = getTensorFlowModel().session().runner();
 
       //Setup the inputs to feed
-      Map<String, Tensor<?>> tensors = new HashMap<>();
+      Map<String, Tensor> tensors = new HashMap<>();
       //"serving_default_" +
       inputs.forEach((name, spec) -> tensors.put(spec.getServingName(), spec.toTensor(batchTransformed)));
       tensors.forEach(runner::feed);
@@ -216,7 +216,7 @@ public class TFModel implements Model, Serializable {
       outputs.forEach((mo, to) -> runner.fetch(to.getServingName()));
 
       List<NumericNDArray> results = new ArrayList<>();
-      for (Tensor<?> tensor : runner.run()) {
+      for (Tensor tensor : runner.run()) {
          results.add(Cast.as(nd.convertTensor(tensor)));
          tensor.close();
       }

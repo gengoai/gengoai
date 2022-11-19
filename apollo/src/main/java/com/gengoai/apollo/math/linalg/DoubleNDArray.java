@@ -20,6 +20,7 @@
 package com.gengoai.apollo.math.linalg;
 
 import org.tensorflow.Tensor;
+import org.tensorflow.types.TFloat64;
 
 /**
  * <p></p>
@@ -31,10 +32,13 @@ public abstract class DoubleNDArray extends NumericNDArray {
       super(shape);
    }
 
-
    @Override
-   public Tensor<?> toTensor() {
-      return Tensor.create(arrayForTensor());
+   public Tensor toTensor() {
+      TFloat64 float64 = TFloat64.tensorOf(org.tensorflow.ndarray.Shape.of(shape().toLongArray()));
+      float64.scalars().forEachIndexed((c, v) -> {
+         v.setDouble(getDouble(Index.index(c)));
+      });
+      return float64;
    }
 
 }//END OF DoubleNDArray

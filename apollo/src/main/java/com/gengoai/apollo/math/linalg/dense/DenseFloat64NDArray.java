@@ -27,8 +27,9 @@ import lombok.NonNull;
 import org.jblas.DoubleMatrix;
 import org.jblas.FloatMatrix;
 import org.jblas.MatrixFunctions;
-import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
+import org.tensorflow.proto.framework.DataType;
+import org.tensorflow.types.TFloat64;
 
 import java.util.function.UnaryOperator;
 
@@ -122,20 +123,11 @@ public final class DenseFloat64NDArray extends DoubleNDArray {
     * @param tensor the tensor
     * @return the converted Tensor
     */
-   public static NumericNDArray fromTensor(@NonNull Tensor<?> tensor) {
-      if (tensor.dataType() == DataType.DOUBLE) {
-         Shape s = Shape.shape(tensor.shape());
-         switch (s.rank()) {
-            case 1:
-               return new DenseFloat64NDArray(tensor.copyTo(new double[s.columns()]));
-            case 2:
-               return new DenseFloat64NDArray(tensor.copyTo(new double[s.rows()][s.columns()]));
-            case 3:
-               return new DenseFloat64NDArray(tensor.copyTo(new double[s.channels()][s.rows()][s.columns()]));
-            default:
-               return new DenseFloat64NDArray(tensor.copyTo(new double[s.kernels()][s.channels()][s.rows()][s
-                     .columns()]));
-         }
+   public static NumericNDArray fromTensor(@NonNull Tensor tensor) {
+      if (tensor.dataType() == DataType.DT_DOUBLE) {
+         TFloat64 ndarray = Cast.as(tensor);
+         NumericNDArray rval = nd.DFLOAT64.zeros(Shape.shape(tensor.shape().asArray()));
+         ndarray.scalars().forEachIndexed((coords, value) -> rval.set(coords, value.getDouble()));
       }
       throw new IllegalArgumentException("Unsupported type '" + tensor.dataType().name() + "'");
    }
@@ -177,9 +169,9 @@ public final class DenseFloat64NDArray extends DoubleNDArray {
    public NumericNDArray reshape(@NonNull Shape newShape) {
       if (shape().length() != newShape.length()) {
          throw new IllegalArgumentException("Cannot change total length from " +
-                                                  shape().length() +
-                                                  " to " +
-                                                  newShape.length());
+                                            shape().length() +
+                                            " to " +
+                                            newShape.length());
       }
       DoubleMatrix[] temp = new DoubleMatrix[newShape.sliceLength()];
       for (int i = 0; i < temp.length; i++) {

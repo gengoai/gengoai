@@ -20,6 +20,7 @@
 package com.gengoai.apollo.math.linalg;
 
 import org.tensorflow.Tensor;
+import org.tensorflow.types.TInt32;
 
 /**
  * <p></p>
@@ -32,7 +33,11 @@ public abstract class Int32NDArray extends NumericNDArray {
    }
 
    @Override
-   public Tensor<?> toTensor() {
-      return Tensor.create(arrayForTensor());
+   public Tensor toTensor() {
+      TInt32 tensor = TInt32.tensorOf(org.tensorflow.ndarray.Shape.of(shape().toLongArray()));
+      tensor.scalars().forEachIndexed((c, v) -> {
+         v.setInt((int) getDouble(Index.index(c)));
+      });
+      return tensor;
    }
 }//END OF Int32NDArray

@@ -27,8 +27,8 @@ import lombok.NonNull;
 import org.jblas.DoubleMatrix;
 import org.jblas.FloatMatrix;
 import org.jblas.MatrixFunctions;
-import org.tensorflow.DataType;
-import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.FloatNdArray;
+import org.tensorflow.types.TFloat32;
 
 import java.util.function.UnaryOperator;
 
@@ -117,25 +117,13 @@ public final class DenseFloat32NDArray extends FloatNDArray {
    /**
     * <p>Converts TensorFlow Tenors for Float type to DenseFloat32NDArray.</p>
     *
-    * @param tensor the tensor
+    * @param ndarray the tensor
     * @return the converted Tensor
     */
-   public static NumericNDArray fromTensor(@NonNull Tensor<?> tensor) {
-      if (tensor.dataType() == DataType.FLOAT) {
-         Shape s = Shape.shape(tensor.shape());
-         switch (s.rank()) {
-            case 1:
-               return new DenseFloat32NDArray(tensor.copyTo(new float[s.columns()]));
-            case 2:
-               return new DenseFloat32NDArray(tensor.copyTo(new float[s.rows()][s.columns()]));
-            case 3:
-               return new DenseFloat32NDArray(tensor.copyTo(new float[s.channels()][s.rows()][s.columns()]));
-            default:
-               return new DenseFloat32NDArray(tensor.copyTo(new float[s.kernels()][s.channels()][s.rows()][s
-                     .columns()]));
-         }
-      }
-      throw new IllegalArgumentException("Unsupported type '" + tensor.dataType().name() + "'");
+   public static NumericNDArray fromTensor(@NonNull FloatNdArray ndarray) {
+      NumericNDArray rval = nd.DFLOAT32.zeros(Shape.shape(ndarray.shape().asArray()));
+      ndarray.scalars().forEachIndexed((coords, value) -> rval.set(coords, value.getFloat()));
+      return rval;
    }
 
    @Override
@@ -176,9 +164,9 @@ public final class DenseFloat32NDArray extends FloatNDArray {
    public NumericNDArray reshape(@NonNull Shape newShape) {
       if (shape().length() != newShape.length()) {
          throw new IllegalArgumentException("Cannot change total length from " +
-                                                  shape().length() +
-                                                  " to " +
-                                                  newShape.length());
+                                            shape().length() +
+                                            " to " +
+                                            newShape.length());
       }
       FloatMatrix[] temp = new FloatMatrix[newShape.sliceLength()];
       for (int i = 0; i < temp.length; i++) {

@@ -33,6 +33,7 @@
 
     <properties>
         <kotlin.version>1.4.30</kotlin.version>
+        <javacpp.platform.extension></javacpp.platform.extension>
     </properties>
 
 
@@ -67,7 +68,14 @@
         <!-- ======================================================================== -->
         <dependency>
             <groupId>org.tensorflow</groupId>
-            <artifactId>tensorflow</artifactId>
+            <artifactId>tensorflow-core-api</artifactId>
+            <version>0.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.tensorflow</groupId>
+            <artifactId>tensorflow-core-api</artifactId>
+            <version>0.4.2</version>
+            <classifier>linux-x86_64${javacpp.platform.extension}</classifier>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

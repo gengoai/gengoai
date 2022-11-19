@@ -2473,6 +2473,20 @@ public abstract class NumericNDArray extends NDArray {
       return set(shape().calculateIndex(index), value);
    }
 
+   public NumericNDArray set(long[] coords, double value) {
+      switch (coords.length) {
+         case 1:
+            return set(coords[0], value);
+         case 2:
+            return set((int) coords[0], (int) coords[1], value);
+         case 3:
+            return set((int) coords[0], (int) coords[1], (int) coords[2], value);
+         case 4:
+            return set((int) coords[0], (int) coords[1], (int) coords[2], (int) coords[3], value);
+      }
+      throw new IllegalArgumentException("Invalid Coordinates Only Rank up to 4 supported");
+   }
+
    /**
     * <p>Sets the value of the element at the given row and column (assumes kernel and channel are 0).</p>
     *
@@ -3161,7 +3175,7 @@ public abstract class NumericNDArray extends NDArray {
             for (int rhsColumn = 0; rhsColumn < rhs.shape().columns(); rhsColumn++) {
                out.set(row, rhsColumn,
                        out.getDouble(row, rhsColumn) +
-                             getDouble(row, lhsColumn) * rhs.getDouble(lhsColumn, rhsColumn));
+                       getDouble(row, lhsColumn) * rhs.getDouble(lhsColumn, rhsColumn));
             }
          }
       }

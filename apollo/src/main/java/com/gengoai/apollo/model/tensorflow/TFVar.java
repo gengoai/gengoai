@@ -109,7 +109,7 @@ public abstract class TFVar implements Serializable {
     * @param data the data to convert
     * @return the tensor
     */
-   public final Tensor<?> toTensor(@NonNull List<Datum> data) {
+   public final Tensor toTensor(@NonNull List<Datum> data) {
       boolean isScalar = data.get(0).get(name).asNDArray().shape().isScalar();
       int[] batch_shape;
 

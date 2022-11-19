@@ -342,9 +342,9 @@ public abstract class NDArray implements Serializable, Observation {
     */
    public <T> ObjectNDArray<T> asObjectNDArray(@NonNull Class<T> dType) {
       throw new IllegalStateException("Cannot cast this NDArray of type '" +
-                                            getType().getSimpleName()
-                                            + "' as an ObjectNDArray of type '" +
-                                            dType.getSimpleName() + "'");
+                                      getType().getSimpleName()
+                                      + "' as an ObjectNDArray of type '" +
+                                      dType.getSimpleName() + "'");
    }
 
    /**
@@ -929,6 +929,20 @@ public abstract class NDArray implements Serializable, Observation {
       return set(index.getKernel(), index.getChannel(), index.getRow(), index.getColumn(), value);
    }
 
+   public NDArray set(long[] coords, Object value) {
+      switch (coords.length) {
+         case 1:
+            return set(coords[0], value);
+         case 2:
+            return set((int) coords[0], (int) coords[1], value);
+         case 3:
+            return set((int) coords[0], (int) coords[1], (int) coords[2], value);
+         case 4:
+            return set((int) coords[0], (int) coords[1], (int) coords[2], (int) coords[3], value);
+      }
+      throw new IllegalArgumentException("Invalid Coordinates Only Rank up to 4 supported");
+   }
+
    /**
     * <p>Sets the values along the given <code>axis</code> at the given <code>position</code> to those in the given
     * NDArray.</p>
@@ -1134,7 +1148,7 @@ public abstract class NDArray implements Serializable, Observation {
     *
     * @return the tensor
     */
-   public abstract Tensor<?> toTensor();
+   public abstract Tensor toTensor();
 
 
    /**

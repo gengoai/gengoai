@@ -21,14 +21,12 @@ package com.gengoai.apollo.math.linalg.dense;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.ObjectNDArray;
-import com.gengoai.apollo.math.linalg.Shape;
-import com.gengoai.apollo.math.linalg.StringNDArray;
+import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
-import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
+import org.tensorflow.proto.framework.DataType;
+import org.tensorflow.types.TString;
 
 /**
  * <p>Dense NDArray representing String values.</p>
@@ -128,19 +126,11 @@ public class DenseStringNDArray extends StringNDArray {
     * @param tensor the tensor
     * @return the converted Tensor
     */
-   public static ObjectNDArray<String> fromTensor(@NonNull Tensor<?> tensor) {
-      if (tensor.dataType() == DataType.STRING) {
-         long[] s = tensor.shape();
-         switch (s.length) {
-            case 1:
-               return new DenseStringNDArray(tensor.copyTo(new byte[(int) s[0]][]));
-            case 2:
-               return new DenseStringNDArray(tensor.copyTo(new byte[(int) s[0]][(int) s[1]][]));
-            case 3:
-               return new DenseStringNDArray(tensor.copyTo(new byte[(int) s[0]][(int) s[1]][(int) s[2]][]));
-            case 4:
-               return new DenseStringNDArray(tensor.copyTo(new byte[(int) s[0]][(int) s[1]][(int) s[2]][(int) s[3]][]));
-         }
+   public static ObjectNDArray<String> fromTensor(@NonNull Tensor tensor) {
+      if (tensor.dataType() == DataType.DT_STRING) {
+         TString ndarray = Cast.as(tensor);
+         ObjectNDArray<String> rval = nd.DSTRING.zeros(Shape.shape(tensor.shape().asArray()));
+         ndarray.scalars().forEachIndexed((coords, value) -> rval.set(coords, value.getObject()));
       }
       throw new IllegalArgumentException("Unsupported type '" + tensor.dataType().name() + "'");
    }
@@ -164,9 +154,9 @@ public class DenseStringNDArray extends StringNDArray {
    public ObjectNDArray<String> reshape(@NonNull Shape newShape) {
       if (shape().length() != newShape.length()) {
          throw new IllegalArgumentException("Cannot change total length from " +
-                                                  shape().length() +
-                                                  " to " +
-                                                  newShape.length());
+                                            shape().length() +
+                                            " to " +
+                                            newShape.length());
       }
       String[][] temp = new String[newShape.sliceLength()][newShape.matrixLength()];
       for (int i = 0; i < length(); i++) {
@@ -237,55 +227,55 @@ public class DenseStringNDArray extends StringNDArray {
    }
 
    @Override
-   public Tensor<?> toTensor() {
-      if (shape().rank() == 0) {
-         return Cast.as(Tensor.create(new byte[0][0]));
-      }
-
-      if (shape().rank() == 1) {
-         byte[][] b = new byte[(int) length()][];
-         for (int i = 0; i < data[0].length; i++) {
-            b[i] = data[0][i].getBytes();
-         }
-         return Cast.as(Tensor.create(b));
-      }
-      if (shape().rank() == 2) {
-         byte[][][] b = new byte[(int) shape().rows()][(int) shape().columns()][];
-         for (int row = 0; row < shape().rows(); row++) {
-            for (int col = 0; col < shape().columns(); col++) {
-               b[row][col] = get(row, col).getBytes();
-            }
-         }
-         return Cast.as(Tensor.create(b));
-      }
-
-      if (shape().rank() == 3) {
-         byte[][][][] b = new byte[(int) shape().channels()][(int) shape().rows()][(int) shape().columns()][];
-         for (int channel = 0; channel < shape().channels(); channel++) {
-            for (int row = 0; row < shape().rows(); row++) {
-               for (int col = 0; col < shape().columns(); col++) {
-                  b[channel][row][col] = data[channel][shape().calculateMatrixIndex(row, col)].getBytes();
-               }
-            }
-         }
-         return Cast.as(Tensor.create(b));
-      }
-
-      if (shape().rank() == 4) {
-         byte[][][][][] b = new byte[(int) shape().kernels()][(int) shape().channels()][(int) shape()
-               .rows()][(int) shape().columns()][];
-         for (int kernel = 0; kernel < shape().kernels(); kernel++) {
-            for (int channel = 0; channel < shape().channels(); channel++) {
-               int sliceIndex = shape().calculateSliceIndex(kernel, channel);
-               for (int row = 0; row < shape().rows(); row++) {
-                  for (int col = 0; col < shape().columns(); col++) {
-                     b[kernel][channel][row][col] = data[sliceIndex][shape().calculateMatrixIndex(row, col)].getBytes();
-                  }
-               }
-            }
-         }
-         return Cast.as(Tensor.create(b));
-      }
+   public Tensor toTensor() {
+//      if (shape().rank() == 0) {
+//         return Cast.as(Tensor.create(new byte[0][0]));
+//      }
+//
+//      if (shape().rank() == 1) {
+//         byte[][] b = new byte[(int) length()][];
+//         for (int i = 0; i < data[0].length; i++) {
+//            b[i] = data[0][i].getBytes();
+//         }
+//         return Cast.as(Tensor.create(b));
+//      }
+//      if (shape().rank() == 2) {
+//         byte[][][] b = new byte[(int) shape().rows()][(int) shape().columns()][];
+//         for (int row = 0; row < shape().rows(); row++) {
+//            for (int col = 0; col < shape().columns(); col++) {
+//               b[row][col] = get(row, col).getBytes();
+//            }
+//         }
+//         return Cast.as(Tensor.create(b));
+//      }
+//
+//      if (shape().rank() == 3) {
+//         byte[][][][] b = new byte[(int) shape().channels()][(int) shape().rows()][(int) shape().columns()][];
+//         for (int channel = 0; channel < shape().channels(); channel++) {
+//            for (int row = 0; row < shape().rows(); row++) {
+//               for (int col = 0; col < shape().columns(); col++) {
+//                  b[channel][row][col] = data[channel][shape().calculateMatrixIndex(row, col)].getBytes();
+//               }
+//            }
+//         }
+//         return Cast.as(Tensor.create(b));
+//      }
+//
+//      if (shape().rank() == 4) {
+//         byte[][][][][] b = new byte[(int) shape().kernels()][(int) shape().channels()][(int) shape()
+//               .rows()][(int) shape().columns()][];
+//         for (int kernel = 0; kernel < shape().kernels(); kernel++) {
+//            for (int channel = 0; channel < shape().channels(); channel++) {
+//               int sliceIndex = shape().calculateSliceIndex(kernel, channel);
+//               for (int row = 0; row < shape().rows(); row++) {
+//                  for (int col = 0; col < shape().columns(); col++) {
+//                     b[kernel][channel][row][col] = data[sliceIndex][shape().calculateMatrixIndex(row, col)].getBytes();
+//                  }
+//               }
+//            }
+//         }
+//         return Cast.as(Tensor.create(b));
+//      }
 
       throw new IllegalStateException();
    }

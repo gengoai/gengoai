@@ -33,7 +33,7 @@ public abstract class StringNDArray extends ObjectNDArray<String> {
    }
 
    @Override
-   public Tensor<?> toTensor() {
+   public Tensor toTensor() {
       return nd.DSTRING.array(shape(), toArray()).toTensor();
    }
 }//END OF StringNDArray
