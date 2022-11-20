@@ -76,13 +76,13 @@ public class NeuralNERModel extends TFSequenceLabeler {
       Config.initialize("CNN", args, "com.gengoai.hermes");
 
 
-      if (Math.random() > 0) {
-         Config.setProperty("tfmodel.data", "/Users/ik/prj/gengoai/mono-repo/python/data/entity2.db");
+      if (Math.random() < 0) {
+         Config.setProperty("tfmodel.data", "/home/ik/prj/gengoai/mono-repo/apollo/python/data/entity2.db");
          NeuralNERModel ner = new NeuralNERModel();
-         DocumentCollection ontonotes = Corpus.open("/Volumes/ikdata/corpora/hermes_data/ontonotes_ner")
+         DocumentCollection ontonotes = Corpus.open("/shared/Data/corpora/hermes_data/ontonotes_ner")
                                               .query("$SPLIT='TRAIN'");
          ner.estimate(ontonotes);
-         ModelIO.save(ner, Resources.from("/Volumes/ikdata/hermes/en/models/ner-tmp"));
+         ModelIO.save(ner, Resources.from("/home/ik/hermes/en/models/ner-reslstm"));
       } else {
 //         NeuralNERModel2 ner = ModelIO.load(Resources.from("/Volumes/ikdata-1/hermes/en/models/ner-tmp/"));
 //         DocumentCollection ontonotes = Corpus.open("/Users/ik/hermes_data/ontonotes_ner")
@@ -99,19 +99,6 @@ public class NeuralNERModel extends TFSequenceLabeler {
          for (Annotation annotation : document.annotations(Types.ENTITY)) {
             System.out.println(annotation.toSGML(true));
          }
-//
-//         ElmoTokenEmbedding elmo = ResourceType.MODEL.load("elmo", Language.ENGLISH);
-//         elmo.apply(document);
-//         for (Annotation token : document.tokens()) {
-//            System.out.println(token + ": " + token.embedding());
-//         }
-//
-//         UniversalSentenceEncoder use = ResourceType.MODEL.load("sentence_encoder", Language.ENGLISH);
-//         use.apply(document);
-//         for (Annotation sentence : document.sentences()) {
-//            System.out.println(sentence);
-//            System.out.println(sentence.embedding());
-//         }
 
       }
    }

@@ -65,7 +65,7 @@ public class TaggerApp extends HermesCLI {
    private static final Map<String, HStringMLModel> NAMED_TRAINERS =
          Collections.unmodifiableMap(hashMapOf($("PHRASE_CHUNK", new PhraseChunkTagger()),
                                                $("ENTITY", new EntityTagger()),
-//                                               $("TF_ENTITY", new NeuralNERModel()),
+                                               $("TF_ENTITY", new NeuralNERModel()),
                                                $("EN_POS", new ENPOSTagger()))); 
 
    @Option(description = "The specification or location the corpus or document collection to process.",
