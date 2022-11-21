@@ -28,19 +28,10 @@ import com.gengoai.apollo.model.FitParameters;
 import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.application.Option;
 import com.gengoai.config.Config;
-import com.gengoai.conversion.Cast;
-import com.gengoai.conversion.Converter;
-import com.gengoai.conversion.TypeConversionException;
 import com.gengoai.hermes.corpus.DocumentCollection;
-import com.gengoai.hermes.en.ENPOSTagger;
-import com.gengoai.hermes.ml.model.EntityTagger;
 import com.gengoai.hermes.ml.HStringMLModel;
-import com.gengoai.hermes.ml.model.NeuralNERModel;
-import com.gengoai.hermes.ml.model.PhraseChunkTagger;
-import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.io.resource.StringResource;
-import com.gengoai.parsing.ParseException;
 import com.gengoai.string.Strings;
 import lombok.extern.java.Log;
 
@@ -49,69 +40,37 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Map;
 
 import static com.gengoai.LogUtils.logInfo;
-import static com.gengoai.Validation.checkState;
-import static com.gengoai.Validation.notNullOrBlank;
-import static com.gengoai.collection.Maps.hashMapOf;
-import static com.gengoai.tuple.Tuples.$;
 
 @Log
 public class TaggerApp extends HermesCLI {
    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
-   private static final Map<String, HStringMLModel> NAMED_TRAINERS =
-         Collections.unmodifiableMap(hashMapOf($("PHRASE_CHUNK", new PhraseChunkTagger()),
-                                               $("ENTITY", new EntityTagger()),
-                                               $("TF_ENTITY", new NeuralNERModel()),
-                                               $("EN_POS", new ENPOSTagger()))); 
+   @Option(description = "The task to execute (specified in your custom .conf file)")
+   private String task;
+   @Option(description = "The action to perform (TRAIN|TEST|PRODUCTION|PARAMETERS)")
+   private String action;
 
-   @Option(description = "The specification or location the corpus or document collection to process.",
-         name = "docFormat",
-         aliases = {"df"})
-   private String documentCollectionSpec;
-   @Option(description = "The name or class of the sequence tagger to train.",
-         aliases = {"tagger"},
-         required = true)
-   private String sequenceTagger;
-   @Option(description = "Location to save model",
-         aliases = {"m"})
-   private String model;
    @Option(description = "Print a Confusion Matrix",
          defaultValue = "false")
    private boolean printCM;
-   @Option(description = "Query to generate data",
-         defaultValue = "")
-   private String query;
 
-   public static void main(String[] args) {
+   public static void main(String[] args) throws Exception {
       new TaggerApp().run(args);
    }
 
-   private DocumentCollection getDocumentCollection() {
-      DocumentCollection docs = DocumentCollection.create(notNullOrBlank(documentCollectionSpec,
-                                                                         "No Document Collection Specified!"));
-      if (Strings.isNotNullOrBlank(query)) {
-         try {
-            docs = docs.query(query);
-         } catch (ParseException e) {
-            throw new RuntimeException(e);
+
+   protected FitParameters<?> getFitParameters(HStringMLModel model,
+                                               String task) {
+      FitParameters<?> parameters = model.getFitParameters();
+      for (String parameterName : parameters.parameterNames()) {
+         String confName = task + ".param." + parameterName;
+         if (Config.hasProperty(confName)) {
+            parameters.set(parameterName, Config.get(confName).as(parameters.getParam(parameterName).type));
          }
       }
-      return docs;
-   }
-
-   private HStringMLModel getTrainer() {
-      if (NAMED_TRAINERS.containsKey(sequenceTagger.toUpperCase())) {
-         return NAMED_TRAINERS.get(sequenceTagger.toUpperCase());
-      }
-      try {
-         return Converter.convert(sequenceTagger, HStringMLModel.class);
-      } catch (TypeConversionException e) {
-         throw new RuntimeException(e);
-      }
+      return parameters;
    }
 
    private void logFitParameters(FitParameters<?> parameters) {
@@ -128,29 +87,13 @@ public class TaggerApp extends HermesCLI {
       logInfo(log, "========================================================");
    }
 
-   @Override
-   protected void programLogic() throws Exception {
-      checkState(getPositionalArgs().length > 0, "No Mode specified!");
-      switch (getPositionalArgs()[0].toUpperCase()) {
-         case "TRAIN":
-            checkState(Strings.isNotNullOrBlank(model), "No Model Specified!");
-            ModelIO.save(train(getDocumentCollection()), Resources.from(model));
-            break;
-         case "TEST":
-            checkState(Strings.isNotNullOrBlank(model), "No Model Specified!");
-            test(getDocumentCollection(), Cast.as(ModelIO.load(Resources.from(model))));
-            break;
-         case "PARAMETERS":
-            logFitParameters(getTrainer().getFitParameters());
-            break;
-         case "LS":
-         case "LIST":
-            NAMED_TRAINERS.forEach((name, trainer) -> logInfo(log, "{0}   {1}", name, trainer));
-            break;
-      }
-   }
+   protected void test(String task) throws Exception {
+      task = task.toUpperCase();
+      action = action.toLowerCase();
+      HStringMLModel model = ModelIO.load(Config.get(task + ".model").asResource());
+      String documentCollectionSpec = Config.get(task + "." + action).asString();
+      String query = Config.get(task + "." + action + ".query").asString();
 
-   private void test(DocumentCollection testingCollection, HStringMLModel tagger) {
       logInfo(log, "========================================================");
       logInfo(log, "                         TEST");
       logInfo(log, "========================================================");
@@ -158,11 +101,16 @@ public class TaggerApp extends HermesCLI {
       logInfo(log, " Tagger: {0}", model);
       logInfo(log, "========================================================");
       logInfo(log, "Loading data set");
-      DataSet testingData = tagger.transform(testingCollection);
-      Evaluation evaluation = tagger.getEvaluator();
+
+      DocumentCollection docs = DocumentCollection.create(documentCollectionSpec);
+      if (Strings.isNotNullOrBlank(query)) {
+         docs = docs.query(query);
+      }
+      DataSet testingData = model.transform(docs);
+      Evaluation evaluation = model.getEvaluator();
       Stopwatch stopwatch = Stopwatch.createStarted();
       logInfo(log, "Testing Started at {0}", LocalDateTime.now().format(TIME_FORMATTER));
-      evaluation.evaluate(tagger.delegate(), testingData);
+      evaluation.evaluate(model.delegate(), testingData);
       stopwatch.stop();
       logInfo(log, "Testing Stopped at {0} ({1})",
               LocalDateTime.now().format(TIME_FORMATTER),
@@ -188,17 +136,21 @@ public class TaggerApp extends HermesCLI {
       }
    }
 
-   private HStringMLModel train(DocumentCollection trainingData) {
-      HStringMLModel trainer = getTrainer();
+   protected void train(String task, String action) throws Exception {
+      task = task.toUpperCase();
+      action = action.toLowerCase();
 
-      //--Fill in parameters based on command line settings
-      FitParameters<?> parameters = trainer.getFitParameters();
-      for (String parameterName : parameters.parameterNames()) {
-         String confName = "param." + parameterName;
-         if (Config.hasProperty(confName)) {
-            parameters.set(parameterName, Config.get(confName));
-         }
+      HStringMLModel model = Config.get(task).as(HStringMLModel.class);
+      FitParameters<?> parameters = getFitParameters(model, task);
+      String documentCollectionSpec = Config.get(task + "." + action).asString();
+      String query = Config.get(task + "." + action + ".query").asString();
+
+      DocumentCollection docs = DocumentCollection.create(documentCollectionSpec);
+      if (Strings.isNotNullOrBlank(query)) {
+         docs = docs.query(query);
       }
+      DataSet trainingData = docs.asDataSet(model.getDataGenerator());
+
       logInfo(log, "========================================================");
       logInfo(log, "                         Train");
       logInfo(log, "========================================================");
@@ -206,7 +158,7 @@ public class TaggerApp extends HermesCLI {
       if (Strings.isNotNullOrBlank(query)) {
          logInfo(log, "  Query: {0}", query);
       }
-      logInfo(log, "Trainer: {0}", sequenceTagger);
+      logInfo(log, "Trainer: {0}", Config.get(task));
       logInfo(log, "  Model: {0}", model);
       logInfo(log, "========================================================");
       logFitParameters(parameters);
@@ -214,11 +166,25 @@ public class TaggerApp extends HermesCLI {
       logInfo(log,
               "Training Started at {0}",
               LocalDateTime.now().format(TIME_FORMATTER));
-      trainer.estimate(trainingData);
+      model.estimate(trainingData);
       stopwatch.stop();
       logInfo(log, "Training Stopped at {0} ({1})",
               LocalDateTime.now().format(TIME_FORMATTER),
               stopwatch);
-      return trainer;
+
+      ModelIO.save(model, Config.get(task + ".model").asResource());
    }
-}//END OF TaggerApp
+
+   @Override
+   protected void programLogic() throws Exception {
+      switch (action.toUpperCase()) {
+         case "TRAIN":
+         case "PRODUCTION":
+            train(task, action);
+            break;
+         case "TEST":
+            test(task);
+            break;
+      }
+   }
+}
