@@ -32,10 +32,10 @@ import java.util.List;
 
 public class PropertyViewer extends JTable {
    private static final long serialVersionUID = 1L;
-   private final KeyValeModel model;
+   private final KeyValueModel model;
 
    public PropertyViewer(ParamMap<?> properties) {
-      this.model = new KeyValeModel(properties);
+      this.model = new KeyValueModel(properties);
       this.setModel(model);
       this.setShowGrid(true);
       this.setFillsViewportHeight(true);
@@ -98,12 +98,12 @@ public class PropertyViewer extends JTable {
       }
    }
 
-   private static class KeyValeModel extends AbstractTableModel {
+   private static class KeyValueModel extends AbstractTableModel {
       private static final long serialVersionUID = 1L;
       private final ParamMap<?> properties;
       private final List<String> keys;
 
-      private KeyValeModel(ParamMap<?> properties) {
+      private KeyValueModel(ParamMap<?> properties) {
          this.properties = properties;
          this.keys = new ArrayList<>(properties.parameterNames());
       }

@@ -279,23 +279,25 @@ public abstract class SwingApplication extends Application {
 
    @Override
    public final void setup() throws Exception {
-      int width = properties.get("window.width").asIntegerValue(800);
-      int height = properties.get("window.height").asIntegerValue(600);
       mainWindowFrame.setMinimumSize(new Dimension(800, 600));
-      mainWindowFrame.setSize(new Dimension(width, height));
 
-      if (properties.get("window.maximized").asBooleanValue(false)) {
-         mainWindowFrame.setExtendedState(mainWindowFrame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
-      } else {
-         Rectangle screenRectangle = mainWindowFrame.getGraphicsConfiguration()
-                                                    .getDevice()
-                                                    .getDefaultConfiguration()
-                                                    .getBounds();
-         int xPos = properties.get("window.position.x")
-                              .asIntegerValue(screenRectangle.width / 2 - width / 2);
-         int yPos = properties.get("window.position.y")
-                              .asIntegerValue(screenRectangle.height / 2 - height / 2);
-         mainWindowFrame.setLocation(xPos, yPos);
+      if (properties != null) {
+         int width = properties.get("window.width").asIntegerValue(800);
+         int height = properties.get("window.height").asIntegerValue(600);
+         mainWindowFrame.setSize(new Dimension(width, height));
+         if (properties.get("window.maximized").asBooleanValue(false)) {
+            mainWindowFrame.setExtendedState(mainWindowFrame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+         } else {
+            Rectangle screenRectangle = mainWindowFrame.getGraphicsConfiguration()
+                                                       .getDevice()
+                                                       .getDefaultConfiguration()
+                                                       .getBounds();
+            int xPos = properties.get("window.position.x")
+                                 .asIntegerValue(screenRectangle.width / 2 - width / 2);
+            int yPos = properties.get("window.position.y")
+                                 .asIntegerValue(screenRectangle.height / 2 - height / 2);
+            mainWindowFrame.setLocation(xPos, yPos);
+         }
       }
 
       mainWindowFrame.setTitle(getName());
