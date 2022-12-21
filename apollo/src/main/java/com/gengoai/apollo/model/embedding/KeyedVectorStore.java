@@ -25,6 +25,7 @@ import com.gengoai.apollo.math.linalg.NumericNDArray;
 import lombok.NonNull;
 
 import java.io.Serializable;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -37,15 +38,7 @@ import java.util.stream.Stream;
  *
  * @author David B. Bracewell
  */
-public interface KeyedVectorStore extends Serializable, Encoder {
-
-   /**
-    * Adds the key to the index or retrieves it index if its is already defined.
-    *
-    * @param key the key to add
-    * @return the index of the key
-    */
-   int addOrGetIndex(@NonNull String key);
+public interface KeyedVectorStore extends Serializable {
 
    /**
     * The dimension of the vectors in the store
@@ -85,9 +78,13 @@ public interface KeyedVectorStore extends Serializable, Encoder {
    /**
     * Updates the vector at the given index.
     *
-    * @param index  the index of the vector
+    * @param word   the word associated with the vector
     * @param vector the new vector
     */
-   void updateVector(int index, @NonNull NumericNDArray vector);
+   void updateVector(String word, @NonNull NumericNDArray vector);
+
+   int size();
+
+   Set<String> getAlphabet();
 
 }//END OF KeyedVectorStore

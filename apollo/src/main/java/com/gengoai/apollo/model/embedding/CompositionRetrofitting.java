@@ -64,7 +64,6 @@ public class CompositionRetrofitting implements Retrofitting {
                                                 embedding.vectorStore.getUnknownKey(),
                                                 embedding.vectorStore.getSpecialKeys());
       for(String key : embedding.getAlphabet()) {
-         int index = out.vectorStore.addOrGetIndex(key);
          NumericNDArray tv = embedding.embed(key).copy();
          if(background.getAlphabet().contains(key)) {
             tv.addi(background.embed(key));
@@ -75,7 +74,7 @@ public class CompositionRetrofitting implements Retrofitting {
                          .forEach(n -> tv.addi(n.mul((float) neighborWeight)));
             }
          }
-         out.vectorStore.updateVector(index, tv);
+         out.vectorStore.updateVector(key, tv);
       }
       return out;
    }

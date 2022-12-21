@@ -60,8 +60,7 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
          if (Strings.isNotNullOrBlank(line) && !line.startsWith("#")) {
             NumericNDArray v = VSTextUtils.convertLineToVector(line, e.dimension());
             synchronized (e) {
-               int index = e.vectorStore.addOrGetIndex(v.getLabel());
-               e.vectorStore.updateVector(index, v);
+               e.vectorStore.updateVector(v.getLabel(), v);
             }
          }
       });

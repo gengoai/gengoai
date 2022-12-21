@@ -26,6 +26,8 @@ import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.Params;
+import com.gengoai.collection.HashMapIndex;
+import com.gengoai.collection.Index;
 import com.gengoai.collection.disk.DiskMap;
 import com.gengoai.concurrent.AtomicDouble;
 import com.gengoai.io.Resources;
@@ -89,6 +91,8 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
       //      dataset = dataset.cache();
       //      double size = dataset.size();
       final AtomicLong processed = new AtomicLong(0);
+      final Index<String> index = new HashMapIndex<>();
+
       //      Counter<IntPair> counts = Counters.newCounter();
       vectorStore = new InMemoryVectorStore(parameters.dimension.value(),
                                             parameters.unknownWord.value(),
@@ -97,18 +101,18 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
       //scan the input for the vocabulary
       AtomicDouble size = new AtomicDouble(0);
       DiskMap<IntPair, Double> counts = DiskMap.<IntPair, Double>builder()
-            .file(Resources.temporaryFile())
-            .namespace("counts")
-            .build();
+                                               .file(Resources.temporaryFile())
+                                               .namespace("counts")
+                                               .build();
       dataset.stream()
              .forEach(datum -> {
                 size.addAndGet(1);
                 datum.stream(parameters.inputs.value()).forEach(source -> {
                    Sequence<?> input = source.asSequence();
-                   List<Integer> ids = toIndices(input);
-                   for(int i = 1; i < ids.size(); i++) {
+                   List<Integer> ids = toIndices(input, index);
+                   for (int i = 1; i < ids.size(); i++) {
                       int iW = ids.get(i);
-                      for(int j = Math.max(0, i - parameters.windowSize.value()); j < i; j++) {
+                      for (int j = Math.max(0, i - parameters.windowSize.value()); j < i; j++) {
                          int jW = ids.get(j);
                          double incrementBy = 1.0 / (i - j);
                          double cnt = counts.getOrDefault(IntPair.of(iW, jW), 0d);
@@ -142,13 +146,13 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
       //      }
 
       sw.stop();
-      if(parameters.verbose.value()) {
+      if (parameters.verbose.value()) {
          logInfo(log, "Cooccurrence Matrix computed in {0}", sw);
       }
 
       List<Cooccurrence> cooccurrences = new ArrayList<>();
       counts.forEach((e, v) -> {
-         if(v >= 5) {
+         if (v >= 5) {
             cooccurrences.add(new Cooccurrence(e.v1, e.v2, v));
          }
       });
@@ -156,7 +160,7 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
 
       DoubleMatrix[] W = new DoubleMatrix[vectorStore.size() * 2];
       DoubleMatrix[] gradSq = new DoubleMatrix[vectorStore.size() * 2];
-      for(int i = 0; i < vectorStore.size() * 2; i++) {
+      for (int i = 0; i < vectorStore.size() * 2; i++) {
          W[i] = DoubleMatrix.rand(parameters.dimension.value()).sub(0.5f).divi(parameters.dimension.value());
          gradSq[i] = DoubleMatrix.ones(parameters.dimension.value());
       }
@@ -166,11 +170,11 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
 
       int vocabLength = vectorStore.size();
 
-      for(int itr = 0; itr < parameters.maxIterations.value(); itr++) {
+      for (int itr = 0; itr < parameters.maxIterations.value(); itr++) {
          double globalCost = 0d;
          Collections.shuffle(cooccurrences);
 
-         for(Cooccurrence cooccurrence : cooccurrences) {
+         for (Cooccurrence cooccurrence : cooccurrences) {
             int iWord = cooccurrence.word1;
             int iContext = cooccurrence.word2 + vocabLength;
             double count = cooccurrence.count;
@@ -187,8 +191,8 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
 
             double diff = v_main.dot(v_context) + b_main + b_context - Math.log(count);
             double fdiff = count > parameters.xMax.value()
-                           ? diff
-                           : Math.pow(count / parameters.xMax.value(), parameters.alpha.value()) * diff;
+                  ? diff
+                  : Math.pow(count / parameters.xMax.value(), parameters.alpha.value()) * diff;
 
             globalCost += 0.5 * fdiff * diff;
 
@@ -214,25 +218,25 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
             gradSqBiases.put(iContext, gradSqBiases.get(iContext) + fdiff);
          }
 
-         if(parameters.verbose.value()) {
+         if (parameters.verbose.value()) {
             logInfo(log, "Iteration: {0},  cost:{1}", (itr + 1), globalCost / cooccurrences.size());
          }
 
       }
 
-      for(int i = 0; i < vocabLength; i++) {
+      for (int i = 0; i < vocabLength; i++) {
          W[i].addi(W[i + vocabLength]);
-         String k = vectorStore.decode(i);
-         vectorStore.updateVector(i, nd.DFLOAT32.array(W[i]).T().setLabel(k));
+         String k = index.get(i);
+         vectorStore.updateVector(k, nd.DFLOAT32.array(W[i]).T().setLabel(k));
       }
 
    }
 
-   private List<Integer> toIndices(Sequence<? extends Observation> sequence) {
+   private List<Integer> toIndices(Sequence<? extends Observation> sequence, Index<String> index) {
       List<Integer> out = new ArrayList<>();
-      for(Observation example : sequence) {
+      for (Observation example : sequence) {
          example.getVariableSpace()
-                .forEach(v -> out.add(vectorStore.addOrGetIndex(parameters.nameSpace.value().getName(v))));
+                .forEach(v -> out.add(index.add(parameters.nameSpace.value().getName(v))));
       }
       return out;
    }

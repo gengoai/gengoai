@@ -97,11 +97,10 @@ public class FaruquiRetrofitting implements Retrofitting {
       PreTrainedWordEmbedding out = new PreTrainedWordEmbedding();
       out.vectorStore = new InMemoryVectorStore(origVectors.dimension());
       for(String key : origVectors.getAlphabet()) {
-         int i = out.vectorStore.addOrGetIndex(key);
          if(retrofittedVectors.containsKey(key)) {
-            out.vectorStore.updateVector(i, retrofittedVectors.get(key).unitize());
+            out.vectorStore.updateVector(key, retrofittedVectors.get(key).unitize());
          } else {
-            out.vectorStore.updateVector(i, origVectors.embed(key).unitize());
+            out.vectorStore.updateVector(key, origVectors.embed(key).unitize());
          }
       }
       return out;

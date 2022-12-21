@@ -31,6 +31,7 @@ import com.gengoai.sql.statement.QueryStatement;
 import com.gengoai.sql.statement.UpdateStatement;
 import com.gengoai.string.Strings;
 import lombok.*;
+import org.sqlite.SQLiteCommitListener;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -261,7 +262,8 @@ public final class SQL {
 
       @Override
       public String toString() {
-         return Strings.appendIfNotPresent(Strings.prependIfNotPresent(SQLDialect.escape(value), "'"), "'");
+         return "'" + SQLiteDialect.escape(value) + "'";
+         //Strings.appendIfNotPresent(Strings.prependIfNotPresent(SQLDialect.escape(value), "'"), "'");
       }
 
    }//END OF Literal

@@ -28,7 +28,6 @@ import org.jblas.DoubleMatrix;
 import org.jblas.FloatMatrix;
 import org.jblas.MatrixFunctions;
 import org.tensorflow.ndarray.FloatNdArray;
-import org.tensorflow.types.TFloat32;
 
 import java.util.function.UnaryOperator;
 

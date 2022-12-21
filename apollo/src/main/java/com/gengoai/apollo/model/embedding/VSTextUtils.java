@@ -27,7 +27,7 @@ import com.gengoai.string.Strings;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-final class VSTextUtils {
+public final class VSTextUtils {
 
    private VSTextUtils() {
       throw new IllegalAccessError();

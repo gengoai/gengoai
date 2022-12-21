@@ -19,21 +19,15 @@
 
 package com.gengoai.apollo.model.embedding;
 
-import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.collection.HashMapIndex;
-import com.gengoai.collection.Index;
-import com.gengoai.collection.Lists;
-import com.gengoai.stream.MStream;
 import com.gengoai.string.Strings;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
@@ -43,8 +37,7 @@ import java.util.stream.Stream;
  */
 public class InMemoryVectorStore implements KeyedVectorStore {
    private static final long serialVersionUID = 1L;
-   protected final Index<String> alphabet = new HashMapIndex<>();
-   protected final List<NumericNDArray> vectors = new ArrayList<>();
+   protected final Map<String, NumericNDArray> vectors = new ConcurrentHashMap<>();
    @NonNull
    @Getter
    private final String unknownKey;
@@ -61,28 +54,14 @@ public class InMemoryVectorStore implements KeyedVectorStore {
       this.dimension = dimension;
       this.unknownKey = Strings.nullToEmpty(unknownKey);
       this.specialKeys = specialKeys == null
-                         ? new String[0]
-                         : specialKeys;
-      if(this.specialKeys.length > 0) {
-         alphabet.addAll(Arrays.asList(this.specialKeys));
-         for(String specialKey : this.specialKeys) {
-            vectors.add(nd.DFLOAT32.zeros(dimension));
-         }
+            ? new String[0]
+            : specialKeys;
+      for (String specialKey : this.specialKeys) {
+         vectors.put(specialKey, nd.DFLOAT32.zeros(dimension));
       }
-      if(Strings.isNotNullOrBlank(unknownKey)) {
-         alphabet.add(unknownKey);
-         vectors.add(nd.DFLOAT32.zeros(dimension));
+      if (Strings.isNotNullOrBlank(unknownKey)) {
+         vectors.put(unknownKey, nd.DFLOAT32.zeros(dimension));
       }
-   }
-
-   @Override
-   public int addOrGetIndex(@NonNull String key) {
-      return alphabet.add(key);
-   }
-
-   @Override
-   public String decode(double index) {
-      return alphabet.get((int) index);
    }
 
    @Override
@@ -91,49 +70,27 @@ public class InMemoryVectorStore implements KeyedVectorStore {
    }
 
    @Override
-   public int encode(String variableName) {
-      return alphabet.getId(variableName);
-   }
-
-   @Override
-   public void fit(@NonNull MStream<Observation> observations) {
-
-   }
-
-   @Override
    public Set<String> getAlphabet() {
-      return alphabet.itemSet();
+      return vectors.keySet();
    }
 
    @Override
    public NumericNDArray getVector(@NonNull String key) {
-      int index = alphabet.getId(key);
-      return index >= 0
-             ? vectors.get(index)
-             : nd.DFLOAT32.zeros(dimension);
-   }
-
-   @Override
-   public boolean isFixed() {
-      return true;
+      return vectors.getOrDefault(key, nd.DFLOAT32.zeros(dimension).setLabel(key));
    }
 
    @Override
    public int size() {
-      return alphabet.size();
+      return vectors.size();
    }
 
    @Override
    public Stream<NumericNDArray> stream() {
-      return vectors.stream();
+      return vectors.values().stream();
    }
 
    @Override
-   public void updateVector(int index, @NonNull NumericNDArray vector) {
-      if(index < 0) {
-         throw new IndexOutOfBoundsException();
-      }
-      Lists.ensureSize(vectors, index + 1, null);
-      vectors.set(index, vector);
+   public void updateVector(String word, @NonNull NumericNDArray vector) {
+      vectors.put(word, vector);
    }
 }//END OF InMemoryVectorStore

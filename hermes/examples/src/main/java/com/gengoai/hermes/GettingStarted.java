@@ -72,7 +72,7 @@ public class GettingStarted extends HermesCLI {
       while(matcher.find()) {
          //Creating the annotation is done using the document and only requires the type and the character offsets
          document.createAnnotation(animalMention, matcher.start(), matcher.end(), Collections.emptyMap());
-         //More complicated annotations would also provide attributes, for example Entity Type word Word Sense.
+         //More complicated annotations would also provide attributes, for example Entity Type or Word Sense.
       }
 
       //Print out the animal mention annotations

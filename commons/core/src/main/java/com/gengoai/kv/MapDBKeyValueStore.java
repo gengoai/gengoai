@@ -30,7 +30,7 @@ import java.util.NavigableMap;
 /**
  * @author David B. Bracewell
  */
-class MapDBKeyValueStore<K, V> extends AbstractNavigableKeyValueStore<K, V> {
+public class MapDBKeyValueStore<K, V> extends AbstractNavigableKeyValueStore<K, V> {
    private static final long serialVersionUID = 1L;
    private final NavigableDiskMap<K, V> map;
 
