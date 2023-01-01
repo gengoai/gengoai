@@ -1,17 +1,22 @@
-from collections import defaultdict
-from typing import DefaultDict
-
 import keras as K
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+from collections import defaultdict
+from typing import DefaultDict
+
+
+def embedding_input(name: str, dimension: int):
+    return K.layers.Input(shape=(None, dimension), name=name)
 
 
 def sequence_input(name: str = None) -> K.layers.Layer:
     return K.layers.Input(shape=(None,), name=name)
 
+
 def instance_input(size, name: str = None) -> K.layers.Layer:
     return K.layers.Input(shape=(size,), name=name)
+
 
 def char_sequence_input(max_characters_per_word: int, name: str = None) -> K.layers.Layer:
     return K.layers.Input(shape=(None, max_characters_per_word), name=name)
@@ -78,12 +83,13 @@ class GloveEmbedding(K.layers.Embedding):
     def __init__(self,
                  dimension: int,
                  glove_path: str = "../embeddings/glove%s.npy",
-                 mask_zero: bool = True):
+                 mask_zero: bool = True,
+                 trainable: bool = False):
         weights = GloveEmbedding.__get_weights(dimension, glove_path)
         super(GloveEmbedding, self).__init__(input_dim=weights.shape[0],
                                              output_dim=weights.shape[1],
                                              weights=[weights],
-                                             trainable=False,
+                                             trainable=trainable,
                                              mask_zero=mask_zero,
                                              name="glove%s_embeddings" % dimension)
 

@@ -157,7 +157,7 @@ public abstract class Featurizer<I> implements FeatureExtractor<I>, Serializable
    }
 
    public static <I> Featurizer<I> valueFeaturizer(@NonNull SerializableFunction<? super I, String> function) {
-      return new ValueExtractor<>(function.toString(), function);
+      return new ValueExtractor<>(null, function);
    }
 
    /**

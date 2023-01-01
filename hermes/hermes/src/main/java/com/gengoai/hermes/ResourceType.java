@@ -21,11 +21,14 @@ package com.gengoai.hermes;
 
 import com.gengoai.Language;
 import com.gengoai.apollo.model.ModelIO;
+import com.gengoai.apollo.model.embedding.KeyedVectorStore;
+import com.gengoai.apollo.model.embedding.OnDiskVectorStore;
 import com.gengoai.cache.Cache;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.function.Unchecked;
 import com.gengoai.hermes.annotator.NerPatterns;
+import com.gengoai.hermes.en.ENResources;
 import com.gengoai.hermes.extraction.caduceus.CaduceusProgram;
 import com.gengoai.hermes.lexicon.LexiconManager;
 import com.gengoai.hermes.lexicon.TrieWordList;
@@ -49,6 +52,14 @@ import static com.gengoai.hermes.Hermes.HERMES_PACKAGE;
  */
 @Log
 public enum ResourceType {
+   EMBEDDINGS("vectors") {
+      @Override
+      public <T> T load(@NonNull String configKey, @NonNull String resourceName, @NonNull Language language) {
+         OnDiskVectorStore vectorStore = new OnDiskVectorStore(locate(configKey, resourceName, language)
+                                                                     .orElseThrow(() -> new RuntimeException(resourceName + " does not exist.")));
+         return Cast.as(vectorStore);
+      }
+   },
    /**
     * Lexicon Resources (supports in-memory via json files and on-disk)
     */
@@ -286,6 +297,5 @@ public enum ResourceType {
       }
       return Optional.empty();
    }
-
 
 }//END OF ResourceType

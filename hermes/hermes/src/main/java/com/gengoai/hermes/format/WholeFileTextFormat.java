@@ -44,6 +44,7 @@ public abstract class WholeFileTextFormat implements DocFormat {
       if (getParameters().distributed.value()) {
          stream = stream.cache();
       }
+      stream.count();
       return stream;
    }
 

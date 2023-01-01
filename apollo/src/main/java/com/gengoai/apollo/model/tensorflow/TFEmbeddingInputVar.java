@@ -17,25 +17,22 @@
  * under the License.
  */
 
-package com.gengoai.hermes.format.conll;
+package com.gengoai.apollo.model.tensorflow;
 
-import com.gengoai.hermes.Types;
-import com.gengoai.hermes.format.CoNLLColumnProcessor;
-import org.kohsuke.MetaInfServices;
+import com.gengoai.apollo.encoder.NoOptEncoder;
+import com.gengoai.apollo.model.embedding.KeyedVectorStore;
+import lombok.Getter;
+import lombok.NonNull;
 
-@MetaInfServices(CoNLLColumnProcessor.class)
-public class SuperSenseProcessor extends IOBFieldProcessor {
-   /**
-    * Instantiates a new IOBFieldProcessor.
-    */
-   public SuperSenseProcessor() {
-      super(Types.SUPER_SENSE, Types.SENSE_CLASS);
-   }
+public class TFEmbeddingInputVar extends TFInputVar {
+   @Getter
+   private final KeyedVectorStore embeddings;
 
-   @Override
-   public String getFieldName() {
-      return "SUPER_SENSE";
+   public TFEmbeddingInputVar(@NonNull String name,
+                              @NonNull KeyedVectorStore embeddings) {
+      super(name, name, NoOptEncoder.INSTANCE, -1, embeddings.dimension());
+      this.embeddings = embeddings;
    }
 
 
-}//END OF SuperSenseProcessor
+}

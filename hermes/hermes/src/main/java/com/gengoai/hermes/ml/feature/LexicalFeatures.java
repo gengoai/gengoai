@@ -152,16 +152,6 @@ public final class LexicalFeatures {
       return false;
    }
 
-   public static void main(String[] args) {
-      Document d = Document.create("33% of the Lts. in the Navy who contract the disease die within 23 days.");
-      d.annotate(Types.TOKEN, Types.SENTENCE);
-      for(Annotation token : d.tokens()) {
-         System.out.println(token + " : " + isDigit(token) + " : " + isPercent(token));
-         System.out.println(Features.IsEndOfSentence.applyAsFeatures(token));
-         System.out.println();
-      }
-   }
-
    public static String shape(@NonNull HString string) {
       if(Strings.isNullOrBlank(string)) {
          return Strings.EMPTY;

@@ -24,10 +24,11 @@ import com.gengoai.apollo.data.DataSetType;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.StreamingDataSet;
 import com.gengoai.apollo.data.transform.Transformer;
+import com.gengoai.apollo.data.transform.vectorizer.EmbeddingVectorizer;
 import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
+import com.gengoai.apollo.data.transform.vectorizer.OneHotVectorizer;
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.FixedEncoder;
-import com.gengoai.apollo.encoder.IndexEncoder;
 import com.gengoai.apollo.encoder.NoOptEncoder;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
@@ -81,11 +82,11 @@ public class TFModel implements Model, Serializable {
    private int inferenceBatchSize = 1;
 
 
-   public Collection<TFInputVar> getInputVars(){
+   public Collection<TFInputVar> getInputVars() {
       return Collections.unmodifiableCollection(inputs.values());
    }
 
-   public Collection<TFOutputVar> getOutputVars(){
+   public Collection<TFOutputVar> getOutputVars() {
       return Collections.unmodifiableCollection(outputs.values());
    }
 
@@ -138,9 +139,20 @@ public class TFModel implements Model, Serializable {
             if (transformer == null) {
                this.transformer = new Transformer(Stream.concat(inputs.entrySet().stream(), outputs.entrySet().stream())
                                                         .filter(e -> !(e.getValue()
-                                                                        .getEncoder() instanceof NoOptEncoder))
-                                                        .map(e -> new IndexingVectorizer(e.getValue().getEncoder())
-                                                              .source(e.getKey()))
+                                                                        .getEncoder() instanceof NoOptEncoder)
+                                                                     || (e.getValue() instanceof TFEmbeddingInputVar))
+                                                        .map(e -> {
+                                                           if (e.getValue() instanceof TFOneHotInputVar) {
+                                                              return new OneHotVectorizer(e.getValue().getEncoder())
+                                                                    .source(e.getKey());
+                                                           } else if (e.getValue() instanceof TFEmbeddingInputVar) {
+                                                              TFEmbeddingInputVar vvar = Cast.as(e.getValue());
+                                                              return new EmbeddingVectorizer(vvar.getEmbeddings())
+                                                                    .source(e.getKey());
+                                                           }
+                                                           return new IndexingVectorizer(e.getValue().getEncoder())
+                                                                 .source(e.getKey());
+                                                        })
                                                         .collect(Collectors.toList()));
             }
          }
@@ -268,7 +280,7 @@ public class TFModel implements Model, Serializable {
       MStream<Datum> batch = StreamingContext.local()
                                              .stream(Streams.reusableStream(
                                                    () -> Streams.asStream(dataset.batchIterator(inferenceBatchSize))
-                                             ))
+                                                                           ))
                                              .map(this::processBatch)
                                              .flatMap(Collection::stream);
       return new StreamingDataSet(batch, dataset.getMetadata(), dataset.getNDArrayFactory()).cache();

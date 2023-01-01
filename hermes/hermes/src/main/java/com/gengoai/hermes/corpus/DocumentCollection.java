@@ -136,7 +136,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
       try {
          return create(Specification.parse(specification));
       } catch (IllegalArgumentException e) {
-         return Corpus.open(specification);
+         throw new RuntimeException(e);
       }
    }
 

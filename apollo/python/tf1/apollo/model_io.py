@@ -18,6 +18,7 @@
 import keras as K
 import tensorflow as tf
 
+
 def save_model(model, location):
     with K.backend.get_session() as sess:
         tf.saved_model.simple_save(

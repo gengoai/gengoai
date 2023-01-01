@@ -17,25 +17,19 @@
  * under the License.
  */
 
-package com.gengoai.hermes.format.conll;
+package com.gengoai.apollo.model.tensorflow;
 
-import com.gengoai.hermes.Types;
-import com.gengoai.hermes.format.CoNLLColumnProcessor;
-import org.kohsuke.MetaInfServices;
+import com.gengoai.apollo.encoder.Encoder;
+import com.gengoai.apollo.model.Consts;
+import lombok.NonNull;
 
-@MetaInfServices(CoNLLColumnProcessor.class)
-public class SuperSenseProcessor extends IOBFieldProcessor {
-   /**
-    * Instantiates a new IOBFieldProcessor.
-    */
-   public SuperSenseProcessor() {
-      super(Types.SUPER_SENSE, Types.SENSE_CLASS);
+import java.util.Collections;
+
+import static com.gengoai.apollo.encoder.IndexEncoder.indexEncoder;
+import static com.gengoai.apollo.model.Consts.*;
+
+public class TFOneHotInputVar extends TFInputVar {
+   public TFOneHotInputVar(@NonNull String name, @NonNull int... shape) {
+      super(name, name, indexEncoder(UNKNOWN_WORD, Collections.singletonList(PADDING)), shape);
    }
-
-   @Override
-   public String getFieldName() {
-      return "SUPER_SENSE";
-   }
-
-
-}//END OF SuperSenseProcessor
+}

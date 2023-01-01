@@ -24,6 +24,7 @@ import com.gengoai.SystemInfo;
 import com.gengoai.collection.multimap.HashSetMultimap;
 import com.gengoai.collection.multimap.Multimap;
 import com.gengoai.conversion.Cast;
+import com.gengoai.hermes.SuperSense;
 import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.json.Json;
@@ -194,6 +195,39 @@ public class CoNLLEditor extends HermesGUI {
             }));
          } else {
             menu.add(createSubMenu(column, child, parentChild, label2Name));
+         }
+      }
+      return menu;
+   }
+
+   private JPopupMenu createSuperSenseMenu(int column, Enum<?>[] enums) {
+      var menu = new JPopupMenu();
+      var noun = new JMenu("NOUN");
+      var verb = new JMenu("VERB");
+      var preposition = new JMenu("PREPOSITION");
+
+      menu.add(with(new JMenuItem("Clear"), $-> $.addActionListener(e -> {
+         for (int selectedRow : table.getSelectedRows()) {
+            table.setValueAt("O", selectedRow, column);
+         }
+      })));
+      menu.add(noun);
+      menu.add(verb);
+      menu.add(preposition);
+      for (Enum<?> anEnum : enums) {
+         String name = anEnum.name();
+         if (name.startsWith("NOUN")) {
+            noun.add(menu.add(with(new JMenuItem(name), $ -> {
+               $.addActionListener(e -> iobTag(column, name));
+            })));
+         } else if (name.startsWith("VERB")) {
+            verb.add(menu.add(with(new JMenuItem(name), $ -> {
+               $.addActionListener(e -> iobTag(column, name));
+            })));
+         } else {
+            preposition.add(menu.add(with(new JMenuItem(name), $ -> {
+               $.addActionListener(e -> iobTag(column, name));
+            })));
          }
       }
       return menu;
@@ -447,8 +481,11 @@ public class CoNLLEditor extends HermesGUI {
                if (column.hasProperty("tagType")) {
                   final String tagType = column.getStringProperty("tagType").toUpperCase();
                   switch (tagType) {
+                     case "SUPERSENSE":
+                        menu = createSuperSenseMenu(tableColumn, SuperSense.values());
+                        break;
                      case "IOB-FREEFORM":
-                        List<String>tags = column.hasProperty("tags")
+                        List<String> tags = column.hasProperty("tags")
                               ? column.getProperty("tags").asArray(String.class)
                               : Collections.emptyList();
                         menu = createFreeFormTagMenu(tableColumn, tags);

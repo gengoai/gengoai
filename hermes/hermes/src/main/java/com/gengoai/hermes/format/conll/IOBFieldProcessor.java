@@ -58,7 +58,7 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
    }
 
    private boolean isI(String value, String target) {
-      if(value == null || value.startsWith("O") || value.startsWith("B-")) {
+      if (value == null || value.startsWith("O") || value.startsWith("B-")) {
          return false;
       }
       return value.startsWith("I-") && value.substring(2).toUpperCase().equals(target);
@@ -79,28 +79,29 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
                             List<CoNLLRow> rows,
                             Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
       final String TYPE = getFieldName();
-
-      for(int i = 0; i < rows.size(); ) {
-         if(rows.get(i).hasOther(TYPE)) {
+      for (int i = 0; i < rows.size(); ) {
+         if (rows.get(i).hasOther(TYPE)) {
 
             String value = rows.get(i).getOther(TYPE).toUpperCase();
-            if(Strings.isNotNullOrBlank(value) && (value.startsWith("B-") || value.startsWith("I-"))) {
+            if (Strings.isNotNullOrBlank(value) && (value.startsWith("B-") || value.startsWith("I-"))) {
                int start = rows.get(i).getStart();
                String tag = value.substring(2);
                i++;
-               while(i < rows.size() && isI(rows.get(i).getOther(TYPE), tag)) {
+               while (i < rows.size() && isI(rows.get(i).getOther(TYPE), tag)) {
                   i++;
                }
                i--;
                int end = rows.get(i).getEnd();
 
                String normalizedTag = normalizeTag(tag);
-               if(Strings.isNotNullOrBlank(normalizedTag)) {
-                  var a = document.createAnnotation(annotationType,
-                                                    start,
-                                                    end,
-                                                    hashMapOf($(attributeType,
-                                                                attributeType.decode(normalizedTag))));
+               if (Strings.isNotNullOrBlank(normalizedTag)) {
+                  if (!tag.equals("??") && !tag.equals("_") && !tag.equals("`$")) {
+                     var a = document.createAnnotation(annotationType,
+                                                       start,
+                                                       end,
+                                                       hashMapOf($(attributeType,
+                                                                   attributeType.decode(normalizedTag))));
+                  }
                }
             }
          }
@@ -112,12 +113,12 @@ public abstract class IOBFieldProcessor implements CoNLLColumnProcessor {
    @Override
    public String processOutput(HString document, Annotation token, int index) {
       Annotation a = token.first(annotationType);
-      if(a.isDetached()) {
+      if (a.isDetached()) {
          return "O";
       }
       Tag tag = a.getTag(new StringTag("O"));
-      if(a.hasTag()) {
-         if(a.firstToken() == token) {
+      if (a.hasTag()) {
+         if (a.firstToken() == token) {
             return "B-" + tag.name();
          }
          return "I-" + tag.name();

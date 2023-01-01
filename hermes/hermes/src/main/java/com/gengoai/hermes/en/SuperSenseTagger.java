@@ -17,24 +17,25 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml.model;
+package com.gengoai.hermes.en;
 
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.model.Consts;
 import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.apollo.model.tensorflow.TFInputVar;
+import com.gengoai.apollo.model.tensorflow.TFOneHotInputVar;
 import com.gengoai.apollo.model.tensorflow.TFOutputVar;
 import com.gengoai.config.Config;
+import com.gengoai.hermes.Annotation;
+import com.gengoai.hermes.Document;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
-import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
-import com.gengoai.hermes.en.ENResources;
 import com.gengoai.hermes.ml.CoNLLEvaluation;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.IOB;
 import com.gengoai.hermes.ml.IOBValidator;
-import com.gengoai.hermes.ml.feature.Features;
+import com.gengoai.hermes.ml.model.TFSequenceLabeler;
 import com.gengoai.io.Resources;
 
 import java.util.List;
@@ -44,47 +45,55 @@ import static com.gengoai.apollo.feature.Featurizer.booleanFeaturizer;
 import static com.gengoai.apollo.feature.Featurizer.valueFeaturizer;
 import static java.util.stream.Collectors.toList;
 
-public class NeuralNERModel extends TFSequenceLabeler {
+public class SuperSenseTagger extends TFSequenceLabeler {
    private static final long serialVersionUID = 1L;
    private static final String LABEL = "label";
    private static final String TOKENS = "words";
    private static final String CHARS = "chars";
-   private static final String SHAPE = "shape";
+   private static final String POS = "pos";
+   private static final String CHUNK = "chunk";
    private static final int MAX_WORD_LENGTH = 25;
 
-   public NeuralNERModel() {
+   public SuperSenseTagger() {
       super(
             List.of(
                   TFInputVar.sequence(TOKENS, fixedEncoder(ENResources.gloveSmallLexicon(), Consts.UNKNOWN_WORD)),
-                  TFInputVar.sequence(SHAPE),
-                  TFInputVar.sequence(CHARS, -1, MAX_WORD_LENGTH)
+                  TFInputVar.sequence(CHARS, -1, MAX_WORD_LENGTH),
+                  TFInputVar.oneHotEncoding(POS, -1, 17)
                    ),
             List.of(
                   TFOutputVar.sequence(LABEL,
                                        "label/truediv",
                                        "O", IOBValidator.INSTANCE)
                    ),
-            IOB.decoder(Types.ML_ENTITY)
+            IOB.decoder(Types.SUPER_SENSE)
            );
    }
 
    public static void main(String[] args) throws Exception {
       Config.initialize("CNN", args, "com.gengoai.hermes");
       if (Math.random() < 0) {
-         Config.setProperty("tfmodel.data", "/work/prj/gengoai/python/tensorflow/data/entity.db");
-         NeuralNERModel ner = new NeuralNERModel();
-         DocumentCollection ontonotes = Corpus.open("/shared/Data/corpora/hermes_data/ontonotes_ner")
-                                              .query("$SPLIT='TRAIN'");
+         Config.setProperty("tfmodel.data", "/work/prj/gengoai/python/tensorflow/data/supersense.db");
+         SuperSenseTagger ner = new SuperSenseTagger();
+         DocumentCollection ontonotes = DocumentCollection.create("conll::/home/ik/Downloads/streusle_train.txt;fields=WORD,SUPER_SENSE;docPerSentence=True")
+                                                          .annotate(Types.PART_OF_SPEECH, Types.PHRASE_CHUNK).cache();
          ner.estimate(ontonotes);
-         ModelIO.save(ner, Resources.from("/home/ik/hermes/en/models/ner"));
+         ModelIO.save(ner, Resources.from("/home/ik/hermes/en/models/supersense/"));
       } else {
-         NeuralNERModel ner = ModelIO.load(Resources.from("/home/ik/hermes/en/models/ner/"));
-         DocumentCollection ontonotes = Corpus.open("/shared/Data/corpora/hermes_data/ontonotes_ner")
-                                              .query("$SPLIT='TEST'");
+         SuperSenseTagger ner = ModelIO.load(Resources.from("/home/ik/hermes/en/models/supersense/"));
+         DocumentCollection ontonotes = DocumentCollection.create("conll::/home/ik/Downloads/streusle_test.txt;fields=WORD,SUPER_SENSE;docPerSentence=True")
+                                                          .annotate(Types.PART_OF_SPEECH, Types.PHRASE_CHUNK).cache();
          CoNLLEvaluation evaluation = new CoNLLEvaluation("label");
          DataSet ds = ner.transform(ontonotes);
          evaluation.evaluate(ner.delegate(), ds);
          evaluation.report();
+         Document doc = Document.create("A Vatican spokesman confirmed later Wednesday that Benedict’s health had worsened “in the last few hours” and that Francis visited Benedict at the Mater Ecclesiae monastery in Vatican City.");
+         doc.annotate(Types.PART_OF_SPEECH);
+         doc.annotate(Types.SUPER_SENSE);
+         for (Annotation annotation : doc.annotations(Types.SUPER_SENSE)) {
+            System.out.println(annotation.toSGML(true));
+         }
+
       }
    }
 
@@ -96,8 +105,8 @@ public class NeuralNERModel extends TFSequenceLabeler {
                                                                                   .stream()
                                                                                   .map(HString::toString)
                                                                                   .collect(toList())))
-                                    .tokenSequence(SHAPE, Features.WordShape)
-                                    .source(LABEL, IOB.encoder(Types.ENTITY))
+                                    .tokenSequence(POS, valueFeaturizer(h -> h.pos().getUniversalTag().name()))
+                                    .source(LABEL, IOB.encoder(Types.SUPER_SENSE))
                                     .build();
    }
 

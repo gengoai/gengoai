@@ -192,6 +192,9 @@ public interface Types {
     * Multi-word expression annotations
     */
    AnnotationType MWE = AnnotationType.make("MWE", TAG);
+   AttributeType<SuperSense> SENSE_CLASS = AttributeType.make("SUPERSENSE", SuperSense.class);
+   AnnotationType SUPER_SENSE = AnnotationType.make("SUPER_SENSE", SENSE_CLASS);
+
    /**
     * String attribute defining the title of the document.
     */

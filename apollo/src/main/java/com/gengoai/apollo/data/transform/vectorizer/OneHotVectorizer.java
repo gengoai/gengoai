@@ -20,6 +20,7 @@
 package com.gengoai.apollo.data.transform.vectorizer;
 
 import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.IndexEncoder;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import lombok.EqualsAndHashCode;
@@ -45,9 +46,9 @@ public class OneHotVectorizer extends AbstractVariableVectorizer<OneHotVectorize
    @Override
    public String toString() {
       return "OneHotVectorizer{" +
-            "input='" + input + '\'' +
-            ", output='" + output + '\'' +
-            '}';
+             "input='" + input + '\'' +
+             ", output='" + output + '\'' +
+             '}';
    }
 
    /**
@@ -60,10 +61,14 @@ public class OneHotVectorizer extends AbstractVariableVectorizer<OneHotVectorize
       super(new IndexEncoder(unknownName));
    }
 
+   public OneHotVectorizer(Encoder encoder) {
+      super(encoder);
+   }
+
    @Override
    protected void encodeVariableInto(Variable v, NumericNDArray ndArray) {
       int index = encoder.encode(v.getName());
-      if(index >= 0) {
+      if (index >= 0) {
          ndArray.set(index, 1.0);
       }
    }

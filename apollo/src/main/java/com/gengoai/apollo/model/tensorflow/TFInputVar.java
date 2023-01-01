@@ -21,6 +21,7 @@ package com.gengoai.apollo.model.tensorflow;
 
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.IndexEncoder;
+import com.gengoai.apollo.model.embedding.KeyedVectorStore;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -38,10 +39,10 @@ import static com.gengoai.apollo.encoder.IndexEncoder.indexEncoder;
 public class TFInputVar extends TFVar {
    private static final long serialVersionUID = 1L;
 
-   private TFInputVar(@NonNull String name,
-                      @NonNull String servingName,
-                      @NonNull Encoder encoder,
-                      @NonNull int... shape) {
+   protected TFInputVar(@NonNull String name,
+                        @NonNull String servingName,
+                        @NonNull Encoder encoder,
+                        @NonNull int... shape) {
       super(name, servingName, encoder, shape);
    }
 
@@ -58,6 +59,14 @@ public class TFInputVar extends TFVar {
     */
    public static TFInputVar sequence(String name, int... shape) {
       return new TFInputVar(name, name, indexEncoder("--UNKNOWN--", Collections.singletonList("--PAD--")), shape);
+   }
+
+   public static TFOneHotInputVar oneHotEncoding(String name, int... shape) {
+      return new TFOneHotInputVar(name, shape);
+   }
+
+   public static TFEmbeddingInputVar embedding(String name, KeyedVectorStore vectors) {
+      return new TFEmbeddingInputVar(name, vectors);
    }
 
    /**

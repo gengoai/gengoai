@@ -188,6 +188,7 @@ public final class LocalStreamingContext extends StreamingContext {
 
    @Override
    public MStream<String> textFile(Resource location, boolean wholeFile) {
+
       if(!wholeFile) {
          return textFile(location);
       }

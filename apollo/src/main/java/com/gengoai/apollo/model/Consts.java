@@ -17,25 +17,17 @@
  * under the License.
  */
 
-package com.gengoai.hermes.format.conll;
+package com.gengoai.apollo.model;
 
-import com.gengoai.hermes.Types;
-import com.gengoai.hermes.format.CoNLLColumnProcessor;
-import org.kohsuke.MetaInfServices;
+public class Consts {
 
-@MetaInfServices(CoNLLColumnProcessor.class)
-public class SuperSenseProcessor extends IOBFieldProcessor {
-   /**
-    * Instantiates a new IOBFieldProcessor.
-    */
-   public SuperSenseProcessor() {
-      super(Types.SUPER_SENSE, Types.SENSE_CLASS);
-   }
-
-   @Override
-   public String getFieldName() {
-      return "SUPER_SENSE";
+   private Consts(){
+      throw new IllegalAccessError();
    }
 
 
-}//END OF SuperSenseProcessor
+   public static final String UNKNOWN_WORD = "--UNKNOWN--";
+   public static final String PADDING = "--PAD--";
+
+
+}

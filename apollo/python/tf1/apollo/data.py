@@ -1,12 +1,11 @@
 import json
-import math
-import sqlite3
 import keras as K
-from collections import defaultdict
-from typing import Set, Iterable, Union, Dict, Any
-
+import math
 import numpy as np
+import sqlite3
+from collections import defaultdict
 from keras.utils import Sequence
+from typing import Set, Iterable, Union, Dict, Any
 
 
 def pad_along_axis(array: np.ndarray, target_length: int, axis: int = 0):
@@ -20,9 +19,9 @@ def pad_along_axis(array: np.ndarray, target_length: int, axis: int = 0):
     return np.pad(array, pad_width=npad, mode='constant', constant_values=0)
 
 
-def pad(n, max_sequence_length, max_word_length=-1):
+def pad(n, max_sequence_length, max_word_length=-1, axis=1):
     if max_word_length > 0:
-        n = [pad_along_axis(x, max_word_length, axis=1)[:, 0:max_word_length] for x in n]
+        n = [pad_along_axis(x, max_word_length, axis=axis)[:, 0:max_word_length] for x in n]
 
     n = K.preprocessing.sequence.pad_sequences(n,
                                                maxlen=max_sequence_length,

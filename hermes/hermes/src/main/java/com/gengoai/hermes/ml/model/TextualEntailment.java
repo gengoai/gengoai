@@ -24,24 +24,16 @@ import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.InMemoryDataSet;
 import com.gengoai.apollo.data.observation.Variable;
-import com.gengoai.apollo.data.observation.VariableCollectionSequence;
-import com.gengoai.apollo.data.observation.VariableList;
 import com.gengoai.apollo.data.observation.VariableSequence;
 import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.apollo.data.transform.vectorizer.Vectorizer;
 import com.gengoai.apollo.encoder.Encoder;
-import com.gengoai.apollo.encoder.IndexEncoder;
-import com.gengoai.apollo.feature.Featurizer;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.apollo.model.tensorflow.TFInputVar;
 import com.gengoai.apollo.model.tensorflow.TFModel;
 import com.gengoai.apollo.model.tensorflow.TFOutputVar;
-import com.gengoai.hermes.Annotation;
-import com.gengoai.hermes.Document;
-import com.gengoai.hermes.HString;
-import com.gengoai.hermes.Types;
-import com.gengoai.hermes.ml.feature.Features;
+import com.gengoai.hermes.*;
 import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.json.Json;
@@ -56,7 +48,6 @@ import java.util.stream.Collectors;
 import static com.gengoai.apollo.encoder.FixedEncoder.fixedEncoder;
 import static com.gengoai.hermes.ResourceType.WORD_LIST;
 import static com.gengoai.tuple.Tuples.$;
-import static java.util.stream.Collectors.toList;
 
 public class TextualEntailment implements Serializable {
    private static final long serialVersionUID = 1L;
@@ -89,7 +80,7 @@ public class TextualEntailment implements Serializable {
     * Instantiates a new Tf model.
     */
    public TextualEntailment() {
-      model = new TEModel();
+      model = ResourceType.MODEL.load("entailment", Language.ENGLISH);
    }
 
    protected static VariableSequence words(com.gengoai.hermes.HString d) {
@@ -176,21 +167,16 @@ public class TextualEntailment implements Serializable {
 
    public static void main(String[] args) throws Exception {
       TextualEntailment textualEntailment = new TextualEntailment();
-      textualEntailment.model = ModelIO.load("/home/ik/snl/");
-
       Document d1 = Document.create("A man is alive");
       Document d2 = Document.create("A man is dead");
       d1.annotate(Types.SENTENCE, Types.TOKEN);
       d2.annotate(Types.SENTENCE, Types.TOKEN);
       System.out.println(textualEntailment.predict(d1, d2));
-
       d1 = Document.create("A kid doing tricks on a skateboard on a bridge");
       d2 = Document.create("A kid on the golden gate bridge");
       d1.annotate(Types.SENTENCE, Types.TOKEN);
       d2.annotate(Types.SENTENCE, Types.TOKEN);
       System.out.println(textualEntailment.predict(d1, d2));
-
-
 //      textualEntailment.test(Resources.from("/Users/ik/Downloads/snli_1.0/snli_1.0_test.jsonl"));
 //      textualEntailment.train(Resources.from("/home/ik/snli_1.0/snli_1.0_train.jsonl"));
    }
@@ -199,7 +185,6 @@ public class TextualEntailment implements Serializable {
    public String predict(HString hypothesis, HString statement) {
       Datum datum = model.transform(Datum.of($("input_1", words(hypothesis)), $("input_2", words(statement))));
       var result = datum.get("output").asNDArray();
-      System.out.println(result);
       return id2Label.get(result.argMax().get(-1));
    }
 

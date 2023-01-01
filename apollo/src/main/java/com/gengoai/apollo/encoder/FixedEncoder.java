@@ -77,6 +77,7 @@ public class FixedEncoder implements Encoder {
       }
    }
 
+
    /**
     * Instantiates a new FixedEncoder.
     *
@@ -98,6 +99,18 @@ public class FixedEncoder implements Encoder {
       return new FixedEncoder(vocabFile, unknown);
    }
 
+   /**
+    * Static constructor for creating a FixedEncoder from a given vocabulary and having
+    * the given <code>unknown</code> word.
+    *
+    * @param vocab   the vocabulary
+    * @param unknown the vocabulary item representing an unknown value
+    * @return the FixedEncoder
+    */
+   public static FixedEncoder fixedEncoder(@NonNull Iterable<String> vocab, String unknown) {
+      return new FixedEncoder(vocab, unknown);
+   }
+
    @Override
    public String decode(double index) {
       return alphabet.get((int) index);
@@ -115,10 +128,10 @@ public class FixedEncoder implements Encoder {
    @Override
    public String toString() {
       return "FixedEncoder{size=" +
-            alphabet.size() +
-            ", unknown='" +
-            unknown
-            + "'}";
+             alphabet.size() +
+             ", unknown='" +
+             unknown
+             + "'}";
 
    }
 

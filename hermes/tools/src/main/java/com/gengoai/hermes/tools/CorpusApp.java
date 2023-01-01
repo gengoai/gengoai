@@ -26,6 +26,7 @@ import com.gengoai.hermes.AnnotatableType;
 import com.gengoai.hermes.Document;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
+import com.gengoai.hermes.corpus.ProgressLogger;
 import com.gengoai.hermes.corpus.SearchResults;
 import com.gengoai.hermes.format.DocFormatParameters;
 import com.gengoai.hermes.format.DocFormatProvider;
@@ -41,19 +42,20 @@ import static com.gengoai.LogUtils.logSevere;
 
 @Application.Description(
       "===========================================================\n" +
-            "           Application for working with corpora.\n" +
-            "===========================================================\n" +
-            "                         Operations\n" +
-            "---------------------------------------------------------\n" +
-            "INFO -  Displays the number of documents and completed AnnotatableType for the corpus.\n" +
-            "QUERY - Queries the corpus with the given query returning the top 10 results.\n" +
-            "GET - Gets the given document (or a random one if *rnd* is given) in Json format.\n" +
-            "IMPORT - Imports the documents from the input document collection into the corpus.\n" +
-            "ANNOTATE - Annotates the corpus with the given annotatable types.\n" +
-            "FORMATS - List the available document formats and their parameters.\n" +
-            "SPLIT - Assigns a random split with the given % as TRAIN and the remaining as TEST\n" +
-            "---------------------------------------------------------\n" +
-            "\n                     Command Line Arguments "
+      "           Application for working with corpora.\n" +
+      "===========================================================\n" +
+      "                         Operations\n" +
+      "---------------------------------------------------------\n" +
+      "INFO -  Displays the number of documents and completed AnnotatableType for the corpus.\n" +
+      "QUERY - Queries the corpus with the given query returning the top 10 results.\n" +
+      "GET - Gets the given document (or a random one if *rnd* is given) in Json format.\n" +
+      "IMPORT - Imports the documents from the input document collection into the corpus.\n" +
+      "ANNOTATE - Annotates the corpus with the given annotatable types.\n" +
+      "FORMATS - List the available document formats and their parameters.\n" +
+      "SPLIT - Assigns a random split with the given % as TRAIN and the remaining as TEST\n" +
+      "EXPORT - Exports the corpus to given document collection format" +
+      "---------------------------------------------------------\n" +
+      "\n                     Command Line Arguments "
 )
 @Log
 public class CorpusApp extends HermesCLI {
@@ -75,17 +77,17 @@ public class CorpusApp extends HermesCLI {
    }
 
    private void corpusAnnotate() throws Exception {
-      if(types == null) {
+      if (types == null) {
          logSevere(log, "No AnnotatableTypes Given!");
          System.exit(-1);
       }
-      try(Corpus corpus = getCorpus()) {
+      try (Corpus corpus = getCorpus()) {
          corpus.annotate(stringToAnnotatableType());
       }
    }
 
    private void corpusExport() throws Exception {
-      try(Corpus corpus = getCorpus()) {
+      try (Corpus corpus = getCorpus()) {
          corpus.export(documentCollectionSpec);
       }
    }
@@ -93,16 +95,16 @@ public class CorpusApp extends HermesCLI {
    private void corpusGetDocument() throws Exception {
       ensurePositionalArgument(1, "No Document Id Given!");
       final String id;
-      if(getPositionalArgs()[1].equalsIgnoreCase("*rnd*")) {
+      if (getPositionalArgs()[1].equalsIgnoreCase("*rnd*")) {
          final Random rnd = new Random();
          final List<String> ids = getCorpus().getIds();
          id = ids.get(rnd.nextInt(ids.size()));
       } else {
          id = getPositionalArgs()[1];
       }
-      try(Corpus corpus = getCorpus()) {
+      try (Corpus corpus = getCorpus()) {
          final Document document = corpus.getDocument(id);
-         if(document == null) {
+         if (document == null) {
             System.err.println(id + " does not exists in the corpus.");
          } else {
             System.out.println(document.toJson());
@@ -111,7 +113,7 @@ public class CorpusApp extends HermesCLI {
    }
 
    private void corpusInfo() throws Exception {
-      try(Corpus corpus = getCorpus()) {
+      try (Corpus corpus = getCorpus()) {
          final long size = corpus.size();
          final Set<AnnotatableType> completedAnnotations = corpus.getCompleted();
          System.out.println("                 Corpus Information");
@@ -121,7 +123,7 @@ public class CorpusApp extends HermesCLI {
          System.out.println("========================================================");
          System.out.println("              Completed AnnotatableTypes");
          System.out.println("------------------------------------------------------");
-         for(AnnotatableType type : completedAnnotations) {
+         for (AnnotatableType type : completedAnnotations) {
             System.out.println(type);
          }
          System.out.println("========================================================");
@@ -130,7 +132,7 @@ public class CorpusApp extends HermesCLI {
 
    private void corpusQuery() throws Exception {
       ensurePositionalArgument(1, "No Query Given!");
-      try(Corpus corpus = getCorpus()) {
+      try (Corpus corpus = getCorpus()) {
          final SearchResults searchResults = corpus.query(getPositionalArgs()[1]);
          System.out.println("                     Query Results");
          System.out.println("========================================================");
@@ -156,20 +158,20 @@ public class CorpusApp extends HermesCLI {
 
    private void corpusSplit() throws Exception {
       double pct = Double.parseDouble(getPositionalArgs()[1]);
-      try(Corpus corpus = getCorpus()) {
+      try (Corpus corpus = getCorpus()) {
          corpus.assignRandomSplit(pct);
       }
    }
 
    private void ensurePositionalArgument(int length, String message) {
-      if(getPositionalArgs().length <= length) {
+      if (getPositionalArgs().length <= length) {
          logSevere(log, message);
          System.exit(-1);
       }
    }
 
    private Corpus getCorpus() throws IOException {
-      if(Strings.isNullOrBlank(corpusLocation)) {
+      if (Strings.isNullOrBlank(corpusLocation)) {
          logSevere(log, "No Corpus Specified!");
          System.exit(-1);
       }
@@ -177,7 +179,7 @@ public class CorpusApp extends HermesCLI {
    }
 
    private DocumentCollection getDocumentCollection() {
-      if(Strings.isNullOrBlank(documentCollectionSpec)) {
+      if (Strings.isNullOrBlank(documentCollectionSpec)) {
          logSevere(log, "No Document Collection Specified!");
          System.exit(-1);
       }
@@ -185,9 +187,9 @@ public class CorpusApp extends HermesCLI {
    }
 
    private void importDocuments() throws Exception {
-      try(DocumentCollection input = getDocumentCollection()) {
-         try(Corpus writeTo = getCorpus()) {
-            writeTo.addAll(getDocumentCollection());
+      try (DocumentCollection input = getDocumentCollection()) {
+         try (Corpus writeTo = getCorpus()) {
+            writeTo.addAll(input);
          }
       }
    }
@@ -196,12 +198,12 @@ public class CorpusApp extends HermesCLI {
       System.out.println("                 Document Formats");
       System.out.println("========================================================");
       System.out.println();
-      for(DocFormatProvider provider : DocFormatService.getProviders()) {
+      for (DocFormatProvider provider : DocFormatService.getProviders()) {
          TableFormatter tableFormatter = new TableFormatter();
          tableFormatter.title(provider.getName().toUpperCase());
          tableFormatter.header(Arrays.asList("ParameterName", "ParameterType"));
          final DocFormatParameters parameters = provider.getDefaultFormatParameters();
-         for(String parameterName : new TreeSet<>(parameters.parameterNames())) {
+         for (String parameterName : new TreeSet<>(parameters.parameterNames())) {
             ParameterDef<?> param = parameters.getParam(parameterName);
             tableFormatter.content(Arrays.asList(parameterName, param.type.getSimpleName()));
          }
@@ -215,7 +217,7 @@ public class CorpusApp extends HermesCLI {
    protected void programLogic() throws Exception {
       ensurePositionalArgument(0, "No Operation Given!");
       final String operation = getPositionalArgs()[0];
-      switch(operation.toUpperCase()) {
+      switch (operation.toUpperCase()) {
          case "INFO":
             corpusInfo();
             break;
@@ -247,7 +249,7 @@ public class CorpusApp extends HermesCLI {
 
    private AnnotatableType[] stringToAnnotatableType() {
       AnnotatableType[] convert = new AnnotatableType[types.length];
-      for(int i = 0; i < types.length; i++) {
+      for (int i = 0; i < types.length; i++) {
          convert[i] = AnnotatableType.valueOf(types[i]);
       }
       return convert;

@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 import static com.gengoai.LogUtils.logFine;
+import static com.gengoai.LogUtils.logWarning;
 import static com.gengoai.collection.Arrays2.arrayOf;
 import static com.gengoai.hermes.Hermes.HERMES_PACKAGE;
 
@@ -192,11 +193,12 @@ public interface AnnotatableType {
             }
          }
 
+
          if(annotatorClass != null) {
             try {
                annotator = Cast.as(BeanUtils.getBean(annotatorClass));
             } catch(ReflectionException e) {
-               logFine(LogUtils.getGlobalLogger(), e);
+               logWarning(LogUtils.getGlobalLogger(), e);
             }
          }
       }

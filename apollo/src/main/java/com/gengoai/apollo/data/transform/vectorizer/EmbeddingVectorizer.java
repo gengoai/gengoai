@@ -23,53 +23,63 @@ import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Observation;
 import com.gengoai.apollo.data.observation.Sequence;
 import com.gengoai.apollo.data.observation.Variable;
-import com.gengoai.apollo.data.observation.VariableSequence;
+import com.gengoai.apollo.data.observation.VariableCollection;
 import com.gengoai.apollo.encoder.NoOptEncoder;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.model.embedding.InMemoryVectorStore;
 import com.gengoai.apollo.model.embedding.KeyedVectorStore;
-import com.gengoai.apollo.model.embedding.VSTextUtils;
 import com.gengoai.conversion.Cast;
-import com.gengoai.io.Resources;
-import com.gengoai.io.resource.Resource;
-import com.gengoai.string.Strings;
 import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EmbeddingVectorizer extends Vectorizer<EmbeddingVectorizer> {
+   private final KeyedVectorStore vectorStore;
 
    public EmbeddingVectorizer(KeyedVectorStore embedding) {
       super(NoOptEncoder.INSTANCE);
+      this.vectorStore = embedding;
    }
 
    @Override
    protected NumericNDArray transform(@NonNull Observation observation) {
-      KeyedVectorStore embedding = Cast.as(encoder);
       if (observation instanceof Variable) {
-
-         NumericNDArray n = embedding.getVector(((Variable) observation).getName());
-         return n;
+         return vectorStore.getVector(((Variable) observation).getSuffix());
       } else if (observation instanceof Sequence) {
          Sequence<? extends Observation> sequence = Cast.as(observation);
          List<NumericNDArray> rows = new ArrayList<>();
          sequence.forEach(o -> rows.add(transform(o)));
          return nd.vstack(Cast.cast(rows));
+      } else if (observation instanceof VariableCollection) {
+         VariableCollection collection = observation.asVariableCollection();
+         List<NumericNDArray> cols = new ArrayList<>();
+         collection.forEach(o -> cols.add(transform(o)));
+         if (cols.size() == 1) {
+            return cols.get(0);
+         }
+         return nd.hstack(Cast.cast(cols));
       }
       throw new IllegalArgumentException("Unsupported Observation: " + observation.getClass());
    }
 
    protected void updateMetadata(@NonNull DataSet dataset) {
-      KeyedVectorStore embedding = Cast.as(encoder);
       dataset.updateMetadata(output, m -> {
-         m.setDimension(embedding.dimension());
+         m.setDimension(vectorStore.dimension());
          m.setType(NDArray.class);
-         m.setEncoder(encoder);
+         m.setEncoder(NoOptEncoder.INSTANCE);
       });
    }
 
+   @Override
+   public EmbeddingVectorizer copy() {
+      return new EmbeddingVectorizer(vectorStore).input(input).output(output);
+   }
 
+   @Override
+   public String toString() {
+      return "EmbeddingVectorizer{input='" + input + "', output='" + output + "'}";
+   }
 }

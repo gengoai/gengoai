@@ -81,14 +81,14 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
    @Override
    public String toString() {
       return "IndexingVectorizer{" +
-            "input='" + input + '\'' +
-            ", output='" + output + '\'' +
-            '}';
+             "input='" + input + '\'' +
+             ", output='" + output + '\'' +
+             '}';
    }
 
    @Override
    public NumericNDArray transform(Observation observation) {
-      if( observation == null ){
+      if (observation == null) {
          return null;
       }
       if (observation instanceof Variable) {
@@ -123,6 +123,19 @@ public class IndexingVectorizer extends Vectorizer<IndexingVectorizer> {
          }
          return ndArrayFactory.asNumeric().scalar(0);
       }
+
+      if (observation.isSequence()) {
+         VariableSequence seq = observation.asVariableSequence();
+         if (out == null) {
+            out = ndArrayFactory.asNumeric().zeros(1, seq.size());
+         }
+         for (int i = 0; i < seq.size(); i++) {
+            int index = encoder.encode(seq.get(i).getName());
+            out.set(i, index);
+         }
+         return out;
+      }
+
       VariableCollection mvo = observation.asVariableCollection();
       DoubleArrayList list = new DoubleArrayList();
       mvo.forEach(v -> {
