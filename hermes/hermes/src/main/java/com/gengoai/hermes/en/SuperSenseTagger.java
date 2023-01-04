@@ -59,7 +59,7 @@ public class SuperSenseTagger extends TFSequenceLabeler {
             List.of(
                   TFInputVar.sequence(TOKENS, fixedEncoder(ENResources.gloveSmallLexicon(), Consts.UNKNOWN_WORD)),
                   TFInputVar.sequence(CHARS, -1, MAX_WORD_LENGTH),
-                  TFInputVar.oneHotEncoding(POS, -1, 17)
+                  TFInputVar.oneHotEncoding(POS, -1, 45)
                    ),
             List.of(
                   TFOutputVar.sequence(LABEL,
@@ -105,7 +105,7 @@ public class SuperSenseTagger extends TFSequenceLabeler {
                                                                                   .stream()
                                                                                   .map(HString::toString)
                                                                                   .collect(toList())))
-                                    .tokenSequence(POS, valueFeaturizer(h -> h.pos().getUniversalTag().name()))
+                                    .tokenSequence(POS, valueFeaturizer(h -> h.pos().name()))
                                     .source(LABEL, IOB.encoder(Types.SUPER_SENSE))
                                     .build();
    }
