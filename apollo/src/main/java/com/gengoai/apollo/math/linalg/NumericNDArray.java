@@ -401,17 +401,26 @@ public abstract class NumericNDArray extends NDArray {
 
       VariableSequence sequence = new VariableSequence();
       String previous = "O";
-      for (int word = 0; word < shape().rows(); word++) {
-         NumericNDArray matrix = getAxis(Shape.ROW, word);
-         int l = matrix.shape().calculateMatrixIndex(matrix.argMax());
-         String tag = encoder.decode(l);
-         while (!validator.isValid(tag, previous, matrix)) {
-            matrix.set(l, Double.NEGATIVE_INFINITY);
-            l = matrix.shape().calculateMatrixIndex(matrix.argMax());
-            tag = encoder.decode(l);
+      if (shape().rows() == 0) {
+         for (int word = 0; word < shape().columns(); word++) {
+            NumericNDArray matrix = getAxis(Shape.COLUMN, word);
+            int l = (int) matrix.scalarDouble();
+            String tag = encoder.decode(l);
+            sequence.add(Variable.real(tag, 1.0));
          }
-         previous = tag;
-         sequence.add(Variable.real(tag, matrix.getDouble(l)));
+      } else {
+         for (int word = 0; word < shape().rows(); word++) {
+            NumericNDArray matrix = getAxis(Shape.ROW, word);
+            int l = matrix.shape().calculateMatrixIndex(matrix.argMax());
+            String tag = encoder.decode(l);
+            while (!validator.isValid(tag, previous, matrix)) {
+               matrix.set(l, Double.NEGATIVE_INFINITY);
+               l = matrix.shape().calculateMatrixIndex(matrix.argMax());
+               tag = encoder.decode(l);
+            }
+            previous = tag;
+            sequence.add(Variable.real(tag, matrix.getDouble(l)));
+         }
       }
       return sequence;
    }

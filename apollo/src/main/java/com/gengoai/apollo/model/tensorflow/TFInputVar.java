@@ -61,8 +61,16 @@ public class TFInputVar extends TFVar {
       return new TFInputVar(name, name, indexEncoder("--UNKNOWN--", Collections.singletonList("--PAD--")), shape);
    }
 
+   public static TFInputVar sequence(String name, String servingName, int... shape) {
+      return new TFInputVar(name, servingName, indexEncoder("--UNKNOWN--", Collections.singletonList("--PAD--")), shape);
+   }
+
    public static TFOneHotInputVar oneHotEncoding(String name, int... shape) {
       return new TFOneHotInputVar(name, shape);
+   }
+
+   public static TFOneHotInputVar oneHotEncoding(String name, String servingName, int... shape) {
+      return new TFOneHotInputVar(name,servingName, shape);
    }
 
    public static TFEmbeddingInputVar embedding(String name, KeyedVectorStore vectors) {
@@ -93,6 +101,10 @@ public class TFInputVar extends TFVar {
     */
    public static TFInputVar sequence(String name, Encoder encoder) {
       return new TFInputVar(name, name, encoder, -1);
+   }
+
+   public static TFInputVar sequence(String name, String servingName, Encoder encoder) {
+      return new TFInputVar(name, servingName, encoder, -1);
    }
 
    /**

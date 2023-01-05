@@ -32,4 +32,8 @@ public class TFOneHotInputVar extends TFInputVar {
    public TFOneHotInputVar(@NonNull String name, @NonNull int... shape) {
       super(name, name, indexEncoder(UNKNOWN_WORD, Collections.singletonList(PADDING)), shape);
    }
+
+   public TFOneHotInputVar(@NonNull String name, String servingName, @NonNull int... shape) {
+      super(name, servingName, indexEncoder(UNKNOWN_WORD, Collections.singletonList(PADDING)), shape);
+   }
 }

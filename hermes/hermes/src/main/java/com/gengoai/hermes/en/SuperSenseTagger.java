@@ -57,13 +57,14 @@ public class SuperSenseTagger extends TFSequenceLabeler {
    public SuperSenseTagger() {
       super(
             List.of(
-                  TFInputVar.sequence(TOKENS, fixedEncoder(ENResources.gloveSmallLexicon(), Consts.UNKNOWN_WORD)),
-                  TFInputVar.sequence(CHARS, -1, MAX_WORD_LENGTH),
-                  TFInputVar.oneHotEncoding(POS, -1, 45)
+                  TFInputVar.sequence(TOKENS, "serving_default_words", fixedEncoder(ENResources.gloveSmallLexicon(), Consts.UNKNOWN_WORD)),
+                  TFInputVar.sequence(CHARS, "serving_default_chars", -1, MAX_WORD_LENGTH),
+                  TFInputVar.oneHotEncoding(POS, "serving_default_pos", -1, 45)
                    ),
             List.of(
                   TFOutputVar.sequence(LABEL,
-                                       "label/truediv",
+                                       //"label/truediv",
+                                       "StatefulPartitionedCall:0",
                                        "O", IOBValidator.INSTANCE)
                    ),
             IOB.decoder(Types.SUPER_SENSE)
@@ -82,10 +83,10 @@ public class SuperSenseTagger extends TFSequenceLabeler {
       } else {
          SuperSenseTagger ner = ModelIO.load(Resources.from("/home/ik/hermes/en/models/supersense/"));
          DocumentCollection ontonotes = DocumentCollection.create("conll::/home/ik/Downloads/streusle_test.txt;fields=WORD,SUPER_SENSE;docPerSentence=True")
-                                                          .annotate(Types.PART_OF_SPEECH, Types.PHRASE_CHUNK).cache();
+                                                          .annotate(Types.PART_OF_SPEECH).cache();
          CoNLLEvaluation evaluation = new CoNLLEvaluation("label");
          DataSet ds = ner.transform(ontonotes);
-         evaluation.evaluate(ner.delegate(), ds);
+         evaluation.evaluate(ner, ds);
          evaluation.report();
          Document doc = Document.create("A Vatican spokesman confirmed later Wednesday that Benedict’s health had worsened “in the last few hours” and that Francis visited Benedict at the Mater Ecclesiae monastery in Vatican City.");
          doc.annotate(Types.PART_OF_SPEECH);
