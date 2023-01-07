@@ -68,8 +68,10 @@ public class WordNet {
 
    private WordNet() {
       db = Config.get("WordNet.db").as(WordNetDB.class);
-      for (WordNetLoader loader : Config.get("WordNet.loaders").asList(WordNetLoader.class)) {
-         loader.load(db);
+      if (Config.hasProperty("WordNet.loaders")) {
+         for (WordNetLoader loader : Config.get("WordNet.loaders").asList(WordNetLoader.class)) {
+            loader.load(db);
+         }
       }
       if (Config.hasProperty("WordNet.properties")) {
          for (WordNetPropertyLoader loader : Config.get("WordNet.properties").asList(WordNetPropertyLoader.class)) {
@@ -430,8 +432,8 @@ public class WordNet {
             .allPossibleLemmas(word, pos)) {
          for (Sense sense : db.getSenses(lemma.toLowerCase())) {
             if ((pos == PartOfSpeech.ANY || pos.isInstance(sense.getPOS())) && sense
-                  .getSenseNumber() == senseNum && sense
-                  .getLanguage() == language) {
+                                                                                     .getSenseNumber() == senseNum && sense
+                                                                                                                            .getLanguage() == language) {
                return Optional.of(sense);
             }
          }

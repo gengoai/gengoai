@@ -102,7 +102,6 @@ public class KeywordExtraction implements Action {
                "{\n" +
                "   \"@type\"=\"" + KeywordExtraction.class.getName() + "\",\n" +
                "   \"algorithm\"=\"tfidf\"|\"tf\"|\"rake\"|\"np\"|\"text-rank\"\n," +
-               "   \"extactor\"={EXTRACTOR DEFINITION}\n," +
                "   \"n\"=NUMBER\n," +
                "   \"keepGlobalCounts\"=true|false\n" +
                "}";

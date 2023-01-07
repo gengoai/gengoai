@@ -167,13 +167,13 @@ public class TextualEntailment implements Serializable {
 
    public static void main(String[] args) throws Exception {
       TextualEntailment textualEntailment = new TextualEntailment();
-      Document d1 = Document.create("A man is alive");
-      Document d2 = Document.create("A man is dead");
+      Document d1 = Document.create("The Flu is on the rise in the northeast.");
+      Document d2 = Document.create("Flu is a person");
       d1.annotate(Types.SENTENCE, Types.TOKEN);
       d2.annotate(Types.SENTENCE, Types.TOKEN);
       System.out.println(textualEntailment.predict(d1, d2));
-      d1 = Document.create("A kid doing tricks on a skateboard on a bridge");
-      d2 = Document.create("A kid on the golden gate bridge");
+      d1 = Document.create("John met with Mary last friday.");
+      d2 = Document.create("John is a disease");
       d1.annotate(Types.SENTENCE, Types.TOKEN);
       d2.annotate(Types.SENTENCE, Types.TOKEN);
       System.out.println(textualEntailment.predict(d1, d2));
@@ -185,6 +185,7 @@ public class TextualEntailment implements Serializable {
    public String predict(HString hypothesis, HString statement) {
       Datum datum = model.transform(Datum.of($("input_1", words(hypothesis)), $("input_2", words(statement))));
       var result = datum.get("output").asNDArray();
+      System.out.println(result);
       return id2Label.get(result.argMax().get(-1));
    }
 
