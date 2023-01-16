@@ -53,7 +53,7 @@ public class BrokerTest {
          start();
          for (int i = 0; i < 100; i++) {
             String s = Strings.randomString(3, CharMatcher.LetterOrDigit);
-            yield(s);
+            yieldObject(s);
          }
          stop();
       }

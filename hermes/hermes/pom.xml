@@ -43,6 +43,11 @@
         </dependency>
         <dependency>
             <groupId>com.gengoai</groupId>
+            <artifactId>commons-python</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gengoai</groupId>
             <artifactId>commons-graph</artifactId>
             <version>${project.version}</version>
         </dependency>

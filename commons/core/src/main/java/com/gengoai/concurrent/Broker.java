@@ -105,7 +105,7 @@ public class Broker<V> implements Serializable {
 
    /**
     * <p>A producer generates data to be consumed. Implementations of Producer should use the {@link #start()} to begin
-    * the production process, {@link #stop()} to signal production has finished, and {@link #yield(Object)} to offer an
+    * the production process, {@link #stop()} to signal production has finished, and {@link #yieldObject(Object)} to offer an
     * item up for consumption.</p>
     */
    @Log
@@ -150,7 +150,7 @@ public class Broker<V> implements Serializable {
        *
        * @param object the object
        */
-      protected final void yield(V object) {
+      protected final void yieldObject(V object) {
          try {
             owner.queue.put(object);
          } catch(InterruptedException e) {

@@ -44,7 +44,7 @@ public class IterableProducer<V> extends Broker.Producer<V> {
       start();
       iterable.forEach(e -> {
          if (e != null) {
-            yield(e);
+            yieldObject(e);
          }
       });
       stop();

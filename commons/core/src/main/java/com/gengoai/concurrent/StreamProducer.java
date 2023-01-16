@@ -44,7 +44,7 @@ public class StreamProducer<V> extends Broker.Producer<V> {
    @Override
    public void produce() {
       start();
-      stream.forEach(this::yield);
+      stream.forEach(this::yieldObject);
       stop();
    }
 
