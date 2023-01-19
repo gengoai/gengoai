@@ -27,6 +27,7 @@ import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +49,7 @@ public class QuestionAnswering {
       this.interpreter = new PythonInterpreter("""
                                                      from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
-                                                     nlp = pipeline('question-answering', model="%s", tokenizer="%s")   
+                                                     nlp = pipeline('question-answering', model="%s", tokenizer="%s") 
                                                                                                                          
                                                      def pipe(question,context):
                                                         return nlp({
@@ -68,19 +69,13 @@ public class QuestionAnswering {
       );
    }
 
-
-   public static void main(String[] args) {
-      QuestionAnswering z = new QuestionAnswering();
-      System.out.println(z.predict("How many months has inflation fallen?",
-                                   "Inflation has fallen for the sixth consecutive month."));
-   }
-
    @Value
-   public static class QAResult {
-      private String answer;
-      private double score;
-      private int startChar;
-      private int endChar;
+   public static class QAResult implements Serializable {
+      private static final long serialVersionUID = 1L;
+      String answer;
+      double score;
+      int startChar;
+      int endChar;
    }
 
 }

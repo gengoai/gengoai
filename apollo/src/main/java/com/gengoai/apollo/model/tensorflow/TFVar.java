@@ -28,6 +28,7 @@ import lombok.*;
 import org.tensorflow.Tensor;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -121,14 +122,13 @@ public abstract class TFVar implements Serializable {
          System.arraycopy(dimensionsOf(data), 0, batch_shape, 1, shape.length);
       }
 
-
       //Create the batch NDArray
       NDArray batch = data.get(0).get(name).asNDArray().factory().zeros(batch_shape);
       Object padValue = batch.getType() == String.class ? "--PAD--" : 0;
 
       for (int i = 0; i < data.size(); i++) {
          NDArray ni = data.get(i).get(name).asNDArray();
-         if (batch.shape().isScalar()){
+         if (batch.shape().isScalar()) {
             batch.set(i, ni.scalar());
          } else if (batch.shape().channels() > 0) {
             batch.setSlice(i, ni.padPostWith(padValue,
