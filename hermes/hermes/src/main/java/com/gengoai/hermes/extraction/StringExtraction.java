@@ -27,6 +27,7 @@ import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.ml.feature.ValueCalculator;
+import com.gengoai.string.Strings;
 import lombok.NonNull;
 
 import java.util.Collections;
@@ -70,6 +71,11 @@ class StringExtraction implements Extraction {
          counter = calculator.adjust(counter);
       }
       return counter;
+   }
+
+   @Override
+   public String toString(){
+      return Strings.join(list, "\n");
    }
 
 }//END OF StringExtraction
