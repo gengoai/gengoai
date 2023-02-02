@@ -17,3 +17,4 @@ Sandbox.java
 *.releaseBackup
 *.h5
 /transformers/
+/hermes/hermes/transformers/
