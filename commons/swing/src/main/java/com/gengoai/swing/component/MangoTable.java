@@ -72,6 +72,12 @@ public class MangoTable extends JTable {
       this(new MangoTableModel(columns));
    }
 
+
+   @Override
+   public MangoTableModel getModel() {
+      return Cast.as(super.getModel());
+   }
+
    /**
     * Instantiates a new Mango table.
     *
@@ -162,9 +168,9 @@ public class MangoTable extends JTable {
    public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
       Component comp = super.prepareRenderer(renderer, row, column);
       if (getSelectedRow() != row &&
-            (comp.getBackground().equals(getBackground()) ||
-                  comp.getBackground().equals(alternateRowColor)
-            )) {
+          (comp.getBackground().equals(getBackground()) ||
+           comp.getBackground().equals(alternateRowColor)
+          )) {
          if (rowColor == null) {
             rowColor = comp.getBackground();
          }

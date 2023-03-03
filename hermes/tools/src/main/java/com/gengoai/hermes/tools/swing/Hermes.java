@@ -20,6 +20,9 @@
 package com.gengoai.hermes.tools.swing;
 
 import com.gengoai.ParameterDef;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.model.topic.MalletLDA;
+import com.gengoai.apollo.model.topic.Topic;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.config.Config;
@@ -30,9 +33,12 @@ import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.corpus.SearchResults;
 import com.gengoai.hermes.extraction.keyword.*;
+import com.gengoai.hermes.extraction.lyre.LyreExpression;
 import com.gengoai.hermes.format.DocFormatParameters;
 import com.gengoai.hermes.format.DocFormatService;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.tools.ui.components.SimpleDocumentView;
+import com.gengoai.io.Resources;
 import com.gengoai.io.resource.StringResource;
 import com.gengoai.parsing.ParseException;
 import com.gengoai.string.Strings;
@@ -43,6 +49,7 @@ import com.gengoai.swing.SwingApplication;
 import com.gengoai.swing.component.*;
 import com.gengoai.swing.component.listener.FluentAction;
 import com.gengoai.swing.component.listener.SwingListeners;
+import com.gengoai.swing.component.model.MangoTableModel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -83,7 +90,7 @@ public class Hermes extends HermesGUI {
    //////////////////////////////////////////////////////////////////////////////////////////////
    private final FluentAction annotateCoreAction = new FluentAction("Annotate Core", this::doAnnotateCore);
    private final FluentAction calcKeywordsAction = new FluentAction("Keywords...", this::doExtractKeywords);
-   private final FluentAction calcSummariesAction = new FluentAction("Summaries...", this::doExtractSummaries);
+   private final FluentAction calcTopicsAction = new FluentAction("Topics...", this::doCalculateTopics);
    //////////////////////////////////////////////////////////////////////////////////////////////
 
    private final MangoTabbedPane tabbedPane = new MangoTabbedPane();
@@ -98,7 +105,7 @@ public class Hermes extends HermesGUI {
          currentCorpus = newCorpusWindow.corpus;
          this.closeCorpusAction.setEnabled(true);
          this.calcKeywordsAction.setEnabled(true);
-         this.calcSummariesAction.setEnabled(true);
+         this.calcTopicsAction.setEnabled(true);
          this.annotateCoreAction.setEnabled(true);
       }
    }
@@ -108,21 +115,51 @@ public class Hermes extends HermesGUI {
       currentCorpus.annotate(Types.ENTITY, Types.DEPENDENCY);
    }
 
-   private void doExtractSummaries(ActionEvent e) {
+   private void doCalculateTopics(ActionEvent e) {
+      LoggingTask loggingTask = new LoggingTask(
+            mainWindowFrame,
+            "Extracting Topics",
+            new TopicsTask()
+      );
+      loggingTask.setModal(true);
+      loggingTask.setVisible(true);
+   }
 
+   private void doExtractKeywords(ActionEvent e) {
+      MangoCombobox<KeywordExtractors> combobox = new MangoCombobox<>();
+      for (KeywordExtractors value : KeywordExtractors.values()) {
+         combobox.addItem(value);
+      }
+      combobox.setEditable(false);
+      if (JOptionPane.showConfirmDialog(
+            null,
+            combobox,
+            "Select Algorithm",
+            JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+         var progressWindow = new ProgressMonitor(mainWindowFrame,
+                                                  "Extracting Keywords",
+                                                  "",
+                                                  0,
+                                                  (int) currentCorpus.size());
+         var task = new KeywordTask(progressWindow, Cast.as(combobox.getSelectedItem(), KeywordExtractors.class));
+         task.execute();
+      }
    }
 
 
    class KeywordTask extends SwingWorker<Void, Void> {
       private final ProgressMonitor progressMonitor;
+      private final KeywordExtractor extractor;
+      private final KeywordExtractors extractorsFactory;
 
-      KeywordTask(ProgressMonitor progressMonitor) {
+      KeywordTask(ProgressMonitor progressMonitor, KeywordExtractors extractor) {
          this.progressMonitor = progressMonitor;
+         this.extractor = extractor.create();
+         this.extractorsFactory = extractor;
       }
 
       @Override
       protected Void doInBackground() throws Exception {
-         KeywordExtractor extractor = new TextRank();
          extractor.fit(currentCorpus);
          int i = 0;
          Counter<String> keywords = Counters.newConcurrentCounter();
@@ -145,23 +182,49 @@ public class Hermes extends HermesGUI {
                   mt.getRowSorter().convertRowIndexToModel(mt.getSelectedRow()),
                   0).toString();
             searchPanel.txt.setText(keyword);
-            searchPanel.performSearch(new ActionEvent(searchPanel,0,""));
+            searchPanel.performSearch(new ActionEvent(searchPanel, 0, ""));
             tabbedPane.setSelectedIndex(0);
          }));
-         tabbedPane.addTab("Keywords", new JScrollPane(mt));
+         JPanel panel = new JPanel();
+         panel.setLayout(new BorderLayout());
+         panel.add(new JScrollPane(mt), BorderLayout.CENTER);
+         JToolBar btnBar = new JToolBar();
+         FluentAction saveCsv = SwingListeners.fluentAction("Save..", l -> {
+                                                 try {
+                                                    mt.getModel().toCSV(Resources.from("/home/ik/test.csv"));
+                                                 } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                 }
+                                              }).smallIcon(FontAwesome.SAVE.createIcon(16))
+                                              .largeIcon(FontAwesome.SAVE.createIcon(16));
+         btnBar.add(Box.createHorizontalGlue());
+         var save = button(saveCsv, false, false, 0);
+         save.setToolTipText("Save...");
+         btnBar.add(save);
+         btnBar.setFloatable(false);
+         panel.add(btnBar, BorderLayout.NORTH);
+         tabbedPane.addTab(extractorsFactory.name() + " Keywords", panel);
          return null;
       }
    }
 
-   private void doExtractKeywords(ActionEvent e) {
-      var progressWindow = new ProgressMonitor(mainWindowFrame,
-                                               "Extracting Keywords",
-                                               "",
-                                               0,
-                                               (int) currentCorpus.size());
-      var task = new KeywordTask(progressWindow);
-      task.execute();
+   class TopicsTask extends SwingWorker<Void, Void> {
+
+      @Override
+      protected Void doInBackground() throws Exception {
+         final MalletLDA lda = new MalletLDA();
+         lda.estimate(currentCorpus.asDataSet(HStringDataSetGenerator.builder(Types.SENTENCE)
+                                                                     .tokenSequence(Datum.DEFAULT_INPUT,
+                                                                                    LyreExpression.parse(
+                                                                                          "filter(lower(@TOKEN), isContentWord)"))
+                                                                     .build()));
+         for (int i = 0; i < lda.getNumberOfTopics(); i++) {
+            System.out.println(lda.getTopic(i));
+         }
+         return null;
+      }
    }
+
 
    private void openCorpus(ActionEvent e) {
       var od = new JFileChooser();
@@ -171,7 +234,7 @@ public class Hermes extends HermesGUI {
          this.currentCorpus = Corpus.open(od.getSelectedFile().getAbsolutePath());
          this.closeCorpusAction.setEnabled(true);
          this.calcKeywordsAction.setEnabled(true);
-         this.calcSummariesAction.setEnabled(true);
+         this.calcTopicsAction.setEnabled(true);
          this.annotateCoreAction.setEnabled(true);
          this.searchPanel = new SearchPanel();
          this.tabbedPane.addTab("Search", this.searchPanel);
@@ -183,8 +246,11 @@ public class Hermes extends HermesGUI {
       this.currentCorpus = null;
       this.closeCorpusAction.setEnabled(false);
       this.calcKeywordsAction.setEnabled(false);
-      this.calcSummariesAction.setEnabled(false);
-      this.annotateCoreAction.setEnabled(true);
+      this.calcTopicsAction.setEnabled(false);
+      this.annotateCoreAction.setEnabled(false);
+      while (tabbedPane.getTabCount() > 0) {
+         tabbedPane.remove(0);
+      }
    }
 
    private void quit(ActionEvent e) {
@@ -195,7 +261,7 @@ public class Hermes extends HermesGUI {
    protected void initControls() throws Exception {
       closeCorpusAction.setEnabled(false);
       calcKeywordsAction.setEnabled(false);
-      calcSummariesAction.setEnabled(false);
+      calcTopicsAction.setEnabled(false);
       annotateCoreAction.setEnabled(false);
 
       menuBar(Menus.menu("File",
@@ -205,10 +271,10 @@ public class Hermes extends HermesGUI {
                          Menus.SEPARATOR,
                          Menus.menuItem(closeCorpusAction),
                          Menus.menuItem(quitAction)),
-              Menus.menu("Analysis",
+              Menus.menu("Corpus Analysis",
                          'A',
                          Menus.menuItem(calcKeywordsAction),
-                         Menus.menuItem(calcSummariesAction),
+                         Menus.menuItem(calcTopicsAction),
                          Menus.SEPARATOR,
                          Menus.menuItem(annotateCoreAction))
              );

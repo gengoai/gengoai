@@ -87,7 +87,7 @@ public class MangoLoggingWindow extends JComponent {
          final Color severe;
          final Color warning;
          final Color info;
-         if(Colors.isDark($.getBackground())) {
+         if (Colors.isDark($.getBackground())) {
             severe = DARK_SEVERE;
             warning = DARK_WARNING;
             info = DARK_INFO;
@@ -126,20 +126,22 @@ public class MangoLoggingWindow extends JComponent {
       public void publish(LogRecord record) {
          String text = formatter.format(record);
          try {
-            if(msgCount.incrementAndGet() > maxBufferSize) {
+            if (msgCount.incrementAndGet() > maxBufferSize) {
                msgCount.set(1);
                logWindow.setText("");
                logWindow.getDocument()
                         .insertString(logWindow.getText().length(),
                                       text,
                                       logWindow.getStyle(record.getLevel().getName()));
+               logWindow.setCaretPosition(logWindow.getDocument().getLength());
             } else {
                logWindow.getDocument()
                         .insertString(logWindow.getText().length(),
                                       text,
                                       logWindow.getStyle(record.getLevel().getName()));
+               logWindow.setCaretPosition(logWindow.getDocument().getLength());
             }
-         } catch(BadLocationException e) {
+         } catch (BadLocationException e) {
             e.printStackTrace();
          }
       }

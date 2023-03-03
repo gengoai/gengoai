@@ -42,18 +42,18 @@ public class FillMaskGenerator {
 
 
    public FillMaskGenerator() {
-      this(XLM_ROBERTA_LARGE);
+      this(XLM_ROBERTA_LARGE, -1);
    }
 
-   public FillMaskGenerator(@NonNull String modelName) {
+   public FillMaskGenerator(@NonNull String modelName, int device) {
       this.interpreter = new PythonInterpreter("""
                                                      from transformers import pipeline
 
-                                                     nlp = pipeline('fill-mask', model="%s")
+                                                     nlp = pipeline('fill-mask', model="%s", device=%d)
                                                                                                                          
                                                      def pipe(context):
                                                         return nlp(context)
-                                                           """.formatted(modelName, modelName));
+                                                           """.formatted(modelName, device));
    }
 
    public List<Tuple2<String, Double>> predict(String context) {
@@ -69,7 +69,7 @@ public class FillMaskGenerator {
    }
 
    public static void main(String[] args) {
-      FillMaskGenerator generator = new FillMaskGenerator();
+      FillMaskGenerator generator = new FillMaskGenerator(XLM_ROBERTA_LARGE, 0);
       System.out.println(generator.predict("John married Mary last june and had twins. John values %s.".formatted(ROBERTA_MASK_TOKEN)));
    }
 

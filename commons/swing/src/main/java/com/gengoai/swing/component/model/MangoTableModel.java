@@ -19,15 +19,16 @@
 
 package com.gengoai.swing.component.model;
 
+import com.gengoai.io.CSV;
+import com.gengoai.io.CSVWriter;
+import com.gengoai.io.resource.Resource;
 import com.gengoai.tuple.Tuple2;
 import com.gengoai.tuple.Tuple3;
 import lombok.NonNull;
 
 import javax.swing.table.DefaultTableModel;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -37,6 +38,25 @@ public class MangoTableModel extends DefaultTableModel {
    private static final long serialVersionUID = 1L;
    private Map<Integer, Class<?>> columnClasses = new HashMap<>();
    private Map<Integer, Boolean> columnEditable = new HashMap<>();
+
+
+   public void toCSV(@NonNull Resource resource) throws IOException {
+      try (CSVWriter writer = CSV.csv().writer(resource)) {
+         List<String> header = new ArrayList<>();
+         for (int c = 0; c < getColumnCount(); c++) {
+            header.add(getColumnName(c));
+         }
+         writer.write(header);
+         for (int i = 0; i < getRowCount(); i++) {
+            List<Object> row = new ArrayList<>();
+            for (int j = 0; j < getColumnCount(); j++) {
+               row.add(getValueAt(i, j));
+            }
+            writer.write(row);
+         }
+      }
+   }
+
 
    /**
     * Instantiates a new Mango table model.
@@ -62,7 +82,7 @@ public class MangoTableModel extends DefaultTableModel {
    @SafeVarargs
    public MangoTableModel(@NonNull Tuple2<String, Class<?>>... columns) {
       super(Stream.of(columns).map(Tuple2::getKey).toArray(), 0);
-      for(int i = 0; i < columns.length; i++) {
+      for (int i = 0; i < columns.length; i++) {
          setColumnClass(i, columns[i].v2);
       }
    }
@@ -75,12 +95,11 @@ public class MangoTableModel extends DefaultTableModel {
    @SafeVarargs
    public MangoTableModel(@NonNull Tuple3<String, Class<?>, Boolean>... columns) {
       super(Stream.of(columns).map(Tuple3::getV1).toArray(), 0);
-      for(int i = 0; i < columns.length; i++) {
+      for (int i = 0; i < columns.length; i++) {
          setColumnClass(i, columns[i].v2);
          setColumnEditable(i, columns[i].v3);
       }
    }
-
 
 
    /**
@@ -89,7 +108,7 @@ public class MangoTableModel extends DefaultTableModel {
     * @param rows the rows
     */
    public void addAllRows(Object[][] rows) {
-      for(Object[] row : rows) {
+      for (Object[] row : rows) {
          addRow(row);
       }
    }
@@ -112,7 +131,7 @@ public class MangoTableModel extends DefaultTableModel {
       super.addRow(new Vector<>(row));
    }
 
-   public void addRow(Object... row){
+   public void addRow(Object... row) {
       super.addRow(row);
    }
 

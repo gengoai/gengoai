@@ -21,7 +21,6 @@ package com.gengoai.hermes.extraction.summarization;
 
 import com.gengoai.Validation;
 import com.gengoai.conversion.Cast;
-import com.gengoai.hermes.Document;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.Extraction;
@@ -33,14 +32,14 @@ import java.util.List;
 import java.util.Map;
 
 public class HuggingFaceSummarizer implements Summarizer {
-   public static final String BART_LARGE_CNN_SAMSUM = "philschmid/flan-t5-base-samsum";
+   public static final String FLAN_T5_BASE_SAMSUM = "philschmid/flan-t5-base-samsum";
 
    public HuggingFaceSummarizer() {
-      this(BART_LARGE_CNN_SAMSUM, 100);
+      this(FLAN_T5_BASE_SAMSUM, 100);
    }
 
    public HuggingFaceSummarizer(int maxLength) {
-      this(BART_LARGE_CNN_SAMSUM, maxLength);
+      this(FLAN_T5_BASE_SAMSUM, maxLength);
    }
 
    private final PythonInterpreter interpreter;
@@ -71,13 +70,4 @@ public class HuggingFaceSummarizer implements Summarizer {
 
    }
 
-   public static void main(String[] args) {
-      HuggingFaceSummarizer summarizer = new HuggingFaceSummarizer(50);
-      System.out.println(summarizer.extract(Document.create("Jeff: Can I train a \uD83E\uDD17 Transformers model on Amazon SageMaker? \n" +
-                                                            "Philipp: Sure you can use the new Hugging Face Deep Learning Container. \n" +
-                                                            "Jeff: ok.\n" +
-                                                            "Jeff: and how can I get started? \n" +
-                                                            "Jeff: where can I find documentation? \n" +
-                                                            "Philipp: ok, ok you can find everything here. https://huggingface.co/blog/the-partnership-amazon-sagemaker-and-hugging-face")));
-   }
 }
