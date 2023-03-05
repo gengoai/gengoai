@@ -42,21 +42,21 @@ public class QuestionAnswering {
 
 
    public QuestionAnswering() {
-      this(ROBERTA_BASE_SQUAD);
+      this(ROBERTA_BASE_SQUAD, -1);
    }
 
-   public QuestionAnswering(@NonNull String modelName) {
+   public QuestionAnswering(@NonNull String modelName, int device) {
       this.interpreter = new PythonInterpreter("""
                                                      from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
-                                                     nlp = pipeline('question-answering', model="%s", tokenizer="%s") 
+                                                     nlp = pipeline('question-answering', model="%s", tokenizer="%s", device=%d) 
                                                                                                                          
                                                      def pipe(question,context):
                                                         return nlp({
                                                         "question": question,
                                                         "context": context
                                                         })
-                                                           """.formatted(modelName, modelName));
+                                                           """.formatted(modelName, modelName,device));
    }
 
    public QAResult predict(String question, String context) {
@@ -76,6 +76,12 @@ public class QuestionAnswering {
       double score;
       int startChar;
       int endChar;
+   }
+
+   public static void main(String[] args) {
+      QuestionAnswering qa = new QuestionAnswering(ROBERTA_BASE_SQUAD, 0);
+      System.out.println(qa.predict("What is the capital of Florida?",
+              "Florida is a state in the United States of America. Its capital is Tallahassee."));
    }
 
 }

@@ -40,17 +40,17 @@ public class ZeroShotClassification {
 
 
    public ZeroShotClassification() {
-      this(BART_LARGE_MNLI);
+      this(BART_LARGE_MNLI, -1);
    }
 
-   public ZeroShotClassification(@NonNull String modelName) {
+   public ZeroShotClassification(@NonNull String modelName, int device) {
       this.interpreter = new PythonInterpreter("""
                                                      from transformers import pipeline
-                                                     classifier = pipeline("zero-shot-classification", model="%s")
+                                                     classifier = pipeline("zero-shot-classification", model="%s", device=%d)
                                                                        
                                                      def pipe(sentence,labels):
                                                         return classifier(sentence,labels)
-                                                     """.formatted(modelName));
+                                                     """.formatted(modelName,device));
    }
 
    public List<Tuple2<String, Double>> predict(String context, @NonNull String... labels) {
@@ -69,7 +69,7 @@ public class ZeroShotClassification {
 
 
    public static void main(String[] args) {
-      ZeroShotClassification z = new ZeroShotClassification();
+      ZeroShotClassification z = new ZeroShotClassification(BART_LARGE_MNLI, 0);
       System.out.println(z.predict("Inflation has fallen for the sixth consecutive month.",
                                    "Economics", "Business", "Politics"));
    }
