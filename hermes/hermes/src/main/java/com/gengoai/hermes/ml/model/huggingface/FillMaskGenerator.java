@@ -17,16 +17,14 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml.model;
+package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
-import com.gengoai.tuple.Tuple;
 import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

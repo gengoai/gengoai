@@ -17,13 +17,14 @@
  * under the License.
  */
 
-package com.gengoai.hermes.extraction.summarization;
+package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.Validation;
 import com.gengoai.conversion.Cast;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.Extraction;
+import com.gengoai.hermes.extraction.summarization.Summarizer;
 import com.gengoai.python.PythonInterpreter;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
