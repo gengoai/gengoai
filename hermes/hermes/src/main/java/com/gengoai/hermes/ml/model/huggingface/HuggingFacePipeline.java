@@ -34,11 +34,11 @@ public abstract class HuggingFacePipeline<INPUT, OUTPUT> {
         this.interpreter = new PythonInterpreter(pythonCode);
     }
 
-    public OUTPUT predict(@NonNull INPUT input) {
-        return predict(List.of(input)).get(0);
+    public abstract OUTPUT predict(@NonNull INPUT input);
+
+
+    public List<OUTPUT> predict(@NonNull List<INPUT> inputList) {
+        return inputList.stream().map(this::predict).toList();
     }
 
-
-    public abstract List<OUTPUT> predict(@NonNull List<INPUT> inputList);
-
-}
+}//END OF HuggingFacePipeline

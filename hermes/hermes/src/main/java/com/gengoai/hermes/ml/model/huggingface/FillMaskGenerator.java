@@ -19,57 +19,48 @@
 
 package com.gengoai.hermes.ml.model.huggingface;
 
+import com.gengoai.collection.counter.Counter;
+import com.gengoai.collection.counter.Counters;
 import com.gengoai.conversion.Cast;
-import com.gengoai.python.PythonInterpreter;
-import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.gengoai.tuple.Tuples.$;
-
-public class FillMaskGenerator {
-   public static final String BERT_BASE_UNCASED = "bert-base-uncased";
-   public static final String BERT_MASK_TOKEN = "[MASK]";
-   public static final String XLM_ROBERTA_LARGE = "xlm-roberta-large";
-   public static final String ROBERTA_MASK_TOKEN = "<mask>";
-
-   private final PythonInterpreter interpreter;
+public class FillMaskGenerator extends HuggingFacePipeline<String, Counter<String>> {
+    public static final String BERT_BASE_UNCASED = "bert-base-uncased";
+    public static final String BERT_MASK_TOKEN = "[MASK]";
+    public static final String XLM_ROBERTA_LARGE = "xlm-roberta-large";
+    public static final String ROBERTA_MASK_TOKEN = "<mask>";
 
 
-   public FillMaskGenerator() {
-      this(XLM_ROBERTA_LARGE, -1);
-   }
+    public FillMaskGenerator() {
+        this(XLM_ROBERTA_LARGE, XLM_ROBERTA_LARGE, -1);
+    }
 
-   public FillMaskGenerator(@NonNull String modelName, int device) {
-      this.interpreter = new PythonInterpreter("""
-                                                     from transformers import pipeline
+    public FillMaskGenerator(@NonNull String modelName,
+                             @NonNull String tokenizerName,
+                             int device) {
+        super("""
+                from transformers import pipeline
 
-                                                     nlp = pipeline('fill-mask', model="%s", device=%d)
-                                                                                                                         
-                                                     def pipe(context):
-                                                        return nlp(context)
-                                                           """.formatted(modelName, device));
-   }
+                nlp = pipeline('fill-mask', model="%s", tokenizer="%s", device=%d)
+                                                                                    
+                def pipe(context):
+                   return nlp(context)
+                      """.formatted(modelName, tokenizerName, device));
+    }
 
-   public List<Tuple2<String, Double>> predict(String context) {
-      List<?> m = Cast.as(interpreter.invoke("pipe", context));
-      List<Tuple2<String, Double>> rval = new ArrayList<>();
-      for (Object o : m) {
-         Map<String, ?> map = Cast.as(o);
-         String tokenStr = map.get("token_str").toString();
-         double score = ((Number) map.get("score")).doubleValue();
-         rval.add($(tokenStr, score));
-      }
-      return rval;
-   }
+    public Counter<String> predict(String context) {
+        List<?> m = Cast.as(interpreter.invoke("pipe", context));
+        Counter<String> rval = Counters.newCounter();
+        for (Object o : m) {
+            Map<String, ?> map = Cast.as(o);
+            String tokenStr = map.get("token_str").toString();
+            double score = ((Number) map.get("score")).doubleValue();
+            rval.set(tokenStr, score);
+        }
+        return rval;
+    }
 
-   public static void main(String[] args) {
-      FillMaskGenerator generator = new FillMaskGenerator(XLM_ROBERTA_LARGE, 0);
-      System.out.println(generator.predict("John married Mary last june and had twins. John values %s.".formatted(ROBERTA_MASK_TOKEN)));
-   }
-
-
-}
+}//END OF FillMaskGenerator
