@@ -19,8 +19,6 @@
 
 package com.gengoai.hermes.ml.model.huggingface;
 
-import com.gengoai.collection.counter.Counter;
-import com.gengoai.collection.counter.Counters;
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
@@ -28,27 +26,23 @@ import lombok.NonNull;
 import java.util.List;
 import java.util.Map;
 
-public class FillMaskGenerator {
-    public static final String BERT_BASE_UNCASED = "bert-base-uncased";
-    public static final String BERT_MASK_TOKEN = "[MASK]";
-    public static final String XLM_ROBERTA_LARGE = "xlm-roberta-large";
-    public static final String ROBERTA_MASK_TOKEN = "<mask>";
-
+public class TokenClassification {
+    public static final String BERT_BASE_NER = "dslim/bert-base-NER";
 
     private final PythonInterpreter interpreter;
 
-    public FillMaskGenerator(@NonNull String modelName,
-                             int device) {
+    public TokenClassification(@NonNull String modelName,
+                               int device) {
         this(modelName, modelName, device);
     }
 
-    public FillMaskGenerator(@NonNull String modelName,
-                             @NonNull String tokenizerName,
-                             int device) {
+    public TokenClassification(@NonNull String modelName,
+                               @NonNull String tokenizerName,
+                               int device) {
         this.interpreter = new PythonInterpreter("""
                 from transformers import pipeline
 
-                nlp = pipeline('fill-mask', model="%s", tokenizer="%s", device=%d)
+                nlp = pipeline('ner', model="%s", tokenizer="%s", device=%d, aggregation_strategy="simple")
                                                                                     
                 def pipe(context):
                    return nlp(list(context))
@@ -56,22 +50,25 @@ public class FillMaskGenerator {
     }
 
 
-    public List<Counter<String>> predict(List<String> contexts) {
-        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", contexts));
-        return rvals.stream().map(m -> {
-            Counter<String> rval = Counters.newCounter();
-            for (Object o : m) {
-                Map<String, ?> map = Cast.as(o);
-                String tokenStr = map.get("token_str").toString();
-                double score = ((Number) map.get("score")).doubleValue();
-                rval.set(tokenStr, score);
-            }
-            return rval;
-        }).toList();
+    public record Output(String label, double confidence, int start, int end) {
+
     }
 
-    public Counter<String> predict(String context) {
+    public List<List<Output>> predict(List<String> contexts) {
+        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", contexts));
+        return rvals.stream().map(l ->
+                l.stream().map(m -> new Output(
+                        m.get("entity_group").toString(),
+                        Cast.as(m.get("score"), Number.class).doubleValue(),
+                        Cast.as(m.get("start"), Number.class).intValue(),
+                        Cast.as(m.get("end"), Number.class).intValue()
+                )).toList()
+        ).toList();
+    }
+
+    public List<Output> predict(String context) {
         return predict(List.of(context)).get(0);
     }
 
-}//END OF FillMaskGenerator
+
+}//END OF TokenClassification

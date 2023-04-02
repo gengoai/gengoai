@@ -22,18 +22,24 @@ package com.gengoai.hermes.ml.model.huggingface;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.conversion.Cast;
+import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class TextClassification extends HuggingFacePipeline<String, Counter<String>> {
+public class TextClassification {
+    private final PythonInterpreter interpreter;
+
+    public TextClassification(@NonNull String modelName,
+                              int device) {
+        this(modelName, modelName, device);
+    }
 
     public TextClassification(@NonNull String modelName,
                               @NonNull String tokenizerName,
                               int device) {
-        super("""
+        this.interpreter = new PythonInterpreter("""
                 from transformers import pipeline
                 nlp = pipeline('text-classification', model="%s", tokenizer="%s", device=%d, top_k=None)
                                 
@@ -43,39 +49,20 @@ public class TextClassification extends HuggingFacePipeline<String, Counter<Stri
                 device));
     }
 
-    @Override
-    public Counter<String> predict(@NonNull String s) {
-        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", s));
-        Counter<String> counter = Counters.newCounter();
-        for (Map<String, ?> stringMap : rvals.get(0)) {
-            counter.set(stringMap.get("label").toString(),
-                    Cast.as(stringMap.get("score"), Double.class));
-        }
-        return counter;
+    public Counter<String> predict(@NonNull String sequence) {
+        return predict(List.of(sequence)).get(0);
     }
 
-    @Override
-    public List<Counter<String>> predict(@NonNull List<String> strings) {
-        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", strings));
-        List<Counter<String>> counterList = new ArrayList<>();
-        for (List<Map<String, ?>> rList : rvals) {
+    public List<Counter<String>> predict(@NonNull List<String> sequences) {
+        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", sequences));
+        return rvals.stream().map(rList -> {
             Counter<String> counter = Counters.newCounter();
             for (Map<String, ?> stringMap : rList) {
                 counter.set(stringMap.get("label").toString(),
                         Cast.as(stringMap.get("score"), Double.class));
             }
-            counterList.add(counter);
-        }
-        return counterList;
+            return counter;
+        }).toList();
     }
 
-    public static void main(String[] args) {
-        TextClassification textClassification = new TextClassification(
-                "roberta-large-mnli",
-                "roberta-large-mnli",
-                0
-        );
-        System.out.println(textClassification.predict("I hated the food."));
-    }
-
-}
+}//END OF TextClassification

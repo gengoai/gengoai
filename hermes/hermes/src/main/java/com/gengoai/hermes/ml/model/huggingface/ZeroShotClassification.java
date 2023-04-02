@@ -22,31 +22,24 @@ package com.gengoai.hermes.ml.model.huggingface;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.conversion.Cast;
+import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
 
 import java.util.List;
 import java.util.Map;
 
-public class ZeroShotClassification extends HuggingFacePipeline<ZeroShotClassification.ZeroShotInput, Counter<String>> {
+public class ZeroShotClassification {
 
     public static final String BART_LARGE_MNLI = "facebook/bart-large-mnli";
 
+    private final PythonInterpreter interpreter;
 
-    public ZeroShotClassification() {
-        this(BART_LARGE_MNLI, BART_LARGE_MNLI, false, -1);
-    }
-
-    public ZeroShotClassification(@NonNull String modelName,
-                                  boolean multiLabel,
-                                  int device) {
+    public ZeroShotClassification(@NonNull String modelName, boolean multiLabel, int device) {
         this(modelName, modelName, multiLabel, device);
     }
 
-    public ZeroShotClassification(@NonNull String modelName,
-                                  @NonNull String tokenizerName,
-                                  boolean multiLabel,
-                                  int device) {
-        super("""
+    public ZeroShotClassification(@NonNull String modelName, @NonNull String tokenizerName, boolean multiLabel, int device) {
+        this.interpreter = new PythonInterpreter("""
                 from transformers import pipeline
                 nlp = pipeline('zero-shot-classification', model="%s", tokenizer="%s", device=%d)
                                 
@@ -57,25 +50,24 @@ public class ZeroShotClassification extends HuggingFacePipeline<ZeroShotClassifi
                 multiLabel ? "True" : "False"));
     }
 
-    public static ZeroShotInput createInput(String sequence, List<String> labels) {
-        return new ZeroShotInput(sequence, labels);
+
+    public List<Counter<String>> predict(@NonNull List<String> sequences, @NonNull List<String> candidateLabels) {
+        List<Map<String, ?>> rvals = Cast.as(interpreter.invoke("pipe",
+                sequences,
+                candidateLabels));
+        return rvals.stream().map(rval -> {
+            List<String> labels = Cast.as(rval.get("labels"));
+            List<Double> scores = Cast.as(rval.get("scores"));
+            Counter<String> counter = Counters.newCounter();
+            for (int i = 0; i < labels.size(); i++) {
+                counter.set(labels.get(i), scores.get(i));
+            }
+            return counter;
+        }).toList();
     }
 
-    @Override
-    public Counter<String> predict(@NonNull ZeroShotInput zeroShotInput) {
-        Map<String, ?> rvals = Cast.as(Cast.as(interpreter.invoke("pipe",
-                List.of(zeroShotInput.sequence),
-                zeroShotInput.labels), List.class).get(0));
-        List<String> labels = Cast.as(rvals.get("labels"));
-        List<Double> scores = Cast.as(rvals.get("scores"));
-        Counter<String> counter = Counters.newCounter();
-        for (int i = 0; i < labels.size(); i++) {
-            counter.set(labels.get(i), scores.get(i));
-        }
-        return counter;
-    }
-
-    public record ZeroShotInput(String sequence, List<String> labels) {
+    public Counter<String> predict(@NonNull String sequence, @NonNull List<String> candidateLabels) {
+        return predict(List.of(sequence), candidateLabels).get(0);
     }
 
 }//END OF ZeroShotClassification

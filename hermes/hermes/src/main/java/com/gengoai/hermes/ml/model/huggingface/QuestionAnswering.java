@@ -20,70 +20,62 @@
 package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.conversion.Cast;
+import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
-import lombok.Value;
 
-import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 
-public class QuestionAnswering extends HuggingFacePipeline<QuestionAnswering.QAInput, QuestionAnswering.QAOutput> {
+public class QuestionAnswering {
     public static final String ROBERTA_BASE_SQUAD = "deepset/roberta-base-squad2";
 
-    public QuestionAnswering() {
-        this(ROBERTA_BASE_SQUAD, ROBERTA_BASE_SQUAD, -1);
+    private final PythonInterpreter interpreter;
+
+    public QuestionAnswering(@NonNull String modelName,
+                             int device) {
+        this(modelName, modelName, device);
     }
 
     public QuestionAnswering(@NonNull String modelName,
                              @NonNull String tokenizerName,
                              int device) {
-        super("""
+        this.interpreter = new PythonInterpreter("""
                 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
                 nlp = pipeline('question-answering', model="%s", tokenizer="%s", device=%d) 
                                                                                     
                 def pipe(context, question):
-                   return nlp({'context':context,'question':question})
+                   return nlp({'context':list(context),'question':list(question)})
                       """.formatted(modelName, tokenizerName, device));
     }
 
-    public static QAInput createInput(String context, String question) {
-        return new QAInput(context, question);
+    public QAOutput predict(@NonNull String context, @NonNull String question) {
+        return predict(List.of(new QAInput(context, question))).get(0);
     }
 
-    @Override
-    public QAOutput predict(@NonNull QAInput qaInput) {
-        HashMap<String, ?> m = Cast.as(interpreter.invoke("pipe", qaInput.context, qaInput.question));
-        return new QAOutput(
+
+    public QAOutput predict(@NonNull QAInput input) {
+        return predict(List.of(input)).get(0);
+    }
+
+    public List<QAOutput> predict(@NonNull List<QAInput> inputs) {
+        List<HashMap<String, ?>> rvals = Cast.as(interpreter.invoke("pipe",
+                inputs.stream().map(QAInput::context).toList(),
+                inputs.stream().map(QAInput::question).toList()
+        ));
+        return rvals.stream().map(m -> new QAOutput(
                 m.get("answer").toString(),
                 Cast.as(m.get("score"), Number.class).doubleValue(),
                 Cast.as(m.get("start"), Number.class).intValue(),
                 Cast.as(m.get("end"), Number.class).intValue()
-        );
-    }
-
-    public QAResult predict(String question, String context) {
-        HashMap<String, ?> m = Cast.as(interpreter.invoke("pipe", question, context));
-        return new QAResult(
-                m.get("answer").toString(),
-                Cast.as(m.get("score"), Number.class).doubleValue(),
-                Cast.as(m.get("start"), Number.class).intValue(),
-                Cast.as(m.get("end"), Number.class).intValue()
-        );
-    }
-
-    public record QAInput(String context, String question) {
+        )).toList();
     }
 
     public record QAOutput(String answer, double score, int startChart, int endChar) {
     }
 
-    @Value
-    public static class QAResult implements Serializable {
-        private static final long serialVersionUID = 1L;
-        String answer;
-        double score;
-        int startChar;
-        int endChar;
+    public record QAInput(@NonNull String context, @NonNull String question) {
+
     }
 
 }//END OF QuestionAnswering

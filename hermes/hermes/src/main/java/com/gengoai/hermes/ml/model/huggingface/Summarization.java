@@ -24,28 +24,28 @@ import com.gengoai.hermes.HString;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.Extraction;
 import com.gengoai.hermes.extraction.summarization.Summarizer;
+import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Summarization extends HuggingFacePipeline<String, String> implements Summarizer {
+public class Summarization implements Summarizer {
     public static final String FLAN_T5_BASE_SAMSUM = "philschmid/flan-t5-base-samsum";
 
-    public Summarization() {
-        this(FLAN_T5_BASE_SAMSUM, FLAN_T5_BASE_SAMSUM, -1, 100);
-    }
+    private final PythonInterpreter interpreter;
 
-    public Summarization(int maxLength) {
-        this(FLAN_T5_BASE_SAMSUM, FLAN_T5_BASE_SAMSUM, -1, maxLength);
+    public Summarization(@NonNull String modelName,
+                         int device,
+                         int maxLength) {
+        this(modelName, modelName, device, maxLength);
     }
 
     public Summarization(@NonNull String modelName,
                          @NonNull String tokenizerName,
                          int device,
                          int maxLength) {
-        super("""
+        this.interpreter = new PythonInterpreter("""
                 from transformers import pipeline
 
                 nlp = pipeline('summarization', model="%s", tokenizer="%s", device=%d)
@@ -58,9 +58,7 @@ public class Summarization extends HuggingFacePipeline<String, String> implement
 
     @Override
     public Extraction extract(@NonNull HString hString) {
-        List<?> m = Cast.as(interpreter.invoke("pipe", hString.toString()));
-        String summary_text = ((Map<String, String>) m.get(0)).get("summary_text");
-        return Extraction.fromStringList(List.of(summary_text));
+        return Extraction.fromStringList(List.of(predict(hString.toString())));
     }
 
 
@@ -69,20 +67,13 @@ public class Summarization extends HuggingFacePipeline<String, String> implement
 
     }
 
-    @Override
-    public String predict(@NonNull String s) {
-        List<?> m = Cast.as(interpreter.invoke("pipe", s));
-        return ((Map<String, String>) m.get(0)).get("summary_text");
+    public String predict(@NonNull String text) {
+        return predict(List.of(text)).get(0);
     }
 
-    @Override
-    public List<String> predict(@NonNull List<String> strings) {
-        List<Map<String, ?>> rvals = Cast.as(interpreter.invoke("pipe", strings));
-        List<String> summaries = new ArrayList<>();
-        for (Map<String, ?> rList : rvals) {
-            summaries.add(rList.get("summary_text").toString());
-        }
-        return summaries;
+    public List<String> predict(@NonNull List<String> texts) {
+        List<Map<String, ?>> rvals = Cast.as(interpreter.invoke("pipe", texts));
+        return rvals.stream().map(rList -> rList.get("summary_text").toString()).toList();
     }
 
 }//END OF Summarization

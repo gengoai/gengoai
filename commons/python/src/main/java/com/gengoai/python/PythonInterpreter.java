@@ -26,9 +26,9 @@ import lombok.NonNull;
 
 import java.util.Map;
 
-public class PythonInterpreter {
+public final class PythonInterpreter {
 
-   protected final MonitoredObject<SharedInterpreter> interpreter;
+   private final MonitoredObject<SharedInterpreter> interpreter;
 
 
    public PythonInterpreter() {
