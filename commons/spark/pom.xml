@@ -31,7 +31,7 @@
     <artifactId>commons-spark</artifactId>
     <packaging>pom</packaging>
     <properties>
-        <spark-version>3.0.1</spark-version>
+        <spark-version>3.4.0</spark-version>
     </properties>
 
     <dependencies>
