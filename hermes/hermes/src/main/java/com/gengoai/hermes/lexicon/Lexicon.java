@@ -32,6 +32,7 @@ import com.gengoai.hermes.extraction.Extractor;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Predicate;
@@ -80,6 +81,7 @@ import java.util.function.Predicate;
  * @author David B. Bracewell
  */
 public abstract class Lexicon implements Predicate<HString>, WordList, Extractor, PrefixSearchable, Serializable {
+   @Serial
    private static final long serialVersionUID = 1L;
 
    /**
@@ -224,9 +226,9 @@ public abstract class Lexicon implements Predicate<HString>, WordList, Extractor
    }
 
    /**
-    * Is the Lexicon case sensitive or not
+    * Is the Lexicon case-sensitive or not
     *
-    * @return True if the lexicon is case sensitive, False if not
+    * @return True if the lexicon is case-sensitive, False if not
     */
    public abstract boolean isCaseSensitive();
 

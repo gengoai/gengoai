@@ -45,64 +45,71 @@ import static com.gengoai.apollo.feature.Featurizer.valueFeaturizer;
 import static java.util.stream.Collectors.toList;
 
 public class NeuralNERModel extends TFSequenceLabeler {
-   private static final long serialVersionUID = 1L;
-   private static final String LABEL = "label";
-   private static final String TOKENS = "words";
-   private static final String CHARS = "chars";
-   private static final String SHAPE = "shape";
-   private static final int MAX_WORD_LENGTH = 25;
+    private static final long serialVersionUID = 1L;
+    private static final String LABEL = "label";
+    private static final String TOKENS = "words";
+    private static final String CHARS = "chars";
+    private static final String SHAPE = "shape";
+    private static final int MAX_WORD_LENGTH = 25;
 
-   public NeuralNERModel() {
-      super(
-            List.of(
-                  TFInputVar.sequence(TOKENS, fixedEncoder(ENResources.gloveSmallLexicon(), Consts.UNKNOWN_WORD)),
-                  TFInputVar.sequence(SHAPE),
-                  TFInputVar.sequence(CHARS, -1, MAX_WORD_LENGTH)
-                   ),
-            List.of(
-                  TFOutputVar.sequence(LABEL,
-                                       "label/truediv",
-                                       "O", IOBValidator.INSTANCE)
-                   ),
-            IOB.decoder(Types.ML_ENTITY)
-           );
-   }
+    public NeuralNERModel() {
+        super(
+                List.of(
+                        TFInputVar.sequence(TOKENS,
+//                                "serving_default_words",
+                                fixedEncoder(ENResources.gloveSmallLexicon(), Consts.UNKNOWN_WORD)),
+                        TFInputVar.sequence(SHAPE,
+//                                "serving_default_shape",
+                                -1),
+                        TFInputVar.sequence(CHARS,
+//                                "serving_default_chars",
+                                -1, MAX_WORD_LENGTH)
+                ),
+                List.of(
+                        TFOutputVar.sequence(LABEL,
+//"StatefulPartitionedCall:0",
+                                "label/truediv",
+                                "O", IOBValidator.INSTANCE)
+                ),
+                IOB.decoder(Types.ML_ENTITY)
+        );
+    }
 
-   public static void main(String[] args) throws Exception {
-      Config.initialize("CNN", args, "com.gengoai.hermes");
-      if (Math.random() < 0) {
-         Config.setProperty("tfmodel.data", "/work/prj/gengoai/python/tensorflow/data/entity.db");
-         NeuralNERModel ner = new NeuralNERModel();
-         DocumentCollection ontonotes = Corpus.open("/shared/Data/corpora/hermes_data/ontonotes_ner")
-                                              .query("$SPLIT='TRAIN'");
-         ner.estimate(ontonotes);
-         ModelIO.save(ner, Resources.from("/home/ik/hermes/en/models/ner"));
-      } else {
-         NeuralNERModel ner = ModelIO.load(Resources.from("/home/ik/hermes/en/models/ner/"));
-         DocumentCollection ontonotes = Corpus.open("/shared/Data/corpora/hermes_data/ontonotes_ner")
-                                              .query("$SPLIT='TEST'");
-         CoNLLEvaluation evaluation = new CoNLLEvaluation("label");
-         DataSet ds = ner.transform(ontonotes);
-         evaluation.evaluate(ner.delegate(), ds);
-         evaluation.report();
-      }
-   }
+    public static void main(String[] args) throws Exception {
+        Config.initialize("CNN", args, "com.gengoai.hermes");
+        if (Math.random() < 0) {
+            Config.setProperty("tfmodel.data", "/work/prj/gengoai/python/tensorflow/data/entity.db");
+            NeuralNERModel ner = new NeuralNERModel();
+            DocumentCollection ontonotes = Corpus.open("/shared/ikdata/corpora/hermes_data/ontonotes_ner")
+                    .query("$SPLIT='TRAIN'");
+            ner.estimate(ontonotes);
+            ModelIO.save(ner, Resources.from("/home/ik/hermes/en/models/ner"));
+        } else {
+            NeuralNERModel ner = ModelIO.load(Resources.from("/home/ik/hermes/en/models/ner/"));
+            DocumentCollection ontonotes = Corpus.open("/shared/ikdata/corpora/hermes_data/ontonotes_ner")
+                    .query("$SPLIT='TEST'");
+            CoNLLEvaluation evaluation = new CoNLLEvaluation("label");
+            DataSet ds = ner.transform(ontonotes);
+            evaluation.evaluate(ner.delegate(), ds);
+            evaluation.report();
+        }
+    }
 
-   @Override
-   public HStringDataSetGenerator getDataGenerator() {
-      return HStringDataSetGenerator.builder(Types.SENTENCE)
-                                    .tokenSequence(TOKENS, valueFeaturizer(HString::toLowerCase))
-                                    .tokenSequence(CHARS, booleanFeaturizer(h -> h.charNGrams(1)
-                                                                                  .stream()
-                                                                                  .map(HString::toString)
-                                                                                  .collect(toList())))
-                                    .tokenSequence(SHAPE, Features.WordShape)
-                                    .source(LABEL, IOB.encoder(Types.ENTITY))
-                                    .build();
-   }
+    @Override
+    public HStringDataSetGenerator getDataGenerator() {
+        return HStringDataSetGenerator.builder(Types.SENTENCE)
+                .tokenSequence(TOKENS, valueFeaturizer(HString::toLowerCase))
+                .tokenSequence(CHARS, booleanFeaturizer(h -> h.charNGrams(1)
+                        .stream()
+                        .map(HString::toString)
+                        .collect(toList())))
+                .tokenSequence(SHAPE, Features.WordShape)
+                .source(LABEL, IOB.encoder(Types.ENTITY))
+                .build();
+    }
 
-   @Override
-   public String getVersion() {
-      return "1.2";
-   }
+    @Override
+    public String getVersion() {
+        return "1.2";
+    }
 }

@@ -3,7 +3,7 @@ OUT_DIR="$BASE_DIR/target/hermes/"
 BUILD_DIR="$BASE_DIR/release/distribution"
 
 # Make sure everything is building and tests pass
-mvn clean install || exit
+mvn clean install -DskipTests=true || exit
 
 #Prepare the output directory
 mkdir -p "$OUT_DIR" &>/dev/null

@@ -30,12 +30,14 @@ import com.gengoai.string.Strings;
 import lombok.extern.java.Log;
 import org.kohsuke.MetaInfServices;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Log
 public class ImportDocuments implements Action {
    public static final String CORPUS_LOCATION = "CORPUS_LOCATION";
+   @Serial
    private static final long serialVersionUID = 1L;
 
    @Override

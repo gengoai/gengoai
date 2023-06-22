@@ -21,12 +21,14 @@ package com.gengoai.hermes.ml.model;
 
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.evaluation.Evaluation;
 import com.gengoai.apollo.model.Model;
 import com.gengoai.apollo.model.tensorflow.TFInputVar;
 import com.gengoai.apollo.model.tensorflow.TFModel;
 import com.gengoai.apollo.model.tensorflow.TFOutputVar;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.HString;
+import com.gengoai.hermes.ml.CoNLLEvaluation;
 import com.gengoai.hermes.ml.HStringMLModel;
 import com.gengoai.hermes.ml.TagDecoder;
 import lombok.NonNull;
@@ -66,5 +68,10 @@ public abstract class TFSequenceLabeler extends TFModel implements HStringMLMode
    @Override
    public void setVersion(String version) {
       throw new UnsupportedOperationException();
+   }
+
+   @Override
+   public Evaluation getEvaluator() {
+      return new CoNLLEvaluation(getOutput());
    }
 }

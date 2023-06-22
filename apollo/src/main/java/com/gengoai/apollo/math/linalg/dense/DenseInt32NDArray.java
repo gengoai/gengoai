@@ -26,6 +26,8 @@ import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.tensorflow.ndarray.IntNdArray;
 
+import java.util.Arrays;
+
 import static com.gengoai.Validation.checkArgument;
 
 /**
@@ -71,7 +73,7 @@ public class DenseInt32NDArray extends Int32NDArray {
    /**
     * <p>Converts TensorFlow Tenors for INT32 type to DenseFloat32NDArray.</p>
     *
-    * @param tensor the tensor
+    * @param ndarray the tensor
     * @return the converted Tensor
     */
    public static NumericNDArray fromTensor(@NonNull IntNdArray ndarray) {

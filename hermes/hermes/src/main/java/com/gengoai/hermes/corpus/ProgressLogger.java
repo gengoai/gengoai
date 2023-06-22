@@ -40,7 +40,7 @@ public interface ProgressLogger extends Serializable {
                                        ? Corpus.class
                                        : DocumentCollection.class),
                     Config.get(DocumentCollection.REPORT_LEVEL)
-                          .as(Level.class, Level.FINEST),
+                          .as(Level.class, Level.INFO),
                     Config.get(DocumentCollection.REPORT_INTERVAL)
                           .as(int.class, 500),
                     operation);

@@ -32,6 +32,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.kohsuke.MetaInfServices;
 
+import java.io.Serial;
+
 /**
  * The type Term extraction processor.
  *
@@ -42,6 +44,7 @@ public class TermCounts implements Action {
     * The constant EXTRACTED_TERMS.
     */
    public static final String EXTRACTED_TERMS = "EXTRACTED_TERMS";
+   @Serial
    private static final long serialVersionUID = 1L;
    @Getter
    @Setter

@@ -29,7 +29,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>commons-spark</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <properties>
         <spark-version>3.4.0</spark-version>
     </properties>

@@ -27,6 +27,7 @@ import com.gengoai.apollo.math.linalg.Shape;
 import lombok.*;
 import org.tensorflow.Tensor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +41,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 public abstract class TFVar implements Serializable {
+   @Serial
    private static final long serialVersionUID = 1L;
    @NonNull
    private final String name;
@@ -113,7 +115,6 @@ public abstract class TFVar implements Serializable {
    public final Tensor toTensor(@NonNull List<Datum> data) {
       boolean isScalar = data.get(0).get(name).asNDArray().shape().isScalar();
       int[] batch_shape;
-
       if (isScalar) {
          batch_shape = new int[]{data.size()};
       } else {
@@ -121,11 +122,9 @@ public abstract class TFVar implements Serializable {
          batch_shape[0] = data.size();
          System.arraycopy(dimensionsOf(data), 0, batch_shape, 1, shape.length);
       }
-
       //Create the batch NDArray
       NDArray batch = data.get(0).get(name).asNDArray().factory().zeros(batch_shape);
       Object padValue = batch.getType() == String.class ? "--PAD--" : 0;
-
       for (int i = 0; i < data.size(); i++) {
          NDArray ni = data.get(i).get(name).asNDArray();
          if (batch.shape().isScalar()) {

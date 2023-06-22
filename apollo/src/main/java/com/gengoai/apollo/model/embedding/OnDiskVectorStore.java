@@ -205,7 +205,7 @@ public class OnDiskVectorStore implements KeyedVectorStore {
 
    public static void main(String[] args) throws Exception {
 //      final Resource path = Resources.from("/home/ik/Downloads/glove.840B.300d.txt");
-      final Resource path = Resources.from("/shared/Data/Common/glove.6B.50d.txt");
+      final Resource path = Resources.from("/shared/ikdata/Common/glove.6B.50d.txt");
       final Resource vectorFile = Resources.from("/home/ik/glove6b.50d");
       createVectorStore(path,
                         50,

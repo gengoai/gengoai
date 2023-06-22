@@ -32,7 +32,7 @@ from pathlib import Path
 
 script_path = Path(os.path.dirname(os.path.realpath(sys.argv[0])))
 base_path = script_path.parent.absolute()
-data_dir = base_path / "distribution" / "data"
+data_dir = base_path /"release"/ "distribution" / "data"
 target_dir = base_path / "target" / "data"
 
 parser = argparse.ArgumentParser(description='Prepare the data for upload to server')
@@ -44,11 +44,12 @@ args = parser.parse_args()
 
 def tar_file(source, target):
     cmd = f"cd {source.parent} && tar czf {target} {source.relative_to(source.parent)}"
+    print(cmd)
     if source.is_dir():
         cmd += "/*"
     else:
         cmd += ".model.bin"
-    print(f"Packaging {source.name}")
+    print(f"Packaging {source.name} {source}")
     os.system(cmd)
 
 

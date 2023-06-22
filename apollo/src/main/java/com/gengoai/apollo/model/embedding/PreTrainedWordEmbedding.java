@@ -42,6 +42,13 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
    private String input = Datum.DEFAULT_INPUT;
    private String output = Datum.DEFAULT_OUTPUT;
 
+
+   public static PreTrainedWordEmbedding from(KeyedVectorStore keyedVectorStore) {
+      PreTrainedWordEmbedding e = new PreTrainedWordEmbedding();
+      e.vectorStore = keyedVectorStore;
+      return e;
+   }
+
    /**
     * Loads a pre-trained embedding in Word2Vec text format from the given resource.
     *
