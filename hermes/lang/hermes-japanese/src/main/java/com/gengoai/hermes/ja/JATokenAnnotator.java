@@ -100,19 +100,4 @@ public class JATokenAnnotator extends Annotator {
         return Set.of(Types.TOKEN, Types.LEMMA, Types.PART_OF_SPEECH, Types.SENTENCE);
     }
 
-    public static void main(String[] args) throws Exception {
-        Config.initialize("Sandbox", args);
-        Document doc = Document.create("気象庁によりますと、山口県では、活発な雨雲が連なる「線状降水帯」が発生し、非常に激しい雨が降り続いています。気象庁は、災害の危険度が急激に高まっているとして、緊急の情報を出し、厳重な警戒を呼びかけています。"
-                , Language.JAPANESE);
-        doc.annotate(Types.TOKEN, Types.PHRASE_CHUNK);
-        for (Annotation sentence : doc.sentences()) {
-            System.out.println(sentence.toPOSString());
-            for (Annotation pc : sentence.annotations(Types.PHRASE_CHUNK)) {
-                System.out.println(pc + " : " + pc.pos());
-            }
-            System.out.println();
-        }
-    }
-
-
 }

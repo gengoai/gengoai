@@ -38,7 +38,7 @@ public class JAPhraseChunkAnnotator extends Annotator {
     public JAPhraseChunkAnnotator() {
         try {
             this.tre = TokenRegex.compile(
-                    "( (?<NP> (#ADJECTIVE | #NUMERAL)* #NOUN+ (　( #助詞連体化 | #助詞格助詞 |　'な') (#ADJECTIVE | #NUMERAL)* #NOUN)*　#NUMERAL*) ) | " +
+                    "( (?<NP> (#ADJECTIVE 'ない'? | #NUMERAL)* #NOUN+ (　( #助詞連体化 | #助詞格助詞 |　'な') (#ADJECTIVE 　'ない'? | #NUMERAL)* #NOUN)*　#NUMERAL*) ) | " +
                             " (?<VP> #名詞サ変接続* #VERB #AUXILIARY*)"
             );
         } catch (ParseException e) {
