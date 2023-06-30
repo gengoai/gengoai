@@ -19,7 +19,9 @@
 
 package com.gengoai.hermes.zh;
 
+import com.gengoai.Language;
 import com.gengoai.hermes.AnnotatableType;
+import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.Document;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.annotator.Annotator;
@@ -245,4 +247,15 @@ public class ZHTokenAnnotator extends Annotator {
    public Set<AnnotatableType> satisfies() {
       return Set.of(Types.TOKEN, Types.LEMMA);
    }
+
+
+   public static void main(String[] args) {
+      Document doc = Document.create("被取消的还有国务卿蓬佩奥（Mike Pompeo）的欧洲之行。:)");
+      doc.setLanguage(Language.CHINESE);
+      doc.annotate(Types.TOKEN, Types.TRANSLITERATION);
+      for (Annotation token : doc.tokens()) {
+         System.out.println(token + " (" + token.attribute(Types.TRANSLITERATION) + ") " + token.pos());
+      }
+   }
+
 }//END OF ZHTokenAnnotator
