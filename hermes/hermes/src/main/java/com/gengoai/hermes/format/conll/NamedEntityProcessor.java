@@ -35,52 +35,33 @@ import org.kohsuke.MetaInfServices;
 @MetaInfServices(CoNLLColumnProcessor.class)
 public class NamedEntityProcessor extends IOBFieldProcessor {
 
-   /**
-    * Instantiates a new Named entity processor.
-    */
-   public NamedEntityProcessor() {
-      super(Types.ENTITY, Types.ENTITY_TYPE);
-   }
+    /**
+     * Instantiates a new Named entity processor.
+     */
+    public NamedEntityProcessor() {
+        super(Types.ENTITY, Types.ENTITY_TYPE);
+    }
 
-   @Override
-   public String getFieldName() {
-      return "ENTITY";
-   }
+    @Override
+    public String getFieldName() {
+        return "ENTITY";
+    }
 
-//   @Override
-//   protected String normalizeTag(String tag) {
-//      tag = tag.toUpperCase();
-//      if(Config.get("conll.ner.normalize").asBooleanValue(false)) {
-//         switch(tag) {
-//            case "PER":
-//               return "PERSON";
-//            case "ORG":
-//            case "NORP":
-//               return "ORGANIZATION";
-//            case "LOC":
-//            case "GPE":
-//               return "LOCATION";
-//            case "ORDINAL":
-//            case "CARDINAL":
-//               return "NUMBER";
-//            case "LANGUAGE":
-//            case "LAW":
-//            case "PRODUCT":
-//            case "WORK_OF_ART":
-//               return "MISC";
-//            case "FAC":
-//               return null;
-//         }
-//      }
-//      if(tag.equals("ORG")) {
-//         return "ORGANIZATION";
-//      }
-//      if(tag.equals("LOC")) {
-//         return "LOCATION";
-//      }
-//      if(tag.equals("PER")) {
-//         return "PERSON";
-//      }
-//      return tag;
-//   }
+    @Override
+    protected String normalizeTag(String tag) {
+        tag = tag.toUpperCase();
+        switch (tag) {
+            case "NORP":
+                return "PERSON_GROUP";
+            case "FAC":
+                return "FACILITY";
+            case "ORG":
+                return "ORGANIZATION";
+            case "LOC":
+                return "LOCATION";
+            case "PER":
+                return "PERSON";
+        }
+        return tag;
+    }
 }//END OF NamedEntityProcessor

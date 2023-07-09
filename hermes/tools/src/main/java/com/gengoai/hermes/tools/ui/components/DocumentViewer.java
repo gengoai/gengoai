@@ -135,6 +135,7 @@ public class DocumentViewer extends JPanel {
       searchBar.setVisible(false);
       documentView.scrollToTopLeft();
       dlgFloatingWindow = new AnnotationFloatWindow(this);
+      dlgFloatingWindow.setMinimumSize(new Dimension(300,50));
       dlgFloatingWindow.setAnnotationLayer(annotationLayer);
       controller.postInit();
    }

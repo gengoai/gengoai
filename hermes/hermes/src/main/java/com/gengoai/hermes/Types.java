@@ -134,6 +134,10 @@ public interface Types {
     */
    AnnotationType ML_ENTITY = AnnotationType.make(ENTITY, "ML_ENTITY");
    /**
+    * Lexicon provided Entities
+    */
+   AnnotationType LEXICAL_ENTITY = AnnotationType.make(ENTITY, "LEXICAL_ENTITY");
+   /**
     * Machine learning provided Entities
     */
    AnnotationType RULE_BASED_ENTITY = AnnotationType.make(ENTITY, "RULE_BASED_ENTITY");
@@ -164,7 +168,11 @@ public interface Types {
     */
    AnnotationType SENTENCE = AnnotationType.make("SENTENCE");
    /**
-    * String attribute defining the source of a document (e.g. url, name of news agency, etc.)
+    * String attribute defining the url of a document
+    */
+   AttributeType<String> URL = AttributeType.make("URL", String.class);
+   /**
+    * String attribute defining the source of a document (e.g. name of news agency, etc.)
     */
    AttributeType<String> SOURCE = AttributeType.make("SOURCE", String.class);
    /**

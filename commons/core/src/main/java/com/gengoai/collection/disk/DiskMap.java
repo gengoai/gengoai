@@ -113,7 +113,7 @@ public class DiskMap<K, V> implements Map<K, V>, AutoCloseable, Serializable {
 
    @Override
    public Set<Entry<K, V>> entrySet() {
-      return map.entrySet();
+      return delegate().entrySet();
    }
 
    @Override

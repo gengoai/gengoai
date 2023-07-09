@@ -18,6 +18,7 @@ Pres.
 Sec.
 Hon.
 Dr.
+Cmdr.
 MPhil
 M.D.
 M.Phil.
@@ -50,3 +51,6 @@ grad.
 St.
 Rep.
 Sen.
+Sens.
+Rep.
+Reps.

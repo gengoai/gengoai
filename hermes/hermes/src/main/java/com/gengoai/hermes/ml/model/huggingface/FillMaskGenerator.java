@@ -37,8 +37,7 @@ public class FillMaskGenerator {
 
     private final PythonInterpreter interpreter;
 
-    public FillMaskGenerator(@NonNull String modelName,
-                             int device) {
+    public FillMaskGenerator(@NonNull String modelName, int device) {
         this(modelName, modelName, device);
     }
 

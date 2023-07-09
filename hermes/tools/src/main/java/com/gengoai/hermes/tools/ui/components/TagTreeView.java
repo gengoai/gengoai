@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.gengoai.swing.component.listener.SwingListeners.mouseClicked;
+import static com.gengoai.swing.component.listener.SwingListeners.mouseDoubleClicked;
 
 /**
  * The type Tag tree view.
@@ -61,7 +62,7 @@ public class TagTreeView extends MangoFilteredTreeView {
       });
       setCellRenderer(new CustomCellRenderer());
       getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-      addMouseListener(mouseClicked(this::onMouseClick));
+      addMouseListener(mouseDoubleClicked(this::onMouseClick));
       setAnnotationLayer(annotationLayer);
    }
 

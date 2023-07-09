@@ -19,24 +19,18 @@
 
 package com.gengoai.hermes.ml.model;
 
-import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.model.Consts;
-import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.apollo.model.tensorflow.TFInputVar;
 import com.gengoai.apollo.model.tensorflow.TFOutputVar;
-import com.gengoai.config.Config;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
-import com.gengoai.hermes.corpus.Corpus;
-import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.en.ENResources;
-import com.gengoai.hermes.ml.CoNLLEvaluation;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.IOB;
 import com.gengoai.hermes.ml.IOBValidator;
 import com.gengoai.hermes.ml.feature.Features;
-import com.gengoai.io.Resources;
 
+import java.io.Serial;
 import java.util.List;
 
 import static com.gengoai.apollo.encoder.FixedEncoder.fixedEncoder;
@@ -45,6 +39,7 @@ import static com.gengoai.apollo.feature.Featurizer.valueFeaturizer;
 import static java.util.stream.Collectors.toList;
 
 public class NeuralNERModel extends TFSequenceLabeler {
+    @Serial
     private static final long serialVersionUID = 1L;
     private static final String LABEL = "label";
     private static final String TOKENS = "words";
@@ -73,26 +68,6 @@ public class NeuralNERModel extends TFSequenceLabeler {
                 ),
                 IOB.decoder(Types.ML_ENTITY)
         );
-    }
-
-    public static void main(String[] args) throws Exception {
-        Config.initialize("CNN", args, "com.gengoai.hermes");
-        if (Math.random() < 0) {
-            Config.setProperty("tfmodel.data", "/work/prj/gengoai/python/tensorflow/data/entity.db");
-            NeuralNERModel ner = new NeuralNERModel();
-            DocumentCollection ontonotes = Corpus.open("/shared/ikdata/corpora/hermes_data/ontonotes_ner")
-                    .query("$SPLIT='TRAIN'");
-            ner.estimate(ontonotes);
-            ModelIO.save(ner, Resources.from("/home/ik/hermes/en/models/ner"));
-        } else {
-            NeuralNERModel ner = ModelIO.load(Resources.from("/home/ik/hermes/en/models/ner/"));
-            DocumentCollection ontonotes = Corpus.open("/shared/ikdata/corpora/hermes_data/ontonotes_ner")
-                    .query("$SPLIT='TEST'");
-            CoNLLEvaluation evaluation = new CoNLLEvaluation("label");
-            DataSet ds = ner.transform(ontonotes);
-            evaluation.evaluate(ner.delegate(), ds);
-            evaluation.report();
-        }
     }
 
     @Override

@@ -41,8 +41,8 @@ public class DefaultTokenTypeEntityAnnotator extends SentenceLevelAnnotator {
       {
          put(TokenType.EMAIL, Entities.EMAIL);
          put(TokenType.URL, Entities.URL);
-         put(TokenType.MONEY, Entities.MONEY);
-         put(TokenType.NUMBER, Entities.NUMBER);
+//         put(TokenType.MONEY, Entities.MONEY);
+//         put(TokenType.NUMBER, Entities.NUMBER);
          put(TokenType.EMOTICON, Entities.EMOTICON);
          put(TokenType.COMPANY, Entities.ORGANIZATION);
          put(TokenType.HASH_TAG, Entities.HASH_TAG);

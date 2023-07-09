@@ -72,8 +72,14 @@ public class CoNLLEditor extends HermesGUI {
    private final JLabel documentPositionLabel = new JLabel();
    private final List<ColumnEntry> columnEntries = new ArrayList<>();
    private final JTextField tfSearch = new JTextField(10);
+
+   private final JTextField currentDoc = new JTextField(40);
+
    private int currentDocument = 0;
    private MangoTable table;
+
+   private JScrollPane tableScrollPane;
+
    private final FluentAction faSearch = new FluentAction("Search", this::search)
          .smallIcon(FontAwesome.SEARCH.createIcon(SMALL_ICON_SIZE))
          .largeIcon(FontAwesome.SEARCH.createIcon(LARGE_ICON_SIZE));
@@ -295,6 +301,7 @@ public class CoNLLEditor extends HermesGUI {
                                                                                 new File(SystemInfo.USER_HOME)));
 
 
+      currentDoc.setEditable(false);
       tfSearch.setMaximumSize(tfSearch.getPreferredSize());
       toolBar(button(faOpen, false, true, 0),
               button(faSave, false, true, 0),
@@ -304,7 +311,9 @@ public class CoNLLEditor extends HermesGUI {
               button(faNextDocument, false, true, 0),
               null,
               tfSearch,
-              button(faSearch, false, true, 0));
+              button(faSearch, false, true, 0),
+              null,
+              currentDoc);
 
 
       faPreviousDocument.setEnabled(false);
@@ -323,7 +332,6 @@ public class CoNLLEditor extends HermesGUI {
             } else {
                doc -= 2;
             }
-            System.out.println(doc);
             currentDocument = doc;
             nextDocument(null);
          } catch (Exception ee) {
@@ -333,7 +341,7 @@ public class CoNLLEditor extends HermesGUI {
 
       tableModel = new MangoTableModel();
       table = new MangoTable(tableModel);
-      Fonts.adjustFont(table, Font.PLAIN, 20);
+      Fonts.adjustFont(table, Font.PLAIN, 32);
       table.setRowHeightPadding(5);
       table.setHeaderIsVisible(true);
       table.setReorderingAllowed(false);
@@ -341,7 +349,8 @@ public class CoNLLEditor extends HermesGUI {
       table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
       table.setShowGrid(true);
 
-      mainWindowFrame.add(Components.scrollPaneNoBorder(table), BorderLayout.CENTER);
+      tableScrollPane = Components.scrollPaneNoBorder(table);
+      mainWindowFrame.add(tableScrollPane, BorderLayout.CENTER);
       table.addMouseListener(SwingListeners.mouseReleased(this::onTableMouseRelease));
       table.addMouseListener(SwingListeners.mouseClicked(this::onTableMouseClick));
    }
@@ -396,6 +405,8 @@ public class CoNLLEditor extends HermesGUI {
          }
          table.addRow(row);
       }
+      currentDoc.setText(resource.toString());
+      tableScrollPane.getVerticalScrollBar().setValue(0);
    }
 
    private void nextDocument(ActionEvent e) {

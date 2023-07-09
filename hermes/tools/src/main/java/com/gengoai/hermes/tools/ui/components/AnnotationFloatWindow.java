@@ -26,9 +26,7 @@ import com.gengoai.swing.component.HBox;
 import com.gengoai.swing.component.StyledSpan;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
@@ -48,7 +46,7 @@ public class AnnotationFloatWindow extends JDialog {
    public AnnotationFloatWindow(DocumentViewer owner) {
       this.owner = owner;
       setUndecorated(true);
-      setLayout(new BorderLayout());
+      setLayout(new FlowLayout());
 
       btnDeleteAnnotation = with(new JButton(FontAwesome.TIMES_CIRCLE.createIcon(24)), $ -> {
          $.setRolloverIcon(FontAwesome.TIMES_CIRCLE.createIcon(24, Color.RED));

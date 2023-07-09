@@ -21,12 +21,14 @@
 
 package com.gengoai.hermes.annotator;
 
+import com.gengoai.config.Config;
 import com.gengoai.hermes.*;
 import com.gengoai.hermes.en.ENLexicons;
 import com.gengoai.hermes.lexicon.TrieWordList;
 import com.gengoai.hermes.morphology.TokenType;
 import com.gengoai.string.Strings;
 
+import javax.print.Doc;
 import java.io.Serial;
 import java.util.*;
 
@@ -163,8 +165,11 @@ public class DefaultSentenceAnnotator extends Annotator {
                 continue;
             }
 
+            if( cTypes.contains(ABBREVIATION) && nTypes.contains(CAPITALIZED) && quoteCount == 0 ){
+                continue; // Abbreviation Captial word. Probably will over join some sentences
+            }
 
-            if (    (cTypes.size() == 1 && cTypes.contains(END_OF_SENTENCE)) // Simple End of Sentence
+            if ( (cTypes.size() == 1 && cTypes.contains(END_OF_SENTENCE)) // Simple End of Sentence
                     || (cTypes.contains(ABBREVIATION) && nTypes.contains(CAPITALIZED) && quoteCount % 2 == 0 && cTypes.contains(END_OF_SENTENCE))
                     || (!cTypes.contains(ABBREVIATION) && cTypes.contains(END_OF_SENTENCE) && !nTypes.contains(PERSON_TITLE))) {
 
@@ -205,14 +210,12 @@ public class DefaultSentenceAnnotator extends Annotator {
                 }
 
 
-//                if (!nonBreaking.contains(cToken) && !nTypes.contains(CONTINUE_SENTENCE) ) {
-                if (addSentence(doc, start, cToken.end(), sentenceIndex)) {
-                    sentenceIndex++;
-                    lastEnd = cToken.end();
-                    start = -1;
-                    quoteCount = 0;
+                if (!nonBreaking.contains(cToken) && !nTypes.contains(CONTINUE_SENTENCE) && addSentence(doc, start, cToken.end(), sentenceIndex)) {
+                        sentenceIndex++;
+                        lastEnd = cToken.end();
+                        start = -1;
+                        quoteCount = 0;
                 }
-//                }
 
             } else {
                 int newLines = countNewLineBeforeNext(doc, cToken, nToken);
@@ -410,5 +413,16 @@ public class DefaultSentenceAnnotator extends Annotator {
          */
         OTHER
     }
+
+
+    public static void main(String[] args) {
+        Config.initialize("sandbox",args);
+        Document doc = Document.create("John W. Willians was tried tuesday.");
+        doc.annotate(Types.SENTENCE);
+        for (Annotation sentence : doc.sentences()) {
+            System.out.println(sentence);
+        }
+    }
+
 
 }//END OF DefaultSentenceAnnotator
