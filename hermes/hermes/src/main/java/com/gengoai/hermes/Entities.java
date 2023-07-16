@@ -34,14 +34,12 @@ public interface Entities {
     //-----------------------------------------------------------------------------------------
     EntityType DATE_TIME = EntityType.make("DATE_TIME");
     EntityType DATE = EntityType.make(DATE_TIME, "DATE");
+    EntityType HOLIDAY = EntityType.make(DATE_TIME, "HOLIDAY");
     EntityType TIME = EntityType.make(DATE_TIME, "TIME");
-    //    EntityType ERA = EntityType.make(DATE_TIME, "ERA");
     EntityType PERIOD = EntityType.make(DATE_TIME, "PERIOD");
     EntityType TIME_PERIOD = EntityType.make(PERIOD, "TIME_PERIOD");
     EntityType DATE_PERIOD = EntityType.make(PERIOD, "DATE_PERIOD");
-//    EntityType WEEK_PERIOD = EntityType.make(PERIOD, "WEEK_PERIOD");
-//    EntityType MONTH_PERIOD = EntityType.make(PERIOD, "MONTH_PERIOD");
-//    EntityType YEAR_PERIOD = EntityType.make(PERIOD, "YEAR_PERIOD");
+    EntityType SEASON = EntityType.make(PERIOD, "SEASON");
 
     //-----------------------------------------------------------------------------------------
     // INTERNET ENTITY TYPES
@@ -195,6 +193,10 @@ public interface Entities {
     EntityType WATER_VEHICLE = EntityType.make(VEHICLE, "WATER_VEHICLE");
     EntityType SPACE_VEHICLE = EntityType.make(VEHICLE, "SPACE_VEHICLE");
 
+
+    EntityType TOOL = EntityType.make(PRODUCT, "TOOL");
+    EntityType WEAPON = EntityType.make(TOOL, "WEAPON");
+
     //-----------------------------------------------------------------------------------------
     // EVENT ENTITY TYPES
     //-----------------------------------------------------------------------------------------
@@ -204,5 +206,12 @@ public interface Entities {
     // MISC ENTITY TYPES
     //-----------------------------------------------------------------------------------------
     EntityType MISC = EntityType.make("MISC");
+
+    //-----------------------------------------------------------------------------------------
+    // ATTRIBUTE ENTITY TYPES
+    //-----------------------------------------------------------------------------------------
+    EntityType ATTRIBUTE = EntityType.make("ATTRIBUTE");
+    EntityType COLOR = EntityType.make(ATTRIBUTE,"COLOR");
+
 
 }//END OF Entities

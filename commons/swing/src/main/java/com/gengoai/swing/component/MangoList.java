@@ -20,44 +20,57 @@
 package com.gengoai.swing.component;
 
 import com.gengoai.conversion.Cast;
+import com.gengoai.swing.component.model.MangoListModel;
 
 import javax.swing.*;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 
-public class MangoList<E> extends JList<E> {
-   private static final long serialVersionUID = 1L;
-   private DefaultListModel<E> model;
+public class MangoList<E extends Comparable<E>> extends JList<E> implements Iterable<E> {
+    private static final long serialVersionUID = 1L;
+    private MangoListModel<E> model;
 
-   public MangoList() {
-      super(new DefaultListModel<>());
-      model = Cast.as(getModel());
-   }
+    public MangoList() {
+        super(new MangoListModel<>());
+        model = Cast.as(getModel());
+    }
 
-   public void add(E item) {
-      model.addElement(item);
-   }
+    @Override
+    public Iterator<E> iterator() {
+        return model.iterator();
+    }
 
-   @SafeVarargs
-   public final void addAll(E... items) {
-      model.addAll(Arrays.asList(items));
-   }
+    public void add(E item) {
+        model.add(item);
+    }
 
-   public void addAll(Collection<E> items) {
-      model.addAll(items);
-   }
+    @SafeVarargs
+    public final void addAll(E... items) {
+        model.addAll(Arrays.asList(items));
+    }
 
-   public void clear() {
-      model.clear();
-   }
 
-   @Override
-   public void setModel(ListModel<E> newModel) {
-      if(newModel instanceof DefaultListModel) {
-         super.setModel(model);
-         this.model = Cast.as(newModel);
-      } else {
-         throw new UnsupportedOperationException("Only DefaultListModel is supported");
-      }
-   }
+    @Override
+    public MangoListModel<E> getModel() {
+        return Cast.as(super.getModel());
+    }
+
+    public void addAll(Collection<E> items) {
+        model.addAll(items);
+    }
+
+    public void clear() {
+        model.clear();
+    }
+
+    @Override
+    public void setModel(ListModel<E> newModel) {
+        if (newModel instanceof MangoListModel) {
+            super.setModel(model);
+            this.model = Cast.as(newModel);
+        } else {
+            throw new UnsupportedOperationException("Only MangoListModel is supported");
+        }
+    }
 }//END OF MangoList

@@ -61,7 +61,7 @@ public class DefaultTokenTypeEntityAnnotator extends SentenceLevelAnnotator {
                     .annotationBuilder(Types.TOKEN_TYPE_ENTITY)
                     .bounds(token)
                     .attribute(Types.ENTITY_TYPE, mapping.get(type))
-                    .attribute(Types.CONFIDENCE, 0.6)
+                    .attribute(Types.CONFIDENCE, 0.0) // LET ML OVERRIDE
                     .createAttached();
          }
       });

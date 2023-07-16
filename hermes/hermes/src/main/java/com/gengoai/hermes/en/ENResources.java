@@ -29,10 +29,11 @@ import com.gengoai.hermes.lexicon.WordList;
  */
 public final class ENResources {
 
-   public static final String GLOVE_LARGE = "glove.840b.300d";
-   public static final String GLOVE_SMALL_50 = "glove.6b.50d";
-   public static final String GLOVE_SMALL_100 = "glove.6b.100d";
-   public static final String GLOVE_SMALL_300 = "glove.6b.300d";
+   public static final String GLOVE_LARGE = "glove.840B.300d";
+   public static final String GLOVE_SMALL_50 = "glove.6B.50d";
+   public static final String GLOVE_SMALL_100 = "glove.6B.100d";
+   public static final String GLOVE_SMALL_300 = "glove.6B.300d";
+   public static final String GLOVE_SMALL_200 = "glove.6B.200d";
    public static final String GLOVE_SMALL_ALPHABET = "glove";
    public static final String GLOVE_LARGE_ALPHABET = "glove_large";
 
@@ -59,6 +60,8 @@ public final class ENResources {
             return ResourceType.EMBEDDINGS.load(GLOVE_SMALL_50, Language.ENGLISH);
          case 100:
             return ResourceType.EMBEDDINGS.load(GLOVE_SMALL_100, Language.ENGLISH);
+         case 200:
+            return ResourceType.EMBEDDINGS.load(GLOVE_SMALL_200, Language.ENGLISH);
          case 300:
             return ResourceType.EMBEDDINGS.load(GLOVE_SMALL_300, Language.ENGLISH);
       }

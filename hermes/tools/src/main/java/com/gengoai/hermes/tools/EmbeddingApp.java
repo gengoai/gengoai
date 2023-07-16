@@ -19,11 +19,14 @@
 
 package com.gengoai.hermes.tools;
 
+import com.gengoai.Language;
 import com.gengoai.apollo.model.ModelIO;
+import com.gengoai.apollo.model.embedding.PreTrainedWordEmbedding;
 import com.gengoai.apollo.model.embedding.VSQuery;
 import com.gengoai.apollo.model.embedding.WordEmbedding;
 import com.gengoai.application.Option;
 import com.gengoai.conversion.Cast;
+import com.gengoai.hermes.ResourceType;
 import com.gengoai.io.resource.Resource;
 
 import java.io.Console;
@@ -35,8 +38,8 @@ import java.io.Console;
  */
 public class EmbeddingApp extends HermesCLI {
 
-   @Option(description = "The embedding model to query.", required = true)
-   private Resource model;
+//   @Option(description = "The embedding model to query.", required = true)
+//   private Resource model;
 
    /**
     * The entry point of application.
@@ -54,7 +57,9 @@ public class EmbeddingApp extends HermesCLI {
 
    @Override
    protected void programLogic() throws Exception {
-      WordEmbedding embedding = Cast.as(ModelIO.load(model));
+      WordEmbedding embedding = PreTrainedWordEmbedding.from(
+              ResourceType.EMBEDDINGS.load("glove.840b.300d", Language.ENGLISH)
+      );
 
       Console console = System.console();
       String line;

@@ -38,7 +38,7 @@ public class DefaultLexicalEntityAnnotator extends Annotator {
         for (Annotation sentence : document.sentences()) {
             for (HString match : lexicon.extract(sentence)) {
                 EntityType type = EntityType.valueOf(match.attribute(Types.MATCHED_TAG));
-                double confidence = 0.8;
+                double confidence = 0; //LET ML OVERRIDE
                 document.createAnnotation(Types.LEXICAL_ENTITY,
                         match.start(),
                         match.end(),

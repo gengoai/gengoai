@@ -43,7 +43,7 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
    private String output = Datum.DEFAULT_OUTPUT;
 
 
-   public static PreTrainedWordEmbedding from(KeyedVectorStore keyedVectorStore) {
+   public static PreTrainedWordEmbedding from(@NonNull KeyedVectorStore keyedVectorStore) {
       PreTrainedWordEmbedding e = new PreTrainedWordEmbedding();
       e.vectorStore = keyedVectorStore;
       return e;

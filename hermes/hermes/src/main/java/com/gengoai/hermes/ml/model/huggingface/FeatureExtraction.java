@@ -20,6 +20,8 @@
 package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.Primitives;
+import com.gengoai.apollo.data.DataSet;
+import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
@@ -73,7 +75,6 @@ public class FeatureExtraction {
                     }
                 }
                 sentenceNDArray.divi(wordL.size());
-                System.out.println(sentenceNDArray);
                 toReturn.add(sentenceNDArray);
             }
         }
