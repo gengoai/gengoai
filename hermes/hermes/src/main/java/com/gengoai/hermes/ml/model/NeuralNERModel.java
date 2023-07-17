@@ -50,9 +50,11 @@ public class NeuralNERModel extends TFSequenceLabeler {
     public NeuralNERModel() {
         super(
                 List.of(
-                        TFInputVar.sequence(TOKENS,
+                        TFInputVar.embedding(TOKENS, ENResources.gloveLargeEmbeddings()),
+//                        TFInputVar.sequence(TOKENS,
 //                                "serving_default_words",
-                                fixedEncoder(ENResources.gloveSmallLexicon(), Consts.UNKNOWN_WORD)),
+//                                TFInputVar.embedding(TOKENS, ENResources.gloveLargeEmbeddings())
+//                                fixedEncoder(ENResources.gloveSmallLexicon(), Consts.UNKNOWN_WORD)),
                         TFInputVar.sequence(SHAPE,
 //                                "serving_default_shape",
                                 -1),
@@ -85,6 +87,6 @@ public class NeuralNERModel extends TFSequenceLabeler {
 
     @Override
     public String getVersion() {
-        return "1.2";
+        return "2.1";
     }
 }
