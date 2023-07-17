@@ -5,4 +5,4 @@ GengoAI's mission is to provide an intuitive and production ready Java ecosystem
 
 * Hermes
 * Apollo
-* Mango
+* Mango (Commons)
