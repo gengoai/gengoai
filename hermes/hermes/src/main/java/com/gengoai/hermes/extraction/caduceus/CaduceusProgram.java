@@ -32,6 +32,7 @@ import lombok.ToString;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,38 +59,47 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 public final class CaduceusProgram implements Serializable, Extractor {
-   private final List<Rule> rules;
+    protected final List<Rule> rules;
 
-   CaduceusProgram(List<Rule> rules) {
-      this.rules = rules;
-   }
+    CaduceusProgram(List<Rule> rules) {
+        this.rules = rules;
+    }
 
-   /**
-    * Reads a Caduceus program from the given resource.
-    *
-    * @param resource the resource containing the Caduceus program
-    * @return the CaduceusProgram
-    * @throws IOException    Something went wrong reading from the resource
-    * @throws ParseException Something went wrong parsing the Caduceus program
-    */
-   public static CaduceusProgram read(@NonNull Resource resource) throws IOException, ParseException {
-      return CaduceusParser.parse(resource);
-   }
+    /**
+     * Reads a Caduceus program from the given resource.
+     *
+     * @param resource the resource containing the Caduceus program
+     * @return the CaduceusProgram
+     * @throws IOException    Something went wrong reading from the resource
+     * @throws ParseException Something went wrong parsing the Caduceus program
+     */
+    public static CaduceusProgram read(@NonNull Resource resource) throws IOException, ParseException {
+        return CaduceusParser.parse(resource);
+    }
 
-   /**
-    * Executes the program over the given document.
-    *
-    * @param document the document to execute the program on
-    */
-   public void execute(@NonNull Document document) {
-      rules.forEach(r -> r.execute(document));
-   }
+    public static CaduceusProgram read(@NonNull Iterable<Resource> resources) throws IOException, ParseException {
+        CaduceusProgram program = new CaduceusProgram(new ArrayList<>());
+        for (Resource r : resources) {
+            CaduceusProgram temp = CaduceusParser.parse(r);
+            program.rules.addAll(temp.rules);
+        }
+        return program;
+    }
 
-   @Override
-   public Extraction extract(@NonNull HString hString) {
-      Validation.checkArgument(hString instanceof Document, "Caduceus only accepts Document input");
-      return Extraction.fromHStringList(rules.stream()
-                                             .flatMap(r -> r.execute(hString.document()).stream())
-                                             .collect(Collectors.toList()));
-   }
+    /**
+     * Executes the program over the given document.
+     *
+     * @param document the document to execute the program on
+     */
+    public void execute(@NonNull Document document) {
+        rules.forEach(r -> r.execute(document));
+    }
+
+    @Override
+    public Extraction extract(@NonNull HString hString) {
+        Validation.checkArgument(hString instanceof Document, "Caduceus only accepts Document input");
+        return Extraction.fromHStringList(rules.stream()
+                .flatMap(r -> r.execute(hString.document()).stream())
+                .collect(Collectors.toList()));
+    }
 }//END OF CaduceusProgram

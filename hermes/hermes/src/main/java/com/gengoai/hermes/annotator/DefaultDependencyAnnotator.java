@@ -51,88 +51,103 @@ import static com.gengoai.LogUtils.logFine;
  */
 @Log
 public class DefaultDependencyAnnotator extends SentenceLevelAnnotator {
-   private static final long serialVersionUID = 1L;
-   private static volatile Map<Language, ConcurrentMaltParserModel> models = new ConcurrentHashMap<>();
+    private static final long serialVersionUID = 1L;
+    private static volatile Map<Language, ConcurrentMaltParserModel> models = new ConcurrentHashMap<>();
 
-   @Override
-   protected void annotate(Annotation sentence) {
-      ConcurrentMaltParserModel model = getModel(sentence.getLanguage());
-      List<Annotation> tokens = sentence.tokens();
-      String[] input = new String[tokens.size()];
+    @Override
+    protected void annotate(Annotation sentence) {
+        ConcurrentMaltParserModel model = getModel(sentence.getLanguage());
+        List<Annotation> tokens = sentence.tokens();
+        String[] input = new String[tokens.size()];
 
-      for(int i = 0; i < tokens.size(); i++) {
-         Annotation token = tokens.get(i);
-         input[i] = (i + 1) + "\t" + token.toString() + "\t" + token.getLemma() + "\t" + token.pos().tag() + "\t" +
-               token.pos().tag() + "\t_";
-      }
-      try {
-         ConcurrentDependencyGraph graph = model.parse(input);
-         for(int i = 1; i <= graph.nTokenNodes(); i++) {
-            ConcurrentDependencyNode node = graph.getTokenNode(i);
-            ConcurrentDependencyEdge edge = node.getHeadEdge();
-            Annotation child = tokens.get(node.getIndex() - 1);
-            if(edge.getSource().getIndex() != 0) {
-               Annotation parent = tokens.get(edge.getSource().getIndex() - 1);
-               child.add(new Relation(Types.DEPENDENCY, edge.getLabel("DEPREL"), parent.getId()));
+        for (int i = 0; i < tokens.size(); i++) {
+            Annotation token = tokens.get(i);
+            input[i] = (i + 1) + "\t" + token.toString() + "\t" + token.getLemma() + "\t" + token.pos().tag() + "\t" +
+                    token.pos().tag() + "\t_";
+        }
+        try {
+            ConcurrentDependencyGraph graph = model.parse(input);
+            for (int i = 1; i <= graph.nTokenNodes(); i++) {
+                ConcurrentDependencyNode node = graph.getTokenNode(i);
+                ConcurrentDependencyEdge edge = node.getHeadEdge();
+                Annotation child = tokens.get(node.getIndex() - 1);
+                if (edge.getSource().getIndex() != 0) {
+                    Annotation parent = tokens.get(edge.getSource().getIndex() - 1);
+                    String depRel = edge.getLabel("DEPREL");
+                    //COLLAPSE PREP RELATIONS
+                    if (depRel.equalsIgnoreCase("pobj") || depRel.equalsIgnoreCase("pcomp")) {
+                        if (parent.outgoing(Types.DEPENDENCY, "prep").size() > 0) {
+                            Relation prep = parent.outgoingRelations(Types.DEPENDENCY).get(0);
+                            Annotation grandparent = parent.outgoing(Types.DEPENDENCY, "prep").get(0);
+                            parent.removeRelation(prep);
+                            child.add(new Relation(Types.DEPENDENCY,
+                                    depRel + "_" + parent.toLowerCase(),
+                                    grandparent.getId()));
+                        } else {
+                            child.add(new Relation(Types.DEPENDENCY, edge.getLabel("DEPREL"), parent.getId()));
+                        }
+                    } else {
+                        child.add(new Relation(Types.DEPENDENCY, edge.getLabel("DEPREL"), parent.getId()));
+                    }
+                }
             }
-         }
-      } catch(MaltChainedException e) {
-         throw new RuntimeException(e);
-      }
-   }
+        } catch (MaltChainedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-   @Override
-   protected Set<AnnotatableType> furtherRequires() {
-      return Sets.hashSetOf(Types.PART_OF_SPEECH, Types.LEMMA);
-   }
+    @Override
+    protected Set<AnnotatableType> furtherRequires() {
+        return Sets.hashSetOf(Types.PART_OF_SPEECH, Types.LEMMA);
+    }
 
-   private ConcurrentMaltParserModel getModel(Language language) {
-      if(!models.containsKey(language)) {
-         synchronized(this) {
-            if(!models.containsKey(language)) {
-               Resource r = ResourceType.MODEL.locate("Relation.DEPENDENCY", "dependency.model.bin", language)
-                                              .orElse(null);
-               Exception thrownException = null;
-               if(r != null && r.exists()) {
-                  if(!(r instanceof FileResource)) {
-                     Resource tmpLocation = Resources.temporaryFile();
-                     tmpLocation.deleteOnExit();
-                     try {
-                        logFine(log, "Writing dependency model to temporary file [{0}].", tmpLocation);
-                        tmpLocation.write(r.readBytes());
-                        r = tmpLocation;
-                     } catch(IOException e) {
-                        //no opt
-                     }
-                  }
-                  if(r instanceof FileResource) {
-                     try {
-                        models.put(language,
-                                   ConcurrentMaltParserService.initializeParserModel(r.asURL().get()));
-                        return models.get(language);
-                     } catch(Exception e) {
-                        thrownException = e;
-                     }
-                  }
-               }
-               if(thrownException == null) {
-                  throw new RuntimeException("Dependency model does not exist");
-               } else {
-                  throw new RuntimeException(thrownException);
-               }
+    private ConcurrentMaltParserModel getModel(Language language) {
+        if (!models.containsKey(language)) {
+            synchronized (this) {
+                if (!models.containsKey(language)) {
+                    Resource r = ResourceType.MODEL.locate("Relation.DEPENDENCY", "dependency.model.bin", language)
+                            .orElse(null);
+                    Exception thrownException = null;
+                    if (r != null && r.exists()) {
+                        if (!(r instanceof FileResource)) {
+                            Resource tmpLocation = Resources.temporaryFile();
+                            tmpLocation.deleteOnExit();
+                            try {
+                                logFine(log, "Writing dependency model to temporary file [{0}].", tmpLocation);
+                                tmpLocation.write(r.readBytes());
+                                r = tmpLocation;
+                            } catch (IOException e) {
+                                //no opt
+                            }
+                        }
+                        if (r instanceof FileResource) {
+                            try {
+                                models.put(language,
+                                        ConcurrentMaltParserService.initializeParserModel(r.asURL().get()));
+                                return models.get(language);
+                            } catch (Exception e) {
+                                thrownException = e;
+                            }
+                        }
+                    }
+                    if (thrownException == null) {
+                        throw new RuntimeException("Dependency model does not exist");
+                    } else {
+                        throw new RuntimeException(thrownException);
+                    }
+                }
             }
-         }
-      }
-      return models.get(language);
-   }
+        }
+        return models.get(language);
+    }
 
-   @Override
-   public String getProvider(Language language) {
-      return "MaltParser";
-   }
+    @Override
+    public String getProvider(Language language) {
+        return "MaltParser";
+    }
 
-   @Override
-   public Set<AnnotatableType> satisfies() {
-      return Collections.singleton(Types.DEPENDENCY);
-   }
+    @Override
+    public Set<AnnotatableType> satisfies() {
+        return Collections.singleton(Types.DEPENDENCY);
+    }
 }//END OF DefaultDependencyAnnotator

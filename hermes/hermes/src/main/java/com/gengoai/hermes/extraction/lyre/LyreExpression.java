@@ -189,10 +189,10 @@ public final class LyreExpression extends FeaturizingExtractor implements Expres
       List<Object> list = applyAsList(object);
       if(list.isEmpty()) {
          return Cast.as(list);
+      }  else if(elementType == HString.class) {
+         return Cast.cast(Lists.transform(list, HString::toHString));
       } else if(elementType.isInstance(list.get(0))) {
          return Cast.cast(list);
-      } else if(elementType == HString.class) {
-         return Cast.cast(Lists.transform(list, HString::toHString));
       }
       return Converter.convertSilently(list, parameterizedType(List.class, elementType));
    }

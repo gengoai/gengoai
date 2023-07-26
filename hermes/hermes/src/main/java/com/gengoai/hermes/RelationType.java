@@ -97,5 +97,8 @@ public final class RelationType extends EnumValue<RelationType> implements Annot
       return TYPE;
    }
 
+
+
+
 }//END OF RelationType
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.hermes.ml.model;
+package com.gengoai.hermes.en;
 
 import com.gengoai.apollo.model.Consts;
 import com.gengoai.apollo.model.tensorflow.TFInputVar;
@@ -29,6 +29,7 @@ import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.IOB;
 import com.gengoai.hermes.ml.IOBValidator;
 import com.gengoai.hermes.ml.feature.Features;
+import com.gengoai.hermes.ml.model.TFSequenceLabeler;
 
 import java.io.Serial;
 import java.util.List;
