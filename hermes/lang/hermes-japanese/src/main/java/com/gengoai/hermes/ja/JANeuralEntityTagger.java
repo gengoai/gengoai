@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.hermes.en;
+package com.gengoai.hermes.ja;
 
 import com.gengoai.apollo.model.tensorflow.TFInputVar;
 import com.gengoai.apollo.model.tensorflow.TFOutputVar;
@@ -26,57 +26,39 @@ import com.gengoai.hermes.Types;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.IOB;
 import com.gengoai.hermes.ml.IOBValidator;
-import com.gengoai.hermes.ml.feature.Features;
 import com.gengoai.hermes.ml.model.TFSequenceLabeler;
 
-import java.io.Serial;
 import java.util.List;
 
 import static com.gengoai.apollo.feature.Featurizer.booleanFeaturizer;
-import static com.gengoai.apollo.feature.Featurizer.valueFeaturizer;
 import static java.util.stream.Collectors.toList;
 
-public class NeuralNERModel extends TFSequenceLabeler {
-    @Serial
-    private static final long serialVersionUID = 1L;
-    private static final String LABEL = "label";
-    private static final String TOKENS = "words";
+public class JANeuralEntityTagger extends TFSequenceLabeler {
     private static final String CHARS = "chars";
-    private static final String SHAPE = "shape";
     private static final int MAX_WORD_LENGTH = 25;
+    private static final String LABEL = "label";
 
-    public NeuralNERModel() {
-        super(
-                List.of(
-                        TFInputVar.embedding(TOKENS,
-//                                "serving_default_words",
-                                ENResources.gloveLargeEmbeddings()),
-                        TFInputVar.sequence(SHAPE,
-//                                "serving_default_shape",
-                                -1),
+    public JANeuralEntityTagger() {
+        super(List.of(
                         TFInputVar.sequence(CHARS,
-//                                "serving_default_chars",
+                                "serving_default_chars",
                                 -1, MAX_WORD_LENGTH)
-                       ),
+                     ),
                 List.of(
                         TFOutputVar.sequence(LABEL,
-//"StatefulPartitionedCall:0",
-                                "label/truediv",
+                                "StatefulPartitionedCall:0",
                                 "O", IOBValidator.INSTANCE)
                        ),
-                IOB.decoder(Types.ML_ENTITY)
-             );
+                IOB.decoder(Types.ML_ENTITY));
     }
 
     @Override
     public HStringDataSetGenerator getDataGenerator() {
         return HStringDataSetGenerator.builder(Types.SENTENCE)
-                                      .tokenSequence(TOKENS, valueFeaturizer(HString::toLowerCase))
                                       .tokenSequence(CHARS, booleanFeaturizer(h -> h.charNGrams(1)
                                                                                     .stream()
                                                                                     .map(HString::toString)
                                                                                     .collect(toList())))
-                                      .tokenSequence(SHAPE, Features.WordShape)
                                       .source(LABEL, IOB.encoder(Types.ENTITY))
                                       .build();
     }

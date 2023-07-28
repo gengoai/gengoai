@@ -88,7 +88,7 @@ public class RSSMonitor extends TimerTask {
 
 
         ),
-                Resources.from("/work/rss"));
+                Resources.from("/work/new-db.db"));
 
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(monitor, new Date(), TimeUnit.MINUTES.toMillis(5));

@@ -54,5 +54,10 @@
             <artifactId>hermes</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.gengoai</groupId>
+            <artifactId>hermes-japanese</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

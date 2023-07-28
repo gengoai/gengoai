@@ -61,6 +61,11 @@ public class NamedEntityProcessor extends IOBFieldProcessor {
                 return "LOCATION";
             case "PER":
                 return "PERSON";
+            case "TITLE_AFFIX":
+                return "POSITION_TITLE";
+            case "MOVEMENT":
+                return "";
+
         }
         return tag;
     }

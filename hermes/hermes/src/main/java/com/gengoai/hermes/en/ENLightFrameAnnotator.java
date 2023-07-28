@@ -111,8 +111,10 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                         a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "ccomp"), null);
                     } else if (chunk.hasIncomingRelation(Types.DEPENDENCY, "pobj_to")) {
                         a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "pobj_to"), null);
-                    } else {
+                    } else if (chunk.hasIncomingRelation(Types.DEPENDENCY, "advcl")) {
                         a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "advcl"), null);
+                    } else {
+                        a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "dep"), null);
                     }
 
                     if (expandA0) a0 = getSubTree(a0, rg);
@@ -120,20 +122,29 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                     if (expandA2) a2 = getSubTree(a2, rg);
                 }
 
+                if (a2 == null && chunk.hasIncomingRelation(Types.DEPENDENCY, "iobj")) {
+                    a2 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "iobj"), null);
+                }
+
                 if (a0 != null || a1 != null || a2 != null) {
+                    //The frame will be the head of the verb phrase + any particles
+                    HString head = chunk.head();
+                    if (head.hasIncomingRelation(Types.DEPENDENCY, "prt")) {
+                        head = HString.union(head, Iterables.getFirst(head.incoming(Types.DEPENDENCY, "prt"), null));
+                    }
                     Annotation frame = doc.createAnnotation(
                             Types.LIGHT_FRAME,
-                            chunk.start(),
-                            chunk.end(),
+                            head.start(),
+                            head.end(),
                             Map.of(Types.TAG, new StringTag("VERB_FRAME"))
-                    );
+                                                           );
                     if (a0 != null) {
                         a0 = doc.createAnnotation(
                                 Types.LIGHT_FRAME_ARG,
                                 a0.start(),
                                 a0.end(),
                                 Collections.emptyMap()
-                        );
+                                                 );
                         a0.add(new Relation(Types.LIGHT_FRAME_ROLE, "a0", frame.getId()));
                     }
                     if (a1 != null) {
@@ -142,7 +153,7 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                                 a1.start(),
                                 a1.end(),
                                 Collections.emptyMap()
-                        );
+                                                 );
                         a1.add(new Relation(Types.LIGHT_FRAME_ROLE, "a1", frame.getId()));
                     }
                     if (a2 != null) {
@@ -151,7 +162,7 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                                 a2.start(),
                                 a2.end(),
                                 Collections.emptyMap()
-                        );
+                                                 );
                         a2.add(new Relation(Types.LIGHT_FRAME_ROLE, "a2", frame.getId()));
                     }
 
@@ -172,7 +183,7 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                                     vp.start(),
                                     vp.end(),
                                     Collections.emptyMap()
-                            );
+                                                     );
                             vp.add(new Relation(Types.LIGHT_FRAME_ROLE, rel.getValue(), frame.getId()));
                         }
                         if (rel.getValue().startsWith("pobj_")) {
@@ -182,15 +193,15 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                                     target.start(),
                                     target.end(),
                                     Collections.emptyMap()
-                            );
+                                                         );
                             String role = rel.getValue();
 
                             boolean isTime = target.annotations(Types.ENTITY)
-                                    .stream()
-                                    .anyMatch(e -> e.getTag().isInstance(Entities.DATE));
+                                                   .stream()
+                                                   .anyMatch(e -> e.getTag().isInstance(Entities.DATE));
                             boolean isLocation = target.annotations(Types.ENTITY)
-                                    .stream()
-                                    .anyMatch(e -> e.getTag().isInstance(Entities.LOCATION) || e.getTag().isInstance(Entities.FACILITY));
+                                                       .stream()
+                                                       .anyMatch(e -> e.getTag().isInstance(Entities.LOCATION) || e.getTag().isInstance(Entities.FACILITY));
 
 
                             if (isTime) {

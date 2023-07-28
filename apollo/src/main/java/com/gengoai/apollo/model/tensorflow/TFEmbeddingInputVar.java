@@ -29,8 +29,9 @@ public class TFEmbeddingInputVar extends TFInputVar {
    private final KeyedVectorStore embeddings;
 
    public TFEmbeddingInputVar(@NonNull String name,
+                              @NonNull String servingName,
                               @NonNull KeyedVectorStore embeddings) {
-      super(name, name, NoOptEncoder.INSTANCE, -1, embeddings.dimension());
+      super(name, servingName, NoOptEncoder.INSTANCE, -1, embeddings.dimension());
       this.embeddings = embeddings;
    }
 

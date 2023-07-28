@@ -1284,6 +1284,10 @@ public interface HString extends Span, StringLike, Serializable {
         return PartOfSpeech.forText(this);
     }
 
+    default PartOfSpeech upos() {
+        return PartOfSpeech.forText(this).getUniversalTag();
+    }
+
     /**
      * Gets the annotation of a given type that is previous in order (of span) to this one
      *

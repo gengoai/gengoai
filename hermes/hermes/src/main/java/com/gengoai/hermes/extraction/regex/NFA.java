@@ -32,6 +32,7 @@ import lombok.extern.java.Log;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.logging.Level;
 
 import static com.gengoai.string.Strings.safeEquals;
 
@@ -41,294 +42,294 @@ import static com.gengoai.string.Strings.safeEquals;
 @Log(topic = "TokenRegex")
 public final class NFA implements Serializable {
 
-   private static final long serialVersionUID = 1L;
-   /**
-    * The End.
-    */
-   Node end = new Node(true);
-   /**
-    * The Start.
-    */
-   Node start = new Node(false);
+    private static final long serialVersionUID = 1L;
+    /**
+     * The End.
+     */
+    Node end = new Node(true);
+    /**
+     * The Start.
+     */
+    Node start = new Node(false);
 
-   /**
-    * Matches the
-    *
-    * @param input      the input
-    * @param startIndex the start index
-    * @return the int
-    */
-   public TokenMatch matches(HString input, int startIndex) {
-      //The set of states that the NFA is in
-      Set<State> states = new HashSet<>();
-
-
-      //Add the start state
-      states.add(new State(startIndex, start));
-
-      //All the accept states that it enters
-      NavigableSet<State> accepts = new TreeSet<>();
-
-      List<Annotation> tokens = input.tokens();
+    /**
+     * Matches the
+     *
+     * @param input      the input
+     * @param startIndex the start index
+     * @return the int
+     */
+    public TokenMatch matches(HString input, int startIndex) {
+        //The set of states that the NFA is in
+        Set<State> states = new HashSet<>();
 
 
-      while (!states.isEmpty()) {
-         Set<State> newStates = new HashSet<>(); //states after the next consumption
-         for (State s : states) {
-            LogUtils.logFine(log, "Processing State: token={0}, state={1}, allTokens={2}", s.inputPosition < tokens.size()
-                  ? tokens.get(s.inputPosition)
-                  : null, s, tokens);
+        //Add the start state
+        states.add(new State(startIndex, start));
 
-            if (s.node.accepts()) {
-               if (s.stack.isEmpty() ||
-                     (s.stack.size() == 1 && s.node.consumes && safeEquals(s.node.name, s.stack.peek().v1, true))) {
-                  if (s.stack.size() > 0) {
-                     Tuple2<String, Integer> ng = s.stack.pop();
-                     s.namedGroups.put(ng.getKey(), HString.union(tokens.subList(ng.v2, s.inputPosition)));
-                  }
-                  LogUtils.logFine(log, "Accepting State: state={0}", s);
-                  accepts.add(s);
-               }
+        //All the accept states that it enters
+        NavigableSet<State> accepts = new TreeSet<>();
+
+        List<Annotation> tokens = input.tokens();
+
+
+        while (!states.isEmpty()) {
+            Set<State> newStates = new HashSet<>(); //states after the next consumption
+            for (State s : states) {
+                LogUtils.logFine(log, "Processing State: token={0}, state={1}, allTokens={2}", s.inputPosition < tokens.size()
+                        ? tokens.get(s.inputPosition)
+                        : null, s, tokens);
+
+                if (s.node.accepts()) {
+                    if (s.stack.isEmpty() ||
+                            (s.stack.size() == 1 && s.node.consumes && safeEquals(s.node.name, s.stack.peek().v1, true))) {
+                        if (s.stack.size() > 0) {
+                            Tuple2<String, Integer> ng = s.stack.pop();
+                            s.namedGroups.put(ng.getKey(), HString.union(tokens.subList(ng.v2, s.inputPosition)));
+                        }
+                        LogUtils.logFine(log, "Accepting State: state={0}", s);
+                        accepts.add(s);
+                    }
+                }
+
+                Deque<Tuple2<String, Integer>> currentStack = s.stack;
+                if (s.node.emits) {
+                    currentStack.push(Tuples.$(s.node.name, s.inputPosition));
+                }
+
+                for (Node n : s.node.epsilons) {
+
+                    if (s.node.consumes) {
+                        State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
+                        Tuple2<String, Integer> ng = next.stack.pop();
+                        next.namedGroups.put(ng.getKey(), HString.union(tokens.subList(ng.v2, Math.min(s.inputPosition, tokens.size()))));
+                        newStates.add(next);
+                        LogUtils.logFine(log, "Processing consuming epsilon: state={0}, adding new state={1}", s, next);
+                    }
+
+                    State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
+                    newStates.add(next);
+                    LogUtils.logFine(log, "Processing epsilon: state={0}, adding new state={1}", s, next);
+                }
+
+                if (s.inputPosition >= input.tokenLength()) {
+                    LogUtils.logFine(log, "Ending Matching because input position is > token length.");
+                    continue;
+                }
+
+                for (Transition t : s.node.transitions) {
+                    int len = t.transitionFunction.matches(tokens.get(s.inputPosition), s.namedGroups);
+                    LogUtils.logFine(log, "Processing transition: transition={0}, matchedLength={1}", t, len);
+                    if (len > 0) {
+                        State next = new State(s.inputPosition + len, t.destination, currentStack, s.namedGroups);
+                        newStates.add(next);
+                        LogUtils.logFine(log, "Processing passed transition: adding new state={0}", next);
+                    }
+                }
             }
+            states.clear();
+            states = newStates;
+        }
 
-            Deque<Tuple2<String, Integer>> currentStack = s.stack;
-            if (s.node.emits) {
-               currentStack.push(Tuples.$(s.node.name, s.inputPosition));
-            }
-
-            for (Node n : s.node.epsilons) {
-
-               if (s.node.consumes) {
-                  State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
-                  Tuple2<String, Integer> ng = next.stack.pop();
-                  next.namedGroups.put(ng.getKey(), HString.union(tokens.subList(ng.v2, s.inputPosition)));
-                  newStates.add(next);
-                  LogUtils.logFine(log, "Processing consuming epsilon: state={0}, adding new state={1}", s, next);
-               }
-
-               State next = new State(s.inputPosition, n, currentStack, s.namedGroups);
-               newStates.add(next);
-               LogUtils.logFine(log, "Processing epsilon: state={0}, adding new state={1}", s, next);
-            }
-
-            if (s.inputPosition >= input.tokenLength()) {
-               LogUtils.logFine(log, "Ending Matching because input position is > token length.");
-               continue;
-            }
-
-            for (Transition t : s.node.transitions) {
-               int len = t.transitionFunction.matches(tokens.get(s.inputPosition), s.namedGroups);
-               LogUtils.logFine(log, "Processing transition: transition={0}, matchedLength={1}", t, len);
-               if (len > 0) {
-                  State next = new State(s.inputPosition + len, t.destination, currentStack, s.namedGroups);
-                  newStates.add(next);
-                  LogUtils.logFine(log, "Processing passed transition: adding new state={0}",next);
-               }
-            }
-         }
-         states.clear();
-         states = newStates;
-      }
-
-      if (accepts.isEmpty()) {
-         return new TokenMatch(input,
-                               -1,
-                               -1,
-                               null);
-      }
+        if (accepts.isEmpty()) {
+            return new TokenMatch(input,
+                    -1,
+                    -1,
+                    null);
+        }
 
 
-      State last = accepts.last();
-      int max = last.inputPosition;
+        State last = accepts.last();
+        int max = last.inputPosition;
 
-      State temp = accepts.last();
-      while (temp != null && temp.inputPosition >= max) {
-         temp = accepts.lower(temp);
-      }
+        State temp = accepts.last();
+        while (temp != null && temp.inputPosition >= max) {
+            temp = accepts.lower(temp);
+        }
 
-      if (max == startIndex) {
-         max++;
-      }
+        if (max == startIndex) {
+            max++;
+        }
 
-      return new TokenMatch(input, startIndex, max, last.namedGroups);
-   }
+        return new TokenMatch(input, startIndex, max, last.namedGroups);
+    }
 
-   /**
-    * The type Node.
-    */
-   static class Node implements Serializable {
-      private static final long serialVersionUID = 1L;
-      /**
-       * The Epsilons.
-       */
-      final List<Node> epsilons = new ArrayList<>();
-      /**
-       * The Transitions.
-       */
-      final List<Transition> transitions = new ArrayList<>();
-      /**
-       * The Consumes.
-       */
-      boolean consumes = false;
-      /**
-       * The Emits.
-       */
-      boolean emits = false;
-      /**
-       * The Is accept.
-       */
-      boolean isAccept;
-      /**
-       * The Name.
-       */
-      String name = null;
+    /**
+     * The type Node.
+     */
+    static class Node implements Serializable {
+        private static final long serialVersionUID = 1L;
+        /**
+         * The Epsilons.
+         */
+        final List<Node> epsilons = new ArrayList<>();
+        /**
+         * The Transitions.
+         */
+        final List<Transition> transitions = new ArrayList<>();
+        /**
+         * The Consumes.
+         */
+        boolean consumes = false;
+        /**
+         * The Emits.
+         */
+        boolean emits = false;
+        /**
+         * The Is accept.
+         */
+        boolean isAccept;
+        /**
+         * The Name.
+         */
+        String name = null;
 
-      /**
-       * Instantiates a new Node.
-       *
-       * @param accept the accept
-       */
-      public Node(boolean accept) {
-         this.isAccept = accept;
-      }
+        /**
+         * Instantiates a new Node.
+         *
+         * @param accept the accept
+         */
+        public Node(boolean accept) {
+            this.isAccept = accept;
+        }
 
-      /**
-       * Accepts boolean.
-       *
-       * @return the boolean
-       */
-      public boolean accepts() {
-         return isAccept;
-      }
+        /**
+         * Accepts boolean.
+         *
+         * @return the boolean
+         */
+        public boolean accepts() {
+            return isAccept;
+        }
 
-      /**
-       * Connect void.
-       *
-       * @param node the node
-       */
-      public void connect(Node node) {
-         epsilons.add(node);
-      }
+        /**
+         * Connect void.
+         *
+         * @param node the node
+         */
+        public void connect(Node node) {
+            epsilons.add(node);
+        }
 
-      /**
-       * Connect void.
-       *
-       * @param node               the node
-       * @param transitionFunction the consumer
-       */
-      public void connect(Node node, TransitionFunction transitionFunction) {
-         transitions.add(new Transition(this, node, transitionFunction));
-      }
+        /**
+         * Connect void.
+         *
+         * @param node               the node
+         * @param transitionFunction the consumer
+         */
+        public void connect(Node node, TransitionFunction transitionFunction) {
+            transitions.add(new Transition(this, node, transitionFunction));
+        }
 
-      @Override
-      public String toString() {
-         return "Node{"
-               + "accepts="
-               + accepts()
-               + ", transitions="
-               + transitions
-               + "}";
-      }
+        @Override
+        public String toString() {
+            return "Node{"
+                    + "accepts="
+                    + accepts()
+                    + ", transitions="
+                    + transitions
+                    + "}";
+        }
 
-   }//END OF NFA$Node
+    }//END OF NFA$Node
 
-   /**
-    * The type State.
-    */
-   @ToString
-   static class State implements Comparable<State> {
-      /**
-       * The Input position.
-       */
-      final int inputPosition;
-      /**
-       * The Named groups.
-       */
-      final ListMultimap<String, HString> namedGroups = new ArrayListMultimap<>();
-      /**
-       * The Node.
-       */
-      final Node node;
-      /**
-       * The Stack.
-       */
-      final Deque<Tuple2<String, Integer>> stack;
+    /**
+     * The type State.
+     */
+    @ToString
+    static class State implements Comparable<State> {
+        /**
+         * The Input position.
+         */
+        final int inputPosition;
+        /**
+         * The Named groups.
+         */
+        final ListMultimap<String, HString> namedGroups = new ArrayListMultimap<>();
+        /**
+         * The Node.
+         */
+        final Node node;
+        /**
+         * The Stack.
+         */
+        final Deque<Tuple2<String, Integer>> stack;
 
-      /**
-       * Instantiates a new State.
-       *
-       * @param inputPosition the input position
-       * @param node          the node
-       */
-      public State(int inputPosition, Node node) {
-         this(inputPosition, node, new LinkedList<>(), new ArrayListMultimap<>());
-      }
+        /**
+         * Instantiates a new State.
+         *
+         * @param inputPosition the input position
+         * @param node          the node
+         */
+        public State(int inputPosition, Node node) {
+            this(inputPosition, node, new LinkedList<>(), new ArrayListMultimap<>());
+        }
 
-      /**
-       * Instantiates a new State.
-       *
-       * @param inputPosition the input position
-       * @param node          the node
-       * @param currentStack  the current stack
-       * @param namedGroups   the named groups
-       */
-      public State(int inputPosition,
-                   Node node,
-                   Deque<Tuple2<String, Integer>> currentStack,
-                   ListMultimap<String, HString> namedGroups) {
-         this.inputPosition = inputPosition;
-         this.node = node;
-         this.stack = new LinkedList<>(currentStack);
-         this.namedGroups.putAll(namedGroups);
-      }
+        /**
+         * Instantiates a new State.
+         *
+         * @param inputPosition the input position
+         * @param node          the node
+         * @param currentStack  the current stack
+         * @param namedGroups   the named groups
+         */
+        public State(int inputPosition,
+                     Node node,
+                     Deque<Tuple2<String, Integer>> currentStack,
+                     ListMultimap<String, HString> namedGroups) {
+            this.inputPosition = inputPosition;
+            this.node = node;
+            this.stack = new LinkedList<>(currentStack);
+            this.namedGroups.putAll(namedGroups);
+        }
 
-      @Override
-      public int compareTo(State o) {
-         return Integer.compare(score(), o.score());
-      }
+        @Override
+        public int compareTo(State o) {
+            return Integer.compare(score(), o.score());
+        }
 
-      private int score() {
-         return inputPosition + namedGroups.size() * namedGroups.values().stream().mapToInt(HString::tokenLength).sum();
-      }
-   }//END OF NFA$State
+        private int score() {
+            return inputPosition + namedGroups.size() * namedGroups.values().stream().mapToInt(HString::tokenLength).sum();
+        }
+    }//END OF NFA$State
 
-   /**
-    * The type Transition.
-    */
-   static class Transition implements Serializable {
+    /**
+     * The type Transition.
+     */
+    static class Transition implements Serializable {
 
-      private static final long serialVersionUID = 1L;
-      /**
-       * The Source.
-       */
-      final Node source;
-      /**
-       * The Transition function.
-       */
-      final TransitionFunction transitionFunction;
-      /**
-       * The Destination.
-       */
-      Node destination;
+        private static final long serialVersionUID = 1L;
+        /**
+         * The Source.
+         */
+        final Node source;
+        /**
+         * The Transition function.
+         */
+        final TransitionFunction transitionFunction;
+        /**
+         * The Destination.
+         */
+        Node destination;
 
-      /**
-       * Instantiates a new Transition.
-       *
-       * @param source             the source
-       * @param destination        the destination
-       * @param transitionFunction the consumer
-       */
-      public Transition(Node source, Node destination, TransitionFunction transitionFunction) {
-         this.source = source;
-         this.destination = destination;
-         this.transitionFunction = transitionFunction;
-      }
+        /**
+         * Instantiates a new Transition.
+         *
+         * @param source             the source
+         * @param destination        the destination
+         * @param transitionFunction the consumer
+         */
+        public Transition(Node source, Node destination, TransitionFunction transitionFunction) {
+            this.source = source;
+            this.destination = destination;
+            this.transitionFunction = transitionFunction;
+        }
 
-      @Override
-      public String toString() {
-         return "[" + destination + ", " + transitionFunction + "]";
-      }
+        @Override
+        public String toString() {
+            return "[" + destination + ", " + transitionFunction + "]";
+        }
 
-   }//END OF NFA$Transition
+    }//END OF NFA$Transition
 
 }//END OF NFA

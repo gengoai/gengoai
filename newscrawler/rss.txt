@@ -1,0 +1,17 @@
+https://news.yahoo.com/rss/world
+https://news.yahoo.com/rss/us
+https://news.yahoo.com/rss/sports
+https://news.yahoo.com/rss/entertainment
+https://news.yahoo.com/rss/business
+https://news.yahoo.com/rss/health
+https://news.yahoo.com/rss/science
+http://rss.cnn.com/rss/cnn_topstories.rss
+http://rss.cnn.com/rss/cnn_world.rss
+http://rss.cnn.com/rss/cnn_us.rss
+http://rss.cnn.com/rss/money_latest.rss
+http://rss.cnn.com/rss/cnn_allpolitics.rss
+http://rss.cnn.com/rss/cnn_tech.rss
+http://rss.cnn.com/rss/cnn_health.rss
+http://rss.cnn.com/rss/cnn_showbiz.rss
+http://rss.cnn.com/rss/cnn_travel.rss
+http://rss.cnn.com/rss/cnn_latest.rss
