@@ -52,15 +52,7 @@ public final class ZHPos {
    public static final PartOfSpeech NNB = PartOfSpeech.create("NNB", "NNB", PartOfSpeech.NOUN, false);
    public static final PartOfSpeech BB = PartOfSpeech.create("BB", "BB", PartOfSpeech.VERB, false);
    public static final PartOfSpeech EC = PartOfSpeech.create("EC", "EC", PartOfSpeech.PUNCTUATION, false);
-//   public static final PartOfSpeech CP = PartOfSpeech.create("CP", "CP", PartOfSpeech.ADVERB, true);
-//   public static final PartOfSpeech CLP = PartOfSpeech.create("CLP", "CLP", PartOfSpeech.ADVERB, true);
-//   public static final PartOfSpeech DNP = PartOfSpeech.create("DNP", "DNP", PartOfSpeech.ADVERB, true);
-//   public static final PartOfSpeech DVP = PartOfSpeech.create("DVP", "DVP", PartOfSpeech.ADVERB, true);
-//   public static final PartOfSpeech DP = PartOfSpeech.create("DP", "DP", PartOfSpeech.ADVERB, true);
-//   public static final PartOfSpeech VRD = PartOfSpeech.create("VRD", "VRD", PartOfSpeech.ADVERB, true);
-//   public static final PartOfSpeech VSB = PartOfSpeech.create("VSB", "VSB", PartOfSpeech.ADVERB, true);
-//   public static final PartOfSpeech NT_SHORT = PartOfSpeech.create("NT-SHORT", "NT-SHORT", PartOfSpeech.ADVERB, true);
-//   public static final PartOfSpeech VNV = PartOfSpeech.create("VNV", "VNV", PartOfSpeech.ADVERB, true);
+
 
    //Adverb
    public static final PartOfSpeech AD = PartOfSpeech.create("AD", "AD", PartOfSpeech.ADVERB, false);

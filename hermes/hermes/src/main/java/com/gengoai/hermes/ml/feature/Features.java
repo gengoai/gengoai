@@ -124,8 +124,8 @@ public final class Features {
             Strings::isAlphaNumeric);
     public static final PredefinedFeaturizer IsBeginOfSentence = predefinedPredicateFeature("IsBeginOfSentence",
             h -> h.start() == h.sentence()
-                    .start()
-    );
+                               .start()
+                                                                                           );
     public static final PredefinedFeaturizer IsCardinalNumber = predefinedPredicateFeature("IsCardinalNumber",
             LexicalFeatures::isCardinalNumber);
     public static final PredefinedFeaturizer IsCurrency = predefinedPredicateFeature("IsCurrency",
@@ -149,7 +149,7 @@ public final class Features {
                         return lt.end() == send ||
                                 (next.end() == send && next.pos().isInstance(PUNCTUATION, SYMBOL));
                     }
-            );
+                                      );
     /**
      * The constant IsHuman.
      */
@@ -260,8 +260,13 @@ public final class Features {
 
     public static Featurizer<HString> Keywords = predefinedFeature("Keywords",
             PredefinedFeaturizer.multiValueFeaturizer("keyword", o ->
-                    o.attribute(Types.KEYWORDS).stream().map(String::toLowerCase).distinct().toList()
-            ));
+                            o.attribute(Types.KEYWORDS).stream().map(String::toLowerCase).distinct().toList()
+                                                     ));
+
+
+    public static Featurizer<HString> charNGrams(int n) {
+        return Featurizer.booleanFeaturizer(h -> h.charNGrams(n).stream().map(HString::toString).toList());
+    }
 
     private Features() {
         throw new IllegalArgumentException();
