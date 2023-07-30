@@ -69,20 +69,6 @@ enum RegexTypes implements TokenDef, GrammarRegistrable {
          });
       }
    },
-   CATEGORY(re(e('$'),
-               "CAT(EGORY)?",
-               "\\s*",
-               "~",
-               "\\s*",
-               CASE_INSENSITIVE_PHRASE.pattern)) {
-      @Override
-      public void register(Grammar grammar) {
-         grammar.prefix(this, (parser, token) -> {
-            BasicCategories bc = BasicCategories.valueOf(token.getVariable(0));
-            return new PredicateTransition(token.getText(), h -> h.isA(bc), this);
-         });
-      }
-   },
    LEMMA_PHRASE(re("<",
                    namedGroup("", oneOrMore(or(ESC_BACKSLASH + ".", notChars(">")))),
                    ">")) {

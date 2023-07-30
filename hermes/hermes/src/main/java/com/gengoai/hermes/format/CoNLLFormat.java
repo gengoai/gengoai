@@ -131,9 +131,6 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
             document.setCompleted(Types.SENTENCE, "PROVIDED");
         }
         document.setCompleted(Types.TOKEN, "PROVIDED");
-        if (document.isCompleted(Types.PART_OF_SPEECH) && parameters.defaultLanguage.value() == Language.ENGLISH) {
-            document.annotate(Types.CATEGORY);
-        }
         return document;
     }
 

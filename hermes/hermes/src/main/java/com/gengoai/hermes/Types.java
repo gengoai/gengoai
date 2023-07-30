@@ -55,16 +55,6 @@ public interface Types {
      */
     AttributeType<String> CADUCEUS_RULE = AttributeType.make("CADUCEUS_RULE", String.class);
     /**
-     * Attribute defining the basic categories for a word/phrase.
-     */
-    AttributeType<Set<BasicCategories>> CATEGORY = AttributeType.make("CATEGORY",
-            parameterizedType(Set.class,
-                    BasicCategories.class));
-    /**
-     * Special Attribute for loading BasicCategories lexicons
-     */
-    AttributeType<BasicCategories> CATEGORY_TAG = AttributeType.make("CATEGORY_TAG", BasicCategories.class);
-    /**
      * Attribute defining the numeric confidence of an extraction.
      */
     AttributeType<Double> CONFIDENCE = AttributeType.make("CONFIDENCE", double.class);
@@ -210,7 +200,7 @@ public interface Types {
      * Token annotation type
      */
     AnnotationType TOKEN = AnnotationType.make("TOKEN", PART_OF_SPEECH);
-    AnnotatableType[] BASE_ANNOTATIONS = {Types.TOKEN, Types.SENTENCE, Types.PART_OF_SPEECH, Types.CATEGORY, Types.PHRASE_CHUNK, Types.ENTITY, Types.DEPENDENCY};
+    AnnotatableType[] BASE_ANNOTATIONS = {Types.TOKEN, Types.SENTENCE, Types.PART_OF_SPEECH, Types.PHRASE_CHUNK, Types.ENTITY, Types.DEPENDENCY};
     /**
      * TokenType attribute defining the type of token.
      */

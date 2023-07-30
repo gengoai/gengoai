@@ -112,9 +112,6 @@ public class AnnotationTest {
       tokens.get(0).computeIfAbsent(ENTITY_TYPE, () -> EntityType.make("REALLYSTRANGETYPE"));
       assertEquals(EntityType.make("REALLYSTRANGETYPE"), tokens.get(0).attribute(ENTITY_TYPE));
 
-      tokens.get(0).removeAttribute(CATEGORY);
-      tokens.get(0).computeIfAbsent(CATEGORY, () -> Collections.singleton(BasicCategories.ANGIOSPERMS));
-      assertEquals(Collections.singleton(BasicCategories.ANGIOSPERMS), tokens.get(0).attribute(CATEGORY));
 
    }
 

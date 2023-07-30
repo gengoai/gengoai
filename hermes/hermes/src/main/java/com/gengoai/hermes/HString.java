@@ -360,17 +360,6 @@ public interface HString extends Span, StringLike, Serializable {
      */
     AttributeMap attributeMap();
 
-    /**
-     * @return the set of base categories covering all tokens of this HString.
-     */
-    default Set<BasicCategories> categories() {
-        Set<BasicCategories> categories = new HashSet<>(attribute(Types.CATEGORY, Collections.emptySet()));
-        tokenStream()
-                .flatMap(token -> token.attribute(Types.CATEGORY, Collections.emptySet()).stream())
-                .forEach(categories::add);
-        return categories;
-    }
-
     @Override
     default char charAt(int index) {
         if (index < 0 || index > length()) {
@@ -1011,21 +1000,6 @@ public interface HString extends Span, StringLike, Serializable {
             }
         }
         return annotations;
-    }
-
-    /**
-     * Checks if this HString has a base category of one of the ones given.
-     *
-     * @param categories the categories to check for
-     * @return if this HString has a base category of one of the ones given.
-     */
-    default boolean isA(@NonNull BasicCategories... categories) {
-        for (BasicCategories category : categories()) {
-            if (category.isInstance(categories)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

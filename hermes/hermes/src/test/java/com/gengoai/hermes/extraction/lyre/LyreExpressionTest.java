@@ -114,7 +114,6 @@ public class LyreExpressionTest {
       pos.tokenAt(0).put(Types.PART_OF_SPEECH, PennTreeBank.PRP);
       pos.tokenAt(0).put(Types.CONFIDENCE, 0.8);
       pos.tokenAt(1).put(Types.PART_OF_SPEECH, PartOfSpeech.VERB);
-      pos.tokenAt(1).put(Types.CATEGORY, Collections.singleton(BasicCategories.HUMAN));
       pos.tokenAt(2).put(Types.PART_OF_SPEECH, PennTreeBank.DT);
       pos.tokenAt(3).put(Types.PART_OF_SPEECH, PennTreeBank.NN);
       pos.tokenAt(4).put(Types.PART_OF_SPEECH, PennTreeBank.PERIOD);

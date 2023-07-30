@@ -316,19 +316,6 @@ final class DocumentViewerController {
                         ? background
                         : sectionColor;
                 htmlTableRow(html, bg, 2, token.toString() + " (" + token.pos().label() + ")");
-                Set<BasicCategories> categoriesSet = token.categories();
-                if (categoriesSet.size() > 0) {
-                    htmlTableRow(html,
-                            bg,
-                            foreground,
-                            2,
-                            "Categories<hr/><font size=8pt>" + Strings.join(categoriesSet, " ") + "</font>");
-                } else {
-                    htmlTableRow(html,
-                            bg,
-                            foreground,
-                            2, "");
-                }
                 row++;
             }
             htmlTableEnd(html);

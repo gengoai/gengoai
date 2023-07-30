@@ -43,14 +43,14 @@ public class WordNetProcessor implements CoNLLColumnProcessor {
 
    @Override
    public void processInput(Document document, List<CoNLLRow> documentRows, Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
-      documentRows
-            .stream()
-            .filter(row -> row.hasOther("SENSE"))
-            .forEach(row -> document.annotation(row.getAnnotationID())
-                                    .ifNotEmpty(a -> {
-                                       Set<BasicCategories> cats = Types.CATEGORY.decode(row.getOther("SENSE"));
-                                       a.put(Types.CATEGORY, cats);
-                                    }));
+//      documentRows
+//            .stream()
+//            .filter(row -> row.hasOther("SENSE"))
+//            .forEach(row -> document.annotation(row.getAnnotationID())
+//                                    .ifNotEmpty(a -> {
+//                                       Set<BasicCategories> cats = Types.CATEGORY.decode(row.getOther("SENSE"));
+//                                       a.put(Types.CATEGORY, cats);
+//                                    }));
    }
 
    @Override

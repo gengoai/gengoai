@@ -143,7 +143,7 @@ public abstract class ClassifierEvaluation implements Evaluation, Serializable {
             return (int) y.shape().calculateOffset(y.argMax());
          }
       }
-      if(output.isVariable()) {
+      if(output.isVariable() && dataset.getMetadata(outputName).getEncoder() != null) {
          return dataset.getMetadata(outputName).getEncoder().encode(output.asVariable().getName());
       }
       throw new IllegalArgumentException("Unable to process output of type: " + output.getClass());

@@ -3,7 +3,6 @@ package com.gengoai.hermes.ml.feature;
 import com.gengoai.Language;
 import com.gengoai.apollo.feature.Featurizer;
 import com.gengoai.hermes.Annotation;
-import com.gengoai.hermes.BasicCategories;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import com.gengoai.string.StringMatcher;
@@ -151,43 +150,19 @@ public final class Features {
                     }
                                       );
     /**
-     * The constant IsHuman.
-     */
-    public static final PredefinedFeaturizer IsHuman = predefinedPredicateFeature("IsHuman",
-            h -> h.isA(BasicCategories.HUMAN));
-    /**
      * The constant IsLanguageName.
      */
     public static final PredefinedFeaturizer IsLanguageName = predefinedPredicateFeature("IsLanguageName",
             h -> Language.fromString(h.toString()) != Language.UNKNOWN);
-    public static final PredefinedFeaturizer IsMonth = predefinedPredicateFeature("isMonth",
-            h -> h.isA(BasicCategories.MONTHS));
     public static final PredefinedFeaturizer IsOrdinalNumber = predefinedPredicateFeature("IsOrdinalNumber",
             LexicalFeatures::isOrdinalNumber);
-    /**
-     * The constant isOrganization.
-     */
-    public static final PredefinedFeaturizer IsOrganization = predefinedPredicateFeature("isOrganization",
-            h -> h.isA(BasicCategories.ORGANIZATIONS));
     public static final PredefinedFeaturizer IsPercent = predefinedPredicateFeature("IsPercent",
             LexicalFeatures::isPercent);
-    /**
-     * The constant IsPlace.
-     */
-    public static final PredefinedFeaturizer IsPlace = predefinedPredicateFeature("IsPlace",
-            h -> h.isA(BasicCategories.PLACES));
     /**
      * The constant IsPunctuation.
      */
     public static final PredefinedFeaturizer IsPunctuation = predefinedPredicateFeature("IsPunctuation",
             Strings::isPunctuation);
-    public static final PredefinedFeaturizer IsStateOrPrefecture = predefinedPredicateFeature("IsStateOrPrefecture",
-            h -> h.isA(BasicCategories.STATES_OR_PREFECTURES));
-    /**
-     * The constant isTime.
-     */
-    public static final PredefinedFeaturizer IsTime = predefinedPredicateFeature("isTime",
-            h -> h.isA(BasicCategories.TIME));
     /**
      * The constant IsInitialCapital.
      */
