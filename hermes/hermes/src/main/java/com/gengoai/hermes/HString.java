@@ -154,9 +154,9 @@ public interface HString extends Span, StringLike, Serializable {
         RelationGraph g = new RelationGraph();
         g.addVertices(interleaved(annotationTypes));
         Set<RelationType> relationTypeList = Streams.asStream(relationTypes.iterator())
-                .filter(r -> r instanceof RelationType)
-                .map(Cast::<RelationType>as)
-                .collect(Collectors.toSet());
+                                                    .filter(r -> r instanceof RelationType)
+                                                    .map(Cast::<RelationType>as)
+                                                    .collect(Collectors.toSet());
         for (Annotation source : g.vertices()) {
             for (Relation relation : source.outgoingRelations(true)) {
                 if (!relationTypeList.contains(relation.getType())) {
@@ -165,9 +165,9 @@ public interface HString extends Span, StringLike, Serializable {
                 Annotation target = relation.getTarget(this);
                 if (!g.containsVertex(target)) {
                     target = target.annotationStream()
-                            .filter(g::containsVertex)
-                            .findFirst()
-                            .orElse(null);
+                                   .filter(g::containsVertex)
+                                   .findFirst()
+                                   .orElse(null);
                 }
                 if (target != null && !g.containsEdge(source, target)) {
                     RelationEdge edge = g.addEdge(source, target);
@@ -512,9 +512,9 @@ public interface HString extends Span, StringLike, Serializable {
             return attribute(Types.EMBEDDING);
         }
         return VectorCompositions.Average.compose(tokenStream().filter(t -> t.hasAttribute(Types.EMBEDDING))
-                .map(t -> t.attribute(Types.EMBEDDING))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList()));
+                                                               .map(t -> t.attribute(Types.EMBEDDING))
+                                                               .filter(Objects::nonNull)
+                                                               .collect(Collectors.toList()));
     }
 
     default NumericNDArray embedding(@NonNull Predicate<HString> filter) {
@@ -523,9 +523,9 @@ public interface HString extends Span, StringLike, Serializable {
         }
         filter = filter.and((HString t) -> t.hasAttribute(Types.EMBEDDING));
         return VectorCompositions.Average.compose(tokenStream().filter(filter)
-                .map(t -> t.attribute(Types.EMBEDDING))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList()));
+                                                               .map(t -> t.attribute(Types.EMBEDDING))
+                                                               .filter(Objects::nonNull)
+                                                               .collect(Collectors.toList()));
     }
 
     /**
@@ -533,9 +533,9 @@ public interface HString extends Span, StringLike, Serializable {
      */
     default List<Annotation> enclosedAnnotations() {
         return annotations().stream()
-                .filter(this::encloses)
-                .filter(h -> h != this)
-                .collect(Collectors.toList());
+                            .filter(this::encloses)
+                            .filter(h -> h != this)
+                            .collect(Collectors.toList());
     }
 
     /**
@@ -643,7 +643,7 @@ public interface HString extends Span, StringLike, Serializable {
      */
     default Annotation first(@NonNull AnnotationType type) {
         return Iterables.getFirst(annotations(type))
-                .orElse(Fragments.orphanedAnnotation(type));
+                        .orElse(Fragments.orphanedAnnotation(type));
     }
 
     /**
@@ -735,9 +735,9 @@ public interface HString extends Span, StringLike, Serializable {
             return computeIfAbsent(Types.STEM, () -> Stemmers.getStemmer(getLanguage()).stem(this));
         }
         return tokenStream().map(HString::getStemmedForm)
-                .collect(Collectors.joining(getLanguage().usesWhitespace()
-                        ? " "
-                        : ""));
+                            .collect(Collectors.joining(getLanguage().usesWhitespace()
+                                    ? " "
+                                    : ""));
     }
 
     /**
@@ -892,9 +892,9 @@ public interface HString extends Span, StringLike, Serializable {
             return Collections.emptyList();
         }
         return incomingRelationStream(includeSubAnnotations).filter(r -> r.getType().isInstance(type))
-                .map(r -> document().annotation(r.getTarget()))
-                .distinct()
-                .collect(Collectors.toList());
+                                                            .map(r -> document().annotation(r.getTarget()))
+                                                            .distinct()
+                                                            .collect(Collectors.toList());
     }
 
     /**
@@ -915,9 +915,9 @@ public interface HString extends Span, StringLike, Serializable {
     default Stream<Relation> incomingRelationStream(boolean includeSubAnnotations) {
         if (includeSubAnnotations) {
             return annotations().stream()
-                    .filter(a -> a != this)
-                    .flatMap(a -> a.incomingRelationStream(false))
-                    .filter(rel -> !rel.getTarget(document()).overlaps(this));
+                                .filter(a -> a != this)
+                                .flatMap(a -> a.incomingRelationStream(false))
+                                .filter(rel -> !rel.getTarget(document()).overlaps(this));
         }
         return Stream.empty();
     }
@@ -960,7 +960,7 @@ public interface HString extends Span, StringLike, Serializable {
      */
     default List<Relation> incomingRelations(@NonNull RelationType relationType, boolean includeSubAnnotations) {
         return incomingRelationStream(includeSubAnnotations).filter(r -> r.getType().equals(relationType))
-                .collect(Collectors.toList());
+                                                            .collect(Collectors.toList());
     }
 
     /**
@@ -1179,9 +1179,9 @@ public interface HString extends Span, StringLike, Serializable {
     default Stream<Relation> outgoingRelationStream(boolean includeSubAnnotations) {
         if (includeSubAnnotations) {
             return annotations().stream()
-                    .flatMap(a -> a.outgoingRelationStream(false))
-                    .filter(a -> !overlaps(this))
-                    .distinct();
+                                .flatMap(a -> a.outgoingRelationStream(false))
+                                .filter(a -> !overlaps(this))
+                                .distinct();
         }
         return Stream.empty();
     }
@@ -1224,7 +1224,7 @@ public interface HString extends Span, StringLike, Serializable {
      */
     default List<Relation> outgoingRelations(@NonNull RelationType relationType, boolean includeSubAnnotations) {
         return outgoingRelationStream(includeSubAnnotations).filter(r -> r.getType().equals(relationType))
-                .collect(Collectors.toList());
+                                                            .collect(Collectors.toList());
     }
 
     /**
@@ -1488,20 +1488,20 @@ public interface HString extends Span, StringLike, Serializable {
         Map<Long, Long> idMap = new HashMap<>();
         for (Annotation annotation : enclosedAnnotations()) {
             long id = doc.annotationBuilder(annotation.getType())
-                    .start(annotation.start() - start())
-                    .end(end() - annotation.end())
-                    .attributes(annotation)
-                    .createAttached()
-                    .getId();
+                         .start(annotation.start() - start())
+                         .end(end() - annotation.end())
+                         .attributes(annotation)
+                         .createAttached()
+                         .getId();
             idMap.put(annotation.getId(), id);
         }
         for (Annotation annotation : enclosedAnnotations()) {
             final Annotation targetAnnotation = document().annotation(annotation.getId());
             annotation.outgoingRelationStream(false)
-                    .filter(r -> idMap.containsKey(r.getTarget()))
-                    .forEach(r -> targetAnnotation.add(new Relation(r.getType(),
-                            r.getValue(),
-                            idMap.get(r.getTarget()))));
+                      .filter(r -> idMap.containsKey(r.getTarget()))
+                      .forEach(r -> targetAnnotation.add(new Relation(r.getType(),
+                              r.getValue(),
+                              idMap.get(r.getTarget()))));
         }
         return doc;
     }

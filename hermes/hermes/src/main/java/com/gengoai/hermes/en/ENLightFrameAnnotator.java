@@ -69,19 +69,21 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
 
                 if (isPassive) {
                     a0 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "pobj_by"), null);
+                    if (a0 != null) {
+                        a0 = Iterables.getFirst(a0.annotations(Types.PHRASE_CHUNK), a0); //EXPAND TO PHRASE CHUNK
+                    }
+                    expandA0 = false;
                     a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "nsubjpass"), null);
-                    a0 = getSubTree(a0, rg);
-                    a1 = getSubTree(a1, rg);
                 } else if (isCopula) {
-                    a1 = chunk.parent();
-                    a0 = Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "nsubj"), null);
+                    a1 = Iterables.getFirst(chunk.parent().annotations(Types.PHRASE_CHUNK), chunk.parent());
+                    a0 = Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "nsubj"),
+                            Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "csubj"), null));
+
                     if (a1.hasIncomingRelation(Types.DEPENDENCY, "dobj")) {
                         a2 = Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "dobj"), null);
                     } else if (hasXComp) {
                         a2 = Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "xcomp"), null);
                     }
-                    a0 = getSubTree(a0, rg);
-                    a2 = getSubTree(a2, rg);
                 } else {
                     a0 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "nsubj"), null);
 
@@ -92,6 +94,9 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                     } else if (a0 == null && chunk.hasOutgoingRelation(Types.DEPENDENCY, "infmod")) {
                         //Get the A0 as the infmod
                         a0 = Iterables.getFirst(chunk.outgoing(Types.DEPENDENCY, "infmod"), null);
+                        if (a0 != null) {
+                            a0 = Iterables.getFirst(a0.annotations(Types.PHRASE_CHUNK), a0); //EXPAND TO PHRASE CHUNK
+                        }
                         expandA0 = false;
                     } else if (a0 == null && chunk.hasOutgoingRelation(Types.DEPENDENCY, "conj")) {
                         //Get the A0 as the nsubj of the conj's ccomp
@@ -99,6 +104,9 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                         if (conj.hasOutgoingRelation(Types.DEPENDENCY, "ccomp")) {
                             Annotation ccomp = Iterables.getFirst(conj.outgoing(Types.DEPENDENCY, "ccomp"), null);
                             a0 = Iterables.getFirst(ccomp.incoming(Types.DEPENDENCY, "nsubj"), null);
+                        } else if (conj.hasIncomingRelation(Types.DEPENDENCY, "nsubj")) {
+                            //A0 as conj's nsubj
+                            a0 = Iterables.getFirst(conj.incoming(Types.DEPENDENCY, "nsubj"), null);
                         }
                     }
 
@@ -116,11 +124,11 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                     } else {
                         a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "dep"), null);
                     }
-
-                    if (expandA0) a0 = getSubTree(a0, rg);
-                    if (expandA1) a1 = getSubTree(a1, rg);
-                    if (expandA2) a2 = getSubTree(a2, rg);
                 }
+
+                if (expandA0) a0 = getSubTree(a0, rg);
+                if (expandA1) a1 = getSubTree(a1, rg);
+                if (expandA2) a2 = getSubTree(a2, rg);
 
                 if (a2 == null && chunk.hasIncomingRelation(Types.DEPENDENCY, "iobj")) {
                     a2 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "iobj"), null);
@@ -171,46 +179,13 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                     }
 
 
-                    for (Relation rel : chunk.incomingRelations(Types.DEPENDENCY)) {
+                    Annotation obj = isCopula && a1 != null ? a1 : chunk;
+                    for (Relation rel : obj.incomingRelations(Types.DEPENDENCY)) {
                         if (rel.getValue().startsWith("pcomp_")) {
-                            Annotation target = rel.getTarget(doc);
-                            Annotation vp = Iterables.getFirst(target.annotations(Types.PHRASE_CHUNK), null);
-                            if (vp == null) {
-                                continue;
-                            }
-                            vp = doc.createAnnotation(
-                                    Types.LIGHT_FRAME_ARG,
-                                    vp.start(),
-                                    vp.end(),
-                                    Collections.emptyMap()
-                                                     );
-                            vp.add(new Relation(Types.LIGHT_FRAME_ROLE, rel.getValue(), frame.getId()));
+                            processPComp(rel, frame, doc, rg);
                         }
                         if (rel.getValue().startsWith("pobj_")) {
-                            Annotation target = getSubTree(rel.getTarget(doc), rg);
-                            target = doc.createAnnotation(
-                                    Types.LIGHT_FRAME_ARG,
-                                    target.start(),
-                                    target.end(),
-                                    Collections.emptyMap()
-                                                         );
-                            String role = rel.getValue();
-
-                            boolean isTime = target.annotations(Types.ENTITY)
-                                                   .stream()
-                                                   .anyMatch(e -> e.getTag().isInstance(Entities.DATE));
-                            boolean isLocation = target.annotations(Types.ENTITY)
-                                                       .stream()
-                                                       .anyMatch(e -> e.getTag().isInstance(Entities.LOCATION) || e.getTag().isInstance(Entities.FACILITY));
-
-
-                            if (isTime) {
-                                role = "time";
-                            } else if (isLocation) {
-                                role = "location";
-                            }
-
-                            target.add(new Relation(Types.LIGHT_FRAME_ROLE, role, frame.getId()));
+                            processPObj(rel, frame, doc, rg);
                         }
                     }
 
@@ -219,4 +194,78 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
             }
         }
     }
+
+
+    private void processPComp(Relation rel, Annotation frame, Document doc, RelationGraph rg) {
+        Annotation target = rel.getTarget(doc);
+        Annotation vp = Iterables.getFirst(target.annotations(Types.PHRASE_CHUNK), null);
+        if (vp == null) {
+            return;
+        }
+        vp = doc.createAnnotation(
+                Types.LIGHT_FRAME_ARG,
+                vp.start(),
+                vp.end(),
+                Collections.emptyMap()
+                                 );
+        vp.add(new Relation(Types.LIGHT_FRAME_ROLE, rel.getValue(), frame.getId()));
+    }
+
+    private void processPObj(Relation rel, Annotation frame, Document doc, RelationGraph rg) {
+        Annotation target = rel.getTarget(doc);
+        target = Iterables.getFirst(target.annotations(Types.PHRASE_CHUNK), null);
+        if (target == null) {
+            return;
+        }
+        target = doc.createAnnotation(
+                Types.LIGHT_FRAME_ARG,
+                target.start(),
+                target.end(),
+                Collections.emptyMap()
+                                     );
+        String role = rel.getValue();
+
+        boolean isTime = target.annotations(Types.ENTITY)
+                               .stream()
+                               .anyMatch(e -> e.getTag().isInstance(Entities.DATE));
+        boolean isLocation = target.annotations(Types.ENTITY)
+                                   .stream()
+                                   .anyMatch(e -> e.getTag().isInstance(Entities.LOCATION) || e.getTag().isInstance(Entities.FACILITY));
+
+
+        if (isTime) {
+            role = "time";
+        } else if (isLocation) {
+            role = "location";
+        } else {
+            processSubPObj(target, frame, doc, rg);
+        }
+
+        target.add(new Relation(Types.LIGHT_FRAME_ROLE, role, frame.getId()));
+    }
+
+    private void processSubPObj(Annotation parent, Annotation frame, Document doc, RelationGraph rg) {
+        for (Relation ir : parent.incomingRelations()) {
+            if (ir.getValue().startsWith("pobj_")) {
+                Annotation subphrase = getSubTree(ir.getTarget(doc), rg);
+                boolean isSTime = subphrase.annotations(Types.ENTITY)
+                                           .stream()
+                                           .anyMatch(e -> e.getTag().isInstance(Entities.DATE));
+                boolean isSLocation = subphrase.annotations(Types.ENTITY)
+                                               .stream()
+                                               .anyMatch(e -> e.getTag().isInstance(Entities.LOCATION) || e.getTag().isInstance(Entities.FACILITY));
+                subphrase = doc.createAnnotation(
+                        Types.LIGHT_FRAME_ARG,
+                        subphrase.start(),
+                        subphrase.end(),
+                        Collections.emptyMap());
+                if (isSTime || isSLocation) {
+                    subphrase.add(new Relation(Types.LIGHT_FRAME_ROLE, isSLocation ? "location" : "time", frame.getId()));
+                } else {
+                    subphrase.add(new Relation(Types.LIGHT_FRAME_ROLE, ir.getValue(), frame.getId()));
+                }
+            }
+        }
+    }
+
 }

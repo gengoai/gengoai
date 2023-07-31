@@ -55,6 +55,15 @@ public interface Types {
      */
     AttributeType<String> CADUCEUS_RULE = AttributeType.make("CADUCEUS_RULE", String.class);
     /**
+     * Attribute defining the basic categories for a word/phrase.
+     */
+    AttributeType<Set<String>> CATEGORY = AttributeType.make("CATEGORY",
+            parameterizedType(Set.class, String.class));
+    /**
+     * Special Attribute for loading BasicCategories lexicons
+     */
+    AttributeType<String> CATEGORY_TAG = AttributeType.make("CATEGORY_TAG", String.class);
+    /**
      * Attribute defining the numeric confidence of an extraction.
      */
     AttributeType<Double> CONFIDENCE = AttributeType.make("CONFIDENCE", double.class);
