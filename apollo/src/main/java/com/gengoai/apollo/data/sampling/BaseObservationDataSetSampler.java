@@ -21,6 +21,7 @@ package com.gengoai.apollo.data.sampling;
 
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.observation.Variable;
+import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.stream.MCounterAccumulator;
 import lombok.Data;

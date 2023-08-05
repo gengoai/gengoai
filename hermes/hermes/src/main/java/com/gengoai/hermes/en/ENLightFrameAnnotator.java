@@ -23,18 +23,17 @@ import com.gengoai.StringTag;
 import com.gengoai.collection.Iterables;
 import com.gengoai.hermes.*;
 import com.gengoai.hermes.annotator.SentenceLevelAnnotator;
+import lombok.Data;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Light Semantic Annotator based on dependency trees
+ */
 public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
-    @Override
-    public Set<AnnotatableType> satisfies() {
-        return Set.of(Types.LIGHT_FRAME_ROLE, Types.LIGHT_FRAME_ARG, Types.LIGHT_FRAME);
-    }
-
-    public static Annotation getSubTree(Annotation annotation, RelationGraph rg) {
+    private static Annotation getSubTree(Annotation annotation, RelationGraph rg) {
         if (annotation == null) {
             return null;
         }
@@ -45,156 +44,149 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
         return annotation;
     }
 
+    @Override
+    public Set<AnnotatableType> satisfies() {
+        return Set.of(Types.LIGHT_FRAME_ROLE, Types.LIGHT_FRAME_ARG, Types.LIGHT_FRAME);
+    }
 
     @Override
     protected Set<AnnotatableType> furtherRequires() {
-        return Set.of(Types.ENTITY, Types.DEPENDENCY, Types.PHRASE_CHUNK);
+        return Set.of(Types.ENTITY, Types.DEPENDENCY, Types.PHRASE_CHUNK, Types.MWE);
+    }
+
+    private void processPassive(VerbFrame frameObj) {
+        frameObj.a0 = frameObj.getFirstIncoming("pobj_by");
+        frameObj.expandA0 = false;
+        if (frameObj.a0 != null) {
+            frameObj.a0 = Iterables.getFirst(frameObj.a0.annotations(Types.PHRASE_CHUNK), frameObj.a0); //EXPAND TO PHRASE CHUNK
+        }
+        frameObj.a1 = frameObj.getFirstIncoming("nsubjpass");
+        if (frameObj.a2 == null && frameObj.hasIncomingDependency("iobj")) {
+            frameObj.a2 = frameObj.getFirstIncoming("iobj");
+        }
+    }
+
+    private void processCopula(VerbFrame frameObj) {
+        frameObj.a1 = Iterables.getFirst(frameObj.frame.parent().annotations(Types.PHRASE_CHUNK), frameObj.frame.parent());
+        frameObj.a0 = Iterables.getFirst(frameObj.a1.incoming(Types.DEPENDENCY, "nsubj"),
+                                         Iterables.getFirst(frameObj.a1.incoming(Types.DEPENDENCY, "csubj"), null));
+        if (frameObj.a1.hasIncomingRelation(Types.DEPENDENCY, "dobj")) {
+            frameObj.a2 = Iterables.getFirst(frameObj.a1.incoming(Types.DEPENDENCY, "dobj"), null);
+        } else if (frameObj.a1.hasIncomingRelation(Types.DEPENDENCY, "xcomp")) {
+            frameObj.a2 = Iterables.getFirst(frameObj.a1.incoming(Types.DEPENDENCY, "xcomp"), null);
+        }
+        if (frameObj.a2 == null && frameObj.hasIncomingDependency("iobj")) {
+            frameObj.a2 = frameObj.getFirstIncoming("iobj");
+        }
+    }
+
+    private Annotation getFirstPhraseChunk(Annotation annotation) {
+        if (annotation == null) {
+            return null;
+        }
+        return Iterables.getFirst(annotation.annotations(Types.PHRASE_CHUNK), null);
+    }
+
+    private void processSVO(VerbFrame frameObj) {
+        frameObj.a0 = frameObj.getFirstIncoming("nsubj");
+
+        if (frameObj.a0 == null && frameObj.hasOutgoingDependency("xcomp")) {
+            //Get the A0 as the nsubj of the xcomp
+            Annotation xcomp = frameObj.getFirstOutgoing("xcomp");
+            frameObj.a0 = Iterables.getFirst(xcomp.incoming(Types.DEPENDENCY, "nsubj"), null);
+        } else if (frameObj.a0 == null && frameObj.hasOutgoingDependency("infmod")) {
+            //Get the A0 as the infmod
+            frameObj.a0 = getFirstPhraseChunk(frameObj.getFirstOutgoing("infmod"));
+            frameObj.expandA0 = false;
+        } else if (frameObj.a0 == null && frameObj.hasOutgoingDependency("conj")) {
+            //Get the A0 as the nsubj of the conj's ccomp
+            Annotation conj = frameObj.getFirstOutgoing("conj");
+            if (conj.hasOutgoingRelation(Types.DEPENDENCY, "ccomp")) {
+                Annotation ccomp = Iterables.getFirst(conj.outgoing(Types.DEPENDENCY, "ccomp"), null);
+                frameObj.a0 = Iterables.getFirst(ccomp.incoming(Types.DEPENDENCY, "nsubj"), null);
+            } else if (conj.hasIncomingRelation(Types.DEPENDENCY, "nsubj")) {
+                //A0 as conj's nsubj
+                frameObj.a0 = Iterables.getFirst(conj.incoming(Types.DEPENDENCY, "nsubj"), null);
+            }
+        }
+
+        if (frameObj.hasIncomingDependency("dobj")) {
+            frameObj.a1 = frameObj.getFirstIncoming("dobj");
+            frameObj.a2 = frameObj.getFirstIncoming("xcomp");
+        } else if (frameObj.hasIncomingDependency("xcomp")) {
+            frameObj.a1 = frameObj.getFirstIncoming("xcomp");
+        } else if (frameObj.hasIncomingDependency("ccomp")) {
+            frameObj.a1 = frameObj.getFirstIncoming("ccomp");
+        } else if (frameObj.hasIncomingDependency("pobj_to")) {
+            frameObj.a1 = frameObj.getFirstIncoming("pobj_to");
+        } else if (frameObj.hasIncomingDependency("advcl")) {
+            frameObj.a1 = frameObj.getFirstIncoming("advcl");
+        } else {
+            frameObj.a1 = frameObj.getFirstIncoming("dep");
+        }
+
+        if (frameObj.a2 == null && frameObj.hasIncomingDependency("iobj")) {
+            frameObj.a2 = frameObj.getFirstIncoming("iobj");
+        }
     }
 
     @Override
     protected void annotate(Annotation sentence) {
-        Document doc = sentence.document();
         RelationGraph rg = sentence.dependencyGraph();
         for (Annotation chunk : sentence.annotations(Types.PHRASE_CHUNK)) {
             if (chunk.pos().isVerb()) {
-                boolean isPassive = chunk.hasIncomingRelation(Types.DEPENDENCY, "nsubjpass");
-                boolean isCopula = chunk.hasOutgoingRelation(Types.DEPENDENCY, "cop");
-                boolean hasDObj = chunk.hasIncomingRelation(Types.DEPENDENCY, "dobj");
-                boolean hasXComp = chunk.hasIncomingRelation(Types.DEPENDENCY, "xcomp");
-                boolean hasCComp = chunk.hasIncomingRelation(Types.DEPENDENCY, "ccomp");
-                Annotation a0 = null, a1 = null, a2 = null;
-                boolean expandA0 = true;
-                boolean expandA1 = true;
-                boolean expandA2 = true;
+                chunk = Iterables.getFirst(chunk.annotations(Types.MWE), chunk);
+                var frameObj = new VerbFrame(chunk);
 
-                if (isPassive) {
-                    a0 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "pobj_by"), null);
-                    if (a0 != null) {
-                        a0 = Iterables.getFirst(a0.annotations(Types.PHRASE_CHUNK), a0); //EXPAND TO PHRASE CHUNK
-                    }
-                    expandA0 = false;
-                    a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "nsubjpass"), null);
-                } else if (isCopula) {
-                    a1 = Iterables.getFirst(chunk.parent().annotations(Types.PHRASE_CHUNK), chunk.parent());
-                    a0 = Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "nsubj"),
-                            Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "csubj"), null));
-
-                    if (a1.hasIncomingRelation(Types.DEPENDENCY, "dobj")) {
-                        a2 = Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "dobj"), null);
-                    } else if (hasXComp) {
-                        a2 = Iterables.getFirst(a1.incoming(Types.DEPENDENCY, "xcomp"), null);
-                    }
+                if (frameObj.isPassive()) {
+                    processPassive(frameObj);
+                } else if (frameObj.isCopula()) {
+                    processCopula(frameObj);
                 } else {
-                    a0 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "nsubj"), null);
-
-                    if (a0 == null && chunk.hasOutgoingRelation(Types.DEPENDENCY, "xcomp")) {
-                        //Get the A0 as the nsubj of the xcomp
-                        Annotation xcomp = Iterables.getFirst(chunk.outgoing(Types.DEPENDENCY, "xcomp"), null);
-                        a0 = Iterables.getFirst(xcomp.incoming(Types.DEPENDENCY, "nsubj"), null);
-                    } else if (a0 == null && chunk.hasOutgoingRelation(Types.DEPENDENCY, "infmod")) {
-                        //Get the A0 as the infmod
-                        a0 = Iterables.getFirst(chunk.outgoing(Types.DEPENDENCY, "infmod"), null);
-                        if (a0 != null) {
-                            a0 = Iterables.getFirst(a0.annotations(Types.PHRASE_CHUNK), a0); //EXPAND TO PHRASE CHUNK
-                        }
-                        expandA0 = false;
-                    } else if (a0 == null && chunk.hasOutgoingRelation(Types.DEPENDENCY, "conj")) {
-                        //Get the A0 as the nsubj of the conj's ccomp
-                        Annotation conj = Iterables.getFirst(chunk.outgoing(Types.DEPENDENCY, "conj"), null);
-                        if (conj.hasOutgoingRelation(Types.DEPENDENCY, "ccomp")) {
-                            Annotation ccomp = Iterables.getFirst(conj.outgoing(Types.DEPENDENCY, "ccomp"), null);
-                            a0 = Iterables.getFirst(ccomp.incoming(Types.DEPENDENCY, "nsubj"), null);
-                        } else if (conj.hasIncomingRelation(Types.DEPENDENCY, "nsubj")) {
-                            //A0 as conj's nsubj
-                            a0 = Iterables.getFirst(conj.incoming(Types.DEPENDENCY, "nsubj"), null);
-                        }
-                    }
-
-                    if (hasDObj) {
-                        a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "dobj"), null);
-                        a2 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "xcomp"), null);
-                    } else if (hasXComp) {
-                        a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "xcomp"), null);
-                    } else if (hasCComp) {
-                        a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "ccomp"), null);
-                    } else if (chunk.hasIncomingRelation(Types.DEPENDENCY, "pobj_to")) {
-                        a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "pobj_to"), null);
-                    } else if (chunk.hasIncomingRelation(Types.DEPENDENCY, "advcl")) {
-                        a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "advcl"), null);
-                    } else {
-                        a1 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "dep"), null);
-                    }
+                    processSVO(frameObj);
                 }
 
-                if (expandA0) a0 = getSubTree(a0, rg);
-                if (expandA1) a1 = getSubTree(a1, rg);
-                if (expandA2) a2 = getSubTree(a2, rg);
-
-                if (a2 == null && chunk.hasIncomingRelation(Types.DEPENDENCY, "iobj")) {
-                    a2 = Iterables.getFirst(chunk.incoming(Types.DEPENDENCY, "iobj"), null);
-                }
-
-                if (a0 != null || a1 != null || a2 != null) {
-                    //The frame will be the head of the verb phrase + any particles
-                    HString head = chunk.head();
-                    if (head.hasIncomingRelation(Types.DEPENDENCY, "prt")) {
-                        head = HString.union(head, Iterables.getFirst(head.incoming(Types.DEPENDENCY, "prt"), null));
-                    }
-                    Annotation frame = doc.createAnnotation(
-                            Types.LIGHT_FRAME,
-                            head.start(),
-                            head.end(),
-                            Map.of(Types.TAG, new StringTag("VERB_FRAME"))
-                                                           );
-                    if (a0 != null) {
-                        a0 = doc.createAnnotation(
-                                Types.LIGHT_FRAME_ARG,
-                                a0.start(),
-                                a0.end(),
-                                Collections.emptyMap()
-                                                 );
-                        a0.add(new Relation(Types.LIGHT_FRAME_ROLE, "a0", frame.getId()));
-                    }
-                    if (a1 != null) {
-                        a1 = doc.createAnnotation(
-                                Types.LIGHT_FRAME_ARG,
-                                a1.start(),
-                                a1.end(),
-                                Collections.emptyMap()
-                                                 );
-                        a1.add(new Relation(Types.LIGHT_FRAME_ROLE, "a1", frame.getId()));
-                    }
-                    if (a2 != null) {
-                        a2 = doc.createAnnotation(
-                                Types.LIGHT_FRAME_ARG,
-                                a2.start(),
-                                a2.end(),
-                                Collections.emptyMap()
-                                                 );
-                        a2.add(new Relation(Types.LIGHT_FRAME_ROLE, "a2", frame.getId()));
-                    }
-
-                    if (chunk.hasIncomingRelation(Types.DEPENDENCY, "neg")) {
-                        frame.put(Types.IS_NEGATED, true);
-                    }
-
-
-                    Annotation obj = isCopula && a1 != null ? a1 : chunk;
-                    for (Relation rel : obj.incomingRelations(Types.DEPENDENCY)) {
-                        if (rel.getValue().startsWith("pcomp_")) {
-                            processPComp(rel, frame, doc, rg);
-                        }
-                        if (rel.getValue().startsWith("pobj_")) {
-                            processPObj(rel, frame, doc, rg);
-                        }
-                    }
-
-
-                }
+                //The frame will be the head of the verb phrase + any particles
+                frameObj.expand(rg);
+                Annotation frame = frameObj.attachFrame();
+                Annotation a0 = frameObj.attachA0(frame);
+                Annotation a1 = frameObj.attachA1(frame);
+                Annotation a2 = frameObj.attachA2(frame);
+                handleNegation(chunk, frame);
+                handlePP(frameObj, chunk, frame, a1, rg);
+                handleTMod(frameObj, frame, rg);
             }
         }
     }
 
+    private void handleTMod(VerbFrame frameObj, Annotation frame, RelationGraph rg) {
+        if (frameObj.hasIncomingDependency("tmod")) {
+            var tmod = getSubTree(frameObj.getFirstIncoming("tmod"), rg);
+            tmod = frame.document().createAnnotation(Types.LIGHT_FRAME_ARG,
+                                                     tmod.start(),
+                                                     tmod.end(),
+                                                     Map.of());
+            tmod.add(new Relation(Types.LIGHT_FRAME_ROLE, "time", frame.getId()));
+        }
+    }
+
+    private void handlePP(VerbFrame frameObj, Annotation chunk, Annotation frame, Annotation a1, RelationGraph rg) {
+        Annotation obj = frameObj.isCopula() && a1 != null ? a1 : chunk;
+        for (Relation rel : obj.incomingRelations(Types.DEPENDENCY)) {
+            if (rel.getValue().startsWith("pcomp_")) {
+                processPComp(rel, frame, frame.document(), rg);
+            }
+            if (rel.getValue().startsWith("pobj_")) {
+                processPObj(rel, frame, frame.document(), rg);
+            }
+        }
+    }
+
+    private void handleNegation(Annotation chunk, Annotation frame) {
+        if (chunk.hasIncomingRelation(Types.DEPENDENCY, "neg") || frame.hasIncomingRelation(Types.DEPENDENCY, "neg")) {
+            frame.put(Types.IS_NEGATED, true);
+        }
+    }
 
     private void processPComp(Relation rel, Annotation frame, Document doc, RelationGraph rg) {
         Annotation target = rel.getTarget(doc);
@@ -241,6 +233,14 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
             processSubPObj(target, frame, doc, rg);
         }
 
+        //Check if the part after the _ is in the frame and if so treat is as the dobj?
+        if (role.indexOf('_') >= 0) {
+            String prep = role.substring(role.indexOf('_') + 1);
+            if (frame.toString().contains(prep)) {
+                role = "a1";
+            }
+        }
+
         target.add(new Relation(Types.LIGHT_FRAME_ROLE, role, frame.getId()));
     }
 
@@ -265,6 +265,111 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                     subphrase.add(new Relation(Types.LIGHT_FRAME_ROLE, ir.getValue(), frame.getId()));
                 }
             }
+        }
+    }
+
+    @Data
+    private static class VerbFrame {
+        Annotation frame;
+        Annotation a0;
+        Annotation a1;
+        Annotation a2;
+        boolean expandA0 = true;
+        boolean expandA1 = true;
+        boolean expandA2 = true;
+
+        public VerbFrame(Annotation frame) {
+            this.frame = frame;
+        }
+
+        public Annotation attachFrame() {
+            HString head = frame.head();
+            if (head.hasIncomingRelation(Types.DEPENDENCY, "prt")) {
+                head = HString.union(head, Iterables.getFirst(head.incoming(Types.DEPENDENCY, "prt"), null));
+            }
+            if (!head.annotations(Types.MWE).isEmpty()) {
+                head = head.annotations(Types.MWE).get(0);
+            }
+            return frame.document().createAnnotation(Types.LIGHT_FRAME,
+                                                     head.start(),
+                                                     head.end(),
+                                                     Map.of(Types.TAG, new StringTag("VERB_FRAME")));
+        }
+
+        public Annotation attachA0(Annotation frame) {
+            if (a0 != null) {
+                Annotation tempA0 = frame.document().createAnnotation(
+                        Types.LIGHT_FRAME_ARG,
+                        a0.start(),
+                        a0.end(),
+                        Collections.emptyMap()
+                                                                     );
+                tempA0.add(new Relation(Types.LIGHT_FRAME_ROLE, "a0", frame.getId()));
+                return tempA0;
+            }
+            return null;
+        }
+
+        public boolean hasAtLest1Arg() {
+            return a0 != null || a1 != null || a2 != null;
+        }
+
+        public Annotation attachA1(Annotation frame) {
+            if (a1 != null) {
+                Annotation tempA1 = frame.document().createAnnotation(
+                        Types.LIGHT_FRAME_ARG,
+                        a1.start(),
+                        a1.end(),
+                        Collections.emptyMap()
+                                                                     );
+                tempA1.add(new Relation(Types.LIGHT_FRAME_ROLE, "a1", frame.getId()));
+                return tempA1;
+            }
+            return null;
+        }
+
+        public Annotation attachA2(Annotation frame) {
+            if (a2 != null) {
+                Annotation tempA2 = frame.document().createAnnotation(
+                        Types.LIGHT_FRAME_ARG,
+                        a2.start(),
+                        a2.end(),
+                        Collections.emptyMap()
+                                                                     );
+                tempA2.add(new Relation(Types.LIGHT_FRAME_ROLE, "a2", frame.getId()));
+                return tempA2;
+            }
+            return null;
+        }
+
+        public boolean isPassive() {
+            return frame.hasIncomingRelation(Types.DEPENDENCY, "nsubjpass");
+        }
+
+        public boolean isCopula() {
+            return frame.hasOutgoingRelation(Types.DEPENDENCY, "cop");
+        }
+
+        public boolean hasIncomingDependency(String value) {
+            return frame.hasIncomingRelation(Types.DEPENDENCY, value);
+        }
+
+        public boolean hasOutgoingDependency(String value) {
+            return frame.hasOutgoingRelation(Types.DEPENDENCY, value);
+        }
+
+        public Annotation getFirstIncoming(String value) {
+            return Iterables.getFirst(frame.incoming(Types.DEPENDENCY, value), null);
+        }
+
+        public Annotation getFirstOutgoing(String value) {
+            return Iterables.getFirst(frame.outgoing(Types.DEPENDENCY, value), null);
+        }
+
+        public void expand(RelationGraph rg) {
+            if (expandA0) a0 = getSubTree(a0, rg);
+            if (expandA1) a1 = getSubTree(a1, rg);
+            if (expandA2) a2 = getSubTree(a2, rg);
         }
     }
 

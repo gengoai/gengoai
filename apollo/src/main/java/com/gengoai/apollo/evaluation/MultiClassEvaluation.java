@@ -67,7 +67,8 @@ public class MultiClassEvaluation extends ClassifierEvaluation {
       MultiClassEvaluation evaluation = new MultiClassEvaluation(outputName);
 
       for(Split split : Split.createFolds(dataset.shuffle(), nFolds)) {
-         model.estimate(split.train);
+         DataSet d = model.fitAndTransform(split.train);
+         split.test.putAllMetadata(d.getMetadata());
          evaluation.evaluate(model, split.test);
       }
       return evaluation;

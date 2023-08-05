@@ -27,7 +27,6 @@ import com.gengoai.hermes.lexicon.TrieWordList;
 import com.gengoai.hermes.morphology.TokenType;
 import com.gengoai.string.Strings;
 
-import java.io.Serial;
 import java.util.*;
 
 import static com.gengoai.collection.Maps.hashMapOf;
@@ -40,7 +39,6 @@ import static com.gengoai.tuple.Tuples.$;
  * @author David B. Bracewell
  */
 public class DefaultSentenceAnnotator extends Annotator {
-    @Serial
     private static final long serialVersionUID = 1L;
     private final TrieWordList nonBreaking;
     private final char[] endOfSentence = new char[]{
@@ -128,9 +126,9 @@ public class DefaultSentenceAnnotator extends Annotator {
         }
         if (start <= end) {
             doc.createAnnotation(Types.SENTENCE,
-                    start,
-                    end,
-                    hashMapOf($(Types.INDEX, index))
+                                 start,
+                                 end,
+                                 hashMapOf($(Types.INDEX, index))
                                 );
             return true;
         }
@@ -188,56 +186,78 @@ public class DefaultSentenceAnnotator extends Annotator {
                 }
 
                 switch (nToken.toString()) {
-                    case "AM", "PM", "a.m.", "p.m.", "A.M.", "P.M." -> {
+                    case "AM":
+                    case "PM":
+                    case "a.m.":
+                    case "p.m.":
+                    case "A.M.":
+                    case "P.M.":
                         Annotation nnToken = nToken.next();
                         if (!nnToken.isEmpty() && nnToken.toUpperCase().contentEquals(nnToken)) {
                             continue;
                         }
-                    }
                 }
                 switch (cToken.toString()) {
-                    case "AM", "PM", "a.m.", "p.m.", "A.M.", "P.M." -> {
+                    case "AM":
+                    case "PM":
+                    case "a.m.":
+                    case "p.m.":
+                    case "A.M.":
+                    case "P.M.":
                         if (!nToken.isEmpty() && nToken.toUpperCase().contentEquals(nToken)) {
                             continue;
                         }
+                    break;
+               case "1":
+               case "2":
+               case "3":
+               case "4":
+               case "5":
+               case "6":
+               case "7":
+               case "8":
+               case "9":
+               case "10":
+                    if (nToken.contentEquals(".")) {
+                        continue;
                     }
-                    case "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" -> {
-                        if (nToken.contentEquals(".")) {
-                            continue;
-                        }
-                    }
-                }
+                  break;
+            }
 
 
-                if (!nonBreaking.contains(cToken) && !nTypes.contains(CONTINUE_SENTENCE) && addSentence(doc, start, cToken.end(), sentenceIndex)) {
+            if (!nonBreaking.contains(cToken) && !nTypes.contains(CONTINUE_SENTENCE) && addSentence(doc, start, cToken.end(), sentenceIndex)) {
+                sentenceIndex++;
+                lastEnd = cToken.end();
+                start = -1;
+                quoteCount = 0;
+            }
+
+        } else{
+            int newLines = countNewLineBeforeNext(doc, cToken, nToken);
+            if (newLines > 1
+                    || (newLines == 1 && nTypes.contains(CAPITALIZED))
+                    || (newLines == 1 && nTypes.contains(LIST_MARKER))) {
+
+                //Two or more line ends typically signifies a section heading, so treat it as a sentence.
+                if (addSentence(doc, start, cToken.end(), sentenceIndex)) {
                     sentenceIndex++;
                     lastEnd = cToken.end();
                     start = -1;
                     quoteCount = 0;
                 }
-
-            } else {
-                int newLines = countNewLineBeforeNext(doc, cToken, nToken);
-                if (newLines > 1
-                        || (newLines == 1 && nTypes.contains(CAPITALIZED))
-                        || (newLines == 1 && nTypes.contains(LIST_MARKER))) {
-
-                    //Two or more line ends typically signifies a section heading, so treat it as a sentence.
-                    if (addSentence(doc, start, cToken.end(), sentenceIndex)) {
-                        sentenceIndex++;
-                        lastEnd = cToken.end();
-                        start = -1;
-                        quoteCount = 0;
-                    }
-                }
             }
         }
-
-        if (tokens.size() > 0 && lastEnd < tokens.get(tokens.size() - 1).end()) {
-            addSentence(doc, start, tokens.get(tokens.size() - 1).end(), sentenceIndex);
-        }
-
     }
+
+        if(tokens.size()>0&&lastEnd<tokens.get(tokens.size()-1).
+
+    end())
+
+    {
+        addSentence(doc, start, tokens.get(tokens.size() - 1).end(), sentenceIndex);
+    }
+
+}
 
     private int countNewLineBeforeNext(Document doc, Annotation cToken, Annotation nToken) {
         if (nToken.isEmpty()) {
@@ -370,47 +390,47 @@ public class DefaultSentenceAnnotator extends Annotator {
         return false;
     }
 
+/**
+ * The enum Internal type.
+ */
+enum InternalType {
     /**
-     * The enum Internal type.
+     * Abbreviation internal type.
      */
-    enum InternalType {
-        /**
-         * Abbreviation internal type.
-         */
-        ABBREVIATION,
-        /**
-         * List marker internal type.
-         */
-        LIST_MARKER,
-        /**
-         * Quotation mark internal type.
-         */
-        QUOTATION_MARK,
-        /**
-         * End of sentence internal type.
-         */
-        END_OF_SENTENCE,
-        /**
-         * Continue sentence internal type.
-         */
-        CONTINUE_SENTENCE,
-        /**
-         * Person title internal type.
-         */
-        PERSON_TITLE,
-        /**
-         * Capitalized internal type.
-         */
-        CAPITALIZED,
-        /**
-         * End bracket internal type.
-         */
-        END_BRACKET,
-        /**
-         * Other internal type.
-         */
-        OTHER
-    }
+    ABBREVIATION,
+    /**
+     * List marker internal type.
+     */
+    LIST_MARKER,
+    /**
+     * Quotation mark internal type.
+     */
+    QUOTATION_MARK,
+    /**
+     * End of sentence internal type.
+     */
+    END_OF_SENTENCE,
+    /**
+     * Continue sentence internal type.
+     */
+    CONTINUE_SENTENCE,
+    /**
+     * Person title internal type.
+     */
+    PERSON_TITLE,
+    /**
+     * Capitalized internal type.
+     */
+    CAPITALIZED,
+    /**
+     * End bracket internal type.
+     */
+    END_BRACKET,
+    /**
+     * Other internal type.
+     */
+    OTHER
+}
 
 
 }//END OF DefaultSentenceAnnotator

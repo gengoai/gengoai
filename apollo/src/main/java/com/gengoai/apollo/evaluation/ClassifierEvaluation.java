@@ -138,7 +138,7 @@ public abstract class ClassifierEvaluation implements Evaluation, Serializable {
       if(output.isNDArray() || output.isClassification()) {
          NumericNDArray y = output.asNumericNDArray();
          if(y.shape().isScalar()) {
-            return (int) y.get(0);
+            return y.get(0).intValue();
          } else {
             return (int) y.shape().calculateOffset(y.argMax());
          }

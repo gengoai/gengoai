@@ -79,7 +79,7 @@ class MStreamDocumentCollection implements DocumentCollection {
       ProgressLogger progressLogger = ProgressLogger.create(getStreamingContext(),
                                                             LogUtils.getLogger(DocumentCollection.class),
                                                             Config.get(DocumentCollection.REPORT_LEVEL)
-                                                                  .as(Level.class, Level.FINEST),
+                                                                  .as(Level.class, Level.INFO),
                                                             Config.get(DocumentCollection.REPORT_INTERVAL)
                                                                   .as(int.class, 500),
                                                             operation);

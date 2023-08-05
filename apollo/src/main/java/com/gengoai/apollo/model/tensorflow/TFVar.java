@@ -27,7 +27,6 @@ import com.gengoai.apollo.math.linalg.Shape;
 import lombok.*;
 import org.tensorflow.Tensor;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +40,6 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 public abstract class TFVar implements Serializable {
-   @Serial
    private static final long serialVersionUID = 1L;
    @NonNull
    private final String name;

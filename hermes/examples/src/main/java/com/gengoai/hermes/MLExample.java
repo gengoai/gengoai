@@ -31,15 +31,18 @@ import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.apollo.evaluation.MultiClassEvaluation;
 import com.gengoai.apollo.feature.Featurizer;
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.LibLinear;
 import com.gengoai.apollo.model.PipelineModel;
 import com.gengoai.hermes.corpus.DocumentCollection;
+import com.gengoai.hermes.en.ENSentenceEncoder;
 import com.gengoai.hermes.extraction.TermExtractor;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.feature.ValueCalculator;
 import com.gengoai.hermes.ml.model.embedding.ElmoTokenEmbedding;
 import com.gengoai.hermes.tools.HermesCLI;
 import com.gengoai.stream.StreamingContext;
+import de.bwaldvogel.liblinear.SolverType;
 
 import static com.gengoai.collection.Maps.hashMapOf;
 import static com.gengoai.tuple.Tuples.$;
@@ -203,7 +206,6 @@ public class MLExample extends HermesCLI {
                                                                                       .binary(h.attribute(label)))
                                                                               .build());
 
-
         //Perform 10-fold cross-validation and output the results to System.out
         //Don't expect great results with this size data and feature set
         MultiClassEvaluation.crossvalidation(dataSet,
@@ -219,11 +221,10 @@ public class MLExample extends HermesCLI {
                             .report();
 
 
-        //Lets try this again using Elmo token embeddings
+        //Lets try this again using sentence embeddings
         // This will take more time, but we should see an increase in micro/macro F1 by 25%
 
-        final ElmoTokenEmbedding elmo = ResourceType.MODEL.load("elmo", Language.ENGLISH);
-
+        final ENSentenceEncoder sentenceEncoder = ResourceType.MODEL.load("sentence_encoder", Language.ENGLISH);
         dataSet = DocumentCollection.create(StreamingContext.local()
                                                             .stream(training)
                                                             .map(example -> Document
@@ -231,13 +232,13 @@ public class MLExample extends HermesCLI {
                                     .annotate(Types.TOKEN, Types.SENTENCE)
                                     .asDataSet(HStringDataSetGenerator.builder()
                                                                       .dataSetType(DataSetType.InMemory)
-                                                                      .defaultInput(h -> elmo.apply(h).embedding())
+                                                                      .defaultInput(h -> sentenceEncoder.apply(h).embedding())
                                                                       .defaultOutput(h -> Variable.binary(h.attribute(label)))
                                                                       .build());
 
         //We need to update the metadata to set the dimension of the elmo embeddings
         dataSet.updateMetadata(Datum.DEFAULT_INPUT, m -> {
-            m.setDimension(ElmoTokenEmbedding.DIMENSION);
+            m.setDimension(ENSentenceEncoder.DIMENSION);
             m.setType(NDArray.class);
         });
 
@@ -245,6 +246,7 @@ public class MLExample extends HermesCLI {
                                     PipelineModel.builder()
                                                  .defaultOutput(new IndexingVectorizer())
                                                  .build(new LibLinear(p -> {
+                                                     p.solver.set(SolverType.L1R_L2LOSS_SVC);
                                                      p.verbose.set(false);
                                                      p.bias.set(true);
                                                  })),

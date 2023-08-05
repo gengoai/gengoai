@@ -29,7 +29,6 @@ import com.gengoai.hermes.ml.IOBValidator;
 import com.gengoai.hermes.ml.feature.Features;
 import com.gengoai.hermes.ml.model.TFSequenceLabeler;
 
-import java.io.Serial;
 import java.util.List;
 
 import static com.gengoai.apollo.feature.Featurizer.booleanFeaturizer;
@@ -37,7 +36,6 @@ import static com.gengoai.apollo.feature.Featurizer.valueFeaturizer;
 import static java.util.stream.Collectors.toList;
 
 public class NeuralNERModel extends TFSequenceLabeler {
-    @Serial
     private static final long serialVersionUID = 1L;
     private static final String LABEL = "label";
     private static final String TOKENS = "words";
@@ -50,19 +48,19 @@ public class NeuralNERModel extends TFSequenceLabeler {
                 List.of(
                         TFInputVar.embedding(TOKENS,
 //                                "serving_default_words",
-                                ENResources.gloveLargeEmbeddings()),
+                                             ENResources.gloveLargeEmbeddings()),
                         TFInputVar.sequence(SHAPE,
 //                                "serving_default_shape",
-                                -1),
+                                            -1),
                         TFInputVar.sequence(CHARS,
 //                                "serving_default_chars",
-                                -1, MAX_WORD_LENGTH)
+                                            -1, MAX_WORD_LENGTH)
                        ),
                 List.of(
                         TFOutputVar.sequence(LABEL,
 //"StatefulPartitionedCall:0",
-                                "label/truediv",
-                                "O", IOBValidator.INSTANCE)
+                                             "label/truediv",
+                                             "O", IOBValidator.INSTANCE)
                        ),
                 IOB.decoder(Types.ML_ENTITY)
              );

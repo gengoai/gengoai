@@ -22,9 +22,11 @@ package com.gengoai.hermes.ml.model.huggingface;
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
+import lombok.Value;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class QuestionAnswering {
     public static final String ROBERTA_BASE_SQUAD = "deepset/roberta-base-squad2";
@@ -39,14 +41,10 @@ public class QuestionAnswering {
     public QuestionAnswering(@NonNull String modelName,
                              @NonNull String tokenizerName,
                              int device) {
-        this.interpreter = new PythonInterpreter("""
-                from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
-
-                nlp = pipeline('question-answering', model="%s", tokenizer="%s", device=%d) 
-                                                                                    
-                def pipe(context, question):
-                   return nlp({'context':list(context),'question':list(question)})
-                      """.formatted(modelName, tokenizerName, device));
+        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
+                                                                       "nlp = pipeline('question-answering', model=\"%s\", tokenizer=\"%s\", device=%d )\n" +
+                                                                       "def pipe(context, question):\n" +
+                                                                       "   return nlp({'context':list(context),'question':list(question)})\n", modelName, tokenizerName, device));
     }
 
     public QAOutput predict(@NonNull String context, @NonNull String question) {
@@ -60,22 +58,30 @@ public class QuestionAnswering {
 
     public List<QAOutput> predict(@NonNull List<QAInput> inputs) {
         List<HashMap<String, ?>> rvals = Cast.as(interpreter.invoke("pipe",
-                inputs.stream().map(QAInput::context).toList(),
-                inputs.stream().map(QAInput::question).toList()
-        ));
+                                                                    inputs.stream().map(QAInput::getContext).collect(Collectors.toList()),
+                                                                    inputs.stream().map(QAInput::getQuestion).collect(Collectors.toList())
+                                                                   ));
         return rvals.stream().map(m -> new QAOutput(
                 m.get("answer").toString(),
                 Cast.as(m.get("score"), Number.class).doubleValue(),
                 Cast.as(m.get("start"), Number.class).intValue(),
                 Cast.as(m.get("end"), Number.class).intValue()
-        )).toList();
+        )).collect(Collectors.toList());
     }
 
-    public record QAOutput(String answer, double score, int startChart, int endChar) {
+    @Value
+    public static class QAOutput {
+        String answer;
+        double score;
+        int startChar;
+        int endChar;
     }
 
-    public record QAInput(@NonNull String context, @NonNull String question) {
-
+    @Value
+    public static class QAInput {
+        String context;
+        String question;
     }
+
 
 }//END OF QuestionAnswering

@@ -258,7 +258,7 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
     */
    public static class Parameters extends WordEmbeddingFitParameters<Parameters> {
       /**
-       * Controls the the normalization of cooccurrence counts to probabilities (default 0.75).
+       * Controls the normalization of cooccurrence counts to probabilities (default 0.75).
        */
       public final Parameter<Double> alpha = parameter(Glove.alpha, 0.75);
       /**

@@ -50,6 +50,35 @@ import static com.gengoai.swing.component.Components.button;
 import static com.gengoai.tuple.Tuples.$;
 
 public class LexiconEditor extends HermesGUI {
+
+
+    private class BulkImport extends JDialog {
+        JTextArea txtLexicon = new JTextArea();
+        JButton btnImport = new JButton("Import");
+
+        public BulkImport() {
+            super(LexiconEditor.this.mainWindowFrame, "Bulk Import");
+            setMinimumSize(new Dimension(640, 480));
+            setLayout(new BorderLayout());
+            add(edtTagComboBox, BorderLayout.NORTH);
+            add(new JScrollPane(txtLexicon), BorderLayout.CENTER);
+            add(btnImport, BorderLayout.SOUTH);
+            btnImport.addActionListener(l -> {
+                for (String line : txtLexicon.getText().split("\r?\n+")) {
+                    if (Strings.isNotNullOrBlank(line)) {
+                        line = line.strip();
+                        tblView.addRow(line, edtTagComboBox.getSelectedItem().toString(), "");
+                        int effectiveRow = tblView.getRowSorter().convertRowIndexToView(tblModel.getRowCount() - 1);
+                        tblView.getSelectionModel().setSelectionInterval(effectiveRow, effectiveRow);
+                        tblView.scrollRectToVisible(new Rectangle(tblView.getCellRect(effectiveRow, 0, true)));
+                        faSave.setEnabled(true);
+                    }
+                }
+                setVisible(false);
+            });
+        }
+    }
+
     private static final int SMALL_ICON_SIZE = 16;
     private static final int LARGE_ICON_SIZE = 32;
     private static final FileFilter ALL_FILE_FIlTER = new FileFilter() {
@@ -109,18 +138,29 @@ public class LexiconEditor extends HermesGUI {
         faNewEntry.setEnabled(false);
         edtTagComboBox.setEditable(true);
         openDialog.setCurrentDirectory(properties.get("open_dialog_directory").as(File.class,
-                new File(SystemInfo.USER_HOME)));
+                                                                                  new File(SystemInfo.USER_HOME)));
 
         menuBar(Menus.menu("File",
-                'F',
-                Menus.menuItem(faOpen),
-                Menus.menuItem(faSave),
-                new JPopupMenu.Separator(),
-                Menus.menuItem(new FluentAction(
-                        "Exit",
-                        (a) -> System.exit(0)
-                ))
-        ));
+                           'F',
+                           Menus.menuItem(faOpen),
+                           Menus.menuItem(faSave),
+                           new JPopupMenu.Separator(),
+                           Menus.menuItem(new FluentAction(
+                                   "Bulk Import",
+                                   (a) -> {
+                                       BulkImport bi = new BulkImport();
+                                       bi.pack();
+                                       bi.setLocationRelativeTo(LexiconEditor.this.mainWindowFrame);
+                                       bi.setVisible(true);
+                                       bi.setModalExclusionType(Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
+                                   }
+                           )),
+                           new JPopupMenu.Separator(),
+                           Menus.menuItem(new FluentAction(
+                                   "Exit",
+                                   (a) -> System.exit(0)
+                           ))
+                          ));
         toolBar(button(faOpen, false, true, 0),
                 button(faSave, false, true, 0),
                 null,
@@ -160,7 +200,7 @@ public class LexiconEditor extends HermesGUI {
         });
         this.mainWindowFrame.add(new
 
-                JScrollPane(tblView), BorderLayout.CENTER);
+                                         JScrollPane(tblView), BorderLayout.CENTER);
 
         MangoPanel editPanel = new MangoPanel();
         this.mainWindowFrame.add(editPanel, BorderLayout.SOUTH);
@@ -188,7 +228,7 @@ public class LexiconEditor extends HermesGUI {
                 null,
                 null,
                 ""
-        );
+                                                            );
         if (Strings.isNotNullOrBlank(result)) {
             tblView.addRow(result, "", "");
             int effectiveRow = tblView.getRowSorter().convertRowIndexToView(tblModel.getRowCount() - 1);
@@ -199,7 +239,6 @@ public class LexiconEditor extends HermesGUI {
     }
 
     private void saveLexicon(ActionEvent e) {
-
         //Make backup
         Resource lexFile = Resources.fromFile(currentLexiconFile);
         Resource backup = Resources.from(currentLexiconFile.getAbsolutePath() + ".bak");
@@ -224,7 +263,7 @@ public class LexiconEditor extends HermesGUI {
                     tag,
                     Strings.isNullOrBlank(constraint) ? null : LyreExpression.parse(constraint),
                     lemma.split("\\s+").length
-            ));
+                                          ));
         }
 
         try {
@@ -254,8 +293,8 @@ public class LexiconEditor extends HermesGUI {
             StringBuilder spec = new StringBuilder();
             if (currentLexiconFile.getAbsoluteFile().toString().toLowerCase().endsWith(".json")) {
                 spec.append("lexicon:mem:")
-                        .append(FileUtils.baseName(Resources.fromFile(currentLexiconFile).baseName(), ".json"))
-                        .append(":json::");
+                    .append(FileUtils.baseName(Resources.fromFile(currentLexiconFile).baseName(), ".json"))
+                    .append(":json::");
             } else {
                 spec.append("lexicon:disk::");
             }
@@ -271,8 +310,8 @@ public class LexiconEditor extends HermesGUI {
             for (LexiconEntry entry : lexicon.entries()) {
                 tags.add(entry.getTag());
                 tblView.addRow(entry.getLemma(),
-                        entry.getTag(),
-                        entry.getConstraint() == null ? "" : entry.getConstraint().toString());
+                               entry.getTag(),
+                               entry.getConstraint() == null ? "" : entry.getConstraint().toString());
             }
 
             while (edtTagComboBox.getModel().getSize() > 0) {

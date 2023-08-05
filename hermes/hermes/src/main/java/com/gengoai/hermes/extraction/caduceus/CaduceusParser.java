@@ -57,7 +57,7 @@ enum CaduceusParser implements TokenDef {
                             oneOrMore(notChars("\r\n")),
                             zeroOrMore(chars("\r\n")))
             ))),
-    IMPORT(re("@import\s+", group(oneOrMore(notChars("\\s"))), zeroOrMore(chars("\r\n")))),
+    IMPORT(re("@import\\s+", group(oneOrMore(notChars("\\s"))), zeroOrMore(chars("\r\n")))),
     RELATION(re("relation",
             zeroOrMore(WHITESPACE),
             e(':'),

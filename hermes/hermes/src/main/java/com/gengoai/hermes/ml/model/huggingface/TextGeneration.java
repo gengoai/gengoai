@@ -25,6 +25,7 @@ import lombok.NonNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TextGeneration {
     public static final String GPT2_MEDIUM = "gpt2-medium";
@@ -39,26 +40,34 @@ public class TextGeneration {
     public TextGeneration(@NonNull String modelName,
                           @NonNull String tokenizerName,
                           int device) {
-        this.interpreter = new PythonInterpreter("""
-                from transformers import pipeline
-
-                nlp = pipeline('text-generation', model="%s", tokenizer="%s", device=%d)
-                                                                                    
-                def pipe(context, max_length):
-                   return nlp(list(context), max_length=max_length)
-                      """.formatted(modelName, tokenizerName, device));
+//        this.interpreter = new PythonInterpreter("""
+//                from transformers import pipeline
+//
+//                nlp = pipeline('text-generation', model="%s", tokenizer="%s", device=%d)
+//
+//                def pipe(context, max_length):
+//                   return nlp(list(context), max_length=max_length)
+//                      """.formatted(modelName, tokenizerName, device));
+        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
+                                                                       "nlp = pipeline('text-generation', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
+                                                                       "def pipe(context,max_length):\n" +
+                                                                       "   return nlp(list(context), max_length=max_length)\n", modelName, tokenizerName, device));
     }
 
 
     public List<String> predict(List<String> contexts, int maxLength) {
         List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", contexts, maxLength));
-        return rvals.stream().map(l -> l.get(0).get("generated_text").toString()).toList();
+        return rvals.stream().map(l -> l.get(0).get("generated_text").toString()).collect(Collectors.toList());
     }
 
     public String predict(String context, int maxLength) {
         return predict(List.of(context), maxLength).get(0);
     }
 
+    public static void main(String[] args) {
+        TextGeneration tg = new TextGeneration(GPT2_MEDIUM, 0);
+        System.out.println(tg.predict("I went to the store and ", 50));
+    }
 
 
 }//END OF TextGeneration

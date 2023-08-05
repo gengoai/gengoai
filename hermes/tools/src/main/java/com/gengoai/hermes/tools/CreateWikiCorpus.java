@@ -60,7 +60,7 @@ public class CreateWikiCorpus extends HermesCLI {
                         System.out.println(counter.incrementAndGet());
                         return datum;
                     });
-                }).limit(500_000).javaStream()
+                }).limit(5_000_000).javaStream()
         );
         dataSet.probe();
     }

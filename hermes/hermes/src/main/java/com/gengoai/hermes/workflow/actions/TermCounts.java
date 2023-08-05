@@ -32,91 +32,88 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.kohsuke.MetaInfServices;
 
-import java.io.Serial;
-
 /**
  * The type Term extraction processor.
  *
  * @author David B. Bracewell
  */
 public class TermCounts implements Action {
-   /**
-    * The constant EXTRACTED_TERMS.
-    */
-   public static final String EXTRACTED_TERMS = "EXTRACTED_TERMS";
-   @Serial
-   private static final long serialVersionUID = 1L;
-   @Getter
-   @Setter
-   private boolean documentFrequencies = false;
-   @Getter
-   private Extractor extractor = TermExtractor.builder().build();
+    /**
+     * The constant EXTRACTED_TERMS.
+     */
+    public static final String EXTRACTED_TERMS = "EXTRACTED_TERMS";
+    private static final long serialVersionUID = 1L;
+    @Getter
+    @Setter
+    private boolean documentFrequencies = false;
+    @Getter
+    private Extractor extractor = TermExtractor.builder().build();
 
 
-   public static Counter<String> getTermCounts(@NonNull Context context) {
-      return Cast.as(context.get(EXTRACTED_TERMS));
-   }
+    public static Counter<String> getTermCounts(@NonNull Context context) {
+        return Cast.as(context.get(EXTRACTED_TERMS));
+    }
 
-   /**
-    * On complete corpus.
-    *
-    * @param corpus  the corpus
-    * @param context the context
-    * @param counts  the counts
-    * @return the corpus
-    */
-   protected DocumentCollection onComplete(DocumentCollection corpus, Context context, Counter<String> counts) {
-      return corpus;
-   }
+    /**
+     * On complete corpus.
+     *
+     * @param corpus  the corpus
+     * @param context the context
+     * @param counts  the counts
+     * @return the corpus
+     */
+    protected DocumentCollection onComplete(DocumentCollection corpus, Context context, Counter<String> counts) {
+        return corpus;
+    }
 
-   @Override
-   public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
-      Counter<String> counts;
-      if (documentFrequencies) {
-         counts = corpus.documentCount(extractor);
-      } else {
-         counts = corpus.termCount(extractor);
-      }
-      context.property(EXTRACTED_TERMS, counts);
-      return onComplete(corpus, context, counts);
-   }
+    @Override
+    public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
+        Counter<String> counts;
+        if (documentFrequencies) {
+            counts = corpus.documentCount(extractor);
+        } else {
+            counts = corpus.termCount(extractor);
+        }
+        context.property(EXTRACTED_TERMS, counts);
+        return onComplete(corpus, context, counts);
+    }
 
-   /**
-    * Sets extractor.
-    *
-    * @param extractor the extractor
-    */
-   public void setExtractor(@NonNull Extractor extractor) {
-      this.extractor = extractor;
-   }
+    /**
+     * Sets extractor.
+     *
+     * @param extractor the extractor
+     */
+    public void setExtractor(@NonNull Extractor extractor) {
+        this.extractor = extractor;
+    }
 
-   @Override
-   public String toString() {
-      return "TermExtractionProcessor{" +
-            "extractor=" + extractor +
-            ", documentFrequencies=" + documentFrequencies +
-            '}';
-   }
+    @Override
+    public String toString() {
+        return "TermExtractionProcessor{" +
+                "extractor=" + extractor +
+                ", documentFrequencies=" + documentFrequencies +
+                '}';
+    }
 
-   @MetaInfServices
-   public static class TermCountsDescription implements ActionDescription {
-      @Override
-      public String description() {
-         return "Calculates the term or document frequencies over corpus. " +
-               "The extracted terms are stored on the context using the property 'EXTRACTED_TERMS'." +
-               "The parameters of the action are defined in the Workflow Json as follows:\n" +
-               "{\n" +
-               "   \"@type\"=\"" + TermCounts.class.getName() + "\",\n" +
-               "   \"extractor\"={EXTRACTOR DEFINITION},\n" +
-               "   \"documentFrequencies\"=true|false\n" +
-               "}\n" +
-               "where you may specify either 'extractor' or 'lyrePattern'. If neither are specified a default TermExtractor is used.";
-      }
+    @MetaInfServices
+    public static class TermCountsDescription implements ActionDescription {
+        @Override
+        public String description() {
+            return "Calculates the term or document frequencies over corpus. " +
+                    "The extracted terms are stored on the context using the property 'EXTRACTED_TERMS'." +
+                    "The parameters of the action are defined in the Workflow Json as follows:\n" +
+                    "{\n" +
+                    "   \"@type\"=\"" + TermCounts.class.getName() + "\",\n" +
+                    "   \"extractor\"={EXTRACTOR DEFINITION},\n" +
+                    "   \"documentFrequencies\"=true|false\n" +
+                    "}\n" +
+                    "where you may specify either 'extractor' or 'lyrePattern'. If neither are specified a default TermExtractor is used.";
+        }
 
-      @Override
-      public String name() {
-         return TermCounts.class.getName();
-      }
+        @Override
+        public String name() {
+            return TermCounts.class.getName();
+        }
 
-   }
+    }
 }//END OF TermCounts

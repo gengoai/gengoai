@@ -27,6 +27,7 @@ import lombok.NonNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FillMaskGenerator {
     public static final String BERT_BASE_UNCASED = "bert-base-uncased";
@@ -44,29 +45,37 @@ public class FillMaskGenerator {
     public FillMaskGenerator(@NonNull String modelName,
                              @NonNull String tokenizerName,
                              int device) {
-        this.interpreter = new PythonInterpreter("""
-                from transformers import pipeline
-
-                nlp = pipeline('fill-mask', model="%s", tokenizer="%s", device=%d)
-                                                                                    
-                def pipe(context):
-                   return nlp(list(context))
-                      """.formatted(modelName, tokenizerName, device));
+        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
+                                                                       "nlp = pipeline('fill-mask', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
+                                                                       "def pipe(context):\n" +
+                                                                       "   return nlp(list(context))\n", modelName, tokenizerName, device));
     }
 
 
     public List<Counter<String>> predict(List<String> contexts) {
-        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", contexts));
-        return rvals.stream().map(m -> {
+        List<?> rvals = Cast.as(interpreter.invoke("pipe", contexts));
+
+        if (rvals.get(0) instanceof List) {
+            return rvals.stream().map(m -> {
+                Counter<String> rval = Counters.newCounter();
+                for (Object o : Cast.as(m, Iterable.class)) {
+                    Map<String, ?> map = Cast.as(o);
+                    String tokenStr = map.get("token_str").toString();
+                    double score = ((Number) map.get("score")).doubleValue();
+                    rval.set(tokenStr, score);
+                }
+                return rval;
+            }).collect(Collectors.toList());
+        } else {
             Counter<String> rval = Counters.newCounter();
-            for (Object o : m) {
-                Map<String, ?> map = Cast.as(o);
+            rvals.forEach(m -> {
+                Map<String, ?> map = Cast.as(m);
                 String tokenStr = map.get("token_str").toString();
                 double score = ((Number) map.get("score")).doubleValue();
                 rval.set(tokenStr, score);
-            }
-            return rval;
-        }).toList();
+            });
+            return List.of(rval);
+        }
     }
 
     public Counter<String> predict(String context) {

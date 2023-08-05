@@ -93,6 +93,12 @@ public final class Classification implements Serializable, Observation {
       return counter;
    }
 
+
+   @Override
+   public NumericNDArray asNumericNDArray() {
+      return distribution;
+   }
+
    @Override
    public NDArray asNDArray() {
       return distribution;

@@ -20,8 +20,6 @@
 package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.Primitives;
-import com.gengoai.apollo.data.DataSet;
-import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
@@ -45,14 +43,11 @@ public class FeatureExtraction {
     public FeatureExtraction(@NonNull String modelName,
                              @NonNull String tokenizerName,
                              int device) {
-        this.interpreter = new PythonInterpreter("""
-                from transformers import pipeline
-
-                nlp = pipeline('feature-extraction', model="%s", tokenizer="%s", device=%d,framework="pt")
-                                                                                    
-                def pipe(context):
-                   return nlp(list(context))
-                      """.formatted(modelName, tokenizerName, device));
+        this.interpreter = new PythonInterpreter(
+                String.format("from transformers import pipeline\n" +
+                                      "nlp = pipeline('feature-extraction', model=\"%s\", tokenizer=\"%s\", device=%d,framework=\"pt\")\n" +
+                                      "def pipe(context):\n" +
+                                      "   return nlp(list(context))\n", modelName, tokenizerName, device));
     }
 
 
@@ -84,5 +79,6 @@ public class FeatureExtraction {
     public NDArray predict(String texts) {
         return predict(List.of(texts)).get(0);
     }
+
 
 }//END OF CLASS FeatureExtraction

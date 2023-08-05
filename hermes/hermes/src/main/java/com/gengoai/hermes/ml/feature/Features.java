@@ -10,6 +10,7 @@ import com.gengoai.string.Strings;
 import com.gengoai.tuple.Tuple2;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.gengoai.hermes.ml.feature.PredefinedFeatures.*;
 import static com.gengoai.hermes.morphology.PartOfSpeech.PUNCTUATION;
@@ -235,12 +236,12 @@ public final class Features {
 
     public static Featurizer<HString> Keywords = predefinedFeature("Keywords",
             PredefinedFeaturizer.multiValueFeaturizer("keyword", o ->
-                            o.attribute(Types.KEYWORDS).stream().map(String::toLowerCase).distinct().toList()
+                            o.attribute(Types.KEYWORDS).stream().map(String::toLowerCase).distinct().collect(Collectors.toList())
                                                      ));
 
 
     public static Featurizer<HString> charNGrams(int n) {
-        return Featurizer.booleanFeaturizer(h -> h.charNGrams(n).stream().map(HString::toString).toList());
+        return Featurizer.booleanFeaturizer(h -> h.charNGrams(n).stream().map(HString::toString).collect(Collectors.toList()));
     }
 
     private Features() {

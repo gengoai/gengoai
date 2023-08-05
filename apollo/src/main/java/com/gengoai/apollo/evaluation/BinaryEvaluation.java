@@ -84,7 +84,8 @@ public class BinaryEvaluation extends ClassifierEvaluation {
       Validation.checkArgument(nFolds > 1, "Must specify more than 1 fold.");
       BinaryEvaluation evaluation = new BinaryEvaluation(outputName);
       for (Split split : Split.createFolds(dataset.shuffle(), nFolds)) {
-         model.estimate(split.train);
+         DataSet d = model.fitAndTransform(split.train);
+         split.test.putAllMetadata(d.getMetadata());
          evaluation.evaluate(model, split.test);
       }
       return evaluation;

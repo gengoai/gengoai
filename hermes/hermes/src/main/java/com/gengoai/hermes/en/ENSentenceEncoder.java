@@ -22,17 +22,16 @@ package com.gengoai.hermes.en;
 import com.gengoai.apollo.model.tensorflow.TFInputVar;
 import com.gengoai.hermes.ml.model.TFSentenceEmbeddingProjector;
 
-import java.io.Serial;
 import java.util.List;
 
 public class ENSentenceEncoder extends TFSentenceEmbeddingProjector {
-    @Serial
+    public static final int DIMENSION = 300;
     private static final long serialVersionUID = 1234567L;
 
     public ENSentenceEncoder() {
         super(List.of(TFInputVar.embedding(TOKENS, ENResources.gloveLargeEmbeddings())),
-                "sentence",
-                "encoder_lstm/add_16");
+              "sentence",
+              "encoder_lstm/add_16");
     }
 
     @Override

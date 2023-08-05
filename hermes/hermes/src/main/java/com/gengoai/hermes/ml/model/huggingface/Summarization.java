@@ -29,6 +29,7 @@ import lombok.NonNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Summarization implements Summarizer {
     public static final String FLAN_T5_BASE_SAMSUM = "philschmid/flan-t5-base-samsum";
@@ -45,14 +46,18 @@ public class Summarization implements Summarizer {
                          @NonNull String tokenizerName,
                          int device,
                          int maxLength) {
-        this.interpreter = new PythonInterpreter("""
-                from transformers import pipeline
-
-                nlp = pipeline('summarization', model="%s", tokenizer="%s", device=%d)
-                                                                                    
-                def pipe(context):
-                   return nlp(list(context), max_length=%d)
-                      """.formatted(modelName, tokenizerName, device, maxLength));
+//        this.interpreter = new PythonInterpreter("""
+//                from transformers import pipeline
+//
+//                nlp = pipeline('summarization', model="%s", tokenizer="%s", device=%d)
+//
+//                def pipe(context):
+//                   return nlp(list(context), max_length=%d)
+//                      """.formatted(modelName, tokenizerName, device, maxLength));
+        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
+                                                                       "nlp = pipeline('summarization', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
+                                                                       "def pipe(context):\n" +
+                                                                       "   return nlp(list(context), max_length=%d)\n", modelName, tokenizerName, device, maxLength));
     }
 
 
@@ -73,7 +78,7 @@ public class Summarization implements Summarizer {
 
     public List<String> predict(@NonNull List<String> texts) {
         List<Map<String, ?>> rvals = Cast.as(interpreter.invoke("pipe", texts));
-        return rvals.stream().map(rList -> rList.get("summary_text").toString()).toList();
+        return rvals.stream().map(rList -> rList.get("summary_text").toString()).collect(Collectors.toList());
     }
 
 }//END OF Summarization

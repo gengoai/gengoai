@@ -76,13 +76,13 @@ public class DefaultDependencyAnnotator extends SentenceLevelAnnotator {
                     String depRel = edge.getLabel("DEPREL");
                     //COLLAPSE PREP RELATIONS
                     if (depRel.equalsIgnoreCase("pobj") || depRel.equalsIgnoreCase("pcomp")) {
-                        if (parent.outgoing(Types.DEPENDENCY, "prep").size() > 0) {
+                        if (!parent.outgoing(Types.DEPENDENCY, "prep").isEmpty()) {
                             Relation prep = parent.outgoingRelations(Types.DEPENDENCY).get(0);
                             Annotation grandparent = parent.outgoing(Types.DEPENDENCY, "prep").get(0);
                             parent.removeRelation(prep);
                             child.add(new Relation(Types.DEPENDENCY,
-                                    depRel + "_" + parent.toLowerCase(),
-                                    grandparent.getId()));
+                                                   depRel + "_" + parent.toLowerCase(),
+                                                   grandparent.getId()));
                         } else {
                             child.add(new Relation(Types.DEPENDENCY, edge.getLabel("DEPREL"), parent.getId()));
                         }
@@ -106,7 +106,7 @@ public class DefaultDependencyAnnotator extends SentenceLevelAnnotator {
             synchronized (this) {
                 if (!models.containsKey(language)) {
                     Resource r = ResourceType.MODEL.locate("Relation.DEPENDENCY", "dependency.model.bin", language)
-                            .orElse(null);
+                                                   .orElse(null);
                     Exception thrownException = null;
                     if (r != null && r.exists()) {
                         if (!(r instanceof FileResource)) {
@@ -123,7 +123,7 @@ public class DefaultDependencyAnnotator extends SentenceLevelAnnotator {
                         if (r instanceof FileResource) {
                             try {
                                 models.put(language,
-                                        ConcurrentMaltParserService.initializeParserModel(r.asURL().get()));
+                                           ConcurrentMaltParserService.initializeParserModel(r.asURL().get()));
                                 return models.get(language);
                             } catch (Exception e) {
                                 thrownException = e;

@@ -27,6 +27,7 @@ import lombok.NonNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ZeroShotClassification {
 
@@ -39,22 +40,22 @@ public class ZeroShotClassification {
     }
 
     public ZeroShotClassification(@NonNull String modelName, @NonNull String tokenizerName, boolean multiLabel, int device) {
-        this.interpreter = new PythonInterpreter("""
-                from transformers import pipeline
-                nlp = pipeline('zero-shot-classification', model="%s", tokenizer="%s", device=%d)
-                                
-                def pipe(sentence,labels):
-                    return nlp(list(sentence),list(labels), multi_label=%s)""".formatted(modelName,
-                tokenizerName,
-                device,
-                multiLabel ? "True" : "False"));
+        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
+                                                                       "nlp = pipeline('zero-shot-classification', model='%s', tokenizer='%s', device=%d)\n" +
+                                                                       "def pipe(sentence,labels):\n" +
+                                                                       "    return nlp(list(sentence),list(labels), multi_label=%s)", modelName,
+                                                               tokenizerName,
+                                                               device,
+                                                               multiLabel ? "True" : "False"));
+
+
     }
 
 
     public List<Counter<String>> predict(@NonNull List<String> sequences, @NonNull List<String> candidateLabels) {
         List<Map<String, ?>> rvals = Cast.as(interpreter.invoke("pipe",
-                sequences,
-                candidateLabels));
+                                                                sequences,
+                                                                candidateLabels));
         return rvals.stream().map(rval -> {
             List<String> labels = Cast.as(rval.get("labels"));
             List<Double> scores = Cast.as(rval.get("scores"));
@@ -63,11 +64,17 @@ public class ZeroShotClassification {
                 counter.set(labels.get(i), scores.get(i));
             }
             return counter;
-        }).toList();
+        }).collect(Collectors.toList());
     }
 
     public Counter<String> predict(@NonNull String sequence, @NonNull List<String> candidateLabels) {
         return predict(List.of(sequence), candidateLabels).get(0);
+    }
+
+    public static void main(String[] args) {
+        ZeroShotClassification zsc = new ZeroShotClassification(BART_LARGE_MNLI, true, 0);
+        System.out.println(zsc.predict(List.of("I am happy", "I am sad"),
+                                       List.of("happy", "sad")));
     }
 
 }//END OF ZeroShotClassification

@@ -27,6 +27,7 @@ import lombok.NonNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TextClassification {
     private final PythonInterpreter interpreter;
@@ -39,14 +40,18 @@ public class TextClassification {
     public TextClassification(@NonNull String modelName,
                               @NonNull String tokenizerName,
                               int device) {
-        this.interpreter = new PythonInterpreter("""
-                from transformers import pipeline
-                nlp = pipeline('text-classification', model="%s", tokenizer="%s", device=%d, top_k=None)
-                                
-                def pipe(text):
-                    return nlp(list(text))""".formatted(modelName,
-                tokenizerName,
-                device));
+//        this.interpreter = new PythonInterpreter("""
+//                from transformers import pipeline
+//                nlp = pipeline('text-classification', model="%s", tokenizer="%s", device=%d, top_k=None)
+//
+//                def pipe(text):
+//                    return nlp(list(text))""".formatted(modelName,
+//                tokenizerName,
+//                device));
+        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
+                                                                       "nlp = pipeline('text-classification', model=\"%s\", tokenizer=\"%s\", device=%d, top_k=None)\n" +
+                                                                       "def pipe(context):\n" +
+                                                                       "   return nlp(list(context))\n", modelName, tokenizerName, device));
     }
 
     public Counter<String> predict(@NonNull String sequence) {
@@ -59,10 +64,17 @@ public class TextClassification {
             Counter<String> counter = Counters.newCounter();
             for (Map<String, ?> stringMap : rList) {
                 counter.set(stringMap.get("label").toString(),
-                        Cast.as(stringMap.get("score"), Double.class));
+                            Cast.as(stringMap.get("score"), Double.class));
             }
             return counter;
-        }).toList();
+        }).collect(Collectors.toList());
+    }
+
+    public static void main(String[] args) {
+        TextClassification te = new TextClassification("SamLowe/roberta-base-go_emotions", 0);
+        System.out.println(te.predict(
+                "I am not happy."
+                                     ));
     }
 
 }//END OF TextClassification

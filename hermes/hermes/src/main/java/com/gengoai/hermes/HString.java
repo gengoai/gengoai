@@ -86,8 +86,8 @@ public interface HString extends Span, StringLike, Serializable {
      */
     static HString union(@NonNull HString first, @NonNull HString second, @NonNull HString... others) {
         return union(() -> Iterators.concat(Collections.singleton(first),
-                Collections.singleton(second),
-                Arrays.asList(others)));
+                                            Collections.singleton(second),
+                                            Arrays.asList(others)));
     }
 
     /**
@@ -390,7 +390,7 @@ public interface HString extends Span, StringLike, Serializable {
      */
     default List<HString> charNGrams(int minOrder, int maxOrder) {
         Validation.checkArgument(minOrder <= maxOrder,
-                "minimum ngram order must be less than or equal to the maximum ngram order");
+                                 "minimum ngram order must be less than or equal to the maximum ngram order");
         Validation.checkArgument(minOrder > 0, "minimum ngram order must be greater than 0.");
         List<HString> ngrams = new ArrayList<>();
         for (int i = 0; i < length(); i++) {
@@ -710,8 +710,13 @@ public interface HString extends Span, StringLike, Serializable {
                 .stream()
                 .map(HString::getLemma)
                 .collect(Collectors.joining(getLanguage().usesWhitespace()
-                        ? " "
-                        : ""));
+                                                    ? " "
+                                                    : ""));
+    }
+
+
+    default List<Frame> getFrames(@NonNull AnnotationType frameType, @NonNull RelationType frameRoleType) {
+        return annotations(frameType).stream().map(trigger -> Frame.from(trigger, frameRoleType)).collect(Collectors.toList());
     }
 
     default UniversalFeatureSet getMorphologicalFeatures() {
@@ -736,8 +741,8 @@ public interface HString extends Span, StringLike, Serializable {
         }
         return tokenStream().map(HString::getStemmedForm)
                             .collect(Collectors.joining(getLanguage().usesWhitespace()
-                                    ? " "
-                                    : ""));
+                                                                ? " "
+                                                                : ""));
     }
 
     /**
@@ -1484,7 +1489,7 @@ public interface HString extends Span, StringLike, Serializable {
             return Cast.as(this);
         }
         DefaultDocumentImpl doc = new DefaultDocumentImpl(String.format("%s-%d:%d", document().getId(), start(), end()),
-                toString());
+                                                          toString());
         Map<Long, Long> idMap = new HashMap<>();
         for (Annotation annotation : enclosedAnnotations()) {
             long id = doc.annotationBuilder(annotation.getType())
@@ -1500,8 +1505,8 @@ public interface HString extends Span, StringLike, Serializable {
             annotation.outgoingRelationStream(false)
                       .filter(r -> idMap.containsKey(r.getTarget()))
                       .forEach(r -> targetAnnotation.add(new Relation(r.getType(),
-                              r.getValue(),
-                              idMap.get(r.getTarget()))));
+                                                                      r.getValue(),
+                                                                      idMap.get(r.getTarget()))));
         }
         return doc;
     }
