@@ -239,7 +239,7 @@ public interface Types {
     RelationType LIGHT_FRAME_ROLE = RelationType.make("LIGHT_FRAME_ROLE");
 
 
-    AttributeType<String> EMPATH_CATEGORY = AttributeType.make("EMPATH", String.class);
+    AttributeType<Set<String>> EMPATH_CATEGORY = AttributeType.make("EMPATH", parameterizedType(Set.class, String.class));
 
     /**
      * Annotation annotation type.

@@ -24,6 +24,7 @@ import com.gengoai.hermes.*;
 import com.gengoai.hermes.annotator.Annotator;
 import com.gengoai.hermes.lexicon.Lexicon;
 
+import java.util.List;
 import java.util.Set;
 
 public class ENEmpathAnnotator extends Annotator {
@@ -37,7 +38,7 @@ public class ENEmpathAnnotator extends Annotator {
     @Override
     protected void annotateImpl(Document document) {
         for (HString match : lexicon.extract(document)) {
-            match.firstToken().put(Types.EMPATH_CATEGORY, match.attribute(Types.MATCHED_TAG));
+            match.firstToken().putAdd(Types.EMPATH_CATEGORY, List.of(match.attribute(Types.MATCHED_TAG)));
         }
     }
 
