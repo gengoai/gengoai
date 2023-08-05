@@ -58,7 +58,7 @@ public interface Types {
      * Attribute defining the basic categories for a word/phrase.
      */
     AttributeType<Set<String>> CATEGORY = AttributeType.make("CATEGORY",
-            parameterizedType(Set.class, String.class));
+                                                             parameterizedType(Set.class, String.class));
     /**
      * Special Attribute for loading BasicCategories lexicons
      */
@@ -143,7 +143,7 @@ public interface Types {
      * Attribute defining the Morphological Features for a given span of text.
      */
     AttributeType<UniversalFeatureSet> MORPHOLOGICAL_FEATURES = AttributeType.make("MORPHO_FEATURES",
-            UniversalFeatureSet.class);
+                                                                                   UniversalFeatureSet.class);
     /**
      * The part-of-speech associated with a span
      */
@@ -226,7 +226,7 @@ public interface Types {
      * Set of String attribute defining the associated Wikipedia categories for a document or span of text.
      */
     AttributeType<Set<String>> WIKI_CATEGORIES = AttributeType.make("WIKI_CATEGORIES",
-            parameterizedType(Set.class, String.class));
+                                                                    parameterizedType(Set.class, String.class));
     AnnotationType WORD_SENSE = AnnotationType.make("WORD_SENSE");
 
 
@@ -238,6 +238,8 @@ public interface Types {
 
     RelationType LIGHT_FRAME_ROLE = RelationType.make("LIGHT_FRAME_ROLE");
 
+
+    AttributeType<String> EMPATH_CATEGORY = AttributeType.make("EMPATH", String.class);
 
     /**
      * Annotation annotation type.
