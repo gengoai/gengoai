@@ -42,111 +42,116 @@ import java.util.Set;
  */
 @EqualsAndHashCode
 public class IndexEncoder implements Encoder {
-   private static final long serialVersionUID = 1L;
-   @JsonProperty
-   private final Index<String> alphabet = new HashMapIndex<>();
-   @JsonProperty
-   private final List<String> special = new ArrayList<>();
-   @JsonProperty
-   private final String unknownName;
+    private static final long serialVersionUID = 1L;
+    @JsonProperty
+    private final Index<String> alphabet = new HashMapIndex<>();
+    @JsonProperty
+    private final List<String> special = new ArrayList<>();
+    @JsonProperty
+    private final String unknownName;
 
-   /**
-    * Instantiates a new IndexEncoder
-    */
-   public IndexEncoder() {
-      this(null);
-   }
+    public IndexEncoder(Index<String> index) {
+        this.alphabet.addAll(index);
+        this.unknownName = null;
+    }
 
-   /**
-    * Instantiates a new IndexEncoder with the given unknown name (always will have index 0) which will be used when we
-    * try to encode a string not in the alphabet.
-    *
-    * @param unknownName the unknown name
-    */
-   public IndexEncoder(String unknownName) {
-      this.unknownName = Strings.isNullOrBlank(unknownName)
-            ? null
-            : unknownName;
-   }
+    /**
+     * Instantiates a new IndexEncoder
+     */
+    public IndexEncoder() {
+        this("");
+    }
 
-   /**
-    * Instantiates a new IndexEncoder with the given unknown name (always will have index 0) which will be used when we
-    * try to encode a string not in the alphabet.
-    *
-    * @param unknownName the unknown name
-    */
-   public IndexEncoder(String unknownName, @NonNull List<String> special) {
-      this.unknownName = Strings.isNullOrBlank(unknownName)
-            ? null
-            : unknownName;
-      this.special.addAll(special);
-   }
+    /**
+     * Instantiates a new IndexEncoder with the given unknown name (always will have index 0) which will be used when we
+     * try to encode a string not in the alphabet.
+     *
+     * @param unknownName the unknown name
+     */
+    public IndexEncoder(String unknownName) {
+        this.unknownName = Strings.isNullOrBlank(unknownName)
+                ? null
+                : unknownName;
+    }
 
-
-   public static IndexEncoder indexEncoder(String unknownName) {
-      return new IndexEncoder(unknownName);
-   }
-
-   public static IndexEncoder indexEncoder(String unknownName, @NonNull List<String> special) {
-      return new IndexEncoder(unknownName, special);
-   }
-
-   public static IndexEncoder iobLabelEncoder() {
-      return new IndexEncoder("O");
-   }
+    /**
+     * Instantiates a new IndexEncoder with the given unknown name (always will have index 0) which will be used when we
+     * try to encode a string not in the alphabet.
+     *
+     * @param unknownName the unknown name
+     */
+    public IndexEncoder(String unknownName, @NonNull List<String> special) {
+        this.unknownName = Strings.isNullOrBlank(unknownName)
+                ? null
+                : unknownName;
+        this.special.addAll(special);
+    }
 
 
-   @Override
-   public String decode(double index) {
-      return alphabet.get((int) index);
-   }
+    public static IndexEncoder indexEncoder(String unknownName) {
+        return new IndexEncoder(unknownName);
+    }
 
-   @Override
-   public int encode(String variableName) {
-      int index = alphabet.getId(variableName);
-      if (index < 0 && unknownName != null) {
-         return alphabet.getId(unknownName);
-      }
-      return index;
-   }
+    public static IndexEncoder indexEncoder(String unknownName, @NonNull List<String> special) {
+        return new IndexEncoder(unknownName, special);
+    }
 
-   @Override
-   public void fit(@NonNull MStream<Observation> stream) {
-      alphabet.clear();
-      alphabet.addAll(special);
-      if (unknownName != null) {
-         alphabet.add(unknownName);
-      }
-      alphabet.addAll(stream.parallel()
-                            .flatMap(Observation::getVariableSpace)
-                            .map(Variable::getName)
-                            .distinct()
-                            .collect());
-   }
+    public static IndexEncoder iobLabelEncoder() {
+        return new IndexEncoder("O");
+    }
 
-   @Override
-   public Set<String> getAlphabet() {
-      return Collections.unmodifiableSet(alphabet.itemSet());
-   }
 
-   @Override
-   public boolean isFixed() {
-      return false;
-   }
+    @Override
+    public String decode(double index) {
+        return alphabet.get((int) index);
+    }
 
-   @Override
-   public int size() {
-      return alphabet.size();
-   }
+    @Override
+    public int encode(String variableName) {
+        int index = alphabet.getId(variableName);
+        if (index < 0 && unknownName != null) {
+            return alphabet.getId(unknownName);
+        }
+        return index;
+    }
 
-   @Override
-   public String toString() {
-      return "IndexEncoder{size=" +
-            alphabet.size() +
-            ", unknown='" +
-            unknownName +
-            "', special=" +
-            special +
-            "}";
-   }
+    @Override
+    public void fit(@NonNull MStream<Observation> stream) {
+        alphabet.clear();
+        alphabet.addAll(special);
+        if (unknownName != null) {
+            alphabet.add(unknownName);
+        }
+        alphabet.addAll(stream.parallel()
+                              .flatMap(Observation::getVariableSpace)
+                              .map(Variable::getName)
+                              .distinct()
+                              .collect());
+    }
+
+    @Override
+    public Set<String> getAlphabet() {
+        return Collections.unmodifiableSet(alphabet.itemSet());
+    }
+
+    @Override
+    public boolean isFixed() {
+        return false;
+    }
+
+    @Override
+    public int size() {
+        return alphabet.size();
+    }
+
+    @Override
+    public String toString() {
+        return "IndexEncoder{size=" +
+                alphabet.size() +
+                ", unknown='" +
+                unknownName +
+                "', special=" +
+                special +
+                "}";
+    }
 }//END OF IndexEncoder

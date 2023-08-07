@@ -31,7 +31,6 @@ import com.gengoai.hermes.extraction.TermExtractor;
 import com.gengoai.hermes.extraction.lyre.LyreDSL;
 import com.gengoai.hermes.extraction.lyre.LyreExpression;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
-import com.gengoai.hermes.tools.HermesCLI;
 import com.gengoai.tuple.Tuple;
 
 /**

@@ -24,7 +24,6 @@ package com.gengoai.hermes;
 import com.gengoai.Language;
 import com.gengoai.hermes.annotator.RegexAnnotator;
 import com.gengoai.hermes.corpus.DocumentCollection;
-import com.gengoai.hermes.tools.HermesCLI;
 
 import static com.gengoai.hermes.Types.SENTENCE;
 import static com.gengoai.hermes.Types.TOKEN;

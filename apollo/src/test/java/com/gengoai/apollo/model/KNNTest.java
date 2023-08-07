@@ -17,40 +17,21 @@
  * under the License.
  */
 
-package com.gengoai.hermes.tools;
+package com.gengoai.apollo.model;
 
-import com.gengoai.application.CommandLineApplication;
-import com.gengoai.hermes.Hermes;
+import com.gengoai.apollo.evaluation.ClassifierEvaluation;
+import com.gengoai.apollo.evaluation.MultiClassEvaluation;
+import com.gengoai.conversion.Cast;
 
-import java.util.Collections;
-import java.util.Set;
+public class KNNTest extends BaseClassifierTest {
 
-/**
- * The type Hermes cli.
- *
- * @author David B. Bracewell
- */
-public abstract class HermesCLI extends CommandLineApplication {
+    public KNNTest() {
+        super(new KNN(p -> p.output.set("class")), true);
+    }
 
-   /**
-    * Instantiates a new Hermes cli.
-    */
-   public HermesCLI() {
-      super();
-   }
-
-   /**
-    * Instantiates a new Hermes cli.
-    *
-    * @param applicationName the application name
-    */
-   public HermesCLI(String applicationName) {
-      super(applicationName);
-   }
-
-   @Override
-   public Set<String> getDependentPackages() {
-      return Collections.singleton(Hermes.HERMES_PACKAGE);
-   }
-
-}//END OF HermesApplication
+    @Override
+    public boolean passes(ClassifierEvaluation evaluation) {
+        MultiClassEvaluation mce = Cast.as(evaluation);
+        return mce.microF1() >= 0.85;
+    }
+}

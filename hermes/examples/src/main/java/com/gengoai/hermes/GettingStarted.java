@@ -23,7 +23,6 @@ package com.gengoai.hermes;
 
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.hermes.extraction.TermExtractor;
-import com.gengoai.hermes.tools.HermesCLI;
 
 import java.util.Collections;
 import java.util.regex.Matcher;

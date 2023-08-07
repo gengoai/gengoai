@@ -4,7 +4,6 @@ import com.gengoai.collection.counter.Counter;
 import com.gengoai.config.Config;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.TermExtractor;
-import com.gengoai.hermes.tools.HermesCLI;
 
 import java.io.Serializable;
 

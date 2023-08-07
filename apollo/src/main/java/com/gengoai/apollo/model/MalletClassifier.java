@@ -41,82 +41,83 @@ import java.util.Arrays;
 
 /**
  * <p>Abstract base class implementation of a {@link SingleSourceModel} that wraps a Mallet Classifier.</p>
+ * <p>Mallet Classifiers do not need to have their datum vectorized.</p>
  *
  * @param <T> the type parameter
  * @author David B. Bracewell
  */
 public abstract class MalletClassifier<T extends SingleSourceFitParameters<T>> extends SingleSourceModel<T, MalletClassifier<T>> {
-   private static final long serialVersionUID = 1L;
-   protected Alphabet featureAlphabet;
-   protected Alphabet labelAlphabet;
-   protected cc.mallet.classify.Classifier model;
+    private static final long serialVersionUID = 1L;
+    protected Alphabet featureAlphabet;
+    protected Alphabet labelAlphabet;
+    protected cc.mallet.classify.Classifier model;
 
-   protected MalletClassifier(@NonNull T parameters) {
-      super(parameters);
-   }
+    protected MalletClassifier(@NonNull T parameters) {
+        super(parameters);
+    }
 
-   @Override
-   public void estimate(@NonNull DataSet dataset) {
-      featureAlphabet = new Alphabet();
-      Pipe pipe = new SerialPipes(Arrays.asList(new Target2Label(),
-                                                new VectorToTokensPipe(featureAlphabet)));
-      pipe.setDataAlphabet(featureAlphabet);
-      InstanceList trainingData = new InstanceList(pipe);
-      for(Datum datum : dataset) {
-         Observation input = datum.get(parameters.input.value());
-         Observation output = datum.get(parameters.output.value());
-         Validation.notNull(input, "Null Input Observation");
-         Validation.notNull(output, "Null Output Observation");
-         trainingData.addThruPipe(new cc.mallet.types.Instance(
-               input,
-               output.getVariableSpace().findFirst().map(Variable::getName).orElseThrow(),
-               null,
-               null
-         ));
-      }
+    @Override
+    public void estimate(@NonNull DataSet dataset) {
+        featureAlphabet = new Alphabet();
+        Pipe pipe = new SerialPipes(Arrays.asList(new Target2Label(),
+                                                  new VectorToTokensPipe(featureAlphabet)));
+        pipe.setDataAlphabet(featureAlphabet);
+        InstanceList trainingData = new InstanceList(pipe);
+        for (Datum datum : dataset) {
+            Observation input = datum.get(parameters.input.value());
+            Observation output = datum.get(parameters.output.value());
+            Validation.notNull(input, "Null Input Observation");
+            Validation.notNull(output, "Null Output Observation");
+            trainingData.addThruPipe(new cc.mallet.types.Instance(
+                    input,
+                    output.getVariableSpace().findFirst().map(Variable::getName).orElseThrow(),
+                    null,
+                    null
+            ));
+        }
 
-      ClassifierTrainer<?> trainer = getTrainer();
-      model = trainer.train(trainingData);
-      labelAlphabet = model.getInstancePipe().getTargetAlphabet();
-   }
+        ClassifierTrainer<?> trainer = getTrainer();
+        model = trainer.train(trainingData);
+        labelAlphabet = model.getInstancePipe().getTargetAlphabet();
+    }
 
-   @Override
-   public T getFitParameters() {
-      return parameters;
-   }
+    @Override
+    public T getFitParameters() {
+        return parameters;
+    }
 
-   @Override
-   public LabelType getLabelType(@NonNull String name) {
-      if(name.equals(parameters.output.value())) {
-         return LabelType.classificationType(labelAlphabet.size());
-      }
-      throw new IllegalArgumentException("'" + name + "' is not a valid output for this model.");
-   }
+    @Override
+    public LabelType getLabelType(@NonNull String name) {
+        if (name.equals(parameters.output.value())) {
+            return LabelType.classificationType(labelAlphabet.size());
+        }
+        throw new IllegalArgumentException("'" + name + "' is not a valid output for this model.");
+    }
 
-   protected abstract ClassifierTrainer<?> getTrainer();
+    protected abstract ClassifierTrainer<?> getTrainer();
 
-   @Override
-   protected Observation transform(@NonNull Observation observation) {
-      Labeling labeling = model.classify(model.getInstancePipe()
-                                              .instanceFrom(new cc.mallet.types.Instance(observation,
-                                                                                         Strings.EMPTY,
-                                                                                         null,
-                                                                                         null)))
-                               .getLabeling();
-      double[] result = new double[labelAlphabet.size()];
-      for(int i = 0; i < labelAlphabet.size(); i++) {
-         result[i] = labeling.value(i);
-      }
-      return new Classification(nd.DFLOAT32.array(result), new MalletEncoder(labelAlphabet));
-   }
+    @Override
+    protected Observation transform(@NonNull Observation observation) {
+        Labeling labeling = model.classify(model.getInstancePipe()
+                                                .instanceFrom(new cc.mallet.types.Instance(observation,
+                                                                                           Strings.EMPTY,
+                                                                                           null,
+                                                                                           null)))
+                                 .getLabeling();
+        double[] result = new double[labelAlphabet.size()];
+        for (int i = 0; i < labelAlphabet.size(); i++) {
+            result[i] = labeling.value(i);
+        }
+        return new Classification(nd.DFLOAT32.array(result), new MalletEncoder(labelAlphabet));
+    }
 
-   @Override
-   protected void updateMetadata(@NonNull DataSet data) {
-      data.updateMetadata(parameters.output.value(), m -> {
-         m.setDimension(-1);
-         m.setEncoder(null);
-         m.setType(Classification.class);
-      });
-   }
+    @Override
+    protected void updateMetadata(@NonNull DataSet data) {
+        data.updateMetadata(parameters.output.value(), m -> {
+            m.setDimension(-1);
+            m.setEncoder(null);
+            m.setType(Classification.class);
+        });
+    }
 
 }//END OF MalletClassifier

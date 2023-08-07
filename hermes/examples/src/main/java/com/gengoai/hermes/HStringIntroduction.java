@@ -20,7 +20,6 @@
 package com.gengoai.hermes;
 
 import com.gengoai.Tag;
-import com.gengoai.hermes.tools.HermesCLI;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

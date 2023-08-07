@@ -241,6 +241,11 @@ public interface Types {
 
     AttributeType<Set<String>> EMPATH_CATEGORY = AttributeType.make("EMPATH", parameterizedType(Set.class, String.class));
 
+
+    AnnotationType EMOTICON = AnnotationType.make("EMOTICON");
+    AttributeType<String> EMOTICON_GROUP = AttributeType.make("EMOTICON_GROUP", String.class);
+    AttributeType<String> EMOTICON_SUB_GROUP = AttributeType.make("EMOTICON_SUB_GROUP", String.class);
+    AttributeType<String> LABEL = Types.attribute("label", String.class);
     /**
      * Annotation annotation type.
      *

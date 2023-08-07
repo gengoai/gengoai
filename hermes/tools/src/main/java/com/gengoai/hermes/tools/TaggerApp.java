@@ -28,6 +28,7 @@ import com.gengoai.apollo.model.FitParameters;
 import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.application.Option;
 import com.gengoai.config.Config;
+import com.gengoai.hermes.HermesCLI;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.ml.HStringMLModel;
 import com.gengoai.io.resource.Resource;

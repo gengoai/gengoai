@@ -24,6 +24,7 @@ import com.gengoai.apollo.data.SQLiteDataSet;
 import com.gengoai.apollo.data.transform.Transformer;
 import com.gengoai.apollo.data.transform.vectorizer.EmbeddingVectorizer;
 import com.gengoai.hermes.HString;
+import com.gengoai.hermes.HermesCLI;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.en.ENResources;

@@ -31,7 +31,6 @@ import com.gengoai.apollo.data.transform.vectorizer.IndexingVectorizer;
 import com.gengoai.apollo.evaluation.MultiClassEvaluation;
 import com.gengoai.apollo.feature.Featurizer;
 import com.gengoai.apollo.math.linalg.NDArray;
-import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.apollo.model.LibLinear;
 import com.gengoai.apollo.model.PipelineModel;
 import com.gengoai.hermes.corpus.DocumentCollection;
@@ -39,10 +38,7 @@ import com.gengoai.hermes.en.ENSentenceEncoder;
 import com.gengoai.hermes.extraction.TermExtractor;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.ml.feature.ValueCalculator;
-import com.gengoai.hermes.ml.model.embedding.ElmoTokenEmbedding;
-import com.gengoai.hermes.tools.HermesCLI;
 import com.gengoai.stream.StreamingContext;
-import de.bwaldvogel.liblinear.SolverType;
 
 import static com.gengoai.collection.Maps.hashMapOf;
 import static com.gengoai.tuple.Tuples.$;
@@ -209,15 +205,15 @@ public class MLExample extends HermesCLI {
         //Perform 10-fold cross-validation and output the results to System.out
         //Don't expect great results with this size data and feature set
         MultiClassEvaluation.crossvalidation(dataSet,
-                                    PipelineModel.builder()
-                                                 .defaultInput(new HashingVectorizer(25, true))
-                                                 .defaultOutput(new IndexingVectorizer())
-                                                 .build(new LibLinear(p -> {
-                                                     p.verbose.set(false);
-                                                     p.bias.set(true);
-                                                 })),
-                                    10,
-                                    Datum.DEFAULT_OUTPUT)
+                                             PipelineModel.builder()
+                                                          .defaultInput(new HashingVectorizer(25, true))
+                                                          .defaultOutput(new IndexingVectorizer())
+                                                          .build(new LibLinear(p -> {
+                                                              p.verbose.set(false);
+                                                              p.bias.set(true);
+                                                          })),
+                                             10,
+                                             Datum.DEFAULT_OUTPUT)
                             .report();
 
 
@@ -243,16 +239,16 @@ public class MLExample extends HermesCLI {
         });
 
         MultiClassEvaluation.crossvalidation(dataSet,
-                                    PipelineModel.builder()
-                                                 .defaultOutput(new IndexingVectorizer())
-                                                 .build(new LibLinear(p -> {
-                                                     p.solver.set(SolverType.L1R_L2LOSS_SVC);
-                                                     p.verbose.set(false);
-                                                     p.bias.set(true);
-                                                 })),
-                                    10,
-                                    Datum.DEFAULT_OUTPUT)
+                                             PipelineModel.builder()
+                                                          .defaultOutput(new IndexingVectorizer())
+                                                          .build(new LibLinear(p -> {
+                                                              p.verbose.set(false);
+                                                              p.bias.set(true);
+                                                          })),
+                                             10,
+                                             Datum.DEFAULT_OUTPUT)
                             .report();
     }
+
 
 }//END OF MLExample

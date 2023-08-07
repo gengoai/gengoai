@@ -22,7 +22,6 @@
 package com.gengoai.hermes;
 
 import com.gengoai.hermes.corpus.DocumentCollection;
-import com.gengoai.hermes.tools.HermesCLI;
 import com.gengoai.tuple.Tuple2;
 
 import static com.gengoai.hermes.Types.DEPENDENCY;

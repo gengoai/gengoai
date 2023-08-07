@@ -20,14 +20,11 @@
 package com.gengoai.hermes.tools;
 
 import com.gengoai.Language;
-import com.gengoai.apollo.model.ModelIO;
 import com.gengoai.apollo.model.embedding.PreTrainedWordEmbedding;
 import com.gengoai.apollo.model.embedding.VSQuery;
 import com.gengoai.apollo.model.embedding.WordEmbedding;
-import com.gengoai.application.Option;
-import com.gengoai.conversion.Cast;
+import com.gengoai.hermes.HermesCLI;
 import com.gengoai.hermes.ResourceType;
-import com.gengoai.io.resource.Resource;
 
 import java.io.Console;
 

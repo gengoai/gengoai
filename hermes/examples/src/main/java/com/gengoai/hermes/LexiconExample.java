@@ -27,7 +27,6 @@ import com.gengoai.hermes.annotator.LexiconAnnotator;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.lexicon.Lexicon;
 import com.gengoai.hermes.lexicon.LexiconIO;
-import com.gengoai.hermes.tools.HermesCLI;
 import com.gengoai.io.Resources;
 
 /**

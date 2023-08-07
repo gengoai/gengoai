@@ -24,7 +24,6 @@ package com.gengoai.hermes;
 import com.gengoai.hermes.extraction.TermExtractor;
 import com.gengoai.hermes.extraction.keyword.NPClusteringKeywordExtractor;
 import com.gengoai.hermes.extraction.keyword.TermKeywordExtractor;
-import com.gengoai.hermes.tools.HermesCLI;
 
 /**
  * @author David B. Bracewell

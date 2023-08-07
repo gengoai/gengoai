@@ -21,6 +21,7 @@ package com.gengoai.hermes.tools;
 
 import com.gengoai.application.Option;
 import com.gengoai.config.Config;
+import com.gengoai.hermes.HermesCLI;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.workflow.Context;

@@ -19,6 +19,7 @@
 
 package com.gengoai.hermes.tools;
 
+import com.gengoai.hermes.HermesCLI;
 import com.gengoai.hermes.workflow.ActionDescription;
 import com.gengoai.string.Strings;
 

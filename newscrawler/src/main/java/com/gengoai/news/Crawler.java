@@ -20,13 +20,12 @@
 package com.gengoai.news;
 
 import com.gengoai.application.Option;
-import com.gengoai.hermes.tools.HermesCLI;
+import com.gengoai.hermes.HermesCLI;
 import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.rss.RSSMonitor;
 import com.gengoai.string.Strings;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;

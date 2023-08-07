@@ -27,9 +27,17 @@ import com.gengoai.hermes.lexicon.Lexicon;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * The ENEmpathAnnotator class is responsible for annotating document with "empath" categories.
+ * It extends the Annotator class.
+ */
 public class ENEmpathAnnotator extends Annotator {
     final Lexicon lexicon;
 
+    /**
+     * Initializes a new instance of the ENEmpathAnnotator class.
+     * This constructor loads the "empath" lexicon for the English language.
+     */
     public ENEmpathAnnotator() {
         this.lexicon = ResourceType.LEXICON.load("empath", Language.ENGLISH);
     }

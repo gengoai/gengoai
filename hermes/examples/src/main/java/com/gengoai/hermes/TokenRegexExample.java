@@ -27,7 +27,6 @@ import com.gengoai.hermes.lexicon.Lexicon;
 import com.gengoai.hermes.lexicon.LexiconEntry;
 import com.gengoai.hermes.lexicon.LexiconManager;
 import com.gengoai.hermes.lexicon.TrieLexicon;
-import com.gengoai.hermes.tools.HermesCLI;
 import com.gengoai.parsing.ParseException;
 
 import java.util.Set;
