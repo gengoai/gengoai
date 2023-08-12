@@ -23,6 +23,7 @@ package com.gengoai.hermes.wordnet;
 
 import com.gengoai.Validation;
 import com.gengoai.hermes.morphology.PartOfSpeech;
+import lombok.Getter;
 
 /**
  * The enum Word net pOS.
@@ -30,80 +31,70 @@ import com.gengoai.hermes.morphology.PartOfSpeech;
  * @author David B. Bracewell
  */
 public enum WordNetPOS {
-   NOUN('n', "noun", PartOfSpeech.NOUN),
-   VERB('v', "verb", PartOfSpeech.VERB),
-   ADJECTIVE('a', "adj", PartOfSpeech.ADJECTIVE),
-   ADVERB('r', "adv", PartOfSpeech.ADVERB),
-   ANY('*', "any", PartOfSpeech.ANY);
+    NOUN('n', "noun", PartOfSpeech.NOUN),
+    VERB('v', "verb", PartOfSpeech.VERB),
+    ADJECTIVE('a', "adj", PartOfSpeech.ADJECTIVE),
+    ADVERB('r', "adv", PartOfSpeech.ADVERB),
+    ANY('*', "any", PartOfSpeech.ANY);
 
-   private final char tag;
-   private final String shortForm;
-   private final PartOfSpeech hermesPOS;
+    @Getter
+    private final char tag;
+    /**
+     * -- GETTER --
+     * Get short form.
+     *
+     * @return the string
+     */
+    @Getter
+    private final String shortForm;
+    private final PartOfSpeech hermesPOS;
 
-   public static WordNetPOS fromHermesPOS(PartOfSpeech pos) {
-      if(pos == null) {
-         return ANY;
-      }
-      if(pos.isNoun()) {
-         return NOUN;
-      }
-      if(pos.isVerb()) {
-         return VERB;
-      }
-      if(pos.isAdjective()) {
-         return ADJECTIVE;
-      }
-      if(pos.isAdverb()) {
-         return ADVERB;
-      }
-      return ANY;
-   }
+    public static WordNetPOS fromHermesPOS(PartOfSpeech pos) {
+        if (pos == null) {
+            return ANY;
+        }
+        if (pos.isNoun()) {
+            return NOUN;
+        }
+        if (pos.isVerb()) {
+            return VERB;
+        }
+        if (pos.isAdjective()) {
+            return ADJECTIVE;
+        }
+        if (pos.isAdverb()) {
+            return ADVERB;
+        }
+        return ANY;
+    }
 
-   /**
-    * From string.
-    *
-    * @param string the string
-    * @return the word net pOS
-    */
-   public static WordNetPOS fromString(String string) {
-      Validation.notNull(string);
-      if(string.equalsIgnoreCase("S")) {
-         return ADJECTIVE;
-      }
-      for(WordNetPOS pos : values()) {
-         if(pos.shortForm.equalsIgnoreCase(string) || pos.tag == Character.toLowerCase(string.charAt(0))) {
-            return pos;
-         }
-      }
-      return WordNetPOS.valueOf(string);
-   }
+    /**
+     * From string.
+     *
+     * @param string the string
+     * @return the word net pOS
+     */
+    public static WordNetPOS fromString(String string) {
+        Validation.notNull(string);
+        if (string.equalsIgnoreCase("S")) {
+            return ADJECTIVE;
+        }
+        for (WordNetPOS pos : values()) {
+            if (pos.shortForm.equalsIgnoreCase(string) || pos.tag == Character.toLowerCase(string.charAt(0))) {
+                return pos;
+            }
+        }
+        return WordNetPOS.valueOf(string);
+    }
 
-   WordNetPOS(char tag, String shortForm, PartOfSpeech hermesPOS) {
-      this.tag = tag;
-      this.shortForm = shortForm;
-      this.hermesPOS = hermesPOS;
-   }
+    WordNetPOS(char tag, String shortForm, PartOfSpeech hermesPOS) {
+        this.tag = tag;
+        this.shortForm = shortForm;
+        this.hermesPOS = hermesPOS;
+    }
 
-   /**
-    * Get short form.
-    *
-    * @return the string
-    */
-   public String getShortForm() {
-      return shortForm;
-   }
-
-   /**
-    * Gets tag.
-    *
-    * @return the tag
-    */
-   public char getTag() {
-      return tag;
-   }
-
-   public PartOfSpeech toHermesPOS() {
-      return hermesPOS;
-   }
+    public PartOfSpeech toHermesPOS() {
+        return hermesPOS;
+    }
 
 }//END OF WordNetPOS

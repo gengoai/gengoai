@@ -83,7 +83,7 @@ class DocumentIterator implements Spliterator<IndexDocument> {
       }
       if (current < end) {
          try {
-            consumer.accept(config.load(reader.object.openReader().document(current)));
+            consumer.accept(config.load(reader.object.openReader().storedFields().document(current)));
          } catch (IOException e) {
             throw new RuntimeException(e);
          }

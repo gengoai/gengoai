@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Summarization implements Summarizer {
+public class Summarization implements Summarizer, AutoCloseable {
     public static final String FLAN_T5_BASE_SAMSUM = "philschmid/flan-t5-base-samsum";
 
     private final PythonInterpreter interpreter;
@@ -81,4 +81,8 @@ public class Summarization implements Summarizer {
         return rvals.stream().map(rList -> rList.get("summary_text").toString()).collect(Collectors.toList());
     }
 
+    @Override
+    public void close() throws Exception {
+        interpreter.close();
+    }
 }//END OF Summarization

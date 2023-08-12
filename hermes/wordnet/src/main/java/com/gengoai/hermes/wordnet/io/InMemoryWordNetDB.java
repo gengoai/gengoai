@@ -43,109 +43,110 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class InMemoryWordNetDB implements WordNetDB, Serializable {
-   private static final long serialVersionUID = 3629513346307838903L;
-   protected final SetMultimap<String, Sense> lemmaToSenseMap = new TreeSetMultimap<>();
-   protected final Map<String, Synset> idToSynsetMap = new HashMap<>();
-   protected final Table<Sense, Sense, WordNetRelation> senseRelations = new HashBasedTable<>();
-   protected final Table<String, String, WordNetRelation> synsetRelations = new HashBasedTable<>();
-   protected final Set<Synset> roots = new HashSet<>();
+    private static final long serialVersionUID = 3629513346307838903L;
+    protected final SetMultimap<String, Sense> lemmaToSenseMap = new TreeSetMultimap<>();
+    protected final Map<String, Synset> idToSynsetMap = new HashMap<>();
+    protected final Table<Sense, Sense, WordNetRelation> senseRelations = new HashBasedTable<>();
+    protected final Table<String, String, WordNetRelation> synsetRelations = new HashBasedTable<>();
+    protected final Set<Synset> roots = new HashSet<>();
 
 
-   @Override
-   public Sense getSenseFromId(String id) {
-      String[] parts = id.split("#");
-      PartOfSpeech pos = WordNetPOS.fromString(parts[1]).toHermesPOS();
-      int num = Integer.parseInt(parts[2]);
-      return lemmaToSenseMap.get(parts[0])
-                            .stream()
-                            .filter(s -> s.getLexicalId() == num && s.getPOS() == pos)
-                            .findFirst()
-                            .orElse(null);
-   }
+    @Override
+    public Sense getSenseFromId(String id) {
+        String[] parts = id.split("#");
+        PartOfSpeech pos = WordNetPOS.fromString(parts[1]).toHermesPOS();
+        int num = Integer.parseInt(parts[2]);
+        parts[0] = parts[0].replace('_', ' ').toLowerCase();
+        return lemmaToSenseMap.get(parts[0])
+                              .stream()
+                              .filter(s -> s.getSenseNumber() == num && s.getPOS().equals(pos))
+                              .findFirst()
+                              .orElse(null);
+    }
 
-   @Override
-   public boolean containsLemma(String lemma) {
-      return lemmaToSenseMap.containsKey(lemma);
-   }
+    @Override
+    public boolean containsLemma(String lemma) {
+        return lemmaToSenseMap.containsKey(lemma);
+    }
 
-   @Override
-   public Set<String> getLemmas() {
-      return lemmaToSenseMap.keySet();
-   }
+    @Override
+    public Set<String> getLemmas() {
+        return lemmaToSenseMap.keySet();
+    }
 
-   @Override
-   public Set<Sense> getSenses() {
-      return new HashSet<>(lemmaToSenseMap.values());
-   }
+    @Override
+    public Set<Sense> getSenses() {
+        return new HashSet<>(lemmaToSenseMap.values());
+    }
 
-   @Override
-   public Set<Sense> getSenses(String lemma) {
-      return lemmaToSenseMap.get(lemma);
-   }
+    @Override
+    public Set<Sense> getSenses(String lemma) {
+        return lemmaToSenseMap.get(lemma);
+    }
 
-   @Override
-   public Synset getSynsetFromId(String id) {
-      return idToSynsetMap.get(id);
-   }
+    @Override
+    public Synset getSynsetFromId(String id) {
+        return idToSynsetMap.get(id);
+    }
 
-   @Override
-   public WordNetRelation getRelation(Sense sense1, Sense sense2) {
-      return senseRelations.get(sense1, sense2);
-   }
+    @Override
+    public WordNetRelation getRelation(Sense sense1, Sense sense2) {
+        return senseRelations.get(sense1, sense2);
+    }
 
-   @Override
-   public WordNetRelation getRelation(Synset synset1, Synset synset2) {
-      return synsetRelations.get(synset1.getId(), synset2.getId());
-   }
+    @Override
+    public WordNetRelation getRelation(Synset synset1, Synset synset2) {
+        return synsetRelations.get(synset1.getId(), synset2.getId());
+    }
 
-   @Override
-   public Map<Sense, WordNetRelation> getRelations(Sense sense) {
-      return senseRelations.row(sense);
-   }
+    @Override
+    public Map<Sense, WordNetRelation> getRelations(Sense sense) {
+        return senseRelations.row(sense);
+    }
 
-   @Override
-   public Map<String, WordNetRelation> getRelations(Synset synset) {
-      return synsetRelations.row(synset.getId());
-   }
+    @Override
+    public Map<String, WordNetRelation> getRelations(Synset synset) {
+        return synsetRelations.row(synset.getId());
+    }
 
-   @Override
-   public Set<Synset> getSynsets() {
-      return new HashSet<>(idToSynsetMap.values());
-   }
+    @Override
+    public Set<Synset> getSynsets() {
+        return new HashSet<>(idToSynsetMap.values());
+    }
 
-   @Override
-   public Set<Synset> getRoots() {
-      return roots;
-   }
+    @Override
+    public Set<Synset> getRoots() {
+        return roots;
+    }
 
-   @Override
-   public void putSense(String lemma, Sense sense) {
-      lemmaToSenseMap.put(lemma.toLowerCase().replace('_', ' '), sense);
-   }
+    @Override
+    public void putSense(String lemma, Sense sense) {
+        lemmaToSenseMap.put(lemma.toLowerCase().replace('_', ' '), sense);
+    }
 
-   @Override
-   public void putSynset(String id, Synset synset) {
-      idToSynsetMap.put(id, synset);
-   }
+    @Override
+    public void putSynset(String id, Synset synset) {
+        idToSynsetMap.put(id, synset);
+    }
 
-   @Override
-   public void putRelation(Sense s1, Sense s2, WordNetRelation relation) {
-      senseRelations.put(s1, s2, relation);
-   }
+    @Override
+    public void putRelation(Sense s1, Sense s2, WordNetRelation relation) {
+        senseRelations.put(s1, s2, relation);
+    }
 
-   @Override
-   public void putRelation(String synsetId1, String synsetId2, WordNetRelation relation) {
-      synsetRelations.put(synsetId1, synsetId2, relation);
-   }
+    @Override
+    public void putRelation(String synsetId1, String synsetId2, WordNetRelation relation) {
+        synsetRelations.put(synsetId1, synsetId2, relation);
+    }
 
-   @Override
-   public void addRoot(Synset root) {
-      roots.add(root);
-   }
+    @Override
+    public void addRoot(Synset root) {
+        roots.add(root);
+    }
 
-   public String toSenseRelationIndex(Sense sense) {
-      return sense.getSynset().getId() + "%%" + Integer.toString(sense.getSynsetPosition());
-   }
+    public String toSenseRelationIndex(Sense sense) {
+        return sense.getSynset().getId() + "%%" + Integer.toString(sense.getSynsetPosition());
+    }
 
 
 }//END OF WordNetDB

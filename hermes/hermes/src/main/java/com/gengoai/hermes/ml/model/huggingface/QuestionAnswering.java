@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class QuestionAnswering {
+public class QuestionAnswering implements AutoCloseable {
     public static final String ROBERTA_BASE_SQUAD = "deepset/roberta-base-squad2";
 
     private final PythonInterpreter interpreter;
@@ -83,5 +83,8 @@ public class QuestionAnswering {
         String question;
     }
 
-
+    @Override
+    public void close() throws Exception {
+        interpreter.close();
+    }
 }//END OF QuestionAnswering

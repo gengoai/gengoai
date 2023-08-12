@@ -22,6 +22,7 @@ package com.gengoai.lucene.field.types;
 import com.gengoai.conversion.Converter;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
+import org.apache.lucene.document.KeywordField;
 import org.apache.lucene.index.IndexableField;
 import org.kohsuke.MetaInfServices;
 

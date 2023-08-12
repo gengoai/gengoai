@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TextClassification {
+public class TextClassification implements AutoCloseable {
     private final PythonInterpreter interpreter;
 
     public TextClassification(@NonNull String modelName,
@@ -75,6 +75,11 @@ public class TextClassification {
         System.out.println(te.predict(
                 "I am not happy."
                                      ));
+    }
+
+    @Override
+    public void close() throws Exception {
+        interpreter.close();
     }
 
 }//END OF TextClassification

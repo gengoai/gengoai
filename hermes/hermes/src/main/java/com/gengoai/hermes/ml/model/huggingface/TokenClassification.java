@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TokenClassification {
+public class TokenClassification implements AutoCloseable {
     public static final String BERT_BASE_NER = "dslim/bert-base-NER";
 
     private final PythonInterpreter interpreter;
@@ -82,6 +82,11 @@ public class TokenClassification {
     public static void main(String[] args) {
         TokenClassification tc = new TokenClassification(BERT_BASE_NER, 0);
         System.out.println(tc.predict("John met Mary in Japan."));
+    }
+
+    @Override
+    public void close() throws Exception {
+        interpreter.close();
     }
 
 }//END OF TokenClassification

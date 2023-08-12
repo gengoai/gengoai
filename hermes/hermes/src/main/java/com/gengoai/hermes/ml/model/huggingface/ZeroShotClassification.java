@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ZeroShotClassification {
+public class ZeroShotClassification implements AutoCloseable {
 
     public static final String BART_LARGE_MNLI = "facebook/bart-large-mnli";
 
@@ -75,6 +75,11 @@ public class ZeroShotClassification {
         ZeroShotClassification zsc = new ZeroShotClassification(BART_LARGE_MNLI, true, 0);
         System.out.println(zsc.predict(List.of("I am happy", "I am sad"),
                                        List.of("happy", "sad")));
+    }
+
+    @Override
+    public void close() throws Exception {
+        interpreter.close();
     }
 
 }//END OF ZeroShotClassification

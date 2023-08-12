@@ -51,10 +51,10 @@ class SchemaAwareQueryParser extends QueryParser {
    }
 
    @Override
-   public Query newTermQuery(Term term) {
+   public Query newTermQuery(Term term, float boost) {
       return Fields
             .findField(field, config.getFields())
             .map(f -> f.getType().newTermQuery(term))
-            .orElseGet(() -> super.newTermQuery(term));
+            .orElseGet(() -> super.newTermQuery(term,boost));
    }
 }//END OF SchemaAwareQueryParser

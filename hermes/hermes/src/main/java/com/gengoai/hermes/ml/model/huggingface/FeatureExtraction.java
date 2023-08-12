@@ -30,8 +30,9 @@ import lombok.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FeatureExtraction {
+public class FeatureExtraction implements AutoCloseable {
     public static final String BART_BASE = "facebook/bart-base";
+    public static final String BART_LARGE_MNLI = "facebook/bart-large-mnli";
 
     private final PythonInterpreter interpreter;
 
@@ -81,4 +82,8 @@ public class FeatureExtraction {
     }
 
 
+    @Override
+    public void close() throws Exception {
+        interpreter.close();
+    }
 }//END OF CLASS FeatureExtraction

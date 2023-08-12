@@ -19,42 +19,24 @@
 
 package com.gengoai.lucene.field.types;
 
-import com.gengoai.collection.counter.Counter;
-import com.gengoai.conversion.Converter;
-import com.gengoai.conversion.TypeConversionException;
-import com.gengoai.lucene.field.EmbeddingField;
-import com.gengoai.lucene.field.Fields;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-import lombok.extern.java.Log;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.KeywordField;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.*;
-import org.kohsuke.MetaInfServices;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 
-@EqualsAndHashCode(callSuper = true)
-@Log
-@MetaInfServices
-public class EmbeddingFieldType extends FieldType {
+public class KeywordFieldType extends FieldType {
+    @Override
+    protected Collection<IndexableField> processImpl(Object value, String outField, boolean store) {
+        return Collections.singleton(new KeywordField(outField, value.toString(), store ? Field.Store.YES : Field.Store.NO));
+    }
 
-   public EmbeddingFieldType() {
-      super(float[].class);
-   }
+    @Override
+    public Analyzer getAnalyzer() {
+        return new KeywordAnalyzer();
+    }
 
-   @Override
-   public Analyzer getAnalyzer() {
-      return new LuceneEmbeddingAnalyzer();
-   }
-
-   @Override
-   protected Collection<IndexableField> processImpl(Object value, String outField, boolean store) {
-      return Collections.singletonList(new EmbeddingField(outField, value.toString()));
-   }
-
-}
+}//END OF KeywordFieldType

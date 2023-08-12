@@ -93,7 +93,7 @@ public class IndexConfig implements Serializable {
    @JsonProperty
    private boolean useCompoundFile = IndexWriterConfig.DEFAULT_USE_COMPOUND_FILE_SYSTEM;
    @JsonProperty
-   private @NonNull LuceneSimilarity similarity = LuceneSimilarity.TF_IDF;
+   private @NonNull LuceneSimilarity similarity = LuceneSimilarity.BM25;
    @JsonProperty("docField")
    @Getter
    private String serializedDocumentField;

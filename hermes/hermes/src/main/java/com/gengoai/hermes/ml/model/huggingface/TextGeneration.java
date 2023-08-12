@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TextGeneration {
+public class TextGeneration implements AutoCloseable {
     public static final String GPT2_MEDIUM = "gpt2-medium";
 
     private final PythonInterpreter interpreter;
@@ -69,5 +69,9 @@ public class TextGeneration {
         System.out.println(tg.predict("I went to the store and ", 50));
     }
 
+    @Override
+    public void close() throws Exception {
+        interpreter.close();
+    }
 
 }//END OF TextGeneration

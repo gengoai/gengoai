@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class FillMaskGenerator {
+public class FillMaskGenerator implements AutoCloseable {
     public static final String BERT_BASE_UNCASED = "bert-base-uncased";
     public static final String BERT_MASK_TOKEN = "[MASK]";
     public static final String XLM_ROBERTA_LARGE = "xlm-roberta-large";
@@ -82,4 +82,14 @@ public class FillMaskGenerator {
         return predict(List.of(context)).get(0);
     }
 
+    public static void main(String[] args) {
+        FillMaskGenerator generator = new FillMaskGenerator(FillMaskGenerator.BERT_BASE_UNCASED, 0);
+        System.out.println(generator.predict("god is a type of [MASK]."));
+    }
+
+
+    @Override
+    public void close() throws Exception {
+        interpreter.close();
+    }
 }//END OF FillMaskGenerator
