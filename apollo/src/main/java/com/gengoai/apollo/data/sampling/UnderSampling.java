@@ -34,32 +34,33 @@ import java.util.List;
  * <p>Removes examples of classes in order to balance the distribution of labels in the data set.</p>
  */
 public class UnderSampling extends BaseObservationDataSetSampler implements Serializable {
-   private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-   /**
-    * Instantiates a new UnderSampling.
-    *
-    * @param observationName the name of the label observation we want to balance.
-    */
-   public UnderSampling(@NonNull String observationName) {
-      super(observationName);
-   }
+    /**
+     * Instantiates a new UnderSampling.
+     *
+     * @param observationName the name of the label observation we want to balance.
+     */
+    public UnderSampling(@NonNull String observationName) {
+        super(observationName);
+    }
 
-   @Override
-   public DataSet sample(@NonNull DataSet dataSet) {
-      Counter<String> fCount = calculateClassDistribution(dataSet);
-      int targetCount = (int) fCount.minimumCount();
-      List<Datum> outputData = new ArrayList<>();
-      for(Object label : fCount.items()) {
-         dataSet.stream().filter(e -> e.get(getObservationName())
-                                       .getVariableSpace()
-                                       .map(Variable::getName)
-                                       .anyMatch(label::equals))
-                .sample(false, targetCount)
-                .map(Datum::copy)
-                .forEach(outputData::add);
-      }
-      return new InMemoryDataSet(outputData, dataSet.getMetadata(), dataSet.getNDArrayFactory());
-   }
+    @Override
+    public DataSet sample(@NonNull DataSet dataSet) {
+        Counter<String> fCount = calculateClassDistribution(dataSet);
+        int targetCount = (int) fCount.minimumCount();
+        List<Datum> outputData = new ArrayList<>();
+        for (Object label : fCount.items()) {
+            dataSet.stream()
+                   .filter(e -> e.get(getObservationName())
+                                 .getVariableSpace()
+                                 .map(Variable::getName)
+                                 .anyMatch(label::equals))
+                   .sample(false, targetCount)
+                   .map(Datum::copy)
+                   .forEach(outputData::add);
+        }
+        return new InMemoryDataSet(outputData, dataSet.getMetadata(), dataSet.getNDArrayFactory());
+    }
 
 }//END OF Undersampling

@@ -231,7 +231,7 @@ abstract class AbstractLocalMStream<T> implements MStream<T>, Serializable {
       if(withReplacement) {
          return cache().sample(true, number);
       } else {
-         return shuffle(new Random()).limit(number);
+         return shuffle(new Random(10)).limit(number);
       }
    }
 

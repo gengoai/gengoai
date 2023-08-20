@@ -62,7 +62,7 @@ public class ShuffleIterator<T> implements Iterator<T> {
          for(int i = 0; i < 500 && backing.hasNext(); i++) {
             buffer.add(backing.next());
          }
-         Collections.shuffle(buffer);
+         Collections.shuffle(buffer, random);
       }
       if(backing.hasNext()) {
          if(random.nextDouble() < random.nextDouble()) {

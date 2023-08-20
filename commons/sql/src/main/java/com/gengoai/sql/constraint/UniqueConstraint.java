@@ -19,7 +19,6 @@
 
 package com.gengoai.sql.constraint;
 
-import com.gengoai.Validation;
 import com.gengoai.sql.SQLElement;
 import lombok.*;
 
@@ -30,14 +29,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public class UniqueConstraint extends ConstraintWithConflictClause<UniqueConstraint> {
-   private static final long serialVersionUID = 1L;
-   @Getter
-   private final List<SQLElement> columns;
+    private static final long serialVersionUID = 1L;
+    @Getter
+    private final List<SQLElement> columns;
 
-   public UniqueConstraint(String name, @NonNull Collection<SQLElement> columns) {
-      super(name);
-      Validation.checkArgument(columns.size() > 0, "Must define at least one column");
-      this.columns = new ArrayList<>(columns);
-   }
+    public UniqueConstraint(String name, @NonNull Collection<SQLElement> columns) {
+        super(name);
+        this.columns = new ArrayList<>(columns);
+    }
 
 }//END OF UniqueConstraint

@@ -31,7 +31,6 @@ public final class PythonInterpreter implements AutoCloseable {
 
     private final MonitoredObject<SharedInterpreter> interpreter;
 
-
     public PythonInterpreter() {
         this.interpreter = ResourceMonitor.monitor(new SharedInterpreter());
     }

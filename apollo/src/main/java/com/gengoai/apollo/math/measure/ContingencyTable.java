@@ -65,10 +65,10 @@ public class ContingencyTable {
     *
     * </pre>
     *
-    * @param n11 the count 1 and 2
-    * @param n1p the count 1
-    * @param np1 the count 2
-    * @param npp the total
+    * @param n11 the number of times word 1 and word 2 co occur
+    * @param n1p the total number of times word 1 occurs
+    * @param np1 the total number of times word 2 occurs
+    * @param npp the sum of the table
     * @return the contingency table
     */
    public static ContingencyTable create2X2(double n11, double n1p, double np1, double npp) {

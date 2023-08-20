@@ -39,26 +39,28 @@ import java.util.Set;
  * @author David B. Bracewell
  */
 public class DefaultTokenAnnotator extends Annotator {
-   private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-   @Override
-   protected void annotateImpl(Document document) {
-      Tokenizer tokenizer = Tokenizers.getTokenizer(document.getLanguage());
-      for(Tokenizer.Token token : tokenizer.tokenize(document.toString())) {
-         Annotation aToken = document.createAnnotation(Types.TOKEN, token.charStartIndex, token.charEndIndex,
-                                                       token.properties);
-         aToken.put(Types.TOKEN_TYPE, token.type);
-      }
-   }
+    @Override
+    protected void annotateImpl(Document document) {
+        Tokenizer tokenizer = Tokenizers.getTokenizer(document.getLanguage());
+        for (Tokenizer.Token token : tokenizer.tokenize(document.toString())) {
+            Annotation aToken = document.createAnnotation(Types.TOKEN,
+                                                          token.charStartIndex,
+                                                          token.charEndIndex,
+                                                          token.properties);
+            aToken.put(Types.TOKEN_TYPE, token.type);
+        }
+    }
 
-   @Override
-   public String getProvider(Language language) {
-      return Tokenizers.getTokenizer(language).getClass().getSimpleName();
-   }
+    @Override
+    public String getProvider(Language language) {
+        return Tokenizers.getTokenizer(language).getClass().getSimpleName();
+    }
 
-   @Override
-   public Set<AnnotatableType> satisfies() {
-      return Collections.singleton(Types.TOKEN);
-   }
+    @Override
+    public Set<AnnotatableType> satisfies() {
+        return Collections.singleton(Types.TOKEN);
+    }
 
 }//END OF DefaultTokenAnnotator

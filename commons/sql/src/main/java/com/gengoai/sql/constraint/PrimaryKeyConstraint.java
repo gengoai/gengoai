@@ -20,26 +20,25 @@
 package com.gengoai.sql.constraint;
 
 
-import com.gengoai.Validation;
 import com.gengoai.sql.SQLElement;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public class PrimaryKeyConstraint extends ConstraintWithConflictClause<PrimaryKeyConstraint> {
-   @Getter
-   private final List<SQLElement> columns;
+    @Getter
+    private final List<SQLElement> columns;
 
 
-   public PrimaryKeyConstraint(String name, @NonNull Collection<SQLElement> columns) {
-      super(name);
-      Validation.checkArgument(columns.size() > 0, "Must define at least one column");
-      this.columns = new ArrayList<>(columns);
-   }
+    public PrimaryKeyConstraint(String name, @NonNull Collection<SQLElement> columns) {
+        super(name);
+        this.columns = new ArrayList<>(columns);
+    }
 
 
 }//END OF PrimaryKeyConstraint

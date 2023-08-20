@@ -31,68 +31,68 @@ import java.util.function.Consumer;
  * @param <T> the type parameter
  */
 public class ShuffleSpliterator<T> implements Spliterator<T> {
-   private final Spliterator<T> backing;
-   private final List<T> buffer = new ArrayList<>();
-   private final Random random;
+    private final Spliterator<T> backing;
+    private final List<T> buffer = new ArrayList<>();
+    private final Random random;
 
-   /**
-    * Instantiates a new Shuffle spliterator.
-    *
-    * @param backing the backing
-    */
-   public ShuffleSpliterator(Spliterator<T> backing) {
-      this(backing, ThreadLocalRandom.current());
-   }
+    /**
+     * Instantiates a new Shuffle spliterator.
+     *
+     * @param backing the backing
+     */
+    public ShuffleSpliterator(Spliterator<T> backing) {
+        this(backing, ThreadLocalRandom.current());
+    }
 
-   /**
-    * Instantiates a new Shuffle spliterator.
-    *
-    * @param backing the backing
-    */
-   public ShuffleSpliterator(@NonNull Spliterator<T> backing, @NonNull Random random) {
-      this.backing = backing;
-      this.random = random;
-   }
+    /**
+     * Instantiates a new Shuffle spliterator.
+     *
+     * @param backing the backing
+     */
+    public ShuffleSpliterator(@NonNull Spliterator<T> backing, @NonNull Random random) {
+        this.backing = backing;
+        this.random = random;
+    }
 
 
-   @Override
-   public boolean tryAdvance(Consumer<? super T> consumer) {
-      if(buffer.isEmpty()) {
-         while(buffer.size() < 500 && backing.tryAdvance(buffer::add)) {
-            //Noop
-         }
-         Collections.shuffle(buffer);
-      }
-      if(buffer.isEmpty()) {
-         return backing.tryAdvance(consumer);
-      }
-      if(random.nextDouble() < random.nextDouble()) {
-         consumer.accept(buffer.remove(buffer.size() - 1));
-         return true;
-      }
-      if(!backing.tryAdvance(consumer)) {
-         consumer.accept(buffer.remove(buffer.size() - 1));
-         return true;
-      }
-      return true;
-   }
+    @Override
+    public boolean tryAdvance(Consumer<? super T> consumer) {
+        if (buffer.isEmpty()) {
+            while (buffer.size() < 500 && backing.tryAdvance(buffer::add)) {
+                //Noop
+            }
+            Collections.shuffle(buffer, random);
+        }
+        if (buffer.isEmpty()) {
+            return backing.tryAdvance(consumer);
+        }
+        if (random.nextDouble() < random.nextDouble()) {
+            consumer.accept(buffer.remove(buffer.size() - 1));
+            return true;
+        }
+        if (!backing.tryAdvance(consumer)) {
+            consumer.accept(buffer.remove(buffer.size() - 1));
+            return true;
+        }
+        return true;
+    }
 
-   @Override
-   public Spliterator<T> trySplit() {
-      Spliterator<T> split = backing.trySplit();
-      if(split != null) {
-         return new ShuffleSpliterator<>(split);
-      }
-      return null;
-   }
+    @Override
+    public Spliterator<T> trySplit() {
+        Spliterator<T> split = backing.trySplit();
+        if (split != null) {
+            return new ShuffleSpliterator<>(split);
+        }
+        return null;
+    }
 
-   @Override
-   public long estimateSize() {
-      return backing.estimateSize();
-   }
+    @Override
+    public long estimateSize() {
+        return backing.estimateSize();
+    }
 
-   @Override
-   public int characteristics() {
-      return CONCURRENT;
-   }
+    @Override
+    public int characteristics() {
+        return CONCURRENT;
+    }
 }//END OF ShuffleSpliterator

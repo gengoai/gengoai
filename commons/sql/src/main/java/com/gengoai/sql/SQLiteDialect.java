@@ -21,46 +21,66 @@ package com.gengoai.sql;
 
 import com.gengoai.sql.constraint.Constraint;
 import com.gengoai.sql.object.Column;
+import com.gengoai.sql.sqlite.SQLiteConnectionRegistry;
 import com.gengoai.string.Strings;
+import lombok.NonNull;
+
+import java.sql.SQLException;
 
 public class SQLiteDialect extends SQLDialect {
-   private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-   @Override
-   protected void defineColumn(Column column, StringBuilder builder) {
-      builder.append(column.getName())
-             .append(" ")
-             .append(column.getType());
-      if (column.isPrimaryKey() || column.isAutoIncrement()) {
-         builder.append(" PRIMARY KEY");
-      }
-      if (column.isAutoIncrement()) {
-         builder.append(" AUTOINCREMENT");
-      }
-      if (column.getDefaultValue() != null) {
-         builder.append(" DEFAULT ")
-                .append(render(column.getDefaultValue()));
-      }
-      if (column.getStoredValue() != null) {
-         builder.append(" AS (")
-                .append(render(column.getStoredValue()))
-                .append(") STORED");
-      }
-      if (column.getVirtualValue() != null) {
-         builder.append(" AS (")
-                .append(render(column.getVirtualValue()))
-                .append(") VIRTUAL");
-      }
+    public static void enableForeignKeys(@NonNull SQLContext context) throws SQLException {
+        SQL.update("PRAGMA foreign_keys = ON").update(context);
+    }
 
-      for (Constraint constraint : column.getConstraints()) {
-         defineConstraint(constraint, false, builder);
-      }
+    public static SQLContext createContext(@NonNull String jdbcConnectionString) throws SQLException {
+        return SQLContext.create(SQLiteConnectionRegistry.getConnection(jdbcConnectionString), new SQLiteDialect());
+    }
 
-      if (Strings.isNotNullOrBlank(column.getCollate())) {
-         builder.append(" COLLATE ")
-                .append(Strings.prependIfNotPresent(Strings.appendIfNotPresent(column.getCollate(), "\""), "\""));
-      }
-   }
+    public static SQLContext createContext(@NonNull String jdbcConnectionString, boolean enableForeignKeys) throws SQLException {
+        SQLContext context = SQLContext.create(SQLiteConnectionRegistry.getConnection(jdbcConnectionString), new SQLiteDialect());
+        if (enableForeignKeys) {
+            enableForeignKeys(context);
+        }
+        return context;
+    }
+
+    @Override
+    protected void defineColumn(Column column, StringBuilder builder) {
+        builder.append(column.getName())
+               .append(" ")
+               .append(column.getType());
+        if (column.isPrimaryKey() || column.isAutoIncrement()) {
+            builder.append(" PRIMARY KEY");
+        }
+        if (column.isAutoIncrement()) {
+            builder.append(" AUTOINCREMENT");
+        }
+        if (column.getDefaultValue() != null) {
+            builder.append(" DEFAULT ")
+                   .append(render(column.getDefaultValue()));
+        }
+        if (column.getStoredValue() != null) {
+            builder.append(" AS (")
+                   .append(render(column.getStoredValue()))
+                   .append(") STORED");
+        }
+        if (column.getVirtualValue() != null) {
+            builder.append(" AS (")
+                   .append(render(column.getVirtualValue()))
+                   .append(") VIRTUAL");
+        }
+
+        for (Constraint constraint : column.getConstraints()) {
+            defineConstraint(constraint, false, builder);
+        }
+
+        if (Strings.isNotNullOrBlank(column.getCollate())) {
+            builder.append(" COLLATE ")
+                   .append(Strings.prependIfNotPresent(Strings.appendIfNotPresent(column.getCollate(), "\""), "\""));
+        }
+    }
 
 
 }//END OF SQLiteContext

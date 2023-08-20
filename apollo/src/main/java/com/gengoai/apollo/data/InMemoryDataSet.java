@@ -38,97 +38,97 @@ import java.util.stream.IntStream;
  * </p>
  */
 public final class InMemoryDataSet extends DataSet {
-   private static final long serialVersionUID = 1L;
-   @JsonProperty("data")
-   private final List<Datum> data = new ArrayList<>();
+    private static final long serialVersionUID = 1L;
+    @JsonProperty("data")
+    private final List<Datum> data = new ArrayList<>();
 
-   /**
-    * Instantiates a new In memory data set.
-    *
-    * @param data the data
-    */
-   public InMemoryDataSet(@NonNull Collection<? extends Datum> data) {
-      this.data.addAll(data);
-   }
+    /**
+     * Instantiates a new In memory data set.
+     *
+     * @param data the data
+     */
+    public InMemoryDataSet(@NonNull Collection<? extends Datum> data) {
+        this.data.addAll(data);
+    }
 
-   @JsonCreator
-   public InMemoryDataSet(@JsonProperty("data") @NonNull Collection<? extends Datum> data,
-                          @JsonProperty("metadata") @NonNull Map<String, ObservationMetadata> metadataMap,
-                          @JsonProperty("ndarrayFactory") @NonNull NDArrayFactory factory) {
-      this.data.addAll(data);
-      this.metadata.putAll(metadataMap);
-      this.ndArrayFactory = factory;
-   }
+    @JsonCreator
+    public InMemoryDataSet(@JsonProperty("data") @NonNull Collection<? extends Datum> data,
+                           @JsonProperty("metadata") @NonNull Map<String, ObservationMetadata> metadataMap,
+                           @JsonProperty("ndarrayFactory") @NonNull NDArrayFactory factory) {
+        this.data.addAll(data);
+        this.metadata.putAll(metadataMap);
+        this.ndArrayFactory = factory;
+    }
 
-   @Override
-   public Iterator<DataSet> batchIterator(int batchSize) {
-      Validation.checkArgument(batchSize > 0, "Batch size must be > 0");
-      return new Iterator<>() {
-         int index = 0;
+    @Override
+    public Iterator<DataSet> batchIterator(int batchSize) {
+        Validation.checkArgument(batchSize > 0, "Batch size must be > 0");
+        return new Iterator<>() {
+            int index = 0;
 
-         @Override
-         public boolean hasNext() {
-            return index < data.size();
-         }
+            @Override
+            public boolean hasNext() {
+                return index < data.size();
+            }
 
-         @Override
-         public DataSet next() {
-            DataSet next = new InMemoryDataSet(data.subList(index, Math.min(index + batchSize, data.size())),
-                                               getMetadata(),
-                                               getNDArrayFactory());
-            index = index + batchSize;
-            return next;
-         }
-      };
-   }
+            @Override
+            public DataSet next() {
+                DataSet next = new InMemoryDataSet(data.subList(index, Math.min(index + batchSize, data.size())),
+                                                   getMetadata(),
+                                                   getNDArrayFactory());
+                index = index + batchSize;
+                return next;
+            }
+        };
+    }
 
-   @Override
-   public DataSet cache() {
-      return this;
-   }
+    @Override
+    public DataSet cache() {
+        return this;
+    }
 
-   @Override
-   public DataSetType getType() {
-      return DataSetType.InMemory;
-   }
+    @Override
+    public DataSetType getType() {
+        return DataSetType.InMemory;
+    }
 
-   @Override
-   public Iterator<Datum> iterator() {
-      return data.iterator();
-   }
+    @Override
+    public Iterator<Datum> iterator() {
+        return data.iterator();
+    }
 
-   @Override
-   public DataSet map(SerializableFunction<? super Datum, ? extends Datum> function) {
-      IntStream.range(0, data.size())
-               .forEach(i -> data.set(i, function.apply(data.get(i))));
-      return this;
-   }
+    @Override
+    public DataSet map(SerializableFunction<? super Datum, ? extends Datum> function) {
+        IntStream.range(0, data.size())
+                 .forEach(i -> data.set(i, function.apply(data.get(i))));
+        return this;
+    }
 
-   @Override
-   public MStream<Datum> parallelStream() {
-      return StreamingContext.local().stream(this).parallel();
-   }
+    @Override
+    public MStream<Datum> parallelStream() {
+        return StreamingContext.local().stream(this).parallel();
+    }
 
-   @Override
-   public DataSet shuffle() {
-      Collections.shuffle(data);
-      return this;
-   }
+    @Override
+    public DataSet shuffle() {
+        Collections.shuffle(data, new Random(10));
+        return this;
+    }
 
-   @Override
-   public DataSet shuffle(Random random) {
-      Collections.shuffle(data, random);
-      return this;
-   }
+    @Override
+    public DataSet shuffle(Random random) {
+        Collections.shuffle(data, random);
+        return this;
+    }
 
-   @Override
-   public long size() {
-      return data.size();
-   }
+    @Override
+    public long size() {
+        return data.size();
+    }
 
-   @Override
-   public MStream<Datum> stream() {
-      return StreamingContext.local().stream(this);
-   }
+    @Override
+    public MStream<Datum> stream() {
+        return StreamingContext.local().stream(this);
+    }
 
 }//END OF InMemoryDataset

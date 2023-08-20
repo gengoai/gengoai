@@ -128,9 +128,10 @@ HEXDIG=([:digit:]|"A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f")
 
 CURRENCY = [$\u00A2\u00A3\u00A5\u20A0-\u20CF]
 
-WHITESPACE = [\p{Z}\t\f\r\n\p{C}]
+WHITESPACE = [\p{Z}\t\f\r\p{C}]
+NEWLINE    = [\n]
 MATH=[\u2200-\u22ff]
-EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue466\ue503-\uefff\uf03d-\uf296\ufe00-\ufe0f]+
+EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue466\ue503-\uefff\uf03d-\uf296\ufe00-\ufe0f]{1,2}
 
 
 
@@ -162,7 +163,8 @@ EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue46
  {UNDERSCORE}           {return attachToken(TokenType.ALPHA_NUMERIC);}
  {URI}                  {return attachToken(TokenType.URL);}
  {EMOTICON}             {return attachToken(TokenType.EMOTICON);}
- {MATH}                 {return attachToken(TokenType.UNKNOWN);}
+ {MATH}                 {return attachToken(TokenType.SYMBOL);}
+ {NEWLINE}              {return attachToken(TokenType.UNKNOWN);}
  {WHITESPACE}           {}
 }
 

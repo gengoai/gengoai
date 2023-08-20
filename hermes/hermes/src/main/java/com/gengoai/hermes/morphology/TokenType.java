@@ -112,6 +112,8 @@ public final class TokenType extends EnumValue<TokenType> {
     */
    public static final TokenType URL = make("URL");
 
+   public static final TokenType SYMBOL = make("SYMBOL");
+
    /**
     * Makes a new or retrieves an existing TokenType with the given name
     *

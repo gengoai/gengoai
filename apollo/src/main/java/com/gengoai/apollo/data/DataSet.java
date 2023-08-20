@@ -316,7 +316,7 @@ public abstract class DataSet implements Iterable<Datum>, Serializable {
     * @return This dataset with its data shuffled
     */
    public DataSet shuffle() {
-      return shuffle(new Random());
+      return shuffle(new Random(10));
    }
 
    /**

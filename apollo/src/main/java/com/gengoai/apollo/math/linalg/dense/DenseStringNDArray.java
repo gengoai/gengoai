@@ -29,7 +29,7 @@ import org.tensorflow.ndarray.buffer.DataBuffers;
 import org.tensorflow.proto.framework.DataType;
 import org.tensorflow.types.TString;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Dense NDArray representing String values.</p>
@@ -157,9 +157,9 @@ public class DenseStringNDArray extends StringNDArray {
     public ObjectNDArray<String> reshape(@NonNull Shape newShape) {
         if (shape().length() != newShape.length()) {
             throw new IllegalArgumentException("Cannot change total length from " +
-                    shape().length() +
-                    " to " +
-                    newShape.length());
+                                                       shape().length() +
+                                                       " to " +
+                                                       newShape.length());
         }
         String[][] temp = new String[newShape.sliceLength()][newShape.matrixLength()];
         for (int i = 0; i < length(); i++) {
@@ -196,7 +196,7 @@ public class DenseStringNDArray extends StringNDArray {
     @Override
     public ObjectNDArray<String> slice(int index) {
         DenseStringNDArray v = new DenseStringNDArray(Shape.shape(shape().rows(),
-                shape().columns()));
+                                                                  shape().columns()));
         if (data.length == 1) {
             v.data[0] = data[0];
         } else {
@@ -231,13 +231,10 @@ public class DenseStringNDArray extends StringNDArray {
 
     @Override
     public Tensor toTensor() {
-        TString tensor = TString.tensorOf(
-                Charset.forName("UTF-8"),
-                org.tensorflow.ndarray.Shape.of(shape().toLongArray()),
-                DataBuffers.ofObjects(String.class, size()));
-        tensor.scalars().forEachIndexed((c, v) -> {
-            v.setObject(get(Index.index(c)));
-        });
-        return Cast.as(tensor);
+        TString tensor = TString.tensorOf(StandardCharsets.UTF_8,
+                                          org.tensorflow.ndarray.Shape.of(shape().toLongArray()),
+                                          DataBuffers.ofObjects(String.class, size()));
+        tensor.scalars().forEachIndexed((c, v) -> v.setObject(get(Index.index(c))));
+        return Cast.as(tensor.asBytes());
     }
 }//END OF DenseStringNDArray

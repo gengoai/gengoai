@@ -128,7 +128,7 @@ public class LocalInMemoryMStream<T> extends AbstractLocalMStream<T> {
          return new LocalInMemoryMStream<>(Lists.sampleWithReplacement(collection, number));
       }
       List<T> sample = new ArrayList<>();
-      new Random().ints(0,collection.size())
+      new Random(10).ints(0,collection.size())
                   .distinct()
                   .limit(Math.min(number,collection.size()))
                   .forEach(index -> sample.add(collection.get(index)));
