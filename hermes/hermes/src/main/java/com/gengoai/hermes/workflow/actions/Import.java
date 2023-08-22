@@ -24,7 +24,6 @@ import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.workflow.Action;
-import com.gengoai.hermes.workflow.ActionDescription;
 import com.gengoai.hermes.workflow.Context;
 import com.gengoai.string.Strings;
 import lombok.extern.java.Log;
@@ -34,9 +33,20 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Log
-public class ImportDocuments implements Action {
-    public static final String CORPUS_LOCATION = "CORPUS_LOCATION";
+@MetaInfServices
+public class Import implements Action {
+    public static final String CORPUS_LOCATION = "import.corpus";
     private static final long serialVersionUID = 1L;
+
+    @Override
+    public String getName() {
+        return "IMPORT";
+    }
+
+    @Override
+    public String getDescription() {
+        return "Import documents into a Corpus. The corpus is specified using the context value 'CORPUS_LOCATION'.";
+    }
 
     @Override
     public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
@@ -56,16 +66,5 @@ public class ImportDocuments implements Action {
         return toCorpus;
     }
 
-    @MetaInfServices
-    public static class ImportDocumentDescription implements ActionDescription {
-        @Override
-        public String description() {
-            return "Import documents into a Corpus. The corpus is specified using the context value 'CORPUS_LOCATION'.";
-        }
 
-        @Override
-        public String name() {
-            return ImportDocuments.class.getName();
-        }
-    }
 }//END OF ImportDocuments

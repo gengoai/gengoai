@@ -31,6 +31,6 @@ import java.io.Serializable;
  * @author David B. Bracewell
  */
 public enum State implements Serializable {
-   LOADED,
-   NOT_LOADED;
+    LOADED,
+    NOT_LOADED;
 }//END OF ProcessingState

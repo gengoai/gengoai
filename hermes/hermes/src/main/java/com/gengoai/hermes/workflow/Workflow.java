@@ -42,40 +42,40 @@ import java.io.Serializable;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
 @JsonSubTypes({
-      @JsonSubTypes.Type(value = SequentialWorkflow.class, name = "Sequential")
+        @JsonSubTypes.Type(value = SequentialWorkflow.class, name = "Sequential")
 })
 public interface Workflow extends Serializable {
 
-   /**
-    * Gets starting context.
-    *
-    * @return the starting context
-    */
-   Context getStartingContext();
+    /**
+     * Gets starting context.
+     *
+     * @return the starting context
+     */
+    Context getStartingContext();
 
-   /**
-    * Gets type.
-    *
-    * @return the type
-    */
-   String getType();
+    /**
+     * Gets type.
+     *
+     * @return the type
+     */
+    String getType();
 
-   /**
-    * Process corpus.
-    *
-    * @param input   the input
-    * @param context the context
-    * @return the corpus
-    * @throws Exception the exception
-    */
-   DocumentCollection process(@NonNull DocumentCollection input,
-                              @NonNull Context context) throws Exception;
+    /**
+     * Process corpus.
+     *
+     * @param input   the input
+     * @param context the context
+     * @return the corpus
+     * @throws Exception the exception
+     */
+    DocumentCollection process(@NonNull DocumentCollection input,
+                               @NonNull Context context) throws Exception;
 
-   /**
-    * Sets starting context.
-    *
-    * @param context the context
-    */
-   void setStartingContext(Context context);
+    /**
+     * Sets starting context.
+     *
+     * @param context the context
+     */
+    void setStartingContext(Context context);
 
 }//END OF Workflow

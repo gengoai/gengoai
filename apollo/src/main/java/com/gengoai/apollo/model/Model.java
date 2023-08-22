@@ -54,66 +54,66 @@ import java.io.Serializable;
  */
 public interface Model extends Transform, Serializable {
 
-   /**
-    * Reads the model from the given resource
-    *
-    * @param resource the resource
-    * @return the model
-    * @throws IOException Something went wrong reading the model
-    */
-   static Model load(@NonNull Resource resource) throws IOException {
-      return resource.getChild("model.bin.gz").readObject();
-   }
+    /**
+     * Reads the model from the given resource
+     *
+     * @param resource the resource
+     * @return the model
+     * @throws IOException Something went wrong reading the model
+     */
+    static Model load(@NonNull Resource resource) throws IOException {
+        return resource.getChild("model.bin.gz").readObject();
+    }
 
-   @Override
-   default Model copy() {
-      return Copyable.deepCopy(this);
-   }
+    @Override
+    default Model copy() {
+        return Copyable.deepCopy(this);
+    }
 
-   /**
-    * Estimates (fits) the model's parameters using the given {@link DataSet}
-    *
-    * @param dataset the dataset
-    */
-   void estimate(@NonNull DataSet dataset);
+    /**
+     * Estimates (fits) the model's parameters using the given {@link DataSet}
+     *
+     * @param dataset the dataset
+     */
+    void estimate(@NonNull DataSet dataset);
 
-   @Override
-   default DataSet fitAndTransform(@NonNull DataSet dataset) {
-      estimate(dataset);
-      return dataset.map(this::transform);
-   }
+    @Override
+    default DataSet fitAndTransform(@NonNull DataSet dataset) {
+        estimate(dataset);
+        return dataset.map(this::transform);
+    }
 
-   /**
-    * Gets the {@link FitParameters} defined for this estimator
-    *
-    * @return the FitParameters
-    */
-   FitParameters<?> getFitParameters();
+    /**
+     * Gets the {@link FitParameters} defined for this estimator
+     *
+     * @return the FitParameters
+     */
+    FitParameters<?> getFitParameters();
 
-   /**
-    * Returns the {@link LabelType} for the {@link Datum#DEFAULT_OUTPUT} source
-    *
-    * @return the LabelType
-    */
-   default LabelType getLabelType() {
-      return getLabelType(Datum.DEFAULT_OUTPUT);
-   }
+    /**
+     * Returns the {@link LabelType} for the {@link Datum#DEFAULT_OUTPUT} source
+     *
+     * @return the LabelType
+     */
+    default LabelType getLabelType() {
+        return getLabelType(Datum.DEFAULT_OUTPUT);
+    }
 
-   /**
-    * Returns the {@link LabelType} for the given source
-    *
-    * @return the LabelType
-    */
-   LabelType getLabelType(@NonNull String name);
+    /**
+     * Returns the {@link LabelType} for the given source
+     *
+     * @return the LabelType
+     */
+    LabelType getLabelType(@NonNull String name);
 
-   /**
-    * Writes the model the given ZipWriter.
-    *
-    * @param resource the resource to write the model to
-    * @throws IOException Something went wrong writing the model
-    */
-   default void save(@NonNull Resource resource) throws IOException {
-      resource.getChild("model.bin.gz").setCompression(Compression.GZIP).writeObject(this);
-   }
+    /**
+     * Writes the model the given ZipWriter.
+     *
+     * @param resource the resource to write the model to
+     * @throws IOException Something went wrong writing the model
+     */
+    default void save(@NonNull Resource resource) throws IOException {
+        resource.getChild("model.bin.gz").setCompression(Compression.GZIP).writeObject(this);
+    }
 
 }//END OF Model

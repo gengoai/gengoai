@@ -21,8 +21,6 @@ package com.gengoai.hermes.extraction.keyword;
 
 import com.gengoai.collection.Lists;
 import com.gengoai.collection.counter.Counter;
-import com.gengoai.collection.multimap.ArrayListMultimap;
-import com.gengoai.collection.multimap.Multimap;
 import com.gengoai.graph.Edge;
 import com.gengoai.graph.Graph;
 import com.gengoai.graph.scoring.PageRank;
@@ -52,76 +50,76 @@ import java.util.stream.Collectors;
  */
 @Data
 public class TextRank implements KeywordExtractor {
-   private static final long serialVersionUID = 1L;
-   private int windowSize = 2;
-   private PartOfSpeech[] validPartsOfSpeech = {PartOfSpeech.ADJECTIVE, PartOfSpeech.NOUN, PartOfSpeech.PROPER_NOUN};
-   private double ratio = 0.33;
+    private static final long serialVersionUID = 1L;
+    private int windowSize = 2;
+    private PartOfSpeech[] validPartsOfSpeech = {PartOfSpeech.ADJECTIVE, PartOfSpeech.NOUN, PartOfSpeech.PROPER_NOUN};
+    private double ratio = 0.33;
 
-   @Override
-   public Extraction extract(@NonNull HString hString) {
-      Graph<String> g = Graph.undirected();
+    @Override
+    public Extraction extract(@NonNull HString hString) {
+        Graph<String> g = Graph.undirected();
 
-      //Generate the words for the graph
-      List<String> tokens = hString.tokenStream()
-                                   .filter(t -> t.pos().isInstance(validPartsOfSpeech))
-                                   .filter(StopWords.isContentWord())
-                                   .map(HString::getLemma)
-                                   .collect(Collectors.toList());
+        //Generate the words for the graph
+        List<String> tokens = hString.tokenStream()
+                                     .filter(t -> t.pos().isInstance(validPartsOfSpeech))
+                                     .filter(StopWords.isContentWord())
+                                     .map(HString::getLemma)
+                                     .collect(Collectors.toList());
 
-      //Add the tokens to the graph
-      g.addVertices(new HashSet<>(tokens));
+        //Add the tokens to the graph
+        g.addVertices(new HashSet<>(tokens));
 
-      for(int i = 0; i < hString.tokenLength() - windowSize; i++) {
-         String tiStr = hString.tokenAt(i).toLowerCase();
+        for (int i = 0; i < hString.tokenLength() - windowSize; i++) {
+            String tiStr = hString.tokenAt(i).toLowerCase();
 
-         if(!g.containsVertex(tiStr)) {
-            continue;
-         }
-
-         Iterable<Tuple> edges = Lists.combinations(hString.tokens().subList(i, i + windowSize), 2);
-         for(Tuple edge : edges) {
-            String tjStr = ((HString) edge.get(1)).getLemma();
-            if(!g.containsVertex(tjStr)) {
-               continue;
+            if (!g.containsVertex(tiStr)) {
+                continue;
             }
-            Edge<String> e;
-            if(g.containsEdge(tiStr, tjStr)) {
-               e = g.getEdge(tiStr, tjStr);
-            } else {
-               e = g.addEdge(tiStr, tjStr);
+
+            Iterable<Tuple> edges = Lists.combinations(hString.tokens().subList(i, i + windowSize), 2);
+            for (Tuple edge : edges) {
+                String tjStr = ((HString) edge.get(1)).getLemma();
+                if (!g.containsVertex(tjStr)) {
+                    continue;
+                }
+                Edge<String> e;
+                if (g.containsEdge(tiStr, tjStr)) {
+                    e = g.getEdge(tiStr, tjStr);
+                } else {
+                    e = g.addEdge(tiStr, tjStr);
+                }
+                e.setWeight(e.getWeight() + 1);
             }
-            e.setWeight(e.getWeight() + 1);
-         }
-      }
+        }
 
-      PageRank<String> pageRank = new PageRank<>(30, 0.85, 0.0001);
-      Counter<String> scores = pageRank.score(g);
-      scores = scores.topN((int) (scores.size() * ratio));
+        PageRank<String> pageRank = new PageRank<>(30, 0.85, 0.0001);
+        Counter<String> scores = pageRank.score(g);
+        scores = scores.topN((int) (scores.size() * ratio));
 
-      List<HString> keywords = new ArrayList<>();
-      for(int i = 0; i < hString.tokenLength(); i++) {
-         String tiStr = hString.tokenAt(i).getLemma();
-         if(scores.contains(tiStr)) {
-            int j = i + 1;
-            double score = scores.get(tiStr);
-            while(j < hString.tokenLength() &&
-                  hString.tokenAt(j).sentence() == hString.tokenAt(i).sentence() &&
-                  scores.contains(hString.tokenAt(j).getLemma())) {
-               score += scores.get(hString.tokenAt(j).getLemma());
-               j++;
+        List<HString> keywords = new ArrayList<>();
+        for (int i = 0; i < hString.tokenLength(); i++) {
+            String tiStr = hString.tokenAt(i).getLemma();
+            if (scores.contains(tiStr)) {
+                int j = i + 1;
+                double score = scores.get(tiStr);
+                while (j < hString.tokenLength() &&
+                        hString.tokenAt(j).sentence() == hString.tokenAt(i).sentence() &&
+                        scores.contains(hString.tokenAt(j).getLemma())) {
+                    score += scores.get(hString.tokenAt(j).getLemma());
+                    j++;
+                }
+                HString h = HString.union(List.of(hString.tokenAt(i), hString.tokenAt(j).previous()));
+                h.put(Types.SCORE, score / (j - i));
+                keywords.add(h);
+                i = j;
             }
-            HString h = HString.union(List.of(hString.tokenAt(i), hString.tokenAt(j).previous()));
-            h.put(Types.SCORE, score / (j - i));
-            keywords.add(h);
-            i = j;
-         }
-      }
+        }
 
-      return Extraction.fromHStringList(keywords, HString::getLemma);
-   }
+        return Extraction.fromHStringList(keywords, HString::getLemma);
+    }
 
-   @Override
-   public void fit(@NonNull DocumentCollection corpus) {
+    @Override
+    public void fit(@NonNull DocumentCollection corpus) {
 
-   }
+    }
 }//END OF TextRank

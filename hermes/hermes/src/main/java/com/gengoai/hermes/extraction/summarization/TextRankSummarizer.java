@@ -49,47 +49,47 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class TextRankSummarizer implements Summarizer {
-   private static final long serialVersionUID = 1L;
-   private double ratio = 0.2;
-   private int numberOfSentences = -1;
-   @NonNull
-   private HStringSimilarity similarityMeasure = new EmbeddingSimilarity(Similarity.Cosine);
-   private double similarityThreshold = 1e-10;
+    private static final long serialVersionUID = 1L;
+    private double ratio = 0.2;
+    private int numberOfSentences = -1;
+    @NonNull
+    private HStringSimilarity similarityMeasure = new EmbeddingSimilarity(Similarity.Cosine);
+    private double similarityThreshold = 1e-10;
 
-   public TextRankSummarizer(@NonNull HStringSimilarity similarityMeasure) {
-      this.similarityMeasure = similarityMeasure;
-   }
+    public TextRankSummarizer(@NonNull HStringSimilarity similarityMeasure) {
+        this.similarityMeasure = similarityMeasure;
+    }
 
-   @Override
-   public Extraction extract(@NonNull HString hString) {
-      List<Annotation> sentences = hString.sentences();
-      Graph<Annotation> g = Graph.undirected();
-      g.addVertices(sentences);
+    @Override
+    public Extraction extract(@NonNull HString hString) {
+        List<Annotation> sentences = hString.sentences();
+        Graph<Annotation> g = Graph.undirected();
+        g.addVertices(sentences);
 
-      for (int i = 0; i < sentences.size(); i++) {
-         Annotation si = sentences.get(i);
-         for (int j = i + 1; j < sentences.size(); j++) {
-            Annotation sj = sentences.get(j);
-            double similarity = similarityMeasure.calculate(si, sj);
-            if (similarity >= similarityThreshold) {
-               g.addEdge(si, sj, similarity);
+        for (int i = 0; i < sentences.size(); i++) {
+            Annotation si = sentences.get(i);
+            for (int j = i + 1; j < sentences.size(); j++) {
+                Annotation sj = sentences.get(j);
+                double similarity = similarityMeasure.calculate(si, sj);
+                if (similarity >= similarityThreshold) {
+                    g.addEdge(si, sj, similarity);
+                }
             }
-         }
-      }
+        }
 
-      PageRank<Annotation> pageRank = new PageRank<>(30, 0.85, 0.0001);
-      Counter<Annotation> scores = pageRank.score(g);
-      int summaryLength = numberOfSentences > 0
-            ? numberOfSentences
-            : (int) Math.floor(sentences.size() * ratio);
-      List<HString> extraction = new ArrayList<>(scores.topN(summaryLength).items());
-      extraction.sort(Comparator.comparingInt(a -> a.attribute(Types.INDEX)));
-      return Extraction.fromHStringList(extraction);
-   }
+        PageRank<Annotation> pageRank = new PageRank<>(30, 0.85, 0.0001);
+        Counter<Annotation> scores = pageRank.score(g);
+        int summaryLength = numberOfSentences > 0
+                ? numberOfSentences
+                : (int) Math.floor(sentences.size() * ratio);
+        List<HString> extraction = new ArrayList<>(scores.topN(summaryLength).items());
+        extraction.sort(Comparator.comparingInt(a -> a.attribute(Types.INDEX)));
+        return Extraction.fromHStringList(extraction);
+    }
 
-   @Override
-   public void fit(@NonNull DocumentCollection corpus) {
-      similarityMeasure.fit(corpus);
-   }
+    @Override
+    public void fit(@NonNull DocumentCollection corpus) {
+        similarityMeasure.fit(corpus);
+    }
 
 }//END OF TextRankSummarizer

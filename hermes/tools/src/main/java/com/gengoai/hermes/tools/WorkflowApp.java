@@ -19,64 +19,86 @@
 
 package com.gengoai.hermes.tools;
 
+import com.gengoai.LogUtils;
 import com.gengoai.application.Option;
 import com.gengoai.config.Config;
 import com.gengoai.hermes.HermesCLI;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
+import com.gengoai.hermes.workflow.BaseWorkflowIO;
 import com.gengoai.hermes.workflow.Context;
 import com.gengoai.hermes.workflow.Workflow;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.json.Json;
 import com.gengoai.specification.Specification;
+import lombok.extern.java.Log;
 
+import java.io.IOException;
+
+@Log
 public class WorkflowApp extends HermesCLI {
-   private static final long serialVersionUID = 1L;
-   public static final String CONTEXT_ARG = "context.";
-   public static final String CONTEXT_OUTPUT = "CONTEXT_OUTPUT";
-   /**
-    * Name of the context parameter for the location of the input corpus
-    */
-   public static final String INPUT_LOCATION = "INPUT_LOCATION";
-   @Option(name = "context-output", description = "Location to save context", aliases = {"oc"})
-   private Resource contextOutputLocation;
-   @Option(name = "definition", description = "Workflow definition", required = true)
-   private Resource definition;
-   @Option(description = "The specification or location the document collection to process.", required = true, aliases = {"i", "corpus"})
-   private String input;
+    private static final long serialVersionUID = 1L;
+    public static final String CONTEXT_ARG = "context.";
+    public static final String CONTEXT_OUTPUT = "CONTEXT_OUTPUT";
+    /**
+     * Name of the context parameter for the location of the input corpus
+     */
+    public static final String INPUT_LOCATION = "INPUT_LOCATION";
+    @Option(name = "context-output", description = "Location to save context", aliases = {"oc"})
+    private Resource contextOutputLocation;
+    @Option(name = "definition", description = "Workflow definition", required = true)
+    private Resource definition;
+    @Option(description = "The specification or location the document collection to process.", required = true, aliases = {"i", "corpus"})
+    private String input;
+    @Option(name = "context-input", description = "Location to save context", aliases = {"ic"})
+    private Resource contextInputLocation;
 
-   public static void main(String[] args) throws Exception {
-      new WorkflowApp().run(args);
-   }
+    public static void main(String[] args) throws Exception {
+        new WorkflowApp().run(args);
+    }
 
-   public DocumentCollection getDocumentCollection(String spec) {
-      try {
-         Specification.parse(spec);
-         return DocumentCollection.create(spec);
-      } catch(Exception e) {
-         return Corpus.open(spec);
-      }
-   }
+    public DocumentCollection getDocumentCollection(String spec) {
+        try {
+            Specification.parse(spec);
+            return DocumentCollection.create(spec);
+        } catch (Exception e) {
+            return Corpus.open(spec);
+        }
+    }
 
-   @Override
-   protected void programLogic() throws Exception {
-      Context context = Context.builder()
-                               .property(INPUT_LOCATION, input)
-                               .property(CONTEXT_OUTPUT, contextOutputLocation)
-                               .build();
-      Config.getPropertiesMatching(s -> s.startsWith(CONTEXT_ARG))
-            .forEach(key -> {
-               var contextName = key.substring(CONTEXT_ARG.length());
-               context.property(contextName, Config.get(key));
-            });
-      Workflow workflow = Json.parse(definition, Workflow.class);
-      try(DocumentCollection inputCorpus = getDocumentCollection(input)) {
-         try(DocumentCollection outputCorpus = workflow.process(inputCorpus, context)) {
-            if(contextOutputLocation != null) {
-               contextOutputLocation.write(Json.dumpsPretty(context));
+    private void loadContext(Resource location, Context context) throws IOException {
+        if (location != null && location.exists()) {
+            //Load the output if it exists
+            Context toMerge = Json.parse(location, Context.class);
+            toMerge.remove(INPUT_LOCATION);
+            toMerge.remove(CONTEXT_OUTPUT);
+            context.merge(toMerge);
+        }
+    }
+
+    @Override
+    protected void programLogic() throws Exception {
+        Context context = Context.builder()
+                                 .property(INPUT_LOCATION, input)
+                                 .property(CONTEXT_OUTPUT, contextOutputLocation)
+                                 .build();
+
+        loadContext(contextOutputLocation, context);
+        loadContext(contextInputLocation, context);
+        Config.getPropertiesMatching(s -> s.startsWith(CONTEXT_ARG))
+              .forEach(key -> {
+                  var contextName = key.substring(CONTEXT_ARG.length());
+                  context.property(contextName, Config.get(key).get());
+                  LogUtils.logInfo(log, "Setting Context property {0} to {1}", contextName, Config.get(key));
+              });
+        Workflow workflow = BaseWorkflowIO.read(definition);
+        try (DocumentCollection inputCorpus = getDocumentCollection(input)) {
+            try (DocumentCollection outputCorpus = workflow.process(inputCorpus, context)) {
+                if (contextOutputLocation != null) {
+                    contextOutputLocation.write(Json.dumpsPretty(context));
+                }
             }
-         }
-      }
-   }
+        }
+    }
 
 }//END OF Runner

@@ -19,12 +19,12 @@
 
 package com.gengoai.hermes.tools;
 
-import com.gengoai.Language;
-import com.gengoai.apollo.model.embedding.PreTrainedWordEmbedding;
+import com.gengoai.apollo.model.Model;
 import com.gengoai.apollo.model.embedding.VSQuery;
 import com.gengoai.apollo.model.embedding.WordEmbedding;
+import com.gengoai.application.Option;
 import com.gengoai.hermes.HermesCLI;
-import com.gengoai.hermes.ResourceType;
+import com.gengoai.io.resource.Resource;
 
 import java.io.Console;
 
@@ -35,50 +35,44 @@ import java.io.Console;
  */
 public class EmbeddingApp extends HermesCLI {
 
-//   @Option(description = "The embedding model to query.", required = true)
-//   private Resource model;
+    @Option(description = "The embedding model to query.", required = true)
+    private Resource model;
 
-   /**
-    * The entry point of application.
-    *
-    * @param args the input arguments
-    * @throws Exception the exception
-    */
-   public static void main(String[] args) throws Exception {
-      String[] nargs = new String[args.length + 2];
-      System.arraycopy(args, 0, nargs, 0, args.length);
-      nargs[nargs.length - 2] = "--input";
-      nargs[nargs.length - 1] = "/dev/null";
-      new EmbeddingApp().run(nargs);
-   }
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     * @throws Exception the exception
+     */
+    public static void main(String[] args) throws Exception {
+        new EmbeddingApp().run(args);
+    }
 
-   @Override
-   protected void programLogic() throws Exception {
-      WordEmbedding embedding = PreTrainedWordEmbedding.from(
-              ResourceType.EMBEDDINGS.load("glove.840b.300d", Language.ENGLISH)
-      );
+    @Override
+    protected void programLogic() throws Exception {
+        WordEmbedding embedding = null;//WordEmbedding.load(model);
 
-      Console console = System.console();
-      String line;
-      do {
-         line = console.readLine("query:> ");
-         if(line.equals("?quit") || line.equals("?q")) {
-            System.exit(0);
-         } else if(line.startsWith("?search") || line.startsWith("?s")) {
-            String search = line.substring(line.indexOf(' ')).trim();
-            embedding.getAlphabet().parallelStream()
-                     .filter(term -> term.startsWith(search))
-                     .forEach(term -> System.out.println("  " + term));
-         } else if(embedding.contains(line)) {
-            embedding.query(VSQuery.termQuery(line.toLowerCase()).limit(10)).forEach(
-                  slv -> System.out.println("  " + slv.getLabel() + " : " + slv.getWeight()));
-            System.out.println();
-         } else {
-            System.out.println("!! " + line + " is not in the dictionary");
-         }
+        Console console = System.console();
+        String line;
+        do {
+            line = console.readLine("query:> ");
+            if (line.equals("?quit") || line.equals("?q")) {
+                System.exit(0);
+            } else if (line.startsWith("?search") || line.startsWith("?s")) {
+                String search = line.substring(line.indexOf(' ')).trim();
+                embedding.getAlphabet().parallelStream()
+                         .filter(term -> term.startsWith(search))
+                         .forEach(term -> System.out.println("  " + term));
+            } else if (embedding.contains(line)) {
+                embedding.query(VSQuery.termQuery(line.toLowerCase()).limit(10)).forEach(
+                        slv -> System.out.println("  " + slv.getLabel() + " : " + slv.getWeight()));
+                System.out.println();
+            } else {
+                System.out.println("!! " + line + " is not in the dictionary");
+            }
 
-      } while(!line.equals("q!"));
+        } while (!line.equals("q!"));
 
-   }
+    }
 
 }//END OF EmbeddingQuery

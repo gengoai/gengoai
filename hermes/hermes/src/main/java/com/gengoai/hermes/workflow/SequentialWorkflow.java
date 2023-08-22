@@ -22,7 +22,7 @@
 
 package com.gengoai.hermes.workflow;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.gengoai.LogUtils;
 import com.gengoai.Stopwatch;
 import com.gengoai.application.Option;
@@ -30,12 +30,11 @@ import com.gengoai.collection.Lists;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.json.Json;
 import com.gengoai.json.JsonEntry;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.gengoai.LogUtils.logInfo;
 
@@ -51,124 +50,91 @@ import static com.gengoai.LogUtils.logInfo;
  * @author David B. Bracewell
  */
 @ToString
-@JsonTypeName("Sequential")
-@JsonAutoDetect(
-      fieldVisibility = JsonAutoDetect.Visibility.NONE,
-      setterVisibility = JsonAutoDetect.Visibility.NONE,
-      getterVisibility = JsonAutoDetect.Visibility.NONE,
-      isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-      creatorVisibility = JsonAutoDetect.Visibility.NONE
-)
-@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
 public final class SequentialWorkflow implements Workflow {
-   public static final String TYPE = "Sequential";
-   private static final long serialVersionUID = 1L;
-   @Option(description = "List of actions to perform run")
-   private List<Action> actions = new ArrayList<>();
-   private Context startingContext = new Context();
+    public static final String TYPE = "Sequential";
+    private static final long serialVersionUID = 1L;
+    @Option(description = "List of actions to perform run")
+    private List<Action> actions = new ArrayList<>();
+    private Context startingContext = new Context();
 
-   /**
-    * Instantiates a new Workflow.
-    *
-    * @param actions the processors
-    */
-   public SequentialWorkflow(@NonNull Iterable<Action> actions) {
-      this.actions = Lists.asArrayList(actions);
-   }
+    /**
+     * Instantiates a new Workflow.
+     *
+     * @param actions the processors
+     */
+    public SequentialWorkflow(@NonNull Iterable<Action> actions) {
+        this.actions = Lists.asArrayList(actions);
+    }
 
-   @JsonCreator
-   private SequentialWorkflow(@JsonProperty JsonEntry entry) {
-      startingContext = BaseWorkflowIO.readDefaultContext(entry);
-      Map<String, JsonEntry> beans = BaseWorkflowIO.readBeans(entry);
-      Map<String, Action> singletons = new HashMap<>();
-      Iterator<JsonEntry> itr = entry.getProperty("actions").elementIterator();
-      try {
-         int idx = 0;
-         while (itr.hasNext()) {
-            JsonEntry a = itr.next();
-            if (a.isString()) {
-               String name = a.asString();
-               Action action = BaseWorkflowIO.createBean(name, beans.get(name), singletons);
-               actions.add(action);
-            } else {
-               actions.add(BaseWorkflowIO.createBean("idx-" + idx, a, singletons));
-            }
-            idx++;
-         }
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-   }
+    @Override
+    public Context getStartingContext() {
+        return startingContext.copy();
+    }
 
-   @Override
-   public Context getStartingContext() {
-      return startingContext.copy();
-   }
+    @Override
+    public void setStartingContext(Context context) {
+        this.startingContext = context.copy();
+    }
 
-   @Override
-   public void setStartingContext(Context context) {
-      this.startingContext = context.copy();
-   }
+    @Override
+    public String getType() {
+        return TYPE;
+    }
 
-   @Override
-   public String getType() {
-      return TYPE;
-   }
-
-   /**
-    * Process corpus.
-    *
-    * @param input   the input
-    * @param context the context
-    * @return the corpus
-    * @throws Exception the exception
-    */
-   public final DocumentCollection process(@NonNull DocumentCollection input,
-                                           @NonNull Context context) throws
-         Exception {
-      DocumentCollection corpus = input;
-      context.merge(startingContext);
-      Stopwatch sw = Stopwatch.createStarted();
-      for (Action processor : actions) {
-         Stopwatch actionTime = Stopwatch.createStarted();
-         logInfo(LogUtils.getLogger(getClass()),
-                 "Running {0}...", processor.getClass().getSimpleName());
-         if (processor.getOverrideStatus()) {
-            corpus = processor.process(corpus, context);
+    /**
+     * Process corpus.
+     *
+     * @param input   the input
+     * @param context the context
+     * @return the corpus
+     * @throws Exception the exception
+     */
+    public DocumentCollection process(@NonNull DocumentCollection input,
+                                      @NonNull Context context) throws
+                                                                Exception {
+        DocumentCollection corpus = input;
+        context.merge(startingContext);
+        Stopwatch sw = Stopwatch.createStarted();
+        for (Action processor : actions) {
+            Stopwatch actionTime = Stopwatch.createStarted();
             logInfo(LogUtils.getLogger(getClass()),
-                    "Completed {0} [Recomputed] ({1})",
-                    processor.getClass().getSimpleName(),
-                    actionTime);
-         } else {
-            if (processor.loadPreviousState(corpus, context) == State.LOADED) {
-               logInfo(LogUtils.getLogger(getClass()),
-                       "Completed {0} [Loaded] ({1})",
-                       processor.getClass().getSimpleName(),
-                       actionTime);
+                    "Running {0}...", processor.getClass().getSimpleName());
+            if (processor.getOverrideStatus()) {
+                corpus = processor.process(corpus, context);
+                logInfo(LogUtils.getLogger(getClass()),
+                        "Completed {0} [Recomputed] ({1})",
+                        processor.getClass().getSimpleName(),
+                        actionTime);
             } else {
-               corpus = processor.process(corpus, context);
-               logInfo(LogUtils.getLogger(getClass()),
-                       "Completed {0} [Computed] ({1})",
-                       processor.getClass().getSimpleName(),
-                       actionTime);
+                if (processor.loadPreviousState(corpus, context) == State.LOADED) {
+                    logInfo(LogUtils.getLogger(getClass()),
+                            "Completed {0} [Loaded] ({1})",
+                            processor.getClass().getSimpleName(),
+                            actionTime);
+                } else {
+                    corpus = processor.process(corpus, context);
+                    logInfo(LogUtils.getLogger(getClass()),
+                            "Completed {0} [Computed] ({1})",
+                            processor.getClass().getSimpleName(),
+                            actionTime);
+                }
             }
-         }
-      }
-      logInfo(LogUtils.getLogger(getClass()), "Completed Workflow in " + sw);
-      return corpus;
-   }
+        }
+        logInfo(LogUtils.getLogger(getClass()), "Completed Workflow in " + sw);
+        return corpus;
+    }
 
-   @JsonValue
-   protected JsonEntry toEntry() {
-      JsonEntry obj = BaseWorkflowIO.serialize(this);
-      JsonEntry actionArray = JsonEntry.array();
-      for (Action action : actions) {
-         JsonEntry ao = JsonEntry.object();
-         ao.mergeObject(Json.asJsonEntry(action));
-         actionArray.addValue(ao);
-      }
-      obj.addProperty("actions", actionArray);
-      return obj;
-   }
+    @JsonValue
+    protected JsonEntry toEntry() {
+        JsonEntry obj = BaseWorkflowIO.serialize(this);
+        JsonEntry actionArray = JsonEntry.array();
+        for (Action action : actions) {
+            JsonEntry ao = JsonEntry.object();
+            ao.mergeObject(Json.asJsonEntry(action));
+            actionArray.addValue(ao);
+        }
+        obj.addProperty("actions", actionArray);
+        return obj;
+    }
 
 }//END OF Controller

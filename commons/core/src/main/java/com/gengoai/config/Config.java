@@ -78,7 +78,7 @@ public final class Config implements Serializable {
    private static final String BEAN_PROPERTY = "@{";
    private static final Pattern BEAN_SUBSTITUTION = Pattern.compile(Pattern.quote(BEAN_PROPERTY) + "(.+?)\\}");
    private static final String DEFAULT_CONFIG_FILE_NAME = "default.conf";
-   private static final Pattern STRING_SUBSTITUTION = Pattern.compile("\\$\\{(.+?)}");
+   public static final Pattern STRING_SUBSTITUTION = Pattern.compile("\\$\\{(.+?)}");
    private static final String SYSTEM_PROPERTY = "system.";
    private static final long serialVersionUID = 6875819132224789761L;
    private volatile static Config INSTANCE;

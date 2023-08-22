@@ -38,83 +38,83 @@ import java.io.IOException;
  */
 public final class ModelIO {
 
-   /**
-    * Loads a model from the given resource
-    *
-    * @param resource the resource containing the model
-    * @return the model
-    * @throws IOException Something went wrong reading the resource
-    */
-   public static <T extends Model> T load(@NonNull String resource) throws IOException {
-      return load(Resources.from(resource));
-   }
+    /**
+     * Loads a model from the given resource
+     *
+     * @param resource the resource containing the model
+     * @return the model
+     * @throws IOException Something went wrong reading the resource
+     */
+    public static <T extends Model> T load(@NonNull String resource) throws IOException {
+        return load(Resources.from(resource));
+    }
 
-   /**
-    * Loads a model from the given resource
-    *
-    * @param resource the resource containing the model
-    * @return the model
-    * @throws IOException Something went wrong reading the resource
-    */
-   public static <T extends Model> T load(@NonNull Resource resource) throws IOException {
-      return load(Cast.as(Reflect.getClassForNameQuietly(resource.getChild("__class__").readToString().strip())),
-                  resource);
-   }
+    /**
+     * Loads a model from the given resource
+     *
+     * @param resource the resource containing the model
+     * @return the model
+     * @throws IOException Something went wrong reading the resource
+     */
+    public static <T extends Model> T load(@NonNull Resource resource) throws IOException {
+        return load(Cast.as(Reflect.getClassForNameQuietly(resource.getChild("__class__").readToString().strip())),
+                    resource);
+    }
 
-   /**
-    * Loads a model from the given resource
-    *
-    * @param modelClass the class of the model to load
-    * @param resource   the resource containing the model
-    * @return the model
-    * @throws IOException Something went wrong reading the resource
-    */
-   public static <T extends Model> T load(@NonNull Class<? extends Model> modelClass,
-                                          @NonNull Resource resource) throws IOException {
-      try {
-         Reflect r = Reflect.onClass(modelClass);
-         if(r.containsMethod("load")) {
-            return r.getMethod("load").invoke(resource);
-         }
-      } catch(ReflectionException e) {
-         throw new IOException(e);
-      }
-      return Cast.as(Model.load(resource));
-   }
+    /**
+     * Loads a model from the given resource
+     *
+     * @param modelClass the class of the model to load
+     * @param resource   the resource containing the model
+     * @return the model
+     * @throws IOException Something went wrong reading the resource
+     */
+    public static <T extends Model> T load(@NonNull Class<? extends Model> modelClass,
+                                           @NonNull Resource resource) throws IOException {
+        try {
+            Reflect r = Reflect.onClass(modelClass);
+            if (r.containsMethod("load")) {
+                return r.getMethod("load").invoke(resource);
+            }
+        } catch (ReflectionException e) {
+            throw new IOException(e);
+        }
+        return Cast.as(Model.load(resource));
+    }
 
-   /**
-    * Saves a model to the given resource
-    *
-    * @param model    the model to save
-    * @param resource the resource where to write the model
-    * @param saveMode the save mode
-    * @throws IOException Something went wrong writing the resource
-    */
-   public static void save(@NonNull Model model,
-                           @NonNull Resource resource,
-                           @NonNull SaveMode saveMode) throws IOException {
-      if(saveMode.validate(resource)) {
-         resource.delete(true);
-         resource.mkdirs();
-         resource.getChild("__class__")
-                 .write(model.getClass().getName());
-         model.save(resource);
-      }
-   }
+    /**
+     * Saves a model to the given resource
+     *
+     * @param model    the model to save
+     * @param resource the resource where to write the model
+     * @param saveMode the save mode
+     * @throws IOException Something went wrong writing the resource
+     */
+    public static void save(@NonNull Model model,
+                            @NonNull Resource resource,
+                            @NonNull SaveMode saveMode) throws IOException {
+        if (saveMode.validate(resource)) {
+            resource.delete(true);
+            resource.mkdirs();
+            resource.getChild("__class__")
+                    .write(model.getClass().getName());
+            model.save(resource);
+        }
+    }
 
-   /**
-    * Saves a model to the given resource
-    *
-    * @param model    the model to save
-    * @param resource the resource where to write the model
-    * @throws IOException Something went wrong writing the resource
-    */
-   public static void save(@NonNull Model model, @NonNull Resource resource) throws IOException {
-      save(model, resource, SaveMode.OVERWRITE);
-   }
+    /**
+     * Saves a model to the given resource
+     *
+     * @param model    the model to save
+     * @param resource the resource where to write the model
+     * @throws IOException Something went wrong writing the resource
+     */
+    public static void save(@NonNull Model model, @NonNull Resource resource) throws IOException {
+        save(model, resource, SaveMode.OVERWRITE);
+    }
 
-   private ModelIO() {
-      throw new IllegalAccessError();
-   }
+    private ModelIO() {
+        throw new IllegalAccessError();
+    }
 
 }//END OF ModelIO

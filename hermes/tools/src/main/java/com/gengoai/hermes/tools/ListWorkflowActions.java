@@ -20,7 +20,7 @@
 package com.gengoai.hermes.tools;
 
 import com.gengoai.hermes.HermesCLI;
-import com.gengoai.hermes.workflow.ActionDescription;
+import com.gengoai.hermes.workflow.Action;
 import com.gengoai.string.Strings;
 
 import java.util.ServiceLoader;
@@ -29,21 +29,21 @@ import java.util.ServiceLoader;
  * @author David B. Bracewell
  */
 public class ListWorkflowActions extends HermesCLI {
-   public static void main(String[] args) {
-      new ListWorkflowActions().run(args);
-   }
+    public static void main(String[] args) {
+        new ListWorkflowActions().run(args);
+    }
 
-   @Override
-   protected void programLogic() throws Exception {
-      final String EQUALS_SEP = Strings.repeat('=', 80);
-      final String DASH_SEP = Strings.repeat('-', 80);
-      for (ActionDescription description : ServiceLoader.load(ActionDescription.class)) {
-         System.out.println(EQUALS_SEP);
-         System.out.println(description.name());
-         System.out.println(EQUALS_SEP);
-         System.out.println(Strings.lineBreak(description.description(), 80).strip());
-         System.out.println(DASH_SEP);
-         System.out.println();
-      }
-   }
+    @Override
+    protected void programLogic() throws Exception {
+        final String EQUALS_SEP = Strings.repeat('=', 80);
+        final String DASH_SEP = Strings.repeat('-', 80);
+        for (Action description : ServiceLoader.load(Action.class)) {
+            System.out.println(EQUALS_SEP);
+            System.out.println(description.getName());
+            System.out.println(EQUALS_SEP);
+            System.out.println(Strings.lineBreak(description.getDescription(), 80).strip());
+            System.out.println(DASH_SEP);
+            System.out.println();
+        }
+    }
 }//END OF ListWorkflowActions

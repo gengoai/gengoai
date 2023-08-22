@@ -19,13 +19,10 @@
 
 package com.gengoai.hermes.workflow.actions;
 
-import com.gengoai.collection.counter.Counter;
-import com.gengoai.conversion.Cast;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.keyword.*;
 import com.gengoai.hermes.workflow.Action;
-import com.gengoai.hermes.workflow.ActionDescription;
 import com.gengoai.hermes.workflow.Context;
 import com.gengoai.stream.MCounterAccumulator;
 import lombok.Data;
@@ -38,79 +35,74 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
+@MetaInfServices
 public class KeywordExtraction implements Action {
-   private static final long serialVersionUID = 1L;
-   private int N = Integer.MAX_VALUE;
-   private KeywordExtractor extractor = new TermKeywordExtractor();
-   private boolean keepGlobalCounts = false;
+    public static final String GLOBAL_COUNTS_CONTEXT = "keyword.globalCounts";
+    private static final long serialVersionUID = 1L;
+    private int N = 10;
+    private String algorithm = "RAKE";
+    private boolean keepGlobalCounts = false;
 
-   public static Counter<String> getKeywords(@NonNull Context context) {
-      return Cast.as(context.get(Types.KEYWORDS.name()));
-   }
+    @Override
+    public String getName() {
+        return "KEYWORD";
+    }
 
-   @Override
-   public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
-      extractor.fit(corpus);
-      final MCounterAccumulator<String> globalKeywordCounts = keepGlobalCounts
-            ? corpus.getStreamingContext().counterAccumulator()
-            : null;
-      corpus.update("KeywordExtraction", doc -> {
-         List<String> keywords = new ArrayList<>(extractor.extract(doc).count().topN(N).items());
-         doc.put(Types.KEYWORDS, keywords);
-         if (keepGlobalCounts) {
-            keywords.forEach(k -> globalKeywordCounts.increment(k, 1));
-         }
-      });
-      if (keepGlobalCounts) {
-         context.property(Types.KEYWORDS.name(), globalKeywordCounts.value());
-      }
-      return corpus;
-   }
+    @Override
+    public String getDescription() {
+        return "Extracts keywords from documents storing them both on the document using the 'KEYWORD' attribute and on the context using 'KEYWORDS'. " +
+                "Note that keywords are only kept on the context if the property 'keepGlobalCounts' is true (it is 'false' by default). " +
+                "Additionally, you can specify the maximum number of keywords per document by setting the parameter 'n'. " +
+                "The keyword extraction algorithm can be set via JSON using either 'algorithm' or 'extractor' as follows:" +
+                "\n\nVia Workflow Json:\n" +
+                "--------------------------------------\n" +
+                "{\n" +
+                "   \"@type\"=\"" + KeywordExtraction.class.getName() + "\",\n" +
+                "   \"algorithm\"=\"tfidf\"|\"tf\"|\"rake\"|\"np\"|\"text-rank\"\n," +
+                "   \"n\"=NUMBER\n," +
+                "   \"keepGlobalCounts\"=true|false\n" +
+                "}";
+    }
 
-   public void setAlgorithm(@NonNull String name) {
-      switch (name.toLowerCase()) {
-         case "tfidf":
-            this.extractor = new TFIDFKeywordExtractor();
-            break;
-         case "tf":
-            this.extractor = new TermKeywordExtractor();
-            break;
-         case "rake":
-            this.extractor = new RakeKeywordExtractor();
-            break;
-         case "np":
-            this.extractor = new NPClusteringKeywordExtractor();
-            break;
-         case "text-rank":
-            this.extractor = new TextRank();
-            break;
-         default:
-            throw new IllegalArgumentException(String.format("Unknown keyword extraction algorithm: '%s'", name));
-      }
-   }
+    @Override
+    public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
+        final KeywordExtractor extractor = getExtractor(algorithm);
+        extractor.fit(corpus);
 
-   @MetaInfServices
-   public static class KeywordExtractionDescription implements ActionDescription {
-      @Override
-      public String description() {
-         return "Extracts keywords from documents storing them both on the document using the 'KEYWORD' attribute and on the context using 'KEYWORDS'. " +
-               "Note that keywords are only kept on the context if the property 'keepGlobalCounts' is true (it is 'false' by default). " +
-               "Additionally, you can specify the maximum number of keywords per document by setting the parameter 'n'. " +
-               "The keyword extraction algorithm can be set via JSON using either 'algorithm' or 'extractor' as follows:" +
-               "\n\nVia Workflow Json:\n" +
-               "--------------------------------------\n" +
-               "{\n" +
-               "   \"@type\"=\"" + KeywordExtraction.class.getName() + "\",\n" +
-               "   \"algorithm\"=\"tfidf\"|\"tf\"|\"rake\"|\"np\"|\"text-rank\"\n," +
-               "   \"n\"=NUMBER\n," +
-               "   \"keepGlobalCounts\"=true|false\n" +
-               "}";
-      }
+        final MCounterAccumulator<String> globalKeywordCounts = keepGlobalCounts
+                ? corpus.getStreamingContext().counterAccumulator()
+                : null;
 
-      @Override
-      public String name() {
-         return KeywordExtraction.class.getName();
-      }
-   }
+        corpus.update("KeywordExtraction", doc -> {
+            List<String> keywords = new ArrayList<>(extractor.extract(doc).count().topN(N).items());
+            doc.put(Types.KEYWORDS, keywords);
+            if (keepGlobalCounts) {
+                keywords.forEach(k -> globalKeywordCounts.increment(k, 1));
+            }
+        });
+
+        if (keepGlobalCounts) {
+            context.property(GLOBAL_COUNTS_CONTEXT, globalKeywordCounts.value());
+        }
+
+        return corpus;
+    }
+
+    private KeywordExtractor getExtractor(@NonNull String name) {
+        switch (name.toLowerCase()) {
+            case "tfidf":
+                return new TFIDFKeywordExtractor();
+            case "tf":
+                return new TermKeywordExtractor();
+            case "rake":
+                return new RakeKeywordExtractor();
+            case "np":
+                return new NPClusteringKeywordExtractor();
+            case "text-rank":
+                return new TextRank();
+            default:
+                throw new IllegalArgumentException(String.format("Unknown keyword extraction algorithm: '%s'", name));
+        }
+    }
 
 }//END OF KeywordExtraction

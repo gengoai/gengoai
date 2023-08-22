@@ -22,9 +22,12 @@ package com.gengoai.apollo.model.embedding;
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
+import com.gengoai.io.resource.Resource;
 import lombok.NonNull;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -40,51 +43,67 @@ import java.util.stream.Stream;
  */
 public interface KeyedVectorStore extends Serializable {
 
-   /**
-    * The dimension of the vectors in the store
-    *
-    * @return the dimension of the vectors in the store
-    */
-   int dimension();
+    /**
+     * The dimension of the vectors in the store
+     *
+     * @return the dimension of the vectors in the store
+     */
+    int dimension();
 
-   /**
-    * @return the array of special tokens
-    */
-   String[] getSpecialKeys();
+    /**
+     * @return the array of special tokens
+     */
+    String[] getSpecialKeys();
 
-   /**
-    * The key representing that is used when other keys are not able to be encoded.
-    *
-    * @return the unknown key
-    */
-   String getUnknownKey();
+    /**
+     * The key representing that is used when other keys are not able to be encoded.
+     *
+     * @return the unknown key
+     */
+    String getUnknownKey();
 
-   /**
-    * Gets the vector for the key. When the key is not in the store, it will backoff to the unknown key or an NDArray of
-    * all zero values.
-    *
-    * @param key the key
-    * @return the vector
-    */
-   NumericNDArray getVector(@NonNull String key);
+    /**
+     * Gets the vector for the key. When the key is not in the store, it will backoff to the unknown key or an NDArray of
+     * all zero values.
+     *
+     * @param key the key
+     * @return the vector
+     */
+    NumericNDArray getVector(@NonNull String key);
 
-   /**
-    * Gets a stream over the vectors in the store.
-    *
-    * @return the stream of vectors.
-    */
-   Stream<NumericNDArray> stream();
+    /**
+     * Gets a stream over the vectors in the store.
+     *
+     * @return the stream of vectors.
+     */
+    Stream<NumericNDArray> stream();
 
-   /**
-    * Updates the vector at the given index.
-    *
-    * @param word   the word associated with the vector
-    * @param vector the new vector
-    */
-   void updateVector(String word, @NonNull NumericNDArray vector);
+    /**
+     * Updates the vector at the given index.
+     *
+     * @param word   the word associated with the vector
+     * @param vector the new vector
+     */
+    void updateVector(String word, @NonNull NumericNDArray vector);
 
-   int size();
+    int size();
 
-   Set<String> getAlphabet();
+    Set<String> getAlphabet();
+
+    default void writeWord2VecFormat(@NonNull Resource output) throws IOException {
+        try (Writer writer = output.writer()) {
+            writer.write(Integer.toString(size()));
+            writer.write(" ");
+            writer.write(Integer.toString(dimension()));
+            writer.write("\n");
+            for (String word : getAlphabet()) {
+                writer.write(word.replace(' ', '_'));
+                writer.write(" ");
+                writer.write(VSTextUtils.vectorToLine(getVector(word)));
+                writer.write("\n");
+            }
+        }
+    }
+
 
 }//END OF KeyedVectorStore
