@@ -28,7 +28,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.gengoai.config.Config;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
+import com.gengoai.io.resource.Resource;
+import com.gengoai.json.Json;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 /**
@@ -53,38 +56,16 @@ public interface Action extends Serializable {
      */
     String getName();
 
+    String getId();
+
+    void setId(String id);
+
     /**
      * Gets the Description of the Action.
      *
      * @return The Description of the action
      */
     String getDescription();
-
-    /**
-     * Gets the override status for this processing module, which can be defined using configuration in the form
-     * <code>fully.qualified.class.name.override=true</code> or all processing can be reperformed using
-     * <code>processing.override.all=true</code>. By default, the status is false, which means try to load the previous
-     * state.
-     *
-     * @return True force reprocessing, False try to load the previous state.
-     */
-    @JsonIgnore
-    default boolean getOverrideStatus() {
-        return Config.get("processing.override.all")
-                     .asBooleanValue(Config.get(this.getClass(), "override")
-                                           .asBooleanValue(false));
-    }
-
-    /**
-     * Loads from a previous processing state.
-     *
-     * @param corpus  the corpus being processed
-     * @param context the context of the processor
-     * @return the processing state (NOT_LOADED by default meaning there is no previous state).
-     */
-    default State loadPreviousState(DocumentCollection corpus, Context context) {
-        return State.NOT_LOADED;
-    }
 
     /**
      * Process corpus.
@@ -94,5 +75,12 @@ public interface Action extends Serializable {
      * @throws Exception the exception
      */
     DocumentCollection process(DocumentCollection corpus, Context context) throws Exception;
+
+
+    default void saveActionState(Resource actionFolder) throws IOException {
+        final Resource saveLocation = actionFolder.getChild(getId());
+        saveLocation.mkdirs();
+        saveLocation.getChild("action.json").write(Json.dumpsPretty(this));
+    }
 
 }//END OF Action

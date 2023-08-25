@@ -99,27 +99,13 @@ public final class SequentialWorkflow implements Workflow {
             Stopwatch actionTime = Stopwatch.createStarted();
             logInfo(LogUtils.getLogger(getClass()),
                     "Running {0}...", processor.getClass().getSimpleName());
-            if (processor.getOverrideStatus()) {
-                corpus = processor.process(corpus, context);
-                logInfo(LogUtils.getLogger(getClass()),
-                        "Completed {0} [Recomputed] ({1})",
-                        processor.getClass().getSimpleName(),
-                        actionTime);
-            } else {
-                if (processor.loadPreviousState(corpus, context) == State.LOADED) {
-                    logInfo(LogUtils.getLogger(getClass()),
-                            "Completed {0} [Loaded] ({1})",
-                            processor.getClass().getSimpleName(),
-                            actionTime);
-                } else {
-                    corpus = processor.process(corpus, context);
-                    logInfo(LogUtils.getLogger(getClass()),
-                            "Completed {0} [Computed] ({1})",
-                            processor.getClass().getSimpleName(),
-                            actionTime);
-                }
-            }
+            corpus = processor.process(corpus, context);
+            logInfo(LogUtils.getLogger(getClass()),
+                    "Completed {0} ({1})",
+                    processor.getClass().getSimpleName(),
+                    actionTime);
         }
+
         logInfo(LogUtils.getLogger(getClass()), "Completed Workflow in " + sw);
         return corpus;
     }

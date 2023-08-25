@@ -19,15 +19,13 @@
 
 package com.gengoai.hermes.workflow;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.*;
 import com.gengoai.Copyable;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.conversion.Converter;
 import com.gengoai.conversion.Val;
+import com.gengoai.io.resource.Resource;
 import com.gengoai.json.JsonEntry;
 import com.gengoai.json.TypedObject;
 import lombok.Builder;
@@ -39,6 +37,8 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.gengoai.hermes.workflow.Workflow.*;
 
 /**
  * Contexts are a specialized map that act as a shared memory for a Workflow. The context will retrieve values from its
@@ -61,6 +61,21 @@ public class Context implements Serializable, Copyable<Context> {
      */
     public Context() {
 
+    }
+
+    @JsonIgnore
+    public Resource getWorkflowFolder() {
+        return getAs(WORKFLOW_FOLDER, Resource.class);
+    }
+
+    @JsonIgnore
+    public Resource getActionsFolder() {
+        return getAs(ACTIONS_FOLDER, Resource.class);
+    }
+
+    @JsonIgnore
+    public Resource getAnalysisFolder() {
+        return getAs(ANALYSIS_FOLDER, Resource.class);
     }
 
     @JsonCreator

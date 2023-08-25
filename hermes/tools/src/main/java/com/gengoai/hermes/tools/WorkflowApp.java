@@ -34,24 +34,23 @@ import com.gengoai.specification.Specification;
 import lombok.extern.java.Log;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+
+import static com.gengoai.LogUtils.logSevere;
+import static com.gengoai.hermes.workflow.Workflow.*;
 
 @Log
 public class WorkflowApp extends HermesCLI {
-    private static final long serialVersionUID = 1L;
-    public static final String CONTEXT_ARG = "context.";
-    public static final String CONTEXT_OUTPUT = "CONTEXT_OUTPUT";
     /**
      * Name of the context parameter for the location of the input corpus
      */
-    public static final String INPUT_LOCATION = "INPUT_LOCATION";
-    @Option(name = "context-output", description = "Location to save context", aliases = {"oc"})
-    private Resource contextOutputLocation;
-    @Option(name = "definition", description = "Workflow definition", required = true)
-    private Resource definition;
-    @Option(description = "The specification or location the document collection to process.", required = true, aliases = {"i", "corpus"})
+    public static final String INPUT_LOCATION = "inputLocation";
+    private static final long serialVersionUID = 1L;
+    @Option(name = "workflow", description = "The location of the workflow folder", aliases = {"w"}, required = true)
+    private Resource workflowFolder;
+    @Option(description = "The specification or location the document collection to process.", aliases = {"i", "corpus"})
     private String input;
-    @Option(name = "context-input", description = "Location to save context", aliases = {"ic"})
-    private Resource contextInputLocation;
 
     public static void main(String[] args) throws Exception {
         new WorkflowApp().run(args);
@@ -68,7 +67,6 @@ public class WorkflowApp extends HermesCLI {
 
     private void loadContext(Resource location, Context context) throws IOException {
         if (location != null && location.exists()) {
-            //Load the output if it exists
             Context toMerge = Json.parse(location, Context.class);
             toMerge.remove(INPUT_LOCATION);
             toMerge.remove(CONTEXT_OUTPUT);
@@ -76,29 +74,107 @@ public class WorkflowApp extends HermesCLI {
         }
     }
 
-    @Override
-    protected void programLogic() throws Exception {
+    private void ensurePositionalArgument(int length, String message) {
+        if (getPositionalArgs().length <= length) {
+            logSevere(log, message);
+            System.exit(-1);
+        }
+    }
+
+
+    private void newWorkFlow() throws Exception {
+        if (workflowFolder.exists()) {
+            throw new RuntimeException("Error: " + workflowFolder.path() + " already exists");
+        }
+        workflowFolder.mkdirs();
+        workflowFolder.getChild("workflow.conf").write("");
+        workflowFolder.getChild("workflow.json").write(Json.dumpsPretty(Map.of(
+                "@type", "Sequential",
+                "actions", Collections.emptyList()
+                                                                              )));
+    }
+
+    private void cleanWorkFlow() throws Exception {
+        if (workflowFolder.exists()) {
+            workflowFolder.getChild("workflow.log").delete();
+            workflowFolder.getChild("workflow.log.lck").delete();
+            workflowFolder.getChild("workflow.output.json.gz").delete();
+            workflowFolder.getChild("actions").delete(true);
+            workflowFolder.getChild("analysis").delete(true);
+            workflowFolder.getChild("corpus").delete(true);
+        }
+    }
+
+
+    private void runWorkflow() throws Exception {
+        final Resource contextOutputLocation = workflowFolder.getChild("workflow.output.json.gz");
+        final Resource actionsFolder = workflowFolder.getChild("actions");
+        final Resource analysisFolder = workflowFolder.getChild("analysis");
+        final Resource workflowConf = workflowFolder.getChild("workflow.conf");
+
+        if (workflowConf.exists()) {
+            Config.loadConfig(workflowConf);
+        }
+
+        if (input == null && Config.hasProperty("context.inputLocation")) {
+            input = Config.get("context.inputLocation").asString();
+        }
+
+        if (input == null) {
+            throw new IllegalStateException("An input document collection is required");
+        }
+
+        actionsFolder.mkdirs();
+
+        Config.setProperty("com.gengoai.logging.dir", workflowFolder.path());
+        LogUtils.addFileHandler("workflow");
         Context context = Context.builder()
                                  .property(INPUT_LOCATION, input)
                                  .property(CONTEXT_OUTPUT, contextOutputLocation)
+                                 .property(WORKFLOW_FOLDER, workflowFolder)
+                                 .property(ACTIONS_FOLDER, actionsFolder)
+                                 .property(ANALYSIS_FOLDER, analysisFolder)
                                  .build();
 
-        loadContext(contextOutputLocation, context);
-        loadContext(contextInputLocation, context);
+
+        actionsFolder.mkdirs();
+        analysisFolder.mkdirs();
+
+        loadContext(workflowFolder.getChild("workflow.input.json"), context);
         Config.getPropertiesMatching(s -> s.startsWith(CONTEXT_ARG))
               .forEach(key -> {
                   var contextName = key.substring(CONTEXT_ARG.length());
                   context.property(contextName, Config.get(key).get());
                   LogUtils.logInfo(log, "Setting Context property {0} to {1}", contextName, Config.get(key));
               });
-        Workflow workflow = BaseWorkflowIO.read(definition);
+        Workflow workflow = BaseWorkflowIO.read(workflowFolder.getChild("workflow.json"));
         try (DocumentCollection inputCorpus = getDocumentCollection(input)) {
             try (DocumentCollection outputCorpus = workflow.process(inputCorpus, context)) {
-                if (contextOutputLocation != null) {
-                    contextOutputLocation.write(Json.dumpsPretty(context));
-                }
+                contextOutputLocation.compressed().write(Json.dumpsPretty(context));
             }
         }
+    }
+
+    @Override
+    protected void programLogic() throws Exception {
+
+        ensurePositionalArgument(0, "No Operation Given!");
+        final String operation = getPositionalArgs()[0];
+        switch (operation.toUpperCase()) {
+            case "NEW":
+                newWorkFlow();
+                break;
+            case "CLEAN":
+                cleanWorkFlow();
+                break;
+            case "RUN":
+                runWorkflow();
+                break;
+            default:
+                throw new IllegalArgumentException("Error: Invalid Operation '" + operation + "'");
+        }
+
+
     }
 
 }//END OF Runner

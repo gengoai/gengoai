@@ -246,6 +246,10 @@ public interface Types {
     AttributeType<String> EMOTICON_GROUP = AttributeType.make("EMOTICON_GROUP", String.class);
     AttributeType<String> EMOTICON_SUB_GROUP = AttributeType.make("EMOTICON_SUB_GROUP", String.class);
     AttributeType<String> LABEL = Types.attribute("label", String.class);
+
+    AttributeType<NumericNDArray> TOPIC_DISTRIBUTION = Types.attribute("TOPIC_DISTRIBUTION", NumericNDArray.class);
+
+
     /**
      * Annotation annotation type.
      *

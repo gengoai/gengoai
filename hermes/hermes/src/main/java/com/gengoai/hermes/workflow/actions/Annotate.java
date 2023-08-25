@@ -48,6 +48,7 @@ public class Annotate implements Action {
     public static final String ANNOTATABLE_TYPE_CONFIG = "annotate.types";
     private static final long serialVersionUID = 1L;
     private List<String> types;
+    private String id;
 
     @Override
     public String getName() {

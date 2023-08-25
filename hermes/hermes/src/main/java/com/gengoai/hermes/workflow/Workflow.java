@@ -45,6 +45,11 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = SequentialWorkflow.class, name = "Sequential")
 })
 public interface Workflow extends Serializable {
+    String WORKFLOW_FOLDER = "WORKFLOW_FOLDER";
+    String ACTIONS_FOLDER = "ACTIONS_FOLDER";
+    String ANALYSIS_FOLDER = "ANALYSIS_FOLDER";
+    String CONTEXT_ARG = "context.";
+    String CONTEXT_OUTPUT = "CONTEXT_OUTPUT";
 
     /**
      * Gets starting context.

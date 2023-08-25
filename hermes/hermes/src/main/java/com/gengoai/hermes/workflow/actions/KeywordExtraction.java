@@ -19,19 +19,23 @@
 
 package com.gengoai.hermes.workflow.actions;
 
+import com.gengoai.hermes.Document;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.keyword.*;
 import com.gengoai.hermes.workflow.Action;
 import com.gengoai.hermes.workflow.Context;
+import com.gengoai.json.Json;
 import com.gengoai.stream.MCounterAccumulator;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.kohsuke.MetaInfServices;
 
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -42,6 +46,8 @@ public class KeywordExtraction implements Action {
     private int N = 10;
     private String algorithm = "RAKE";
     private boolean keepGlobalCounts = false;
+    private boolean outputKeywords = false;
+    private String id;
 
     @Override
     public String getName() {
@@ -66,6 +72,8 @@ public class KeywordExtraction implements Action {
 
     @Override
     public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
+        saveActionState(context.getActionsFolder());
+
         final KeywordExtractor extractor = getExtractor(algorithm);
         extractor.fit(corpus);
 
@@ -73,13 +81,27 @@ public class KeywordExtraction implements Action {
                 ? corpus.getStreamingContext().counterAccumulator()
                 : null;
 
+
         corpus.update("KeywordExtraction", doc -> {
             List<String> keywords = new ArrayList<>(extractor.extract(doc).count().topN(N).items());
             doc.put(Types.KEYWORDS, keywords);
             if (keepGlobalCounts) {
                 keywords.forEach(k -> globalKeywordCounts.increment(k, 1));
             }
+
         });
+
+        if (outputKeywords) {
+            try (Writer writer = context.getAnalysisFolder().getChild(getId() + "-keywords.jsonl").writer()) {
+                for (Document document : corpus) {
+                    writer.write(Json.dumps(Map.of(
+                            "documentId", document.getId(),
+                            "keywords", document.attribute(Types.KEYWORDS)
+                                                  )));
+                    writer.write("\n");
+                }
+            }
+        }
 
         if (keepGlobalCounts) {
             context.property(GLOBAL_COUNTS_CONTEXT, globalKeywordCounts.value());

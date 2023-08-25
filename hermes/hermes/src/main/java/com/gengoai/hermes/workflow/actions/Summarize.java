@@ -48,7 +48,7 @@ public class Summarize implements Action {
     private String algorithm;
     private int maxLength = 250;
     private int device = -1;
-
+    private String id;
 
     private Summarizer getSummarizer(String name) {
         switch (name.toLowerCase()) {
@@ -75,6 +75,8 @@ public class Summarize implements Action {
 
     @Override
     public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
+        saveActionState(context.getActionsFolder());
+
         Summarizer summarizer = getSummarizer(algorithm);
         summarizer.fit(corpus);
         if (summarizer instanceof Summarization && corpus instanceof Corpus) {
@@ -101,6 +103,7 @@ public class Summarize implements Action {
             Extraction summary = summarizer.extract(doc);
             doc.put(Types.SUMMARY, Lists.asArrayList(summary.string()));
         });
+
     }
 
 }//END OF Summarize

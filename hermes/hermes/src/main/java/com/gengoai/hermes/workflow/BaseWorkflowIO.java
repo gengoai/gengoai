@@ -21,6 +21,8 @@ package com.gengoai.hermes.workflow;
 
 import com.gengoai.collection.Iterables;
 import com.gengoai.collection.Iterators;
+import com.gengoai.collection.counter.Counter;
+import com.gengoai.collection.counter.Counters;
 import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.io.resource.Resource;
@@ -48,6 +50,7 @@ public class BaseWorkflowIO {
         }
         List<Action> actionList = new ArrayList<>();
         JsonEntry actions = entry.getProperty("actions");
+        Counter<String> idCounter = Counters.newCounter();
         actions.forEachElement(action -> {
             String actionName = action.getStringProperty("action");
             Action actionImpl = Actions.getAction(actionName);
@@ -56,7 +59,6 @@ public class BaseWorkflowIO {
                 if (action.hasProperty(property)) {
                     String strProperty = action.getStringProperty(property);
                     if (strProperty != null && Config.STRING_SUBSTITUTION.matcher(strProperty).find()) {
-                        System.out.println(property + " IS A CONFIG PROPERTY");
                         strProperty = Config.get(strProperty.substring(2, strProperty.length() - 1)).asString("NOT SET");
                         beanMap.put(property, strProperty);
                     } else {
@@ -64,6 +66,13 @@ public class BaseWorkflowIO {
                     }
                 }
             }
+
+            if (actionImpl.getId() == null) {
+                idCounter.increment(actionImpl.getName());
+                actionImpl.setId(actionImpl.getName() + "-" + idCounter.get(actionImpl.getName()));
+            }
+
+
             actionList.add(actionImpl);
         });
         return new SequentialWorkflow(actionList);

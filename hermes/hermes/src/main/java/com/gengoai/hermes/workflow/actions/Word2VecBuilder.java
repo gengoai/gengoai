@@ -24,31 +24,26 @@ import com.gengoai.apollo.data.DataSetType;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.transform.MinCountFilter;
 import com.gengoai.apollo.data.transform.Transform;
-import com.gengoai.apollo.model.embedding.PreTrainedWordEmbedding;
+import com.gengoai.apollo.model.embedding.OnDiskVectorStore;
 import com.gengoai.apollo.model.embedding.Word2Vec;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.extraction.lyre.LyreExpression;
 import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.workflow.Action;
 import com.gengoai.hermes.workflow.Context;
-import com.gengoai.hermes.workflow.State;
-import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
-import com.gengoai.string.Strings;
 import lombok.Data;
 import org.kohsuke.MetaInfServices;
-
-import java.io.IOException;
 
 @Data
 @MetaInfServices
 public class Word2VecBuilder implements Action {
-    public static final String WORD2VEC_SAVE_LOCATION = "word2vec.saveLocation";
     public static final String WORD2VEC_EMBEDDING = "word2vec.embedding";
     private int dimension = 100;
     private int minCount = 10;
     private String extractor = "filter(lemma(@TOKEN), isContentWord)";
     private String saveLocation = null;
+    private String id;
 
     @Override
     public String getName() {
@@ -62,24 +57,10 @@ public class Word2VecBuilder implements Action {
 
 
     @Override
-    public State loadPreviousState(DocumentCollection corpus, Context context) {
-        if (context.getString(WORD2VEC_SAVE_LOCATION) != null) {
-            Resource r = Resources.from(context.getString(WORD2VEC_SAVE_LOCATION));
-            if (r.exists()) {
-                try {
-                    PreTrainedWordEmbedding embedding = PreTrainedWordEmbedding.readWord2VecTextFormat(r);
-                    context.property(WORD2VEC_EMBEDDING, embedding);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                return State.LOADED;
-            }
-        }
-        return State.NOT_LOADED;
-    }
-
-    @Override
     public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
+        saveActionState(context.getActionsFolder());
+        final Resource saveLocation = context.getActionsFolder().getChild(getId());
+
         Word2Vec word2Vec = new Word2Vec(p -> {
             p.dimension.set(dimension);
             p.unknownWord.set("--UNKNOWN--");
@@ -94,16 +75,12 @@ public class Word2VecBuilder implements Action {
         dataSet = transform.fitAndTransform(dataSet);
         word2Vec.estimate(dataSet);
 
-        Resource outputLocation = null;
-        if (!Strings.isNullOrBlank(context.getString(WORD2VEC_SAVE_LOCATION))) {
-            outputLocation = Resources.from(context.getString(WORD2VEC_SAVE_LOCATION));
-        } else if (saveLocation != null) {
-            outputLocation = Resources.from(saveLocation);
-            context.property(WORD2VEC_SAVE_LOCATION, saveLocation);
-        }
-
-        if (outputLocation != null) {
-            word2Vec.writeWord2VecFormat(outputLocation);
+        OnDiskVectorStore vectorStore = new OnDiskVectorStore(dimension,
+                                                              "--UNKNOWN--",
+                                                              new String[]{"--PAD--"},
+                                                              saveLocation.getChild("word2vec.vectors"));
+        for (String word : word2Vec.getAlphabet()) {
+            vectorStore.updateVector(word, word2Vec.embed(word));
         }
 
         context.property(WORD2VEC_EMBEDDING, word2Vec);

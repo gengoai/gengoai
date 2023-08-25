@@ -25,9 +25,12 @@ import com.gengoai.hermes.extraction.Extractor;
 import com.gengoai.hermes.extraction.lyre.LyreExpression;
 import com.gengoai.hermes.workflow.Action;
 import com.gengoai.hermes.workflow.Context;
-import com.gengoai.hermes.workflow.State;
+import com.gengoai.io.CSV;
+import com.gengoai.io.CSVWriter;
 import lombok.Data;
 import org.kohsuke.MetaInfServices;
+
+import java.util.List;
 
 /**
  * The type Term extraction processor.
@@ -43,8 +46,9 @@ public class TermCounts implements Action {
     public static final String EXTRACTED_TERMS = "termCounts.extractedTerms";
     private static final long serialVersionUID = 1L;
     private boolean documentFrequencies = false;
-    private String extractor= "filter(lemma(@TOKEN), isContentWord)";
-
+    private String extractor = "filter(lemma(@TOKEN), isContentWord)";
+    private String id;
+    private int minCount = 1;
 
     /**
      * On complete corpus.
@@ -78,16 +82,9 @@ public class TermCounts implements Action {
 
 
     @Override
-    public State loadPreviousState(DocumentCollection corpus, Context context) {
-        if (context.get(EXTRACTED_TERMS) != null) {
-            System.out.println(context.get(EXTRACTED_TERMS).getClass());
-            return State.LOADED;
-        }
-        return State.NOT_LOADED;
-    }
-
-    @Override
     public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
+        saveActionState(context.getActionsFolder());
+
         Extractor ex = LyreExpression.parse(extractor);
         Counter<String> counts;
         if (documentFrequencies) {
@@ -95,7 +92,17 @@ public class TermCounts implements Action {
         } else {
             counts = corpus.termCount(ex);
         }
+
+        counts = counts.filterByValue(d -> d >= minCount);
         context.property(EXTRACTED_TERMS, counts);
+
+        try (CSVWriter writer = CSV.csv().writer(context.getAnalysisFolder().getChild(getId() + "-termCounts.csv"))) {
+            writer.write(List.of("Term", "Count"));
+            for (String term : counts.itemsByCount(false)) {
+                writer.write(List.of(term, counts.get(term)));
+            }
+        }
+
         return onComplete(corpus, context, counts);
     }
 

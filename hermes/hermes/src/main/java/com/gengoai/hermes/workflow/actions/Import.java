@@ -25,7 +25,8 @@ import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.workflow.Action;
 import com.gengoai.hermes.workflow.Context;
-import com.gengoai.string.Strings;
+import com.gengoai.io.resource.Resource;
+import lombok.Data;
 import lombok.extern.java.Log;
 import org.kohsuke.MetaInfServices;
 
@@ -33,10 +34,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Log
+@Data
 @MetaInfServices
 public class Import implements Action {
-    public static final String CORPUS_LOCATION = "import.corpus";
     private static final long serialVersionUID = 1L;
+    private String id;
 
     @Override
     public String getName() {
@@ -50,12 +52,8 @@ public class Import implements Action {
 
     @Override
     public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
-        String location = context.getString(CORPUS_LOCATION);
-        if (Strings.isNullOrBlank(location)) {
-            throw new IllegalStateException("No corpus location specified. Please specify using a "
-                                                    + CORPUS_LOCATION + " context value"
-            );
-        }
+        final Resource workflowFolder = context.getWorkflowFolder();
+        String location = workflowFolder.getChild("corpus").path();
         LogUtils.logConfig(log, "Saving document collection to ''{0}''.", location);
         Corpus toCorpus = Corpus.open(location);
         String importDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
