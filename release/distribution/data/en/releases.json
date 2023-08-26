@@ -1,9 +1,0 @@
-{
-  "en_core": {
-    "description": "Core Models, Lexicons, and Vectors",
-    "latest": "2.0",
-    "versions": {
-      "2.0": "https://www.github.com/gengoai/models/releases/en/en_core_2.0.zip"
-    }
-  }
-}
