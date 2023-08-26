@@ -45,11 +45,11 @@ import java.util.stream.Stream;
 @MetaInfServices
 public class AttributeAssociationCalc implements Action {
     private String id;
+    private String metric = "G_SCORE";
     private String extractor = "filter(lemma(@TOKEN), isContentWord)";
     private String attribute = Types.LABEL.toString();
     private boolean distinct = false;
     private double minCount = 10;
-    private String calculator = "G_SCORE";
 
     @Override
     public String getName() {
@@ -61,38 +61,20 @@ public class AttributeAssociationCalc implements Action {
         return "Calculates the association between two sets of terms.";
     }
 
-    private ContingencyTableCalculator getCalculator() {
-        switch (calculator.toUpperCase()) {
-            case "G_SCORE":
-                return Association.G_SQUARE;
-            case "X2":
-                return Association.CHI_SQUARE;
-            case "MIKOLOV":
-                return Association.Mikolov;
-            case "NPMI":
-                return Association.NPMI;
-            case "PMI":
-                return Association.PMI;
-            case "PPMI":
-                return Association.PPMI;
-            case "MI":
-                return Association.MI;
-        }
-        throw new IllegalArgumentException("Unknown Association: '" + calculator + "'");
-    }
 
     @Override
     public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
         saveActionState(context.getActionsFolder());
+
         final Counter<String> attributeCounter = Counters.newConcurrentCounter();
         final Counter<String> termCounter = Counters.newConcurrentCounter();
         final MultiCounter<String, String> cooccurrence = MultiCounters.newConcurrentMultiCounter();
-        final AttributeType<String> attributeType = AttributeType.valueOf(attribute);
+        final AttributeType<?> attributeType = AttributeType.valueOf(attribute);
         final LyreExpression lyreExpression = LyreExpression.parse(extractor);
 
         corpus.parallelStream()
               .forEach(d -> {
-                  String LABEL = d.attribute(attributeType);
+                  String LABEL = d.attribute(attributeType).toString();
                   attributeCounter.increment(LABEL);
                   Stream<String> stream = Streams.asStream(lyreExpression.extract(d).string());
                   if (distinct) {
@@ -106,25 +88,42 @@ public class AttributeAssociationCalc implements Action {
 
         final double totalItems = attributeCounter.sum();
         final double totalTerms = cooccurrence.sum();
-        final ContingencyTableCalculator calculator = getCalculator();
+        final ContingencyTableCalculator tableCalculator = Association.valueOf(metric.toUpperCase());
         try (CSVWriter writer = CSV.csv().writer(context.getAnalysisFolder().getChild(getId() + "-association.csv"))) {
-            writer.write(List.of("Attribute", "Term", calculator, "P-Value"));
+            writer.write(List.of(attribute,
+                                 "Term",
+                                 "cooccurrence",
+                                 "Total Term Count",
+                                 "Total Attribute Count",
+                                 metric,
+                                 "P-Value"));
             for (String attr : cooccurrence.firstKeys()) {
-                Counter<String> terms = cooccurrence.get(attr);
-                for (String term : terms.itemsByCount(false)) {
-                    if (terms.get(term) < minCount) {
+                Counter<String> attrTerms = cooccurrence.get(attr);
+                double attrCount = attributeCounter.get(attr);
+
+                for (String term : attrTerms.itemsByCount(false)) {
+                    if (attrTerms.get(term) < minCount) {
                         break;
                     }
+                    double n11 = cooccurrence.get(attr, term);
                     double termCount = termCounter.get(term);
-                    ContingencyTable table = ContingencyTable.create2X2(terms.get(term),
-                                                                        totalItems,
+                    ContingencyTable table = ContingencyTable.create2X2(n11,
+                                                                        attrCount,
                                                                         termCount,
                                                                         totalTerms);
-                    double score = calculator.calculate(table);
-                    double p = calculator.pValue(table);
+                    double score = tableCalculator.calculate(table);
+                    double p = -1;
+                    try {
+                        p = tableCalculator.pValue(table);
+                    } catch (UnsupportedOperationException e) {
+                        //ignore as not all calculators support p-value
+                    }
                     writer.write(List.of(
                             attr,
                             term,
+                            n11,
+                            termCount,
+                            attrCount,
                             score,
                             p));
                 }

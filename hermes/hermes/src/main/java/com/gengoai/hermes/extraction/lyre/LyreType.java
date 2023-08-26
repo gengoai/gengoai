@@ -91,7 +91,17 @@ enum LyreType implements TokenDef, GrammarRegistrable {
          });
       }
    },
-
+   INTERLEAVE(re("interleave")) {
+      @Override
+      public void register(Grammar grammar) {
+         method(grammar, (parser, token, arguments) -> {
+            AnnotationType[] types = arguments.stream()
+                                              .map(e -> Types.annotation(e.as(LyreExpression.class).apply(null)))
+                                              .toArray(AnnotationType[]::new);
+            return LyreDSL.interleave(types);
+         });
+      }
+   },
    OUTGOING_RELATION(re(e('@'), e('>'), namedGroup("", IDENTIFIER),
                         zeroOrOne(e('{'), LITERAL.pattern, e('}')))) {
       @Override
@@ -1115,17 +1125,6 @@ enum LyreType implements TokenDef, GrammarRegistrable {
                return LyreDSL.notNull(arguments.get(0), arguments.get(1));
             }
             throw new ParseException("Illegal number of arguments for " + token.getText());
-         });
-      }
-   },
-   INTERLEAVE(re("interleave")) {
-      @Override
-      public void register(Grammar grammar) {
-         method(grammar, (parser, token, arguments) -> {
-            AnnotationType[] types = arguments.stream()
-                                              .map(e -> Types.annotation(e.as(LyreExpression.class).apply(null)))
-                                              .toArray(AnnotationType[]::new);
-            return LyreDSL.interleave(types);
          });
       }
    },

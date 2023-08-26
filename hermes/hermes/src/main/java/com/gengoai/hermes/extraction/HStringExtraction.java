@@ -38,42 +38,47 @@ import java.util.List;
  * @author David B. Bracewell
  */
 class HStringExtraction implements Extraction {
-   private static final long serialVersionUID = 1L;
-   @NonNull
-   private final List<HString> list;
-   @NonNull
-   private final SerializableFunction<HString, String> toString;
-   private final ValueCalculator calculator;
+    private static final long serialVersionUID = 1L;
+    @NonNull
+    private final List<HString> list;
+    @NonNull
+    private final SerializableFunction<HString, String> toString;
+    private final ValueCalculator calculator;
 
-   public HStringExtraction(List<HString> list,
-                            SerializableFunction<HString, String> toString,
-                            ValueCalculator calculator) {
-      this.list = Collections.unmodifiableList(list);
-      this.toString = toString;
-      this.calculator = calculator;
-   }
+    public HStringExtraction(List<HString> list,
+                             SerializableFunction<HString, String> toString,
+                             ValueCalculator calculator) {
+        this.list = Collections.unmodifiableList(list);
+        this.toString = toString;
+        this.calculator = calculator;
+    }
 
-   @Override
-   public Iterator<HString> iterator() {
-      return list.iterator();
-   }
+    @Override
+    public Iterator<HString> iterator() {
+        return list.iterator();
+    }
 
-   @Override
-   public int size() {
-      return list.size();
-   }
+    @Override
+    public int size() {
+        return list.size();
+    }
 
-   @Override
-   public Iterable<String> string() {
-      return Iterables.transform(list, toString);
-   }
+    @Override
+    public Iterable<String> string() {
+        return Iterables.transform(list, toString);
+    }
 
-   @Override
-   public Counter<String> count() {
-      Counter<String> counter = Counters.newCounter(string());
-      if (calculator != null) {
-         counter = calculator.adjust(counter);
-      }
-      return counter;
-   }
+    @Override
+    public Counter<String> count() {
+        Counter<String> counter = Counters.newCounter(string());
+        if (calculator != null) {
+            counter = calculator.adjust(counter);
+        }
+        return counter;
+    }
+
+    @Override
+    public String toString() {
+        return list.toString();
+    }
 }//END OF HStringExtraction

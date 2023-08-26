@@ -58,14 +58,14 @@ public class SignificantBigrams implements Action {
     }
 
 
-    private ContingencyTableCalculator getCalculator() {
+    private ContingencyTableCalculator getTableCalculator() {
         switch (calculator.toUpperCase()) {
             case "G_SCORE":
                 return Association.G_SQUARE;
             case "X2":
                 return Association.CHI_SQUARE;
             case "MIKOLOV":
-                return Association.Mikolov;
+                return Association.MIKOLOV;
             case "NPMI":
                 return Association.NPMI;
             case "PMI":
@@ -94,7 +94,7 @@ public class SignificantBigrams implements Action {
         Counter<Tuple> cntr = corpus.significantBigrams(nGramExtractor.build(),
                                                         minCount,
                                                         minScore,
-                                                        getCalculator());
+                                                        getTableCalculator());
         try (CSVWriter writer = CSV.csv().writer(context.getAnalysisFolder().getChild(getId() + "-bigrams.csv"))) {
             writer.write(List.of("Bigram", calculator));
             cntr.forEach((tuple, value) -> {

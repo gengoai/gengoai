@@ -40,7 +40,7 @@ public class AssociationMeasureTest {
 
    @Test
    public void mikolov() {
-      assertEquals(0.1, Association.Mikolov.calculate(c1), 0.01d);
+      assertEquals(0.1, Association.MIKOLOV.calculate(c1), 0.01d);
    }
 
    @Test

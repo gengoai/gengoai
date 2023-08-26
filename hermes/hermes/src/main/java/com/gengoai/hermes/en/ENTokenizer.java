@@ -179,10 +179,10 @@ public class ENTokenizer implements Tokenizer, Serializable {
 
                 if (Strings.isNullOrBlank(nn.text)) {
                     //Special Case of new lines
-                    if (last == n) {
-                        return n;
+                    if (emoticons.contains(emoLower)) {
+                        return new Token(emo, TokenType.EMOTICON, n.charStartIndex, end, n.index);
                     }
-                    return new Token(emo, TokenType.EMOTICON, n.charStartIndex, end, n.index);
+                    return new Token(emo, n.type, n.charStartIndex, end, n.index);
                 }
 
                 String tempLower = emoLower;

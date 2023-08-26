@@ -249,9 +249,16 @@ public interface Types {
 
     AttributeType<NumericNDArray> TOPIC_DISTRIBUTION = Types.attribute("TOPIC_DISTRIBUTION", NumericNDArray.class);
 
+    /**********
+     * MBTI
+     *********/
+    AttributeType<Boolean> EXTROVERSION_INTROVERSION = Types.attribute("IS_EXTROVERT", Boolean.class); //E I
+    AttributeType<Boolean> SENSING_INTUITION = Types.attribute("IS_SENSING", Boolean.class); // S N
+    AttributeType<Boolean> FEELING_THINKING = Types.attribute("IS_FEELING", Boolean.class); // F T
+    AttributeType<Boolean> JUDGING_PERCEIVING = Types.attribute("IS_JUDGING", Boolean.class); // J P
 
     /**
-     * Annotation annotation type.
+     * Annotation type.
      *
      * @param name the name
      * @return the annotation type

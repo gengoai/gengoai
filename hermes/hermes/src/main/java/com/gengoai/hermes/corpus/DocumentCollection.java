@@ -389,7 +389,7 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
     * @return the counter of bigrams and their scores
     */
    default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, double minScore) {
-      return significantBigrams(nGramExtractor, minCount, minScore, Association.Mikolov);
+      return significantBigrams(nGramExtractor, minCount, minScore, Association.MIKOLOV);
    }
 
    /**

@@ -38,7 +38,7 @@ public enum Association implements ContingencyTableCalculator {
    /**
     * Measures based on Mikolov et. al's "Distributed Representations of Words and Phrases and their Compositionality"
     */
-   Mikolov {
+   MIKOLOV {
       @Override
       public double calculate(ContingencyTable table) {
          Validation.checkArgument(table.rowCount() == table.columnCount() && table.rowCount() == 2,

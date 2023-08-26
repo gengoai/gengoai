@@ -98,11 +98,12 @@ public final class SequentialWorkflow implements Workflow {
         for (Action processor : actions) {
             Stopwatch actionTime = Stopwatch.createStarted();
             logInfo(LogUtils.getLogger(getClass()),
-                    "Running {0}...", processor.getClass().getSimpleName());
+                    "Running {0} [{1}]...", processor.getClass().getSimpleName(), processor.getId());
             corpus = processor.process(corpus, context);
             logInfo(LogUtils.getLogger(getClass()),
-                    "Completed {0} ({1})",
+                    "Completed {0} [{1}] ({2})",
                     processor.getClass().getSimpleName(),
+                    processor.getId(),
                     actionTime);
         }
 
