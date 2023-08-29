@@ -241,10 +241,6 @@ public interface Types {
 
     AttributeType<Set<String>> EMPATH_CATEGORY = AttributeType.make("EMPATH", parameterizedType(Set.class, String.class));
 
-
-    AnnotationType EMOTICON = AnnotationType.make("EMOTICON");
-    AttributeType<String> EMOTICON_GROUP = AttributeType.make("EMOTICON_GROUP", String.class);
-    AttributeType<String> EMOTICON_SUB_GROUP = AttributeType.make("EMOTICON_SUB_GROUP", String.class);
     AttributeType<String> LABEL = Types.attribute("label", String.class);
 
     AttributeType<NumericNDArray> TOPIC_DISTRIBUTION = Types.attribute("TOPIC_DISTRIBUTION", NumericNDArray.class);
@@ -252,10 +248,10 @@ public interface Types {
     /**********
      * MBTI
      *********/
-    AttributeType<Boolean> EXTROVERSION_INTROVERSION = Types.attribute("IS_EXTROVERT", Boolean.class); //E I
-    AttributeType<Boolean> SENSING_INTUITION = Types.attribute("IS_SENSING", Boolean.class); // S N
-    AttributeType<Boolean> FEELING_THINKING = Types.attribute("IS_FEELING", Boolean.class); // F T
-    AttributeType<Boolean> JUDGING_PERCEIVING = Types.attribute("IS_JUDGING", Boolean.class); // J P
+    AttributeType<Boolean> EXTROVERSION_INTROVERSION = Types.attribute("IS_EXTROVERT", Boolean.class); //Extrovert vs Introvert
+    AttributeType<Boolean> SENSING_INTUITION = Types.attribute("IS_SENSING", Boolean.class); // Sensing vs Intuition
+    AttributeType<Boolean> FEELING_THINKING = Types.attribute("IS_FEELING", Boolean.class); // Feeling vs Thinking
+    AttributeType<Boolean> JUDGING_PERCEIVING = Types.attribute("IS_JUDGING", Boolean.class); // Judging vs Perceiving
 
     /**
      * Annotation type.
@@ -268,7 +264,7 @@ public interface Types {
     }
 
     /**
-     * Attribute attribute type.
+     * Attribute type.
      *
      * @param name the name
      * @return the attribute type
@@ -278,7 +274,7 @@ public interface Types {
     }
 
     /**
-     * Attribute attribute type.
+     * Attribute type.
      *
      * @param <T>  the type parameter
      * @param name the name
@@ -290,7 +286,7 @@ public interface Types {
     }
 
     /**
-     * Attribute attribute type.
+     * Attribute type.
      *
      * @param <T>  the type parameter
      * @param name the name
@@ -302,7 +298,7 @@ public interface Types {
     }
 
     /**
-     * Relation relation type.
+     * Relation type.
      *
      * @param name the name
      * @return the relation type

@@ -31,6 +31,7 @@ import com.gengoai.hermes.workflow.Workflow;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.json.Json;
 import com.gengoai.specification.Specification;
+import com.gengoai.string.Strings;
 import lombok.extern.java.Log;
 
 import java.io.IOException;
@@ -56,12 +57,18 @@ public class WorkflowApp extends HermesCLI {
         new WorkflowApp().run(args);
     }
 
-    public DocumentCollection getDocumentCollection(String spec) {
+    public DocumentCollection getDocumentCollection(Resource workflowFolder) {
+        if (Strings.isNullOrBlank(input)) {
+            LogUtils.logInfo(log, "No input collection specified, looking for corpus in workflow folder");
+            return Corpus.open(workflowFolder.getChild("corpus"));
+        }
         try {
-            Specification.parse(spec);
-            return DocumentCollection.create(spec);
+            Specification.parse(input);
+            LogUtils.logInfo(log, "Input collection specified as ''{0}'', creating collection", input);
+            return DocumentCollection.create(input);
         } catch (Exception e) {
-            return Corpus.open(spec);
+            LogUtils.logInfo(log, "Input corpus specified as ''{0}'', opening corpus", input);
+            return Corpus.open(input);
         }
     }
 
@@ -120,8 +127,8 @@ public class WorkflowApp extends HermesCLI {
             input = Config.get("context.inputLocation").asString();
         }
 
-        if (input == null) {
-            throw new IllegalStateException("An input document collection is required");
+        if (input == null && !workflowFolder.getChild("corpus").exists()) {
+            throw new IllegalArgumentException("Error: No input collection specified and no corpus found in workflow folder.");
         }
 
         actionsFolder.mkdirs();
@@ -148,7 +155,7 @@ public class WorkflowApp extends HermesCLI {
                   LogUtils.logInfo(log, "Setting Context property {0} to {1}", contextName, Config.get(key));
               });
         Workflow workflow = BaseWorkflowIO.read(workflowFolder.getChild("workflow.json"));
-        try (DocumentCollection inputCorpus = getDocumentCollection(input)) {
+        try (DocumentCollection inputCorpus = getDocumentCollection(workflowFolder)) {
             try (DocumentCollection outputCorpus = workflow.process(inputCorpus, context)) {
                 contextOutputLocation.compressed().write(Json.dumpsPretty(context));
             }

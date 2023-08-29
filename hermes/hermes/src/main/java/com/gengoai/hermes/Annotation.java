@@ -51,166 +51,171 @@ import static com.gengoai.tuple.Tuples.$;
  */
 @JsonDeserialize(as = DefaultAnnotationImpl.class)
 public interface Annotation extends HString {
-   /**
-    * The ID associated with a detached annotation
-    */
-   long DETACHED_ID = Long.MIN_VALUE;
+    /**
+     * The ID associated with a detached annotation
+     */
+    long DETACHED_ID = Long.MIN_VALUE;
 
-   /**
-    * Attaches the annotation the document is contained in
-    */
-   default void attach() {
-      if (isDetached()) {
-         Validation.checkState(document() != null, "Attempting to attach an annotation that has no owning document.");
-         document().attach(this);
-      }
-   }
+    /**
+     * Attaches the annotation the document is contained in
+     */
+    default void attach() {
+        if (isDetached()) {
+            Validation.checkState(document() != null, "Attempting to attach an annotation that has no owning document.");
+            document().attach(this);
+        }
+    }
 
-   @Override
-   default <T> T attribute(@NonNull AttributeType<T> attributeType) {
-      if (attributeType == Types.TAG) {
-         return Cast.as(attributeMap().get(getType().getTagAttribute()));
-      }
-      return attributeMap().get(attributeType);
-   }
+    @Override
+    default <T> T attribute(@NonNull AttributeType<T> attributeType) {
+        if (attributeType == Types.TAG) {
+            return Cast.as(attributeMap().get(getType().getTagAttribute()));
+        }
+        return attributeMap().get(attributeType);
+    }
 
-   @Override
-   default Tuple2<String, Annotation> dependency() {
-      return outgoingRelationStream(true)
-            .filter(r -> r.getType().equals(Types.DEPENDENCY))
-            .filter(r -> !r.getTarget(this).isEmpty())
-            .filter(r -> !this.overlaps(r.getTarget(this)))
-            .map(r -> Tuple2.of(r.getValue(), r.getTarget(this)))
-            .findFirst()
-            .orElse($(Strings.EMPTY, Fragments.orphanedAnnotation(AnnotationType.ROOT)));
-   }
+    @Override
+    default boolean isA(@NonNull AnnotationType type) {
+        return getType().isInstance(type);
+    }
 
-   /**
-    * Gets the unique id associated with the annotation.
-    *
-    * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the
-    * annotation is not attached to the document.
-    */
-   @JsonProperty("id")
-   long getId();
+    @Override
+    default Tuple2<String, Annotation> dependency() {
+        return outgoingRelationStream(true)
+                .filter(r -> r.getType().equals(Types.DEPENDENCY))
+                .filter(r -> !r.getTarget(this).isEmpty())
+                .filter(r -> !this.overlaps(r.getTarget(this)))
+                .map(r -> Tuple2.of(r.getValue(), r.getTarget(this)))
+                .findFirst()
+                .orElse($(Strings.EMPTY, Fragments.orphanedAnnotation(AnnotationType.ROOT)));
+    }
 
-   /**
-    * Sets the unique id of the annotation.
-    *
-    * @param id the id
-    */
-   void setId(long id);
+    /**
+     * Gets the unique id associated with the annotation.
+     *
+     * @return the id of the annotation that is unique with in its document or <code>Annotation.DETACHED_ID</code> if the
+     * annotation is not attached to the document.
+     */
+    @JsonProperty("id")
+    long getId();
 
-   /**
-    * @return The value of the tag attribute for the annotation.
-    */
-   default Tag getTag() {
-      return attribute(getType().getTagAttribute());
-   }
+    /**
+     * Sets the unique id of the annotation.
+     *
+     * @param id the id
+     */
+    void setId(long id);
 
-   /**
-    * Gets the tag, if one, associated with the annotation.
-    *
-    * @param defaultTag The default tag if one is not on the annotation
-    * @return An optional containing the tag if present
-    */
-   default Tag getTag(@NonNull Tag defaultTag) {
-      AttributeType<? extends Tag> tagAttributeType = Cast.as(getType().getTagAttribute());
-      Tag out = attribute(tagAttributeType);
-      return out == null
-            ? defaultTag
-            : out;
-   }
+    /**
+     * @return The value of the tag attribute for the annotation.
+     */
+    default Tag getTag() {
+        return attribute(getType().getTagAttribute());
+    }
 
-   /**
-    * @return the type of the annotation
-    */
-   @JsonProperty("type")
-   AnnotationType getType();
+    /**
+     * Gets the tag, if one, associated with the annotation.
+     *
+     * @param defaultTag The default tag if one is not on the annotation
+     * @return An optional containing the tag if present
+     */
+    default Tag getTag(@NonNull Tag defaultTag) {
+        AttributeType<? extends Tag> tagAttributeType = Cast.as(getType().getTagAttribute());
+        Tag out = attribute(tagAttributeType);
+        return out == null
+                ? defaultTag
+                : out;
+    }
 
-   /**
-    * @return True if the annotation has an tag value set, false otherwise
-    */
-   default boolean hasTag() {
-      return attribute(getType().getTagAttribute()) != null;
-   }
+    /**
+     * @return the type of the annotation
+     */
+    @JsonProperty("type")
+    AnnotationType getType();
 
-   @Override
-   default boolean isAnnotation() {
-      return true;
-   }
+    /**
+     * @return True if the annotation has an tag value set, false otherwise
+     */
+    default boolean hasTag() {
+        return attribute(getType().getTagAttribute()) != null;
+    }
 
-   /**
-    * @return True if the annotation is detached, False otherwise
-    */
-   default boolean isDetached() {
-      return document() == null || getId() == DETACHED_ID;
-   }
+    @Override
+    default boolean isAnnotation() {
+        return true;
+    }
 
-   @Override
-   default boolean isInstance(@NonNull AnnotationType type) {
-      return getType().isInstance(type);
-   }
+    /**
+     * @return True if the annotation is detached, False otherwise
+     */
+    default boolean isDetached() {
+        return document() == null || getId() == DETACHED_ID;
+    }
 
-   /**
-    * @return The next annotation with the same type as this one or an empty fragment
-    */
-   default Annotation next() {
-      return next(getType());
-   }
+    @Override
+    default boolean isInstance(@NonNull AnnotationType type) {
+        return getType().isInstance(type);
+    }
 
-   /**
-    * @return The previous annotation with the same type as this one or an empty fragment
-    */
-   default Annotation previous() {
-      return previous(getType());
-   }
+    /**
+     * @return The next annotation with the same type as this one or an empty fragment
+     */
+    default Annotation next() {
+        return next(getType());
+    }
 
-   @Override
-   default <T> T put(@NonNull AttributeType<T> attributeType, T value) {
-      return HString.super.put(attributeType == Types.TAG
-                                     ? Cast.as(getType().getTagAttribute())
-                                     : attributeType,
-                               value);
-   }
+    /**
+     * @return The previous annotation with the same type as this one or an empty fragment
+     */
+    default Annotation previous() {
+        return previous(getType());
+    }
 
-   /**
-    * Determines if this annotation's tag is an instance of the given tag.
-    *
-    * @param tag the tag to check
-    * @return True if this annotation's tag is an instance of the given tag.
-    */
-   default boolean tagIsA(@NonNull Object tag) {
-      Tag target = (tag instanceof Val)
-            ? Cast.<Val>as(tag).as(getType().getTagAttribute().getValueType())
-            : getType().getTagAttribute().decode(tag);
-      return target != null && getTag() != null && getTag().isInstance(target);
-   }
+    @Override
+    default <T> T put(@NonNull AttributeType<T> attributeType, T value) {
+        return HString.super.put(attributeType == Types.TAG
+                                         ? Cast.as(getType().getTagAttribute())
+                                         : attributeType,
+                                 value);
+    }
 
-   default String toSGML() {
-      return toSGML(false);
-   }
+    /**
+     * Determines if this annotation's tag is an instance of the given tag.
+     *
+     * @param tag the tag to check
+     * @return True if this annotation's tag is an instance of the given tag.
+     */
+    default boolean tagIsA(@NonNull Object tag) {
+        Tag target = (tag instanceof Val)
+                ? Cast.<Val>as(tag).as(getType().getTagAttribute().getValueType())
+                : getType().getTagAttribute().decode(tag);
+        return target != null && getTag() != null && getTag().isInstance(target);
+    }
 
-   default String toSGML(boolean includeConfidence) {
-      if (includeConfidence) {
-         return String.format("<%s confidence=\"%.3f\">%s</%s>",
-                              getTag().label(),
-                              attribute(Types.CONFIDENCE),
-                              toString(),
-                              getTag().label());
-      }
-      return String.format("<%s>%s</%s>",
-                           getTag().label(),
-                           toString(),
-                           getTag().label());
-   }
+    default String toSGML() {
+        return toSGML(false);
+    }
 
-   default String toTagString() {
-      return toTagString('/');
-   }
+    default String toSGML(boolean includeConfidence) {
+        if (includeConfidence) {
+            return String.format("<%s confidence=\"%.3f\">%s</%s>",
+                                 getTag().label(),
+                                 attribute(Types.CONFIDENCE),
+                                 toString(),
+                                 getTag().label());
+        }
+        return String.format("<%s>%s</%s>",
+                             getTag().label(),
+                             toString(),
+                             getTag().label());
+    }
 
-   default String toTagString(char delimiter) {
-      return toString() + delimiter + getTag().label();
-   }
+    default String toTagString() {
+        return toTagString('/');
+    }
+
+    default String toTagString(char delimiter) {
+        return toString() + delimiter + getTag().label();
+    }
 
 }//END OF Annotation

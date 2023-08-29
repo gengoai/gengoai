@@ -180,6 +180,16 @@ public interface HString extends Span, StringLike, Serializable {
     }
 
     /**
+     * <p>Checks if the given annotation type is a subtype of the given annotation type.</p>
+     *
+     * @param type the annotation type to check
+     * @return {@code true} if the given annotation type is a subtype of the given annotation type, {@code false} otherwise
+     */
+    default boolean isA(@NonNull AnnotationType type) {
+        return false;
+    }
+
+    /**
      * Gets a java Stream over all annotations overlapping this HString.
      *
      * @return the stream of annotations
