@@ -25,8 +25,11 @@ import com.gengoai.Language;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
 import com.gengoai.collection.Collect;
+import com.gengoai.collection.Iterables;
 import com.gengoai.collection.tree.Span;
+import com.gengoai.conversion.Cast;
 import com.gengoai.json.Json;
+import com.gengoai.tuple.Tuple2;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -56,524 +59,614 @@ import java.util.stream.Collectors;
 @JsonDeserialize(as = DefaultDocumentImpl.class)
 public interface Document extends HString {
 
-   /**
-    * Convenience method for creating a document using the default document factory.
-    *
-    * @param text the text content making up the document
-    * @return the document
-    */
-   static Document create(@NonNull String text) {
-      return DocumentFactory.getInstance().create(text);
-   }
+    /**
+     * Convenience method for creating a document using the default document factory.
+     *
+     * @param text the text content making up the document
+     * @return the document
+     */
+    static Document create(@NonNull String text) {
+        return DocumentFactory.getInstance().create(text);
+    }
 
-   /**
-    * Convenience method for creating a document using the default document factory.
-    *
-    * @param text     the text content making up the document
-    * @param language the language of the content
-    * @return the document
-    */
-   static Document create(@NonNull String text, @NonNull Language language) {
-      return DocumentFactory.getInstance().create(text, language);
-   }
+    /**
+     * Convenience method for creating a document using the default document factory.
+     *
+     * @param text     the text content making up the document
+     * @param language the language of the content
+     * @return the document
+     */
+    static Document create(@NonNull String text, @NonNull Language language) {
+        return DocumentFactory.getInstance().create(text, language);
+    }
 
-   /**
-    * Convenience method for creating a document using the default document factory.
-    *
-    * @param text       the text content making up the document
-    * @param language   the language of the content
-    * @param attributes the attributes, i.e. metadata, associated with the document
-    * @return the document
-    */
-   static Document create(@NonNull String text,
-                          @NonNull Language language,
-                          @NonNull Map<AttributeType<?>, ?> attributes) {
-      return DocumentFactory.getInstance().create(text, language, attributes);
-   }
+    /**
+     * Combines multiple documents into a single document.
+     *
+     * @param toCombine              the collection of documents to combine
+     * @param documentAnnotationType the annotation type to be added to the combined document per added document
+     * @param copyIfPresent          the attribute types to copy from the original documents if present
+     * @return the combined document
+     * @throws IllegalArgumentException if there are no documents to combine
+     */
+    static Document combine(@NonNull Iterable<Document> toCombine,
+                            @NonNull AnnotationType documentAnnotationType,
+                            @NonNull AttributeType<?>... copyIfPresent) {
+        return combine(UUID.randomUUID().toString(), toCombine, documentAnnotationType, copyIfPresent);
+    }
 
-   /**
-    * Convenience method for creating a document using the default document factory.
-    *
-    * @param text       the text content making up the document
-    * @param attributes the attributes, i.e. metadata, associated with the document
-    * @return the document
-    */
-   static Document create(@NonNull String text, @NonNull Map<AttributeType<?>, ?> attributes) {
-      return DocumentFactory.getInstance().create(text, Hermes.defaultLanguage(), attributes);
-   }
+    /**
+     * Combines multiple documents into a single document.
+     *
+     * @param id                     the ID of the combined document
+     * @param toCombine              the collection of documents to combine
+     * @param documentAnnotationType the annotation type to be added to the combined document per added document
+     * @param copyIfPresent          the attribute types to copy from the original documents if present
+     * @return the combined document
+     * @throws IllegalArgumentException if there are no documents to combine
+     */
+    static Document combine(@NonNull String id,
+                            @NonNull Iterable<Document> toCombine,
+                            @NonNull AnnotationType documentAnnotationType,
+                            @NonNull AttributeType<?>... copyIfPresent) {
+        StringBuilder sb = new StringBuilder();
+        List<Tuple2<Integer, Integer>> documentOffsets = new ArrayList<>();
+        Document firstDocument = Iterables.getFirst(toCombine, null);
+        if (firstDocument == null) {
+            throw new IllegalArgumentException("Must have at least one document.");
+        }
+        for (Document document : toCombine) {
+            if (sb.length() > 0) {
+                sb.append("\n\n");
+            }
+            int start = sb.length();
+            sb.append(document.toString());
+            int end = sb.length();
+            documentOffsets.add(Tuple2.of(start, end));
+        }
+        Document document = DocumentFactory.builder().build().create(id, sb.toString());
+        documentOffsets.forEach(t -> document.annotationBuilder(documentAnnotationType)
+                                             .bounds(Span.of(t.v1, t.v2))
+                                             .createAttached());
+        document.put(Types.LANGUAGE, firstDocument.getLanguage());
+        for (AttributeType<?> attributeType : copyIfPresent) {
+            Iterables.zip(document.annotations(documentAnnotationType),
+                          toCombine).forEach(e -> {
+                if (e.getValue().hasAttribute(attributeType)) {
+                    e.getKey().put(attributeType, Cast.as(e.getValue().attribute(attributeType)));
+                }
+            });
+        }
+        return document;
+    }
 
-   /**
-    * Convenience method for creating a document using the default document factory.
-    *
-    * @param id   the document id
-    * @param text the text content making up the document
-    * @return the document
-    */
-   static Document create(@NonNull String id, @NonNull String text) {
-      return DocumentFactory.getInstance().create(id, text);
-   }
+    /**
+     * Combines multiple documents into a single document.
+     *
+     * @param toCombine              the collection of documents to combine
+     * @param documentAnnotationType the annotation type to be added to the combined document per added document
+     * @return the combined document
+     * @throws IllegalArgumentException if there are no documents to combine
+     */
+    static Document combineRaw(@NonNull Iterable<String> toCombine,
+                               @NonNull AnnotationType documentAnnotationType) {
+        return combineRaw(UUID.randomUUID().toString(), toCombine, documentAnnotationType);
+    }
 
-   /**
-    * Convenience method for creating a document using the default document factory.
-    *
-    * @param id       the document id
-    * @param text     the text content making up the document
-    * @param language the language of the content
-    * @return the document
-    */
-   static Document create(@NonNull String id, @NonNull String text, @NonNull Language language) {
-      return DocumentFactory.getInstance().create(id, text, language);
-   }
+    /**
+     * Combines multiple documents into a single document.
+     *
+     * @param id                     the ID of the combined document
+     * @param toCombine              the collection of documents to combine
+     * @param documentAnnotationType the annotation type to be added to the combined document per added document
+     * @return the combined document
+     * @throws IllegalArgumentException if there are no documents to combine
+     */
+    static Document combineRaw(@NonNull String id,
+                               @NonNull Iterable<String> toCombine,
+                               @NonNull AnnotationType documentAnnotationType) {
+        return combine(id,
+                       Iterables.transform(toCombine, Document::create),
+                       documentAnnotationType);
+    }
 
-   /**
-    * Convenience method for creating a document using the default document factory.
-    *
-    * @param id         the document id
-    * @param text       the text content making up the document
-    * @param language   the language of the content
-    * @param attributes the attributes, i.e. metadata, associated with the document
-    * @return the document
-    */
-   static Document create(@NonNull String id,
-                          @NonNull String text,
-                          @NonNull Language language,
-                          @NonNull Map<AttributeType<?>, ?> attributes) {
-      return DocumentFactory.getInstance().create(id, text, language, attributes);
-   }
+    /**
+     * Convenience method for creating a document using the default document factory.
+     *
+     * @param text       the text content making up the document
+     * @param language   the language of the content
+     * @param attributes the attributes, i.e. metadata, associated with the document
+     * @return the document
+     */
+    static Document create(@NonNull String text,
+                           @NonNull Language language,
+                           @NonNull Map<AttributeType<?>, ?> attributes) {
+        return DocumentFactory.getInstance().create(text, language, attributes);
+    }
 
-   /**
-    * Convenience method for creating a document using the default document factory.
-    *
-    * @param id         the document id
-    * @param text       the text content making up the document
-    * @param attributes the attributes, i.e. metadata, associated with the document
-    * @return the document
-    */
-   static Document create(@NonNull String id, @NonNull String text, @NonNull Map<AttributeType<?>, ?> attributes) {
-      return DocumentFactory.getInstance().create(id, text, Hermes.defaultLanguage(), attributes);
-   }
+    /**
+     * Convenience method for creating a document using the default document factory.
+     *
+     * @param text       the text content making up the document
+     * @param attributes the attributes, i.e. metadata, associated with the document
+     * @return the document
+     */
+    static Document create(@NonNull String text, @NonNull Map<AttributeType<?>, ?> attributes) {
+        return DocumentFactory.getInstance().create(text, Hermes.defaultLanguage(), attributes);
+    }
 
-   /**
-    * Creates a document from a JSON representation (created by the write or toJson methods)
-    *
-    * @param jsonString the json string
-    * @return the document
-    */
-   static Document fromJson(@NonNull String jsonString) {
-      try {
-         return Json.parse(jsonString, Document.class);
-      } catch (IOException e) {
-         throw new RuntimeException(e);
-      }
-   }
+    /**
+     * Convenience method for creating a document using the default document factory.
+     *
+     * @param id   the document id
+     * @param text the text content making up the document
+     * @return the document
+     */
+    static Document create(@NonNull String id, @NonNull String text) {
+        return DocumentFactory.getInstance().create(id, text);
+    }
 
-   /**
-    * Convenience method for annotating the document with the given annotatable types.
-    *
-    * @param types the types to annotate
-    */
-   void annotate(AnnotatableType... types);
+    /**
+     * Convenience method for creating a document using the default document factory.
+     *
+     * @param id       the document id
+     * @param text     the text content making up the document
+     * @param language the language of the content
+     * @return the document
+     */
+    static Document create(@NonNull String id, @NonNull String text, @NonNull Language language) {
+        return DocumentFactory.getInstance().create(id, text, language);
+    }
 
-   /**
-    * Gets an annotation on the document by its ID.
-    *
-    * @param id the id of the annotation to retrieve
-    * @return the annotation
-    */
-   Annotation annotation(long id);
+    /**
+     * Convenience method for creating a document using the default document factory.
+     *
+     * @param id         the document id
+     * @param text       the text content making up the document
+     * @param language   the language of the content
+     * @param attributes the attributes, i.e. metadata, associated with the document
+     * @return the document
+     */
+    static Document create(@NonNull String id,
+                           @NonNull String text,
+                           @NonNull Language language,
+                           @NonNull Map<AttributeType<?>, ?> attributes) {
+        return DocumentFactory.getInstance().create(id, text, language, attributes);
+    }
 
-   /**
-    * Creates an annotation builder for adding annotations to the document.
-    *
-    * @return the annotation builder
-    */
-   default AnnotationBuilder annotationBuilder(@NonNull AnnotationType type) {
-      return new AnnotationBuilder(this, type);
-   }
+    /**
+     * Convenience method for creating a document using the default document factory.
+     *
+     * @param id         the document id
+     * @param text       the text content making up the document
+     * @param attributes the attributes, i.e. metadata, associated with the document
+     * @return the document
+     */
+    static Document create(@NonNull String id, @NonNull String text, @NonNull Map<AttributeType<?>, ?> attributes) {
+        return DocumentFactory.getInstance().create(id, text, Hermes.defaultLanguage(), attributes);
+    }
 
-   /**
-    * Gets annotations of the given type that overlap with the given span.
-    *
-    * @param type the type of annotation
-    * @param span the span to search for overlapping annotations
-    * @return All annotations of the given type on the document that overlap with the give span.
-    */
-   List<Annotation> annotations(AnnotationType type, Span span);
+    /**
+     * Creates a document from a JSON representation (created by the write or toJson methods)
+     *
+     * @param jsonString the json string
+     * @return the document
+     */
+    static Document fromJson(@NonNull String jsonString) {
+        try {
+            return Json.parse(jsonString, Document.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-   /**
-    * Gets annotations of the given type that overlap with the given span and meet the given filter.
-    *
-    * @param type   the type of annotation
-    * @param span   the span to search for overlapping annotations
-    * @param filter the filter to use on the annotations
-    * @return All annotations of the given type on the document that overlap with the give span and meet the given
-    * filter.
-    */
-   List<Annotation> annotations(AnnotationType type,
-                                Span span,
-                                Predicate<? super Annotation> filter);
+    /**
+     * Convenience method for annotating the document with the given annotatable types.
+     *
+     * @param types the types to annotate
+     */
+    void annotate(AnnotatableType... types);
 
-   /**
-    * Attaches the given annotation to the document.
-    *
-    * @param annotation The annotation to attach to the document.
-    */
-   void attach(Annotation annotation);
+    /**
+     * Gets an annotation on the document by its ID.
+     *
+     * @param id the id of the annotation to retrieve
+     * @return the annotation
+     */
+    Annotation annotation(long id);
 
-   @Override
-   default List<Annotation> children(@NonNull String relation) {
-      return annotations();
-   }
+    /**
+     * Creates an annotation builder for adding annotations to the document.
+     *
+     * @return the annotation builder
+     */
+    default AnnotationBuilder annotationBuilder(@NonNull AnnotationType type) {
+        return new AnnotationBuilder(this, type);
+    }
 
-   /**
-    * Gets the set of completed AnnotatableType on this document.
-    *
-    * @return the set of completed AnnotatableType
-    */
-   Set<AnnotatableType> completed();
+    /**
+     * Gets annotations of the given type that overlap with the given span.
+     *
+     * @param type the type of annotation
+     * @param span the span to search for overlapping annotations
+     * @return All annotations of the given type on the document that overlap with the give span.
+     */
+    List<Annotation> annotations(AnnotationType type, Span span);
 
-   /**
-    * Determines if the given annotation is attached to this document.
-    *
-    * @param annotation The annotation to check
-    * @return True if this annotation is attached to this document, false otherwise.
-    */
-   boolean contains(Annotation annotation);
+    /**
+     * Gets annotations of the given type that overlap with the given span and meet the given filter.
+     *
+     * @param type   the type of annotation
+     * @param span   the span to search for overlapping annotations
+     * @param filter the filter to use on the annotations
+     * @return All annotations of the given type on the document that overlap with the give span and meet the given
+     * filter.
+     */
+    List<Annotation> annotations(AnnotationType type,
+                                 Span span,
+                                 Predicate<? super Annotation> filter);
 
-   /**
-    * Creates an annotation of the given type encompassing the given span and having the given attributes. The
-    * annotation is added to the document and has a unique id assigned.
-    *
-    * @param type         the type of annotation
-    * @param start        the start of the span
-    * @param end          the end of the span
-    * @param attributeMap the attributes associated with the annotation
-    * @param relations    the relations to add on the annotation
-    * @return the created annotation
-    */
-   Annotation createAnnotation(AnnotationType type,
-                               int start,
-                               int end,
-                               Map<AttributeType<?>, ?> attributeMap,
-                               List<Relation> relations);
+    /**
+     * Attaches the given annotation to the document.
+     *
+     * @param annotation The annotation to attach to the document.
+     */
+    void attach(Annotation annotation);
 
-   /**
-    * Creates an annotation of the given type encompassing the given span and having the given attributes. The
-    * annotation is added to the document and has a unique id assigned.
-    *
-    * @param type         the type of annotation
-    * @param start        the start of the span
-    * @param end          the end of the span
-    * @param attributeMap the attributes associated with the annotation
-    * @return the created annotation
-    */
-   Annotation createAnnotation(AnnotationType type,
-                               int start,
-                               int end,
-                               Map<AttributeType<?>, ?> attributeMap);
+    @Override
+    default List<Annotation> children(@NonNull String relation) {
+        return annotations();
+    }
 
-   @Override
-   default Document document() {
-      return this;
-   }
+    /**
+     * Gets the set of completed AnnotatableType on this document.
+     *
+     * @return the set of completed AnnotatableType
+     */
+    Set<AnnotatableType> completed();
 
-   @Override
-   default NumericNDArray embedding() {
-      if (hasAttribute(Types.EMBEDDING)) {
-         return attribute(Types.EMBEDDING);
-      }
-      return VectorCompositions.Average.compose(sentenceStream().map(HString::embedding)
-                                                                .filter(Objects::nonNull)
-                                                                .collect(Collectors.toList()));
-   }
+    /**
+     * Determines if the given annotation is attached to this document.
+     *
+     * @param annotation The annotation to check
+     * @return True if this annotation is attached to this document, false otherwise.
+     */
+    boolean contains(Annotation annotation);
 
-   default NumericNDArray embedding(@NonNull Predicate<HString> filter) {
-      if (hasAttribute(Types.EMBEDDING)) {
-         return attribute(Types.EMBEDDING);
-      }
-      return VectorCompositions.Average.compose(sentenceStream().filter(filter)
-                                                                .map(HString::embedding)
-                                                                .filter(Objects::nonNull)
-                                                                .collect(Collectors.toList()));
-   }
+    /**
+     * Creates an annotation of the given type encompassing the given span and having the given attributes. The
+     * annotation is added to the document and has a unique id assigned.
+     *
+     * @param type         the type of annotation
+     * @param start        the start of the span
+     * @param end          the end of the span
+     * @param attributeMap the attributes associated with the annotation
+     * @param relations    the relations to add on the annotation
+     * @return the created annotation
+     */
+    Annotation createAnnotation(AnnotationType type,
+                                int start,
+                                int end,
+                                Map<AttributeType<?>, ?> attributeMap,
+                                List<Relation> relations);
 
-   @Override
-   default List<Annotation> enclosedAnnotations() {
-      return annotations();
-   }
+    /**
+     * Creates an annotation of the given type encompassing the given span and having the given attributes. The
+     * annotation is added to the document and has a unique id assigned.
+     *
+     * @param type         the type of annotation
+     * @param start        the start of the span
+     * @param end          the end of the span
+     * @param attributeMap the attributes associated with the annotation
+     * @return the created annotation
+     */
+    Annotation createAnnotation(AnnotationType type,
+                                int start,
+                                int end,
+                                Map<AttributeType<?>, ?> attributeMap);
 
-   /**
-    * Gets the provider for the given AnnotatableType when that type is completed on the document.
-    *
-    * @param type the annotatable type whose provider we want
-    * @return The provider of the given annotatable type
-    */
-   String getAnnotationProvider(AnnotatableType type);
+    @Override
+    default Document document() {
+        return this;
+    }
 
-   /**
-    * Gets the id of the document
-    *
-    * @return The id of the document
-    */
-   String getId();
+    @Override
+    default NumericNDArray embedding() {
+        if (hasAttribute(Types.EMBEDDING)) {
+            return attribute(Types.EMBEDDING);
+        }
+        return VectorCompositions.Average.compose(sentenceStream().map(HString::embedding)
+                                                                  .filter(Objects::nonNull)
+                                                                  .collect(Collectors.toList()));
+    }
 
-   /**
-    * Sets the id of the document. If a null or blank id is given a random id will generated.
-    *
-    * @param id The new id of the document
-    */
-   void setId(String id);
+    default NumericNDArray embedding(@NonNull Predicate<HString> filter) {
+        if (hasAttribute(Types.EMBEDDING)) {
+            return attribute(Types.EMBEDDING);
+        }
+        return VectorCompositions.Average.compose(sentenceStream().filter(filter)
+                                                                  .map(HString::embedding)
+                                                                  .filter(Objects::nonNull)
+                                                                  .collect(Collectors.toList()));
+    }
 
-   @Override
-   default Language getLanguage() {
-      if (hasAttribute(Types.LANGUAGE)) {
-         return attribute(Types.LANGUAGE);
-      }
-      return Hermes.defaultLanguage();
-   }
+    @Override
+    default List<Annotation> enclosedAnnotations() {
+        return annotations();
+    }
 
-   @Override
-   default List<Annotation> incoming(RelationType type, String value, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+    /**
+     * Gets the provider for the given AnnotatableType when that type is completed on the document.
+     *
+     * @param type the annotatable type whose provider we want
+     * @return The provider of the given annotatable type
+     */
+    String getAnnotationProvider(AnnotatableType type);
 
-   @Override
-   default List<Annotation> incoming(RelationType type, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+    /**
+     * Gets the id of the document
+     *
+     * @return The id of the document
+     */
+    String getId();
 
-   @Override
-   default List<Relation> incomingRelations(boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+    /**
+     * Sets the id of the document. If a null or blank id is given a random id will generated.
+     *
+     * @param id The new id of the document
+     */
+    void setId(String id);
 
-   @Override
-   default List<Relation> incomingRelations(RelationType relationType, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+    @Override
+    default Language getLanguage() {
+        if (hasAttribute(Types.LANGUAGE)) {
+            return attribute(Types.LANGUAGE);
+        }
+        return Hermes.defaultLanguage();
+    }
 
-   /**
-    * Checks is if a given {@link AnnotatableType} is completed, i.e. been added by an annotator.
-    *
-    * @param type the type to check
-    * @return True if the type is complete, False if not
-    */
-   boolean isCompleted(AnnotatableType type);
+    @Override
+    default List<Annotation> incoming(RelationType type, String value, boolean includeSubAnnotations) {
+        return Collections.emptyList();
+    }
 
-   @Override
-   default boolean isDocument() {
-      return true;
-   }
+    @Override
+    default List<Annotation> incoming(RelationType type, boolean includeSubAnnotations) {
+        return Collections.emptyList();
+    }
 
-   /**
-    * Determines the next annotation of the given type after the given annotation (e.g. what is the token after the
-    * current token)
-    *
-    * @param annotation The current annotation.
-    * @param type       The type of annotation we want to find after the current annotation.
-    * @return The annotation of the given type after the current annotation or an empty HString if there are none.
-    */
-   Annotation next(Annotation annotation, AnnotationType type);
+    @Override
+    default List<Relation> incomingRelations(boolean includeSubAnnotations) {
+        return Collections.emptyList();
+    }
 
-   /**
-    * @return The number of annotations on the document
-    */
-   int numberOfAnnotations();
+    @Override
+    default List<Relation> incomingRelations(RelationType relationType, boolean includeSubAnnotations) {
+        return Collections.emptyList();
+    }
 
-   @Override
-   default List<Annotation> outgoing(RelationType type, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+    /**
+     * Checks is if a given {@link AnnotatableType} is completed, i.e. been added by an annotator.
+     *
+     * @param type the type to check
+     * @return True if the type is complete, False if not
+     */
+    boolean isCompleted(AnnotatableType type);
 
-   @Override
-   default List<Annotation> outgoing(RelationType type, String value, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+    @Override
+    default boolean isDocument() {
+        return true;
+    }
 
-   @Override
-   default List<Relation> outgoingRelations(boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+    /**
+     * Determines the next annotation of the given type after the given annotation (e.g. what is the token after the
+     * current token)
+     *
+     * @param annotation The current annotation.
+     * @param type       The type of annotation we want to find after the current annotation.
+     * @return The annotation of the given type after the current annotation or an empty HString if there are none.
+     */
+    Annotation next(Annotation annotation, AnnotationType type);
 
-   @Override
-   default List<Relation> outgoingRelations(@NonNull RelationType relationType, boolean includeSubAnnotations) {
-      return Collections.emptyList();
-   }
+    /**
+     * @return The number of annotations on the document
+     */
+    int numberOfAnnotations();
 
-   /**
-    * Determines the previous annotation of the given type after the given annotation (e.g. what is the token before the
-    * current token)
-    *
-    * @param annotation The current annotation.
-    * @param type       The type of annotation we want to find before the current annotation.
-    * @return The annotation of the given type the the current annotation or an empty HString if there are none.
-    */
-   Annotation previous(Annotation annotation, AnnotationType type);
+    @Override
+    default List<Annotation> outgoing(RelationType type, boolean includeSubAnnotations) {
+        return Collections.emptyList();
+    }
 
-   @JsonProperty("completed")
-   Map<AnnotatableType, String> providers();
+    @Override
+    default List<Annotation> outgoing(RelationType type, String value, boolean includeSubAnnotations) {
+        return Collections.emptyList();
+    }
 
-   /**
-    * Removes the given annotation from the document
-    *
-    * @param annotation the annotation to remove
-    * @return True if the annotation was successfully removed, False otherwise
-    */
-   boolean remove(Annotation annotation);
+    @Override
+    default List<Relation> outgoingRelations(boolean includeSubAnnotations) {
+        return Collections.emptyList();
+    }
 
-   /**
-    * Removes all annotations of a given type.
-    *
-    * @param type the type of to remove
-    */
-   void removeAnnotationType(AnnotationType type);
+    @Override
+    default List<Relation> outgoingRelations(@NonNull RelationType relationType, boolean includeSubAnnotations) {
+        return Collections.emptyList();
+    }
 
-   /**
-    * Marks the given AnnotatableType as being completed by the given provider.
-    *
-    * @param type     The AnnotatableType to mark as completed.
-    * @param provider The provided that satisfied the given AnnotatableType
-    */
-   void setCompleted(AnnotatableType type, String provider);
+    /**
+     * Determines the previous annotation of the given type after the given annotation (e.g. what is the token before the
+     * current token)
+     *
+     * @param annotation The current annotation.
+     * @param type       The type of annotation we want to find before the current annotation.
+     * @return The annotation of the given type the the current annotation or an empty HString if there are none.
+     */
+    Annotation previous(Annotation annotation, AnnotationType type);
 
-   /**
-    * Marks the given AnnotatableType as not being completed. Useful for reannotating for a given type.
-    *
-    * @param type The AnnotatableType to mark as uncompleted.
-    */
-   void setUncompleted(AnnotatableType type);
+    @JsonProperty("completed")
+    Map<AnnotatableType, String> providers();
 
-   /**
-    * @return JSON representation of the document
-    */
-   default String toJson() {
-      return Json.dumps(this);
-   }
+    /**
+     * Removes the given annotation from the document
+     *
+     * @param annotation the annotation to remove
+     * @return True if the annotation was successfully removed, False otherwise
+     */
+    boolean remove(Annotation annotation);
 
-   /**
-    * Annotation builder for creating annotations associated with a document
-    */
-   @Data
-   @Accessors(fluent = true)
-   class AnnotationBuilder {
-      private final Document document;
-      private final List<Relation> relations = new ArrayList<>();
-      private final AnnotationType type;
-      private Map<AttributeType<?>, Object> attributes = new HashMap<>();
-      private int end = -1;
-      private int start = -1;
+    /**
+     * Removes all annotations of a given type.
+     *
+     * @param type the type of to remove
+     */
+    void removeAnnotationType(AnnotationType type);
 
-      /**
-       * Instantiates a new Annotation builder.
-       *
-       * @param document the document
-       */
-      AnnotationBuilder(Document document, AnnotationType type) {
-         this.document = document;
-         this.type = type;
-      }
+    /**
+     * Marks the given AnnotatableType as being completed by the given provider.
+     *
+     * @param type     The AnnotatableType to mark as completed.
+     * @param provider The provided that satisfied the given AnnotatableType
+     */
+    void setCompleted(AnnotatableType type, String provider);
+
+    /**
+     * Marks the given AnnotatableType as not being completed. Useful for reannotating for a given type.
+     *
+     * @param type The AnnotatableType to mark as uncompleted.
+     */
+    void setUncompleted(AnnotatableType type);
+
+    /**
+     * @return JSON representation of the document
+     */
+    default String toJson() {
+        return Json.dumps(this);
+    }
+
+    /**
+     * Annotation builder for creating annotations associated with a document
+     */
+    @Data
+    @Accessors(fluent = true)
+    class AnnotationBuilder {
+        private final Document document;
+        private final List<Relation> relations = new ArrayList<>();
+        private final AnnotationType type;
+        private Map<AttributeType<?>, Object> attributes = new HashMap<>();
+        private int end = -1;
+        private int start = -1;
+
+        /**
+         * Instantiates a new Annotation builder.
+         *
+         * @param document the document
+         */
+        AnnotationBuilder(Document document, AnnotationType type) {
+            this.document = document;
+            this.type = type;
+        }
 
 
-      /**
-       * Sets the value of the given AttributeType on the new Annotation to the given value.
-       *
-       * @param type  the attribute type
-       * @param value the attribute value
-       * @return this annotation builder
-       */
-      public AnnotationBuilder attribute(AttributeType type, Object value) {
-         this.attributes.put(type, value);
-         return this;
-      }
+        /**
+         * Sets the value of the given AttributeType on the new Annotation to the given value.
+         *
+         * @param type  the attribute type
+         * @param value the attribute value
+         * @return this annotation builder
+         */
+        public AnnotationBuilder attribute(AttributeType type, Object value) {
+            this.attributes.put(type, value);
+            return this;
+        }
 
-      /**
-       * Adds multiple attributes to the annotation
-       *
-       * @param map the map of attribute types and values
-       * @return this annotation builder
-       */
-      public AnnotationBuilder attributes(Map<AttributeType<?>, ?> map) {
-         this.attributes.putAll(map);
-         return this;
-      }
+        /**
+         * Adds multiple attributes to the annotation
+         *
+         * @param map the map of attribute types and values
+         * @return this annotation builder
+         */
+        public AnnotationBuilder attributes(Map<AttributeType<?>, ?> map) {
+            this.attributes.putAll(map);
+            return this;
+        }
 
-      /**
-       * Adds attributes to this annotation by copying the attributes of another HString object.
-       *
-       * @param copy the HString object whose attributes will be copied
-       * @return this annotation builder
-       */
-      public AnnotationBuilder attributes(HString copy) {
-         this.attributes.putAll(copy.attributeMap());
-         return this;
-      }
+        /**
+         * Adds attributes to this annotation by copying the attributes of another HString object.
+         *
+         * @param copy the HString object whose attributes will be copied
+         * @return this annotation builder
+         */
+        public AnnotationBuilder attributes(HString copy) {
+            this.attributes.putAll(copy.attributeMap());
+            return this;
+        }
 
-      /**
-       * Sets the bounds of this annotation from the given span
-       *
-       * @param span the span to use for the bounds of the annotation
-       * @return this annotation builder
-       */
-      public AnnotationBuilder bounds(Span span) {
-         this.start = span.start();
-         this.end = span.end();
-         return this;
-      }
+        /**
+         * Sets the bounds of this annotation from the given span
+         *
+         * @param span the span to use for the bounds of the annotation
+         * @return this annotation builder
+         */
+        public AnnotationBuilder bounds(Span span) {
+            this.start = span.start();
+            this.end = span.end();
+            return this;
+        }
 
-      /**
-       * Creates the annotation and attaches it to the document
-       *
-       * @return the annotation
-       */
-      public Annotation createAttached() {
-         return document.createAnnotation(type, start, end, attributes, relations);
-      }
+        /**
+         * Creates the annotation and attaches it to the document
+         *
+         * @return the annotation
+         */
+        public Annotation createAttached() {
+            return document.createAnnotation(type, start, end, attributes, relations);
+        }
 
-      /**
-       * Creates the annotation associated, but not attached, to the document
-       *
-       * @return the annotation
-       */
-      public Annotation createDetached() {
-         Annotation annotation = new DefaultAnnotationImpl(document, type, start, end);
-         annotation.putAll(attributes);
-         annotation.addAll(relations);
-         return annotation;
-      }
+        /**
+         * Creates the annotation associated, but not attached, to the document
+         *
+         * @return the annotation
+         */
+        public Annotation createDetached() {
+            Annotation annotation = new DefaultAnnotationImpl(document, type, start, end);
+            annotation.putAll(attributes);
+            annotation.addAll(relations);
+            return annotation;
+        }
 
-      /**
-       * Sets the bounds, and adds the relations and attributes from the given HString to this builder.
-       *
-       * @param hString The HString to copy from
-       * @return This builder
-       */
-      public AnnotationBuilder from(@NonNull HString hString) {
-         return bounds(hString).attributes(hString)
-                               .relation(hString.outgoingRelations());
-      }
+        /**
+         * Sets the bounds, and adds the relations and attributes from the given HString to this builder.
+         *
+         * @param hString The HString to copy from
+         * @return This builder
+         */
+        public AnnotationBuilder from(@NonNull HString hString) {
+            return bounds(hString).attributes(hString)
+                                  .relation(hString.outgoingRelations());
+        }
 
-      /**
-       * Adds the given relation.
-       *
-       * @param relation The relation to add
-       * @return This builder
-       */
-      public AnnotationBuilder relation(@NonNull Relation relation) {
-         this.relations.add(relation);
-         return this;
-      }
+        /**
+         * Adds the given relation.
+         *
+         * @param relation The relation to add
+         * @return This builder
+         */
+        public AnnotationBuilder relation(@NonNull Relation relation) {
+            this.relations.add(relation);
+            return this;
+        }
 
-      /**
-       * Adds the given iterable of relations.
-       *
-       * @param relations The relations to add
-       * @return This builder
-       */
-      public AnnotationBuilder relation(@NonNull Iterable<Relation> relations) {
-         Collect.addAll(this.relations, relations);
-         return this;
-      }
+        /**
+         * Adds the given iterable of relations.
+         *
+         * @param relations The relations to add
+         * @return This builder
+         */
+        public AnnotationBuilder relation(@NonNull Iterable<Relation> relations) {
+            Collect.addAll(this.relations, relations);
+            return this;
+        }
 
-   }//END OF AnnotationBuilder
+    }//END OF AnnotationBuilder
 
 }//END OF Document

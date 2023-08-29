@@ -245,13 +245,23 @@ public interface Types {
 
     AttributeType<NumericNDArray> TOPIC_DISTRIBUTION = Types.attribute("TOPIC_DISTRIBUTION", NumericNDArray.class);
 
-    /**********
-     * MBTI
-     *********/
+    /*************************************************************************
+     * User Demographics and Personality Annotation Types
+     **************************************************************************/
     AttributeType<Boolean> EXTROVERSION_INTROVERSION = Types.attribute("IS_EXTROVERT", Boolean.class); //Extrovert vs Introvert
     AttributeType<Boolean> SENSING_INTUITION = Types.attribute("IS_SENSING", Boolean.class); // Sensing vs Intuition
     AttributeType<Boolean> FEELING_THINKING = Types.attribute("IS_FEELING", Boolean.class); // Feeling vs Thinking
     AttributeType<Boolean> JUDGING_PERCEIVING = Types.attribute("IS_JUDGING", Boolean.class); // Judging vs Perceiving
+
+
+    /*************************************************************************
+     * Social Media Annotation Types
+     **************************************************************************/
+    AnnotationType POST = Types.annotation("POST");
+    AttributeType<Integer> POST_ID = Types.attribute("POST_ID", Integer.class);
+    AttributeType<Integer> REFERENCE_ID = Types.attribute("REF_ID", Integer.class);
+    AttributeType<String> POST_TYPE = Types.attribute("POST_TYPE", String.class);
+
 
     /**
      * Annotation type.

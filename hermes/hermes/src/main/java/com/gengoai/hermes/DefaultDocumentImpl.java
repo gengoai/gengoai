@@ -91,9 +91,9 @@ class DefaultDocumentImpl extends BaseHString implements Document {
         AnnotatableType t = Types.ENTITY;
         if (providers != null) {
             providers.forEach((type, provider) -> {
-                        this.annotationSet.setIsCompleted(AnnotatableType.valueOf(type), true, provider);
-                    }
-            );
+                                  this.annotationSet.setIsCompleted(AnnotatableType.valueOf(type), true, provider);
+                              }
+                             );
         }
         if (attributeMap != null) {
             this.attributeMap().putAll(attributeMap);
@@ -109,17 +109,19 @@ class DefaultDocumentImpl extends BaseHString implements Document {
         }
 
         Map<Annotation, Set<Relation>> am = new HashMap<>();
-        for (Annotation a : annotations) {
-            am.put(a, new HashSet<>(a.outgoingRelations(false)));
-            if (a instanceof DefaultAnnotationImpl) {
-                ((DefaultAnnotationImpl) a).incomingRelations.clear();
-                ((DefaultAnnotationImpl) a).outgoingRelations.clear();
-            }
+        if (annotations != null) {
+            for (Annotation a : annotations) {
+                am.put(a, new HashSet<>(a.outgoingRelations(false)));
+                if (a instanceof DefaultAnnotationImpl) {
+                    ((DefaultAnnotationImpl) a).incomingRelations.clear();
+                    ((DefaultAnnotationImpl) a).outgoingRelations.clear();
+                }
 
+            }
+            am.forEach((a, relations) -> {
+                relations.forEach(a::add);
+            });
         }
-        am.forEach((a, relations) -> {
-            relations.forEach(a::add);
-        });
     }
 
     @Override
@@ -136,7 +138,7 @@ class DefaultDocumentImpl extends BaseHString implements Document {
     @JsonProperty("annotations")
     public List<Annotation> annotations() {
         return Streams.asStream(annotationSet.iterator())
-                .collect(Collectors.toList());
+                      .collect(Collectors.toList());
     }
 
     @Override
@@ -162,16 +164,16 @@ class DefaultDocumentImpl extends BaseHString implements Document {
     @Override
     public void attach(@NonNull Annotation annotation) {
         Validation.checkArgument(annotation.document() == this,
-                "Error: Attempting to attach an annotation to a different document.");
+                                 "Error: Attempting to attach an annotation to a different document.");
         if (annotation.isDetached()) {
             annotation.setId(idGenerator.getAndIncrement());
             annotationSet.add(annotation);
             annotation.outgoingRelationStream()
-                    .forEach(relation -> relation.getTarget(this)
-                            .incomingRelations()
-                            .add(new Relation(relation.getType(),
-                                    relation.getValue(),
-                                    annotation.getId())));
+                      .forEach(relation -> relation.getTarget(this)
+                                                   .incomingRelations()
+                                                   .add(new Relation(relation.getType(),
+                                                                     relation.getValue(),
+                                                                     annotation.getId())));
         }
     }
 
@@ -206,7 +208,7 @@ class DefaultDocumentImpl extends BaseHString implements Document {
                                        @NonNull Map<AttributeType<?>, ?> attributeMap,
                                        @NonNull List<Relation> relations) {
         Validation.checkArgument(start >= start(),
-                "Annotation must have a starting position >= the start of the document");
+                                 "Annotation must have a starting position >= the start of the document");
         Validation.checkArgument(end <= end(), "Annotation must have a ending position <= the end of the document");
         Annotation annotation = new DefaultAnnotationImpl(this, type, start, end);
         annotation.setId(idGenerator.getAndIncrement());
