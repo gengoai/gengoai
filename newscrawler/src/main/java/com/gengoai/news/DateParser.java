@@ -34,94 +34,91 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-public class DateParser {
+public final class DateParser {
     private List<DateFormat> formats = new ArrayList<>();
     private Pattern yyyyMMdd_dash = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
     private Pattern yyyyMMdd_slash = Pattern.compile("\\d{4}/\\d{2}/\\d{2}");
 
-    public static void main(String[] args) throws Exception {
-    }
-
     public DateParser(Locale locale) {
         formats.add(DateFormat.getDateTimeInstance(DateFormat.FULL,
-                DateFormat.FULL,
-                locale));
+                                                   DateFormat.FULL,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.FULL,
-                DateFormat.LONG,
-                locale));
+                                                   DateFormat.LONG,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.FULL,
-                DateFormat.MEDIUM,
-                locale));
+                                                   DateFormat.MEDIUM,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.FULL,
-                DateFormat.SHORT,
-                locale));
+                                                   DateFormat.SHORT,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.FULL,
-                DateFormat.DEFAULT,
-                locale));
+                                                   DateFormat.DEFAULT,
+                                                   locale));
 
         formats.add(DateFormat.getDateTimeInstance(DateFormat.LONG,
-                DateFormat.FULL,
-                locale));
+                                                   DateFormat.FULL,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.LONG,
-                DateFormat.LONG,
-                locale));
+                                                   DateFormat.LONG,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.LONG,
-                DateFormat.MEDIUM,
-                locale));
+                                                   DateFormat.MEDIUM,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.LONG,
-                DateFormat.SHORT,
-                locale));
+                                                   DateFormat.SHORT,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.LONG,
-                DateFormat.DEFAULT,
-                locale));
+                                                   DateFormat.DEFAULT,
+                                                   locale));
 
         formats.add(DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
-                DateFormat.FULL,
-                locale));
+                                                   DateFormat.FULL,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
-                DateFormat.LONG,
-                locale));
+                                                   DateFormat.LONG,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
-                DateFormat.MEDIUM,
-                locale));
+                                                   DateFormat.MEDIUM,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
-                DateFormat.SHORT,
-                locale));
+                                                   DateFormat.SHORT,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.MEDIUM,
-                DateFormat.DEFAULT,
-                locale));
+                                                   DateFormat.DEFAULT,
+                                                   locale));
 
         formats.add(DateFormat.getDateTimeInstance(DateFormat.SHORT,
-                DateFormat.FULL,
-                locale));
+                                                   DateFormat.FULL,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.SHORT,
-                DateFormat.LONG,
-                locale));
+                                                   DateFormat.LONG,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.SHORT,
-                DateFormat.MEDIUM,
-                locale));
+                                                   DateFormat.MEDIUM,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.SHORT,
-                DateFormat.SHORT,
-                locale));
+                                                   DateFormat.SHORT,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.SHORT,
-                DateFormat.DEFAULT,
-                locale));
+                                                   DateFormat.DEFAULT,
+                                                   locale));
 
         formats.add(DateFormat.getDateTimeInstance(DateFormat.DEFAULT,
-                DateFormat.FULL,
-                locale));
+                                                   DateFormat.FULL,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.DEFAULT,
-                DateFormat.LONG,
-                locale));
+                                                   DateFormat.LONG,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.DEFAULT,
-                DateFormat.MEDIUM,
-                locale));
+                                                   DateFormat.MEDIUM,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.DEFAULT,
-                DateFormat.SHORT,
-                locale));
+                                                   DateFormat.SHORT,
+                                                   locale));
         formats.add(DateFormat.getDateTimeInstance(DateFormat.DEFAULT,
-                DateFormat.DEFAULT,
-                locale));
+                                                   DateFormat.DEFAULT,
+                                                   locale));
 
         formats.add(DateFormat.getDateInstance(DateFormat.FULL, locale));
         formats.add(DateFormat.getDateInstance(DateFormat.LONG, locale));
@@ -147,8 +144,8 @@ public class DateParser {
             for (DateFormat format : formats) {
                 try {
                     return format.parse(string).toInstant()
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDateTime();
+                                 .atZone(ZoneId.systemDefault())
+                                 .toLocalDateTime();
                 } catch (ParseException parseException) {
                     //pass
                 }

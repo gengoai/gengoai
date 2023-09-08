@@ -17,23 +17,18 @@
  * under the License.
  */
 
-package com.gengoai.news;
+package com.gengoai.news.extractor;
 
-import com.gengoai.string.Strings;
-import org.jsoup.nodes.Document;
+import com.gengoai.news.NewsArticle;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
-public class DefaultArticleExtractor {
+public class DefaultArticleExtractor extends ArticleExtractor {
 
-    public DefaultArticleExtractor() {
-        throw new IllegalAccessError();
-    }
-
-    public static NewsArticle extract(org.jsoup.nodes.Document doc) {
+    protected NewsArticle extract(org.jsoup.nodes.Document doc) {
 
         for (Element figure : doc.select("figure")) {
             figure.remove();
@@ -49,19 +44,19 @@ public class DefaultArticleExtractor {
         List<String> headlines = List.of(
                 "meta[property='headline']",
                 "[class~=-headline$]"
-        );
+                                        );
 
         List<String> author = List.of(
                 "meta[name='author']",
                 "meta[property='article:author']",
                 "[class*='byline']"
-        );
+                                     );
 
         List<String> pubdate = List.of(
                 "meta[name='date']",
                 "[class~=timestamp] > time",
                 "[class*='published']"
-        );
+                                      );
 
         List<String> content = List.of(
                 "[class~=caas-body] > p", // Yahoo News 7/4/2023
@@ -72,8 +67,9 @@ public class DefaultArticleExtractor {
                 "[class*='article-body']",
                 "script[data-schema='NewsArticle']",
                 "[class~=story-body]",
-                "[class~=content] > p"
-        );
+                "[class~=content] > p",
+                "[id=*'article-content'] > p"
+                                      );
 
 
         NewsArticle article = new NewsArticle();
@@ -85,21 +81,10 @@ public class DefaultArticleExtractor {
         return article;
     }
 
-    private static String findFirst(Document doc, List<String> patterns) {
-        for (String pattern : patterns) {
-            Elements elements = doc.select(pattern);
-            if (!elements.isEmpty()) {
-                return elements.stream()
-                        .map(element -> {
-                            if (element.hasText()) {
-                                return element.text();
-                            } else {
-                                return element.attr("content");
-                            }
-                        }).distinct().collect(Collectors.joining("\n"));
-            }
-        }
-        return Strings.EMPTY;
+    @Override
+    public Set<String> getSupportedDomains() {
+        return Collections.emptySet();
     }
+
 
 }//END OF ArticleExtractor

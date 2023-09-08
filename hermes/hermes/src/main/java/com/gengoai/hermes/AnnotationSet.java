@@ -155,6 +155,9 @@ public class AnnotationSet implements Iterable<Annotation>, Serializable {
     * given criteria
     */
    public List<Annotation> select(Span span, Predicate<? super Annotation> criteria) {
+      if(size() == 0){
+         return Collections.emptyList();
+      }
       return Streams.asStream(tree.overlapping(span)).filter(criteria).sorted().collect(Collectors.toList());
    }
 
@@ -165,6 +168,9 @@ public class AnnotationSet implements Iterable<Annotation>, Serializable {
     * @return A list of annotations that are an instance of the given class and matching the given criteria
     */
    public List<Annotation> select(Predicate<? super Annotation> criteria) {
+      if(size() == 0){
+         return Collections.emptyList();
+      }
       return tree.stream()
                  .filter(criteria)
                  .collect(Collectors.toList());

@@ -130,6 +130,22 @@ class LuceneCorpus implements Corpus {
     }
 
     @Override
+    public void addAll(@NonNull DocumentCollection documents) {
+        try (IndexWriter writer = getIndexWriter()) {
+            documents.parallelStream()
+                     .forEach(document -> {
+                         try {
+                             writer.updateDocument(new Term(ID_FIELD, document.getId()), toDocument(document));
+                         } catch (IOException ex) {
+                             throw new RuntimeException(ex);
+                         }
+                     });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void close() throws IOException {
         directory.close();
     }

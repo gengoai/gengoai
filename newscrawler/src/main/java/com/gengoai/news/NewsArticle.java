@@ -22,15 +22,17 @@ package com.gengoai.news;
 import com.gengoai.Language;
 import com.gengoai.hermes.Document;
 import com.gengoai.hermes.DocumentFactory;
+import com.gengoai.hermes.Hermes;
 import com.gengoai.hermes.Types;
+import com.gengoai.news.extractor.ArticleExtractors;
 import com.gengoai.string.Strings;
 import lombok.Data;
 import lombok.NonNull;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -90,16 +92,21 @@ public class NewsArticle {
         sections.addAll(other.sections);
     }
 
-    public static NewsArticle fromHTML(String rawHtml) throws Exception {
-        org.jsoup.nodes.Document doc = Jsoup.parse(rawHtml);
-        var article = DefaultArticleExtractor.extract(doc);
-        article.update(OpenGraphMetadataExtractor.extract(doc), true);
+    public static NewsArticle fromHTML(URL url, String rawHtml) throws Exception {
+        var article = ArticleExtractors.get(url).extract(rawHtml);
 
-        doc = Jsoup.parse(rawHtml); //Reparse to get script
+        //Structured Data Extractor
+        org.jsoup.nodes.Document doc = Jsoup.parse(rawHtml);
+        article.update(OpenGraphMetadataExtractor.extract(doc), true);
         Elements elements = doc.select("script[type=\"application/ld+json\"]");
         for (Element element : elements) {
             article.update(SchemaOrgArticleExtractor.extract(element.html()), true);
         }
+
+        if (Strings.isNullOrBlank(article.getUrl())) {
+            article.setUrl(url.toString());
+        }
+
         return article;
     }
 
@@ -109,12 +116,17 @@ public class NewsArticle {
             setLocale("en");
         }
         if (Strings.isNotNullOrBlank(getBody()) && Strings.isNotNullOrBlank(getUrl())) {
-            Document document = DocumentFactory.getInstance().create(DigestUtils.md5Hex(getUrl()), getBody());
+            Document document = DocumentFactory.getInstance().create(getUrl(), getBody());
+            //DocumentFactory.getInstance().create(DigestUtils.md5Hex(getUrl()), getBody());
 
             final String locale = getLocale().replace("_", "-");
-
-
-            document.setLanguage(Language.fromLocale(Locale.forLanguageTag(locale)));
+            final Language language;
+            if (Strings.isNullOrBlank(locale)) {
+                language = Hermes.defaultLanguage();
+            } else {
+                language = Language.fromLocale(Locale.forLanguageTag(locale));
+            }
+            document.setLanguage(language);
             document.put(Types.URL, getUrl());
 
 

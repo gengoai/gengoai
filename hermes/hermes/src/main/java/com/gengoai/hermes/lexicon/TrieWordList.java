@@ -42,133 +42,148 @@ import static com.gengoai.collection.Maps.asHashMap;
  * @author David B. Bracewell
  */
 public class TrieWordList implements WordList, PrefixSearchable, Serializable {
-   private static final long serialVersionUID = 1L;
-   private final Trie<Boolean> words;
+    private static final long serialVersionUID = 1L;
+    private final Trie<Boolean> words;
 
-   /**
-    * <p>
-    * Reads the word list from the given resource where each term is on its own line and "#" represents comments.
-    * </p>
-    * <p>
-    * Note that convention states that if the first line of a word list is a comment stating "case-insensitive" then
-    * loading of that word list will result in all words being lower-cased.
-    * </p>
-    *
-    * @param resource the resource
-    * @return the trie word list
-    * @throws IOException the io exception
-    */
-   public static TrieWordList read(@NonNull Resource resource) throws IOException {
-      TrieWordList twl = new TrieWordList();
-      boolean firstLine = true;
-      boolean isLowerCase = false;
-      try(MStream<String> lines = resource.lines()) {
-         for(String line : lines) {
-            line = line.strip();
-            if(firstLine && line.startsWith("#")) {
-               isLowerCase = line.contains("case-insensitive");
+    /**
+     * <p>
+     * Reads the word list from the given resource where each term is on its own line and "#" represents comments.
+     * </p>
+     * <p>
+     * Note that convention states that if the first line of a word list is a comment stating "case-insensitive" then
+     * loading of that word list will result in all words being lower-cased.
+     * </p>
+     *
+     * @param resource the resource
+     * @return the trie word list
+     * @throws IOException the io exception
+     */
+    public static TrieWordList read(@NonNull Resource resource) throws IOException {
+        TrieWordList twl = new TrieWordList();
+        boolean firstLine = true;
+        boolean isLowerCase = false;
+        try (MStream<String> lines = resource.lines()) {
+            for (String line : lines) {
+                line = line.strip();
+                if (firstLine && line.startsWith("#")) {
+                    isLowerCase = line.contains("case-insensitive");
+                }
+                firstLine = false;
+                if (!line.startsWith("#")) {
+                    if (isLowerCase) {
+                        twl.words.put(line.toLowerCase(), true);
+                    } else {
+                        twl.words.put(line, true);
+                    }
+                }
             }
-            firstLine = false;
-            if(!line.startsWith("#")) {
-               if(isLowerCase) {
-                  twl.words.put(line.toLowerCase(), true);
-               } else {
-                  twl.words.put(line, true);
-               }
-            }
-         }
-      } catch(Exception e) {
-         throw new IOException(e);
-      }
-      return twl;
-   }
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        return twl;
+    }
 
-   /**
-    * Instantiates a new TrieWordList
-    *
-    * @param words the words
-    */
-   public TrieWordList(@NonNull Iterable<String> words) {
-      this.words = new Trie<>(asHashMap(words, s -> Boolean.TRUE));
-   }
+    /**
+     * Instantiates a new TrieWordList
+     *
+     * @param words the words
+     */
+    public TrieWordList(@NonNull Iterable<String> words) {
+        this.words = new Trie<>(asHashMap(words, s -> Boolean.TRUE));
+    }
 
-   /**
-    * Instantiates a new TrieWordList
-    *
-    * @param wordLists the wordLists
-    */
-   public TrieWordList(@NonNull WordList... wordLists) {
-      this.words = new Trie<>();
-      for(WordList wordList : wordLists) {
-         words.putAll(asHashMap(wordList, s -> Boolean.TRUE));
-      }
-   }
+    /**
+     * Instantiates a new TrieWordList
+     *
+     * @param wordLists the wordLists
+     */
+    public TrieWordList(@NonNull WordList... wordLists) {
+        this.words = new Trie<>();
+        for (WordList wordList : wordLists) {
+            words.putAll(asHashMap(wordList, s -> Boolean.TRUE));
+        }
+    }
 
-   private TrieWordList() {
-      this.words = new Trie<>();
-   }
+    private TrieWordList() {
+        this.words = new Trie<>();
+    }
 
-   @Override
-   public boolean contains(String string) {
-      return words.containsKey(string);
-   }
+    @Override
+    public boolean contains(String string) {
+        return words.containsKey(string);
+    }
 
-   @Override
-   public boolean isPrefixMatch(HString hString) {
-      return !words.prefix(hString.toString()).isEmpty();
-   }
+    @Override
+    public boolean isPrefixMatch(HString hString) {
+        return !words.prefix(hString.toString()).isEmpty();
+    }
 
-   @Override
-   public boolean isPrefixMatch(String hString) {
-      return !words.prefix(hString).isEmpty();
-   }
+    @Override
+    public boolean isPrefixMatch(String hString) {
+        return !words.prefix(hString).isEmpty();
+    }
 
-   @Override
-   public Iterator<String> iterator() {
-      return Iterators.unmodifiableIterator(words.keySet().iterator());
-   }
+    @Override
+    public Iterator<String> iterator() {
+        return Iterators.unmodifiableIterator(words.keySet().iterator());
+    }
 
-   @Override
-   public Set<String> prefixes(String string) {
-      return words.prefix(string).keySet();
-   }
+    @Override
+    public Set<String> prefixes(String string) {
+        return words.prefix(string).keySet();
+    }
 
-   @Override
-   public int size() {
-      return words.size();
-   }
+    @Override
+    public int size() {
+        return words.size();
+    }
 
-   /**
-    * Suggests potential matches based on the given elements.
-    *
-    * @param string the string to generate suggestions for
-    * @return the map of suggestions with their costs
-    */
-   public Map<String, Integer> suggest(String string) {
-      return words.suggest(string);
-   }
+    /**
+     * Suggests potential matches based on the given elements.
+     *
+     * @param string the string to generate suggestions for
+     * @return the map of suggestions with their costs
+     */
+    public Map<String, Integer> suggest(String string) {
+        return words.suggest(string);
+    }
 
-   /**
-    * Suggests potential matches based on the given elements.
-    *
-    * @param string  the string to generate suggestions for
-    * @param maxCost the maximum cost of the suggestions
-    * @return the map of suggestions with their costs
-    */
-   public Map<String, Integer> suggest(String string, int maxCost) {
-      return words.suggest(string, maxCost);
-   }
+    /**
+     * Suggests potential matches based on the given elements.
+     *
+     * @param string  the string to generate suggestions for
+     * @param maxCost the maximum cost of the suggestions
+     * @return the map of suggestions with their costs
+     */
+    public Map<String, Integer> suggest(String string, int maxCost) {
+        return words.suggest(string, maxCost);
+    }
 
-   /**
-    * Suggests potential matches based on the given elements.
-    *
-    * @param string           the string to generate suggestions for
-    * @param maxCost          the maximum cost of the suggestions
-    * @param substitutionCost the cost for string substitutions
-    * @return the map of suggestions with their costs
-    */
-   public Map<String, Integer> suggest(String string, int maxCost, int substitutionCost) {
-      return words.suggest(string, maxCost, substitutionCost);
-   }
+    /**
+     * Suggests potential matches based on the given elements.
+     *
+     * @param string           the string to generate suggestions for
+     * @param maxCost          the maximum cost of the suggestions
+     * @param substitutionCost the cost for string substitutions
+     * @return the map of suggestions with their costs
+     */
+    public Map<String, Integer> suggest(String string, int maxCost, int substitutionCost) {
+        return words.suggest(string, maxCost, substitutionCost);
+    }
+
+    /**
+     * Returns the contents of the current word list as a new Lexicon object.
+     *
+     * @param name          the name of the new lexicon
+     * @param caseSensitive true if the lexicon should be case-sensitive, false otherwise
+     * @return a new Lexicon object containing the same words as the current word list
+     */
+    public Lexicon asLexicon(@NonNull String name, boolean caseSensitive) {
+        TrieLexicon lexicon = new TrieLexicon(name, caseSensitive);
+        for (String word : words.keySet()) {
+            lexicon.add(LexiconEntry.of(word));
+        }
+        return lexicon;
+    }
 
 }//END OF TrieWordList

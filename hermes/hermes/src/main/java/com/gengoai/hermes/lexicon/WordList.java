@@ -38,29 +38,29 @@ import lombok.NonNull;
  */
 public interface WordList extends Iterable<String> {
 
-   /**
-    * Is the String contained in the WordList
-    *
-    * @param string the string to lookup
-    * @return True if the string is in the WordList, False otherwise
-    */
-   boolean contains(String string);
+    /**
+     * Is the String contained in the WordList
+     *
+     * @param string the string to lookup
+     * @return True if the string is in the WordList, False otherwise
+     */
+    boolean contains(String string);
 
-   /**
-    * Is the {@link HString} contained in the WordList
-    *
-    * @param string the {@link HString} to lookup
-    * @return True if the {@link HString} is in the WordList, False otherwise
-    */
-   default boolean contains(@NonNull HString string) {
-      return contains(string.toString());
-   }
+    /**
+     * Is the {@link HString} contained in the WordList
+     *
+     * @param string the {@link HString} to lookup
+     * @return True if the {@link HString} is in the WordList, False otherwise
+     */
+    default boolean contains(@NonNull HString string) {
+        return contains(string.toString());
+    }
 
-   /**
-    * Number of words in the list
-    *
-    * @return the number of words in the list
-    */
-   int size();
+    /**
+     * Number of words in the list
+     *
+     * @return the number of words in the list
+     */
+    int size();
 
 }//END OF WordList

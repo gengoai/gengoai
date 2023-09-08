@@ -19,19 +19,29 @@
 
 package com.gengoai.hermes.ml.model.huggingface;
 
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
+import com.gengoai.hermes.*;
+import com.gengoai.hermes.corpus.Corpus;
+import com.gengoai.io.Resources;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TokenClassification implements AutoCloseable {
+public class TokenClassification {
     public static final String BERT_BASE_NER = "dslim/bert-base-NER";
 
-    private final PythonInterpreter interpreter;
+    private final String uniqueFuncName;
+
+
+    public TokenClassification(@NonNull String modelName) {
+        this(modelName, modelName, Config.get("gpu.device").asIntegerValue(-1));
+    }
 
     public TokenClassification(@NonNull String modelName,
                                int device) {
@@ -41,18 +51,12 @@ public class TokenClassification implements AutoCloseable {
     public TokenClassification(@NonNull String modelName,
                                @NonNull String tokenizerName,
                                int device) {
-//        this.interpreter = new PythonInterpreter("""
-//                from transformers import pipeline
-//
-//                nlp = pipeline('ner', model="%s", tokenizer="%s", device=%d, aggregation_strategy="simple")
-//
-//                def pipe(context):
-//                   return nlp(list(context))
-//                      """.formatted(modelName, tokenizerName, device));
-        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
-                                                                       "nlp = pipeline('ner', model='%s', tokenizer='%s', device=%d, aggregation_strategy='simple')\n" +
-                                                                       "def pipe(context):\n" +
-                                                                       "   return nlp(list(context))\n", modelName, tokenizerName, device));
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(String.format("from transformers import pipeline\n" +
+                                                     uniqueFuncName + "_nlp = pipeline('ner', model='%s', tokenizer='%s', device=%d, aggregation_strategy='max')\n" +
+                                                     "def " + uniqueFuncName + "(context):\n" +
+                                                     "   return " + uniqueFuncName + "_nlp(list(context))\n", modelName, tokenizerName, device));
     }
 
 
@@ -65,7 +69,7 @@ public class TokenClassification implements AutoCloseable {
     }
 
     public List<List<Output>> predict(List<String> contexts) {
-        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", contexts));
+        List<List<Map<String, ?>>> rvals = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, contexts));
         return rvals.stream().map(l -> l.stream().map(m -> new Output(
                                           m.get("entity_group").toString(),
                                           Cast.as(m.get("score"), Number.class).doubleValue(),
@@ -80,13 +84,41 @@ public class TokenClassification implements AutoCloseable {
     }
 
     public static void main(String[] args) {
-        TokenClassification tc = new TokenClassification(BERT_BASE_NER, 0);
-        System.out.println(tc.predict("John met Mary in Japan."));
-    }
+        Config.initialize("Sandbox", args);
+        TokenClassification tc = new TokenClassification("/work/prj/huggingface/token-classification/bert-finetuned-ner", 0);
+        Corpus docs = Corpus.open("/work/shortDocs.corpus");
+        docs.clearAnnotations();
+        Resources.from("/work/magic.corpus").delete(true);
+        Corpus c = Corpus.open("/work/magic.corpus");
+        List<Document> buffer = new ArrayList<>();
+        for (Document d : docs) {
+            d.annotate(Types.SENTENCE);
+            for (Annotation sentence : d.sentences()) {
+                System.out.println(sentence);
+                List<Output> outputs = tc.predict(sentence.toString());
+                for (Output output : outputs) {
+                    HString eHStr = sentence.substring(output.start, output.end);
+                    d.createAnnotation(Types.ENTITY,
+                                       eHStr.start(),
+                                       eHStr.end(),
+                                       Map.of(Types.ENTITY_TYPE, EntityType.valueOf(output.label),
+                                              Types.CONFIDENCE, output.confidence));
+                }
+            }
+            for (Annotation entity : d.annotations(Types.ENTITY)) {
+                System.out.println(entity + " / " + entity.attribute(Types.ENTITY_TYPE) + " / " + entity.attribute(Types.CONFIDENCE));
+            }
+            buffer.add(d);
 
-    @Override
-    public void close() throws Exception {
-        interpreter.close();
+            if (buffer.size() > 100) {
+                c.addAll(buffer);
+                buffer.clear();
+            }
+
+        }
+
+        c.addAll(buffer);
+
     }
 
 }//END OF TokenClassification

@@ -148,7 +148,7 @@ EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue46
  {NUMBER}               {return attachToken(TokenType.NUMBER);}
  {ALPHANUM}({HYPHEN}{ALPHANUM})+ {return attachToken(TokenType.ALPHA_NUMERIC);}
  {HYPHEN}               {return attachToken(TokenType.HYPHEN);}
- {CURRENCY}             {return attachToken(TokenType.MONEY);}
+ {CURRENCY}([,\.]*{NUMBER})*    {return attachToken(TokenType.MONEY);}
  {CONTRACTION}          {return attachToken(TokenType.CONTRACTION);}
  {ABBREVIATION}         {return attachToken(TokenType.ACRONYM);}
  {ALPHANUM}/{CONTRACTION} {return attachToken(TokenType.ALPHA_NUMERIC);}
@@ -166,6 +166,7 @@ EMOTICON=[\u219d\u2300-\u2800\ud800-\uddff\ude00-\ue079\ue200-\ue263\ue3ff-\ue46
  {MATH}                 {return attachToken(TokenType.SYMBOL);}
  {NEWLINE}              {return attachToken(TokenType.UNKNOWN);}
  {WHITESPACE}           {}
+ {APOS}                 {return attachToken(TokenType.PUNCTUATION);}
 }
 
 [^]                   {return attachToken(TokenType.UNKNOWN);}

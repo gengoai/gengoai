@@ -521,6 +521,16 @@ public interface Document extends HString {
      */
     void removeAnnotationType(AnnotationType type);
 
+    default void clearAnnotations() {
+        List<AnnotatableType> types = new ArrayList<>(completed());
+        for (AnnotatableType type : types) {
+            if (type instanceof AnnotationType) {
+                removeAnnotationType(Cast.as(type));
+            }
+        }
+        completed().clear();
+    }
+
     /**
      * Marks the given AnnotatableType as being completed by the given provider.
      *

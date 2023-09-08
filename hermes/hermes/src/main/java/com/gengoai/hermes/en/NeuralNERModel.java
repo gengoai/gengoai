@@ -31,9 +31,7 @@ import com.gengoai.hermes.ml.model.TFSequenceLabeler;
 
 import java.util.List;
 
-import static com.gengoai.apollo.feature.Featurizer.booleanFeaturizer;
 import static com.gengoai.apollo.feature.Featurizer.valueFeaturizer;
-import static java.util.stream.Collectors.toList;
 
 public class NeuralNERModel extends TFSequenceLabeler {
     private static final long serialVersionUID = 1L;
@@ -41,6 +39,7 @@ public class NeuralNERModel extends TFSequenceLabeler {
     private static final String TOKENS = "words";
     private static final String CHARS = "chars";
     private static final String SHAPE = "shape";
+    private static final String WORD_CLASS = "class";
     private static final int MAX_WORD_LENGTH = 25;
 
     public NeuralNERModel() {
@@ -48,10 +47,11 @@ public class NeuralNERModel extends TFSequenceLabeler {
                 List.of(
                         TFInputVar.embedding(TOKENS,
 //                                "serving_default_words",
-                                             ENResources.gloveLargeEmbeddings()),
+                                             ENResources.gloveSmallEmbeddings(100)),
                         TFInputVar.sequence(SHAPE,
 //                                "serving_default_shape",
                                             -1),
+                        TFInputVar.sequence(WORD_CLASS, -1),
                         TFInputVar.sequence(CHARS,
 //                                "serving_default_chars",
                                             -1, MAX_WORD_LENGTH)
@@ -70,10 +70,8 @@ public class NeuralNERModel extends TFSequenceLabeler {
     public HStringDataSetGenerator getDataGenerator() {
         return HStringDataSetGenerator.builder(Types.SENTENCE)
                                       .tokenSequence(TOKENS, valueFeaturizer(HString::toLowerCase))
-                                      .tokenSequence(CHARS, booleanFeaturizer(h -> h.charNGrams(1)
-                                                                                    .stream()
-                                                                                    .map(HString::toString)
-                                                                                    .collect(toList())))
+                                      .tokenSequence(CHARS, Features.charNGrams(2))
+                                      .tokenSequence(WORD_CLASS, Features.WordClass)
                                       .tokenSequence(SHAPE, Features.WordShape)
                                       .source(LABEL, IOB.encoder(Types.ENTITY))
                                       .build();
@@ -81,6 +79,8 @@ public class NeuralNERModel extends TFSequenceLabeler {
 
     @Override
     public String getVersion() {
-        return "2.1";
+        return "2.2";
     }
+
+
 }

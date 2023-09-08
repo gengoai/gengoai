@@ -69,182 +69,198 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public interface Corpus extends DocumentCollection {
 
-   /**
-    * Opens the corpus at the given resource.
-    *
-    * @param resource the resource pertaining to the corpus
-    * @return the corpus
-    */
-   static Corpus open(@NonNull Resource resource) {
-      return new LuceneCorpus(resource.asFile().orElseThrow());
-   }
+    /**
+     * Opens the corpus at the given resource.
+     *
+     * @param resource the resource pertaining to the corpus
+     * @return the corpus
+     */
+    static Corpus open(@NonNull Resource resource) {
+        return new LuceneCorpus(resource.asFile().orElseThrow());
+    }
 
-   /**
-    * Opens the corpus at the given resource.
-    *
-    * @param resource the resource pertaining to the corpus
-    * @return the corpus
-    */
-   static Corpus open(@NonNull String resource) {
-      return open(Resources.from(resource));
-   }
+    /**
+     * Opens the corpus at the given resource.
+     *
+     * @param resource the resource pertaining to the corpus
+     * @return the corpus
+     */
+    static Corpus open(@NonNull String resource) {
+        return open(Resources.from(resource));
+    }
 
-   /**
-    * Adds a document to the corpus
-    *
-    * @param document the document to add
-    * @return True if added, False if not
-    */
-   boolean add(Document document);
+    /**
+     * Adds a document to the corpus
+     *
+     * @param document the document to add
+     * @return True if added, False if not
+     */
+    boolean add(Document document);
 
-   /**
-    * Adds multiple documents to the corpus.
-    *
-    * @param documents the documents
-    */
-   default void addAll(@NonNull Iterable<Document> documents) {
-      documents.forEach(this::add);
-   }
+    /**
+     * Adds multiple documents to the corpus.
+     *
+     * @param documents the documents
+     */
+    default void addAll(@NonNull Iterable<Document> documents) {
+        documents.forEach(this::add);
+    }
 
-   @Override
-   default Corpus annotate(@NonNull AnnotatableType... annotatableTypes) {
-      AnnotationPipeline pipeline = new AnnotationPipeline(Sets.difference(Arrays.asList(annotatableTypes),
-                                                                           getCompleted()));
-      if(pipeline.requiresUpdate()) {
-         return update("Annotate", pipeline::annotate);
-      }
-      return this;
-   }
+    /**
+     * Adds multiple documents to the corpus.
+     *
+     * @param documents the documents
+     */
+    default void addAll(@NonNull DocumentCollection documents) {
+        documents.forEach(this::add);
+    }
 
-   @Override
-   default Corpus apply(Lexicon lexicon, SerializableConsumer<HString> onMatch) {
-      return Cast.as(DocumentCollection.super.apply(lexicon, onMatch));
-   }
+    @Override
+    default Corpus annotate(@NonNull AnnotatableType... annotatableTypes) {
+        AnnotationPipeline pipeline = new AnnotationPipeline(Sets.difference(Arrays.asList(annotatableTypes),
+                                                                             getCompleted()));
+        if (pipeline.requiresUpdate()) {
+            return update("Annotate", pipeline::annotate);
+        }
+        return this;
+    }
 
-   @Override
-   default Corpus apply(TokenRegex pattern, SerializableConsumer<TokenMatch> onMatch) {
-      return Cast.as(DocumentCollection.super.apply(pattern, onMatch));
-   }
+    @Override
+    default Corpus apply(Lexicon lexicon, SerializableConsumer<HString> onMatch) {
+        return Cast.as(DocumentCollection.super.apply(lexicon, onMatch));
+    }
 
-   default void assignRandomSplit(double pct) {
-      AtomicLong train = new AtomicLong((int) Math.floor(pct * size()));
-      update("AssignSplit", d -> {
-         if(train.decrementAndGet() > 0) {
-            d.put(Types.SPLIT, "TRAIN");
-         } else {
-            d.put(Types.SPLIT, "TEST");
-         }
-      });
-   }
+    @Override
+    default Corpus apply(TokenRegex pattern, SerializableConsumer<TokenMatch> onMatch) {
+        return Cast.as(DocumentCollection.super.apply(pattern, onMatch));
+    }
 
-   /**
-    * Compacts the storage used for the corpus.
-    *
-    * @return This corpus
-    */
-   default Corpus compact() {
-      return this;
-   }
+    default void assignRandomSplit(double pct) {
+        AtomicLong train = new AtomicLong((int) Math.floor(pct * size()));
+        update("AssignSplit", d -> {
+            if (train.decrementAndGet() > 0) {
+                d.put(Types.SPLIT, "TRAIN");
+            } else {
+                d.put(Types.SPLIT, "TEST");
+            }
+        });
+    }
+
+    /**
+     * Compacts the storage used for the corpus.
+     *
+     * @return This corpus
+     */
+    default Corpus compact() {
+        return this;
+    }
 
 
+    /**
+     * Gets a count of the values for the given attribute across documents in the corpus.
+     *
+     * @param <T>  the attribute value type parameter
+     * @param type the AttributeType we want to count
+     * @return A Counter over the attribute values.
+     */
+    <T> Counter<T> getAttributeValueCount(@NonNull AttributeType<T> type);
 
-   /**
-    * Gets a count of the values for the given attribute across documents in the corpus.
-    *
-    * @param <T>  the attribute value type parameter
-    * @param type the AttributeType we want to count
-    * @return A Counter over the attribute values.
-    */
-   <T> Counter<T> getAttributeValueCount(@NonNull AttributeType<T> type);
+    /**
+     * @return the set of attribute types found across the documents in the corpus
+     */
+    Set<AttributeType<?>> getAttributes();
 
-   /**
-    * @return the set of attribute types found across the documents in the corpus
-    */
-   Set<AttributeType<?>> getAttributes();
+    /**
+     * @return the set of completed AnnotatableType where completed means completed by every document in the corpus.
+     */
+    Set<AnnotatableType> getCompleted();
 
-   /**
-    * @return the set of completed AnnotatableType where completed means completed by every document in the corpus.
-    */
-   Set<AnnotatableType> getCompleted();
+    /**
+     * Gets the document with the given document id
+     *
+     * @param id the id of the document
+     * @return the document or null if it doesn't exist
+     */
+    default Document getDocument(String id) {
+        return parallelStream().filter(d -> d.getId().equals(id)).first().orElse(null);
+    }
 
-   /**
-    * Gets the document with the given document id
-    *
-    * @param id the id of the document
-    * @return the document or null if it doesn't exist
-    */
-   default Document getDocument(String id) {
-      return parallelStream().filter(d -> d.getId().equals(id)).first().orElse(null);
-   }
+    /**
+     * @return the document ids of all documents in the corpus
+     */
+    default List<String> getIds() {
+        return parallelStream().map(Document::getId).sorted(true).collect();
+    }
 
-   /**
-    * @return the document ids of all documents in the corpus
-    */
-   default List<String> getIds() {
-      return parallelStream().map(Document::getId).sorted(true).collect();
-   }
+    /**
+     * Imports documents from the given document collection specification.
+     *
+     * @param specification the document format specification with path to documents.
+     * @return the corpus
+     * @throws IOException Something went wrong loading the documents
+     */
+    default Corpus importDocuments(@NonNull String specification) throws IOException {
+        Specification inSpec = Specification.parse(specification);
+        DocFormat format = DocFormatService.create(inSpec);
+        addAll(format.read(Resources.from(inSpec.getPath())));
+        return this;
+    }
 
-   /**
-    * Imports documents from the given document collection specification.
-    *
-    * @param specification the document format specification with path to documents.
-    * @return the corpus
-    * @throws IOException Something went wrong loading the documents
-    */
-   default Corpus importDocuments(@NonNull String specification) throws IOException {
-      Specification inSpec = Specification.parse(specification);
-      DocFormat format = DocFormatService.create(inSpec);
-      addAll(format.read(Resources.from(inSpec.getPath())));
-      return this;
-   }
+    /**
+     * Processes the corpus using the given {@link SequentialWorkflow}
+     *
+     * @param processor the processor
+     * @return this Corpus
+     * @throws Exception the exception
+     */
+    default Corpus process(@NonNull SequentialWorkflow processor) throws Exception {
+        processor.process(null, new Context());
+        return this;
+    }
 
-   /**
-    * Processes the corpus using the given {@link SequentialWorkflow}
-    *
-    * @param processor the processor
-    * @return this Corpus
-    * @throws Exception the exception
-    */
-   default Corpus process(@NonNull SequentialWorkflow processor) throws Exception {
-      processor.process(null, new Context());
-      return this;
-   }
+    /**
+     * Removes a document from the corpus
+     *
+     * @param document the document to remove
+     * @return True of removed, False otherwise
+     */
+    boolean remove(Document document);
 
-   /**
-    * Removes a document from the corpus
-    *
-    * @param document the document to remove
-    * @return True of removed, False otherwise
-    */
-   boolean remove(Document document);
+    /**
+     * Removes a document by its id.
+     *
+     * @param id the id of the document to remove
+     * @return True of removed, False otherwise
+     */
+    boolean remove(String id);
 
-   /**
-    * Removes a document by its id.
-    *
-    * @param id the id of the document to remove
-    * @return True of removed, False otherwise
-    */
-   boolean remove(String id);
 
-   @Override
-   default Corpus repartition(int numPartitions) {
-      return this;
-   }
+    /**
+     * Removes all annotations from the corpus
+     */
+    default void clearAnnotations() {
+        update("ClearAnnotations", Document::clearAnnotations);
+    }
 
-   @Override
-   Corpus update(@NonNull String operation, @NonNull SerializableConsumer<Document> documentProcessor);
+    @Override
+    default Corpus repartition(int numPartitions) {
+        return this;
+    }
 
-   @Override
-   default Corpus update(@NonNull CaduceusProgram program) {
-      return Cast.as(DocumentCollection.super.update(program));
-   }
+    @Override
+    Corpus update(@NonNull String operation, @NonNull SerializableConsumer<Document> documentProcessor);
 
-   /**
-    * Updates the given document
-    *
-    * @param document the document to update
-    * @return True if the document is updated, False if not
-    */
-   boolean update(Document document);
+    @Override
+    default Corpus update(@NonNull CaduceusProgram program) {
+        return Cast.as(DocumentCollection.super.update(program));
+    }
+
+    /**
+     * Updates the given document
+     *
+     * @param document the document to update
+     * @return True if the document is updated, False if not
+     */
+    boolean update(Document document);
 
 }//END OF Corpus

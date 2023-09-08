@@ -137,6 +137,9 @@ class DefaultDocumentImpl extends BaseHString implements Document {
     @Override
     @JsonProperty("annotations")
     public List<Annotation> annotations() {
+        if( annotationSet.size() == 0){
+            return Collections.emptyList();
+        }
         return Streams.asStream(annotationSet.iterator())
                       .collect(Collectors.toList());
     }
@@ -278,9 +281,12 @@ class DefaultDocumentImpl extends BaseHString implements Document {
     @Override
     public void removeAnnotationType(@NonNull AnnotationType type) {
         annotationSet.removeAll(type);
+        completed().remove(type);
         for (AnnotationType child : type.children()) {
             removeAnnotationType(child);
+            completed().remove(child);
         }
+
     }
 
     @Override

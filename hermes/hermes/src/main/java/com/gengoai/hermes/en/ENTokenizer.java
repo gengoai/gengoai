@@ -65,9 +65,9 @@ public class ENTokenizer implements Tokenizer, Serializable {
     private class TokenIterator implements Iterator<Token> {
         private final LinkedList<Token> buffer = new LinkedList<>();
         private int lastIndex = 0;
+        private Token lastToken = null;
 
         private TokenIterator(Reader reader) {
-//            this.tokenizer = new StandardTokenizer(reader);
             StandardTokenizer tokenizer = new StandardTokenizer(reader);
             Token token;
             try {
@@ -355,12 +355,63 @@ public class ENTokenizer implements Tokenizer, Serializable {
                 token = mergeMoneyNumber(token);
             }
 
+            /*
+             * If we think this is a contraction, but there is a space between it and the last token, then it is not
+             * a contraction and we should split the punctuation and add the alphanumeric to the buffer.
+             */
+            if (lastToken != null && token.type.isInstance(TokenType.CONTRACTION)) {
+                if (lastToken.charEndIndex < token.charStartIndex) {
+                    Token nn = peek(0);
+                    if (nn != null && nn.charStartIndex == token.charEndIndex) {
+                        token = new Token(
+                                token.text.substring(0, 1),
+                                TokenType.PUNCTUATION,
+                                token.charStartIndex,
+                                token.charStartIndex + 1,
+                                token.index
+                        );
+                        consume();
+                        buffer.addFirst(new Token(
+                                token.text.substring(1) + nn.text,
+                                TokenType.ALPHA_NUMERIC,
+                                token.charStartIndex + 1,
+                                nn.charEndIndex,
+                                token.index
+                        ));
+                    }
+                }
+            }
+
+            /*
+             * If the token is an alpha-numeric and the last character is a punctuation, we need to split the punctuation
+             * off the end of the alpha-numeric token.
+             */
+            final String trailingCharacter = token.text.substring(token.text.length() - 1);
+            if (token.type.isInstance(TokenType.ALPHA_NUMERIC) && Strings.isPunctuation(trailingCharacter)) {
+                buffer.addFirst(new Token(
+                        trailingCharacter,
+                        TokenType.PUNCTUATION,
+                        token.charEndIndex - 1,
+                        token.charEndIndex,
+                        token.index
+                ));
+                token = new Token(
+                        token.text.substring(0, token.text.length() - 1),
+                        TokenType.PUNCTUATION,
+                        token.charStartIndex,
+                        token.charEndIndex - 1,
+                        token.index
+                );
+            }
+
             if (token.type.isInstance(TokenType.HYPHEN)) {
                 token = mergeMultiHyphens(token);
             }
 
             token.index = lastIndex;
             lastIndex++;
+
+            lastToken = token;
             return token;
         }
 
