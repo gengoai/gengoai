@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TokenClassification {
+public final class TokenClassification {
     public static final String BERT_BASE_NER = "dslim/bert-base-NER";
 
     private final String uniqueFuncName;

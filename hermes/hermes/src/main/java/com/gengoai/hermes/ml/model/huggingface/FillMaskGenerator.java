@@ -21,6 +21,7 @@ package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
@@ -29,14 +30,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class FillMaskGenerator implements AutoCloseable {
+public final class FillMaskGenerator {
     public static final String BERT_BASE_UNCASED = "bert-base-uncased";
     public static final String BERT_MASK_TOKEN = "[MASK]";
     public static final String XLM_ROBERTA_LARGE = "xlm-roberta-large";
     public static final String ROBERTA_MASK_TOKEN = "<mask>";
 
 
-    private final PythonInterpreter interpreter;
+    private final String uniqueFuncName;
+
+    public FillMaskGenerator(@NonNull String modelName) {
+        this(modelName, modelName, Config.get("gpu.device").asIntegerValue(-1));
+    }
 
     public FillMaskGenerator(@NonNull String modelName, int device) {
         this(modelName, modelName, device);
@@ -45,15 +50,17 @@ public class FillMaskGenerator implements AutoCloseable {
     public FillMaskGenerator(@NonNull String modelName,
                              @NonNull String tokenizerName,
                              int device) {
-        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
-                                                                       "nlp = pipeline('fill-mask', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
-                                                                       "def pipe(context):\n" +
-                                                                       "   return nlp(list(context))\n", modelName, tokenizerName, device));
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(String.format("from transformers import pipeline\n" +
+                                                     uniqueFuncName + "_nlp = pipeline('fill-mask', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
+                                                     "def " + uniqueFuncName + "(context):\n" +
+                                                     "   return " + uniqueFuncName + "_nlp(list(context))\n", modelName, tokenizerName, device));
     }
 
 
     public List<Counter<String>> predict(List<String> contexts) {
-        List<?> rvals = Cast.as(interpreter.invoke("pipe", contexts));
+        List<?> rvals = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, contexts));
 
         if (rvals.get(0) instanceof List) {
             return rvals.stream().map(m -> {
@@ -87,9 +94,4 @@ public class FillMaskGenerator implements AutoCloseable {
         System.out.println(generator.predict("god is a type of [MASK]."));
     }
 
-
-    @Override
-    public void close() throws Exception {
-        interpreter.close();
-    }
 }//END OF FillMaskGenerator

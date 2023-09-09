@@ -23,9 +23,7 @@ import com.gengoai.io.MonitoredObject;
 import com.gengoai.io.ResourceMonitor;
 import com.gengoai.string.CharMatcher;
 import com.gengoai.string.Strings;
-import jep.Jep;
 import jep.SharedInterpreter;
-import lombok.NonNull;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -69,19 +67,10 @@ public final class PythonInterpreter implements AutoCloseable {
     /**
      * Instantiates a new Python interpreter.
      */
-    public PythonInterpreter() {
+    private PythonInterpreter() {
         this.interpreter = ResourceMonitor.monitor(new SharedInterpreter());
     }
 
-    /**
-     * Instantiates a new Python interpreter.
-     *
-     * @param initCode the init code
-     */
-    public PythonInterpreter(@NonNull String initCode) {
-        this.interpreter = ResourceMonitor.monitor(new SharedInterpreter(), Jep::close);
-        this.interpreter.object.exec(initCode);
-    }
 
     /**
      * Executes the specified Python code.

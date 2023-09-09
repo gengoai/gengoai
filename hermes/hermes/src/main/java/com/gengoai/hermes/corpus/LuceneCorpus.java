@@ -22,6 +22,7 @@
 
 package com.gengoai.hermes.corpus;
 
+import com.gengoai.LogUtils;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.collection.multimap.Multimap;
@@ -471,16 +472,29 @@ class LuceneCorpus implements Corpus {
     private Corpus update(String operation, SerializablePredicate<Document> processor) {
         ProgressLogger progressLogger = ProgressLogger.create(this, operation);
         final UpdateConsumer consumer = new UpdateConsumer(processor, progressLogger);
-        Broker<Document> broker = Broker.<Document>builder()
-                                        .addProducer(new IterableProducer<>(this))
-                                        .bufferSize(10_000)
-                                        .addConsumer(consumer, Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
-                                        .build();
-        broker.run();
+        if (Config.get("corpus.singleThreaded").asBooleanValue(false)) {
+            //Single Threaded to use with HuggingFace
+            try (IndexReader reader = getIndexReader()) {
+                for (int i = 0; i < reader.maxDoc(); i++) {
+                    if (reader.document(i).getField(ID_FIELD) != null) {
+                        consumer.accept(loadDocument(reader, i));
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            Broker<Document> broker = Broker.<Document>builder()
+                                            .addProducer(new IterableProducer<>(this))
+                                            .bufferSize(10_000)
+                                            .addConsumer(consumer, Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
+                                            .build();
+            broker.run();
+        }
         try {
             consumer.writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LogUtils.logWarning(log, e);
         }
         progressLogger.report();
         return this;

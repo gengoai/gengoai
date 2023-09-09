@@ -23,6 +23,7 @@ import com.gengoai.Primitives;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
@@ -30,11 +31,15 @@ import lombok.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FeatureExtraction implements AutoCloseable {
+public final class FeatureExtraction {
     public static final String BART_BASE = "facebook/bart-base";
     public static final String BART_LARGE_MNLI = "facebook/bart-large-mnli";
 
-    private final PythonInterpreter interpreter;
+    private final String uniqueFuncName;
+
+    public FeatureExtraction(@NonNull String modelName) {
+        this(modelName, modelName, Config.get("gpu.device").asIntegerValue(-1));
+    }
 
 
     public FeatureExtraction(@NonNull String modelName, int device) {
@@ -44,18 +49,18 @@ public class FeatureExtraction implements AutoCloseable {
     public FeatureExtraction(@NonNull String modelName,
                              @NonNull String tokenizerName,
                              int device) {
-        this.interpreter = new PythonInterpreter(
-                String.format("from transformers import pipeline\n" +
-                                      "nlp = pipeline('feature-extraction', model=\"%s\", tokenizer=\"%s\", device=%d,framework=\"pt\")\n" +
-                                      "def pipe(context):\n" +
-                                      "   return nlp(list(context))\n", modelName, tokenizerName, device));
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(String.format("from transformers import pipeline\n" +
+                                                     uniqueFuncName + "_nlp = pipeline('feature-extraction', model=\"%s\", tokenizer=\"%s\", device=%d,framework=\"pt\")\n" +
+                                                     "def " + uniqueFuncName + "(context):\n" +
+                                                     "   return " + uniqueFuncName + "_nlp(list(context))\n", modelName, tokenizerName, device));
     }
 
 
     public List<NumericNDArray> predict(List<String> texts) {
         List<NumericNDArray> toReturn = new ArrayList<>();
-
-        List<?> list = Cast.as(interpreter.invoke("pipe", texts));
+        List<?> list = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, texts));
         for (Object sentenceO : list) {
             List<?> sentenceL = Cast.as(sentenceO);
             NumericNDArray sentenceNDArray = null;
@@ -82,8 +87,12 @@ public class FeatureExtraction implements AutoCloseable {
     }
 
 
-    @Override
-    public void close() throws Exception {
-        interpreter.close();
+    public static void main(String[] args) {
+        FeatureExtraction te = new FeatureExtraction(BART_BASE, 0);
+        System.out.println(te.predict(
+                "I am not happy."
+                                     ));
     }
+
+
 }//END OF CLASS FeatureExtraction

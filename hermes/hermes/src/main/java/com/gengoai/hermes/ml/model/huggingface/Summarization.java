@@ -19,6 +19,7 @@
 
 package com.gengoai.hermes.ml.model.huggingface;
 
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.hermes.HString;
 import com.gengoai.hermes.corpus.DocumentCollection;
@@ -31,10 +32,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Summarization implements Summarizer, AutoCloseable {
+public final class Summarization implements Summarizer {
     public static final String FLAN_T5_BASE_SAMSUM = "philschmid/flan-t5-base-samsum";
 
-    private final PythonInterpreter interpreter;
+    private final String uniqueFuncName;
+
+    public Summarization(@NonNull String modelName,
+                         int maxLength) {
+        this(modelName, modelName, Config.get("gpu.device").asIntegerValue(-1), maxLength);
+    }
 
     public Summarization(@NonNull String modelName,
                          int device,
@@ -46,18 +52,12 @@ public class Summarization implements Summarizer, AutoCloseable {
                          @NonNull String tokenizerName,
                          int device,
                          int maxLength) {
-//        this.interpreter = new PythonInterpreter("""
-//                from transformers import pipeline
-//
-//                nlp = pipeline('summarization', model="%s", tokenizer="%s", device=%d)
-//
-//                def pipe(context):
-//                   return nlp(list(context), max_length=%d)
-//                      """.formatted(modelName, tokenizerName, device, maxLength));
-        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
-                                                                       "nlp = pipeline('summarization', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
-                                                                       "def pipe(context):\n" +
-                                                                       "   return nlp(list(context), max_length=%d)\n", modelName, tokenizerName, device, maxLength));
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(String.format("from transformers import pipeline\n" +
+                                                     uniqueFuncName + "_nlp = pipeline('summarization', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
+                                                     "def " + uniqueFuncName + "(context):\n" +
+                                                     "   return " + uniqueFuncName + "_nlp(list(context), max_length=%d)\n", modelName, tokenizerName, device, maxLength));
     }
 
 
@@ -77,12 +77,45 @@ public class Summarization implements Summarizer, AutoCloseable {
     }
 
     public List<String> predict(@NonNull List<String> texts) {
-        List<Map<String, ?>> rvals = Cast.as(interpreter.invoke("pipe", texts));
+        List<Map<String, ?>> rvals = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, texts));
         return rvals.stream().map(rList -> rList.get("summary_text").toString()).collect(Collectors.toList());
     }
 
-    @Override
-    public void close() throws Exception {
-        interpreter.close();
+    public static void main(String[] args) {
+        Summarization summarization = new Summarization(FLAN_T5_BASE_SAMSUM, 128);
+        System.out.println(summarization.predict("The US has " +
+                                                         "passed the peak on new coronavirus cases, " +
+                                                         "President Donald Trump said and predicted that " +
+                                                         "some states would reopen this month. The US has " +
+                                                         "over 637,000 confirmed Covid-19 cases and over " +
+                                                         "30,826 deaths, the highest for any country in " +
+                                                         "the world. At the daily White House briefing on " +
+                                                         "Wednesday, Trump said new guidelines to reopen " +
+                                                         "the country would be announced on Thursday after " +
+                                                         "he speaks to governors. \"We'll be the comeback " +
+                                                         "kids, all of us,\" he said. \"We want to get our " +
+                                                         "country back.\" The Trump administration has " +
+                                                         "earlier given guidelines for a staged reopening " +
+                                                         "of the economy, with a shutdown of schools and " +
+                                                         "non-essential businesses. Trump said some states " +
+                                                         "could reopen even before the May 1 deadline for " +
+                                                         "the current shutdown to expire. \"I think some " +
+                                                         "of the states can actually open up before the " +
+                                                         "deadline of May 1,\" he said. \"I think that " +
+                                                         "will happen.\" Trump said he would speak to " +
+                                                         "governors on Thursday, and anticipated \"a lot " +
+                                                         "of questions on what we're talking about\". \"We " +
+                                                         "are going to have a very interesting talk,\" he " +
+                                                         "said. \"I think you're going to have a lot of " +
+                                                         "happy people.\" Trump said the US had \"passed " +
+                                                         "the peak on new cases\". \"Hopefully that will " +
+                                                         "continue, and we will continue to make great " +
+                                                         "progress,\" he said. \"These encouraging results " +
+                                                         "have put us in a very strong position to finalize " +
+                                                         "guidelines for states on reopening the country, " +
+                                                         "which we'll be announcing ... tomorrow.\" Trump " +
+                                                         "said the US had conducted 3.3 million coronavirus " +
+                                                         "tests, and would soon be conducting 2 million " +
+                                                         "tests a week."));
     }
 }//END OF Summarization

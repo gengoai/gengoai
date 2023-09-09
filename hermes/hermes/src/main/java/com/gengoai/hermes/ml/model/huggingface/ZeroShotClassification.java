@@ -21,6 +21,7 @@ package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
@@ -29,33 +30,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ZeroShotClassification implements AutoCloseable {
+public final class ZeroShotClassification {
 
     public static final String BART_LARGE_MNLI = "facebook/bart-large-mnli";
 
-    private final PythonInterpreter interpreter;
+    private final String uniqueFuncName;
+
+    public ZeroShotClassification(@NonNull String modelName, boolean multiLabel) {
+        this(modelName, multiLabel, Config.get("gpu.device").asIntegerValue(-1));
+    }
 
     public ZeroShotClassification(@NonNull String modelName, boolean multiLabel, int device) {
         this(modelName, modelName, multiLabel, device);
     }
 
     public ZeroShotClassification(@NonNull String modelName, @NonNull String tokenizerName, boolean multiLabel, int device) {
-        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
-                                                                       "nlp = pipeline('zero-shot-classification', model='%s', tokenizer='%s', device=%d)\n" +
-                                                                       "def pipe(sentence,labels):\n" +
-                                                                       "    return nlp(list(sentence),list(labels), multi_label=%s)", modelName,
-                                                               tokenizerName,
-                                                               device,
-                                                               multiLabel ? "True" : "False"));
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(String.format("from transformers import pipeline\n" +
+                                                     uniqueFuncName + "_nlp = pipeline('zero-shot-classification', model='%s', tokenizer='%s', device=%d)\n" +
+                                                     "def " + uniqueFuncName + "(sentence,labels):\n" +
+                                                     "    return " + uniqueFuncName + "_nlp(list(sentence),list(labels), multi_label=%s)", modelName,
+                                             tokenizerName,
+                                             device,
+                                             multiLabel ? "True" : "False"));
 
 
     }
 
 
     public List<Counter<String>> predict(@NonNull List<String> sequences, @NonNull List<String> candidateLabels) {
-        List<Map<String, ?>> rvals = Cast.as(interpreter.invoke("pipe",
-                                                                sequences,
-                                                                candidateLabels));
+        List<Map<String, ?>> rvals = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName,
+                                                                                    sequences,
+                                                                                    candidateLabels));
         return rvals.stream().map(rval -> {
             List<String> labels = Cast.as(rval.get("labels"));
             List<Double> scores = Cast.as(rval.get("scores"));
@@ -75,11 +82,6 @@ public class ZeroShotClassification implements AutoCloseable {
         ZeroShotClassification zsc = new ZeroShotClassification(BART_LARGE_MNLI, true, 0);
         System.out.println(zsc.predict(List.of("I am happy", "I am sad"),
                                        List.of("happy", "sad")));
-    }
-
-    @Override
-    public void close() throws Exception {
-        interpreter.close();
     }
 
 }//END OF ZeroShotClassification

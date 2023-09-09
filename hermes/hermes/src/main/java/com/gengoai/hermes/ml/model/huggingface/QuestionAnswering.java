@@ -19,6 +19,7 @@
 
 package com.gengoai.hermes.ml.model.huggingface;
 
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
@@ -28,10 +29,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class QuestionAnswering implements AutoCloseable {
+public final class QuestionAnswering {
     public static final String ROBERTA_BASE_SQUAD = "deepset/roberta-base-squad2";
 
-    private final PythonInterpreter interpreter;
+
+    private final String uniqueFuncName;
+
+    public QuestionAnswering(@NonNull String modelName) {
+        this(modelName, modelName, Config.get("gpu.device").asIntegerValue(-1));
+    }
 
     public QuestionAnswering(@NonNull String modelName,
                              int device) {
@@ -41,10 +47,12 @@ public class QuestionAnswering implements AutoCloseable {
     public QuestionAnswering(@NonNull String modelName,
                              @NonNull String tokenizerName,
                              int device) {
-        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
-                                                                       "nlp = pipeline('question-answering', model=\"%s\", tokenizer=\"%s\", device=%d )\n" +
-                                                                       "def pipe(context, question):\n" +
-                                                                       "   return nlp({'context':list(context),'question':list(question)})\n", modelName, tokenizerName, device));
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(String.format("from transformers import pipeline\n" +
+                                                     uniqueFuncName + "_nlp = pipeline('question-answering', model=\"%s\", tokenizer=\"%s\", device=%d )\n" +
+                                                     "def " + uniqueFuncName + "(context, question):\n" +
+                                                     "   return " + uniqueFuncName + "_nlp({'context':list(context),'question':list(question)})\n", modelName, tokenizerName, device));
     }
 
     public QAOutput predict(@NonNull String context, @NonNull String question) {
@@ -57,10 +65,10 @@ public class QuestionAnswering implements AutoCloseable {
     }
 
     public List<QAOutput> predict(@NonNull List<QAInput> inputs) {
-        List<HashMap<String, ?>> rvals = Cast.as(interpreter.invoke("pipe",
-                                                                    inputs.stream().map(QAInput::getContext).collect(Collectors.toList()),
-                                                                    inputs.stream().map(QAInput::getQuestion).collect(Collectors.toList())
-                                                                   ));
+        List<HashMap<String, ?>> rvals = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName,
+                                                                                        inputs.stream().map(QAInput::getContext).collect(Collectors.toList()),
+                                                                                        inputs.stream().map(QAInput::getQuestion).collect(Collectors.toList())
+                                                                                       ));
         return rvals.stream().map(m -> new QAOutput(
                 m.get("answer").toString(),
                 Cast.as(m.get("score"), Number.class).doubleValue(),
@@ -83,8 +91,9 @@ public class QuestionAnswering implements AutoCloseable {
         String question;
     }
 
-    @Override
-    public void close() throws Exception {
-        interpreter.close();
+    public static void main(String[] args) {
+        QuestionAnswering generator = new QuestionAnswering(QuestionAnswering.ROBERTA_BASE_SQUAD, 0);
+        System.out.println(generator.predict("god is a type of deity.", "what is god?"));
     }
+
 }//END OF QuestionAnswering

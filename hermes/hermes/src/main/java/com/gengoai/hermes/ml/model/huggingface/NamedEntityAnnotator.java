@@ -47,7 +47,7 @@ public class NamedEntityAnnotator {
             Annotation sentence = listAnnotationEntry.getValue();
             for (TokenClassification.Output output : sentenceOutput) {
                 HString eHStr = sentence.substring(output.getStart(), output.getEnd());
-                document.createAnnotation(Types.ENTITY,
+                document.createAnnotation(Types.ML_ENTITY,
                                           eHStr.start(),
                                           eHStr.end(),
                                           Map.of(Types.ENTITY_TYPE, EntityType.valueOf(output.getLabel()),

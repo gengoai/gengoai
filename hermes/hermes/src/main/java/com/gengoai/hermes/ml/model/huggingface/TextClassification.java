@@ -21,6 +21,7 @@ package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
@@ -29,8 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TextClassification implements AutoCloseable {
-    private final PythonInterpreter interpreter;
+public final class TextClassification {
+    private final String uniqueFuncName;
+
+    public TextClassification(@NonNull String modelName) {
+        this(modelName, modelName, Config.get("gpu.device").asIntegerValue(-1));
+    }
 
     public TextClassification(@NonNull String modelName,
                               int device) {
@@ -40,18 +45,12 @@ public class TextClassification implements AutoCloseable {
     public TextClassification(@NonNull String modelName,
                               @NonNull String tokenizerName,
                               int device) {
-//        this.interpreter = new PythonInterpreter("""
-//                from transformers import pipeline
-//                nlp = pipeline('text-classification', model="%s", tokenizer="%s", device=%d, top_k=None)
-//
-//                def pipe(text):
-//                    return nlp(list(text))""".formatted(modelName,
-//                tokenizerName,
-//                device));
-        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
-                                                                       "nlp = pipeline('text-classification', model=\"%s\", tokenizer=\"%s\", device=%d, top_k=None)\n" +
-                                                                       "def pipe(context):\n" +
-                                                                       "   return nlp(list(context))\n", modelName, tokenizerName, device));
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(String.format("from transformers import pipeline\n" +
+                                                     uniqueFuncName + "_nlp = pipeline('text-classification', model=\"%s\", tokenizer=\"%s\", device=%d, top_k=None)\n" +
+                                                     "def " + uniqueFuncName + "(context):\n" +
+                                                     "   return " + uniqueFuncName + "_nlp(list(context))\n", modelName, tokenizerName, device));
     }
 
     public Counter<String> predict(@NonNull String sequence) {
@@ -59,7 +58,7 @@ public class TextClassification implements AutoCloseable {
     }
 
     public List<Counter<String>> predict(@NonNull List<String> sequences) {
-        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", sequences));
+        List<List<Map<String, ?>>> rvals = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, sequences));
         return rvals.stream().map(rList -> {
             Counter<String> counter = Counters.newCounter();
             for (Map<String, ?> stringMap : rList) {
@@ -77,9 +76,5 @@ public class TextClassification implements AutoCloseable {
                                      ));
     }
 
-    @Override
-    public void close() throws Exception {
-        interpreter.close();
-    }
 
 }//END OF TextClassification

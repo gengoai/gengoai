@@ -19,6 +19,7 @@
 
 package com.gengoai.hermes.ml.model.huggingface;
 
+import com.gengoai.config.Config;
 import com.gengoai.conversion.Cast;
 import com.gengoai.python.PythonInterpreter;
 import lombok.NonNull;
@@ -27,10 +28,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TextGeneration implements AutoCloseable {
+public final class TextGeneration {
     public static final String GPT2_MEDIUM = "gpt2-medium";
 
-    private final PythonInterpreter interpreter;
+    private final String uniqueFuncName;
+
+    public TextGeneration(@NonNull String modelName) {
+        this(modelName, modelName, Config.get("gpu.device").asIntegerValue(-1));
+    }
 
     public TextGeneration(@NonNull String modelName,
                           int device) {
@@ -40,23 +45,17 @@ public class TextGeneration implements AutoCloseable {
     public TextGeneration(@NonNull String modelName,
                           @NonNull String tokenizerName,
                           int device) {
-//        this.interpreter = new PythonInterpreter("""
-//                from transformers import pipeline
-//
-//                nlp = pipeline('text-generation', model="%s", tokenizer="%s", device=%d)
-//
-//                def pipe(context, max_length):
-//                   return nlp(list(context), max_length=max_length)
-//                      """.formatted(modelName, tokenizerName, device));
-        this.interpreter = new PythonInterpreter(String.format("from transformers import pipeline\n" +
-                                                                       "nlp = pipeline('text-generation', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
-                                                                       "def pipe(context,max_length):\n" +
-                                                                       "   return nlp(list(context), max_length=max_length)\n", modelName, tokenizerName, device));
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(String.format("from transformers import pipeline\n" +
+                                                     uniqueFuncName + "_nlp = pipeline('text-generation', model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
+                                                     "def " + uniqueFuncName + "(context,max_length):\n" +
+                                                     "   return " + uniqueFuncName + "_nlp(list(context), max_length=max_length)\n", modelName, tokenizerName, device));
     }
 
 
     public List<String> predict(List<String> contexts, int maxLength) {
-        List<List<Map<String, ?>>> rvals = Cast.as(interpreter.invoke("pipe", contexts, maxLength));
+        List<List<Map<String, ?>>> rvals = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, contexts, maxLength));
         return rvals.stream().map(l -> l.get(0).get("generated_text").toString()).collect(Collectors.toList());
     }
 
@@ -67,11 +66,6 @@ public class TextGeneration implements AutoCloseable {
     public static void main(String[] args) {
         TextGeneration tg = new TextGeneration(GPT2_MEDIUM, 0);
         System.out.println(tg.predict("I went to the store and ", 50));
-    }
-
-    @Override
-    public void close() throws Exception {
-        interpreter.close();
     }
 
 }//END OF TextGeneration
