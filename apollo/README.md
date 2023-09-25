@@ -1,4 +1,7 @@
-![Apollo](https://raw.githubusercontent.com/dbracewell/apollo/gh-pages/images/apollo.png)
+![Apollo](https://gengoai.com/images/apollo.png)
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.gengoai/apollo/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.gengoai/apollo)
+[![Javadocs](http://javadoc.io/badge/com.gengoai/apollo.svg)](http://javadoc.io/doc/com.gengoai/apollo)
 
 Java Machine Learning Library
 

@@ -44,9 +44,5 @@
         <!-- ======================================================================== -->
         <!-- 3rd Party Dependencies -->
         <!-- ======================================================================== -->
-        <dependency>
-            <groupId>com.huaban</groupId>
-            <artifactId>jieba-analysis</artifactId>
-        </dependency>
     </dependencies>
 </project>

@@ -199,6 +199,9 @@ public final class PartOfSpeech implements Tag, Serializable {
     */
    @JsonCreator
    public static PartOfSpeech valueOf(String nameOrTag) {
+      if( nameOrTag == null) {
+         return null;
+      }
       nameOrTag = nameOrTag.toUpperCase();
       if(tags.containsKey(nameOrTag)) {
          return tags.get(nameOrTag);

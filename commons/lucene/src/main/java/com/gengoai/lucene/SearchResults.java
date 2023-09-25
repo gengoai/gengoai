@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
@@ -31,14 +32,18 @@ import java.util.stream.Stream;
  * @author David B. Bracewell
  */
 @Value
-public class SearchResults {
-   public long totalHits;
-   @Getter
-   public Stream<ScoredDocument> stream;
+public class SearchResults implements Iterable<ScoredDocument> {
+    public long totalHits;
+    @Getter
+    public Stream<ScoredDocument> stream;
 
-   public SearchResults(long totalHits, @NonNull Stream<ScoredDocument> stream) {
-      this.totalHits = totalHits;
-      this.stream = stream;
-   }
+    public SearchResults(long totalHits, @NonNull Stream<ScoredDocument> stream) {
+        this.totalHits = totalHits;
+        this.stream = stream;
+    }
 
+    @Override
+    public Iterator<ScoredDocument> iterator() {
+        return stream.iterator();
+    }
 }//END OF SearchResults

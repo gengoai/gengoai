@@ -32,7 +32,7 @@ Hermes requires Java 11 and is available via the maven central repository at:
 <dependency>
      <groupId>com.gengoai</groupId>
      <artifactId>hermes</artifactId>
-     <version>1.0</version>
+     <version>2.1</version>
 </dependency>
 ----
 
@@ -50,3 +50,5 @@ We provide two distributions:
 
 == User Guide
 See https://www.gengoai.com/hermes/
+
+

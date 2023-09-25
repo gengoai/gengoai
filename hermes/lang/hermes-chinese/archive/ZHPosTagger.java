@@ -64,7 +64,7 @@ public class ZHPosTagger extends POSTagger {
                                  parameters.set(Params.verbose, true);
                                  parameters.set(Params.Optimizable.historySize, 3);
                                  parameters.set(Params.Optimizable.tolerance, 1e-4);
-                                 parameters.validator.set(new ENPOSValidator());
+//                                 parameters.validator.set(new ENPOSValidator());
                              })));
     }
 

@@ -41,94 +41,94 @@ import java.util.Set;
  */
 public interface HStringMLModel extends Model, SerializableFunction<HString, HString> {
 
-   /**
-    * Delegate model.
-    *
-    * @return the model
-    */
-   Model delegate();
+    /**
+     * Delegate model.
+     *
+     * @return the model
+     */
+    Model delegate();
 
-   /**
-    * Estimate.
-    *
-    * @param documentCollection the document collection
-    */
-   default void estimate(@NonNull DocumentCollection documentCollection) {
-      delegate().estimate(transform(documentCollection));
-   }
+    /**
+     * Estimate.
+     *
+     * @param documentCollection the document collection
+     */
+    default void estimate(@NonNull DocumentCollection documentCollection) {
+        delegate().estimate(transform(documentCollection));
+    }
 
-   @Override
-   default void estimate(@NonNull DataSet dataset) {
-      delegate().estimate(dataset);
-      LocalDateTime now = LocalDateTime.now();
-      setVersion(now.format(DateTimeFormatter.ofPattern("yyyy_MM_dd")));
-   }
+    @Override
+    default void estimate(@NonNull DataSet dataset) {
+        delegate().estimate(dataset);
+        LocalDateTime now = LocalDateTime.now();
+        setVersion(now.format(DateTimeFormatter.ofPattern("yyyy_MM_dd")));
+    }
 
-   /**
-    * Gets data generator.
-    *
-    * @return the data generator
-    */
-   HStringDataSetGenerator getDataGenerator();
+    /**
+     * Gets data generator.
+     *
+     * @return the data generator
+     */
+    HStringDataSetGenerator getDataGenerator();
 
-   default Evaluation getEvaluator() {
-      return new PerInstanceEvaluation(getOutput());
-   }
+    default Evaluation getEvaluator() {
+        return new PerInstanceEvaluation(getOutput());
+    }
 
-   @Override
-   default FitParameters<?> getFitParameters() {
-      return delegate().getFitParameters();
-   }
+    @Override
+    default FitParameters<?> getFitParameters() {
+        return delegate().getFitParameters();
+    }
 
-   @Override
-   default Set<String> getInputs() {
-      return delegate().getInputs();
-   }
+    @Override
+    default Set<String> getInputs() {
+        return delegate().getInputs();
+    }
 
-   @Override
-   default LabelType getLabelType(@NonNull String name) {
-      return delegate().getLabelType(name);
-   }
+    @Override
+    default LabelType getLabelType(@NonNull String name) {
+        return delegate().getLabelType(name);
+    }
 
-   default String getOutput() {
-      return Iterables.getFirst(getOutputs()).orElseThrow(() -> new IllegalStateException("No Output is defined"));
-   }
+    default String getOutput() {
+        return Iterables.getFirst(getOutputs()).orElseThrow(() -> new IllegalStateException("No Output is defined"));
+    }
 
-   @Override
-   default Set<String> getOutputs() {
-      return delegate().getOutputs();
-   }
+    @Override
+    default Set<String> getOutputs() {
+        return delegate().getOutputs();
+    }
 
-   /**
-    * Gets version.
-    *
-    * @return the version
-    */
-   String getVersion();
+    /**
+     * Gets version.
+     *
+     * @return the version
+     */
+    String getVersion();
 
-   /**
-    * Sets version.
-    *
-    * @param version the version
-    */
-   void setVersion(String version);
+    /**
+     * Sets version.
+     *
+     * @param version the version
+     */
+    void setVersion(String version);
 
-   default DataSet transform(@NonNull DocumentCollection documentCollection) {
-      return getDataGenerator().generate(documentCollection.parallelStream());
-   }
+    default DataSet transform(@NonNull DocumentCollection documentCollection) {
+        return getDataGenerator().generate(documentCollection.parallelStream());
+    }
 
-   default HString transform(@NonNull HString hString) {
-      return apply(hString);
-   }
+    default HString transform(@NonNull HString hString) {
+        return apply(hString);
+    }
 
-   @Override
-   default DataSet transform(@NonNull DataSet dataset) {
-      return delegate().transform(dataset);
-   }
+    @Override
+    default DataSet transform(@NonNull DataSet dataset) {
+        return delegate().transform(dataset);
+    }
 
-   @Override
-   default Datum transform(@NonNull Datum datum) {
-      return delegate().transform(datum);
-   }
+    @Override
+    default Datum transform(@NonNull Datum datum) {
+        return delegate().transform(datum);
+    }
 
 }//END OF HStringMLModel

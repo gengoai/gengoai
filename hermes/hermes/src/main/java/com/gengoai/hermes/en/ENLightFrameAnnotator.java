@@ -37,7 +37,8 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
         if (annotation == null) {
             return null;
         }
-        annotation = rg.getSubTreeText(annotation, true).asAnnotation();
+        annotation = rg.getSubTreeText(annotation, true)
+                       .asAnnotation();
         if (annotation.document() != null) {
             annotation.attach();
         }
@@ -145,7 +146,6 @@ public class ENLightFrameAnnotator extends SentenceLevelAnnotator {
                 } else {
                     processSVO(frameObj);
                 }
-
                 //The frame will be the head of the verb phrase + any particles
                 frameObj.expand(rg);
                 Annotation frame = frameObj.attachFrame();

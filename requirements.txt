@@ -2,3 +2,5 @@ torch
 transformers
 jep
 xformers
+sentence-transformers
+accelerate

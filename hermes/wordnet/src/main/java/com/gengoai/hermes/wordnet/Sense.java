@@ -40,106 +40,106 @@ import java.util.Set;
 @JsonDeserialize(as = SenseImpl.class)
 public interface Sense extends Comparable<Sense> {
 
-   /**
-    * Depth int.
-    *
-    * @return the int
-    */
-   int depth();
+    /**
+     * Depth int.
+     *
+     * @return the int
+     */
+    int depth();
 
-   /**
-    * Gets adjective marker.
-    *
-    * @return the adjective marker
-    */
-   AdjectiveMarker getAdjectiveMarker();
+    /**
+     * Gets adjective marker.
+     *
+     * @return the adjective marker
+     */
+    AdjectiveMarker getAdjectiveMarker();
 
-   /**
-    * Gets id.
-    *
-    * @return the id
-    */
-   String getId();
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
+    String getId();
 
-   /**
-    * Gets language.
-    *
-    * @return the language
-    */
-   Language getLanguage();
+    /**
+     * Gets language.
+     *
+     * @return the language
+     */
+    Language getLanguage();
 
-   /**
-    * ASCII form of a word as entered in the synset by the lexicographer, with spaces replaced by underscore characters
-    * (_). The text of the word is case sensitive, in contrast to its form in the corresponding index. pos file, that
-    * contains only lower-case forms. In data.adj , a word is followed by a syntactic marker if one was specified in the
-    * lexicographer file. A syntactic marker is appended, in parentheses, onto word without any intervening spaces. See
-    * wninput(5WN) for a list of the syntactic markers for adjectives.
-    *
-    * @return the lemma
-    */
-   String getLemma();
+    /**
+     * ASCII form of a word as entered in the synset by the lexicographer, with spaces replaced by underscore characters
+     * (_). The text of the word is case sensitive, in contrast to its form in the corresponding index. pos file, that
+     * contains only lower-case forms. In data.adj , a word is followed by a syntactic marker if one was specified in the
+     * lexicographer file. A syntactic marker is appended, in parentheses, onto word without any intervening spaces. See
+     * wninput(5WN) for a list of the syntactic markers for adjectives.
+     *
+     * @return the lemma
+     */
+    String getLemma();
 
-   /**
-    * One digit hexadecimal integer that, when appended onto lemma , uniquely identifies a sense within a lexicographer
-    * file. lex_id numbers usually start with 0 , and are incremented as additional senses of the word are added to the
-    * same file, although there is no requirement that the numbers be consecutive or begin with 0 . Note that a value of
-    * 0 is the default, and therefore is not present in lexicographer files.
-    *
-    * @return the lexical id
-    */
-   int getLexicalId();
+    /**
+     * One digit hexadecimal integer that, when appended onto lemma , uniquely identifies a sense within a lexicographer
+     * file. lex_id numbers usually start with 0 , and are incremented as additional senses of the word are added to the
+     * same file, although there is no requirement that the numbers be consecutive or begin with 0 . Note that a value of
+     * 0 is the default, and therefore is not present in lexicographer files.
+     *
+     * @return the lexical id
+     */
+    int getLexicalId();
 
-   /**
-    * Gets pOS.
-    *
-    * @return the pOS
-    */
-   PartOfSpeech getPOS();
+    /**
+     * Gets pOS.
+     *
+     * @return the pOS
+     */
+    PartOfSpeech getPOS();
 
-   /**
-    * Gets related senses.
-    *
-    * @param relation the relation
-    * @return the related senses
-    */
-   Set<Sense> getRelatedSenses(WordNetRelation relation);
+    /**
+     * Gets related senses.
+     *
+     * @param relation the relation
+     * @return the related senses
+     */
+    Set<Sense> getRelatedSenses(WordNetRelation relation);
 
-   /**
-    * Gets related senses.
-    *
-    * @return the related senses
-    */
-   SetMultimap<WordNetRelation, Sense> getRelatedSenses();
+    /**
+     * Gets related senses.
+     *
+     * @return the related senses
+     */
+    SetMultimap<WordNetRelation, Sense> getRelatedSenses();
 
-   /**
-    * Senses in WordNet are generally ordered from most to least frequently used, with the most common sense numbered 1.
-    * Frequency of use is determined by the number of times a sense is tagged in the various semantic concordance texts.
-    * Senses that are not semantically tagged follow the ordered senses. The tagsense_cnt field for each entry in the
-    * index.pos files indicates how many of the senses in the list have been tagged.
-    *
-    * @return the sense number
-    */
-   int getSenseNumber();
+    /**
+     * Senses in WordNet are generally ordered from most to least frequently used, with the most common sense numbered 1.
+     * Frequency of use is determined by the number of times a sense is tagged in the various semantic concordance texts.
+     * Senses that are not semantically tagged follow the ordered senses. The tagsense_cnt field for each entry in the
+     * index.pos files indicates how many of the senses in the list have been tagged.
+     *
+     * @return the sense number
+     */
+    int getSenseNumber();
 
-   /**
-    * Gets synset.
-    *
-    * @return the synset
-    */
-   Synset getSynset();
+    /**
+     * Gets synset.
+     *
+     * @return the synset
+     */
+    Synset getSynset();
 
-   /**
-    * Gets synset position.
-    *
-    * @return the synset position
-    */
-   int getSynsetPosition();
+    /**
+     * Gets synset position.
+     *
+     * @return the synset position
+     */
+    int getSynsetPosition();
 
-   /**
-    * Gets verb frames.
-    *
-    * @return the verb frames
-    */
-   List<VerbFrame> getVerbFrames();
+    /**
+     * Gets verb frames.
+     *
+     * @return the verb frames
+     */
+    List<VerbFrame> getVerbFrames();
 
 }//END OF Sense

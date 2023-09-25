@@ -72,6 +72,7 @@ public class RSSMonitor extends TimerTask {
                     }
                 }
             } catch (Exception e) {
+                LogUtils.logSevere(log, "Error processing {0}", url);
                 e.printStackTrace();
             }
         }

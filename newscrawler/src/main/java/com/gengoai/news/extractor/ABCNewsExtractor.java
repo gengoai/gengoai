@@ -17,23 +17,30 @@
  * under the License.
  */
 
-package com.gengoai.hermes.zh;
+package com.gengoai.news.extractor;
 
-import com.gengoai.hermes.AnnotatableType;
-import com.gengoai.hermes.Annotation;
-import com.gengoai.hermes.Types;
-import com.gengoai.hermes.annotator.SentenceLevelAnnotator;
+import com.gengoai.news.NewsArticle;
+import org.jsoup.nodes.Document;
+import org.kohsuke.MetaInfServices;
 
+import java.util.List;
 import java.util.Set;
 
-public class ZHPhraseChunkAnnotator extends SentenceLevelAnnotator {
+@MetaInfServices
+public class ABCNewsExtractor extends ArticleExtractor {
     @Override
-    public Set<AnnotatableType> satisfies() {
-        return Set.of(Types.PHRASE_CHUNK);
+    protected NewsArticle extract(Document doc) {
+        removeElements(doc, List.of("figure", "script", "figcaption"));
+        NewsArticle article = new NewsArticle();
+        article.setBody(findFirst(doc, List.of("article[class] > p")));
+        article.setHeadline(findFirst(doc, List.of("h1[class*='vMjA']")));
+        article.setAuthor(findFirst(doc, List.of("span > a[class='zZyg UbGl iFzk qdXb WCDh DbOX tqUt']")));
+        return article;
     }
 
     @Override
-    protected void annotate(Annotation sentence) {
-
+    public Set<String> getSupportedDomains() {
+        return Set.of("abcnews.go.com");
     }
-}
+
+}//END OF ABCNewsExtractor

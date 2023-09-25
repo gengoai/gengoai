@@ -1,3 +1,4 @@
 = Mango
 
-image::https://raw.githubusercontent.com/gengoai/mango/master/docs/mango.png[align="center"]
+image::https://gengoai.com/images/mango.png[align="center"]
+

@@ -81,6 +81,13 @@ class DefaultDocumentImpl extends BaseHString implements Document {
         this.annotationSet = new AnnotationSet();
     }
 
+    public void clearAnnotations() {
+        annotationSet.clear();
+        if (tokens != null) {
+            tokens = null;
+        }
+    }
+
     @JsonCreator
     private DefaultDocumentImpl(@JsonProperty("content") String content,
                                 @JsonProperty("id") String id,
@@ -137,7 +144,7 @@ class DefaultDocumentImpl extends BaseHString implements Document {
     @Override
     @JsonProperty("annotations")
     public List<Annotation> annotations() {
-        if( annotationSet.size() == 0){
+        if (annotationSet.size() == 0) {
             return Collections.emptyList();
         }
         return Streams.asStream(annotationSet.iterator())

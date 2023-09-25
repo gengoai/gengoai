@@ -19,10 +19,10 @@
 
 package com.gengoai.hermes.corpus;
 
+import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.math.measure.Association;
 import com.gengoai.apollo.math.measure.ContingencyTable;
 import com.gengoai.apollo.math.measure.ContingencyTableCalculator;
-import com.gengoai.apollo.data.DataSet;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.multimap.ArrayListMultimap;
 import com.gengoai.collection.multimap.ListMultimap;
@@ -76,405 +76,406 @@ import static com.gengoai.collection.counter.Counters.newCounter;
  * </p>
  */
 public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
-   /**
-    * Configuration option for setting the reporting interval for when updating a DocumentCollection or Corpus
-    */
-   String REPORT_INTERVAL = "Corpus.reportInterval";
-   /**
-    * Configuration option for setting the reporting log level for when updating a DocumentCollection or Corpus
-    */
-   String REPORT_LEVEL = "Corpus.reportLevel";
+    /**
+     * Configuration option for setting the reporting interval for when updating a DocumentCollection or Corpus
+     */
+    String REPORT_INTERVAL = "Corpus.reportInterval";
+    /**
+     * Configuration option for setting the reporting log level for when updating a DocumentCollection or Corpus
+     */
+    String REPORT_LEVEL = "Corpus.reportLevel";
 
-   /**
-    * Creates a document collection for one or more documents.
-    *
-    * @param documents the documents
-    * @return the document collection
-    */
-   static DocumentCollection create(@NonNull Document... documents) {
-      return new MStreamDocumentCollection(StreamingContext.local().stream(documents));
-   }
+    /**
+     * Creates a document collection for one or more documents.
+     *
+     * @param documents the documents
+     * @return the document collection
+     */
+    static DocumentCollection create(@NonNull Document... documents) {
+        return new MStreamDocumentCollection(StreamingContext.local().stream(documents));
+    }
 
-   /**
-    * Creates a document collection for one or more documents.
-    *
-    * @param documents the documents
-    * @return the document collection
-    */
-   static DocumentCollection create(@NonNull Iterable<Document> documents) {
-      return new MStreamDocumentCollection(StreamingContext.local().stream(documents));
-   }
+    /**
+     * Creates a document collection for one or more documents.
+     *
+     * @param documents the documents
+     * @return the document collection
+     */
+    static DocumentCollection create(@NonNull Iterable<Document> documents) {
+        return new MStreamDocumentCollection(StreamingContext.local().stream(documents));
+    }
 
-   /**
-    * Creates a document collection for a stream of  documents.
-    *
-    * @param documents the documents
-    * @return the document collection
-    */
-   static DocumentCollection create(@NonNull Stream<Document> documents) {
-      return new MStreamDocumentCollection(StreamingContext.local().stream(documents));
-   }
+    /**
+     * Creates a document collection for a stream of  documents.
+     *
+     * @param documents the documents
+     * @return the document collection
+     */
+    static DocumentCollection create(@NonNull Stream<Document> documents) {
+        return new MStreamDocumentCollection(StreamingContext.local().stream(documents));
+    }
 
-   /**
-    * Creates a document collection for a stream of  documents.
-    *
-    * @param documents the documents
-    * @return the document collection
-    */
-   static DocumentCollection create(@NonNull MStream<Document> documents) {
-      return new MStreamDocumentCollection(documents);
-   }
+    /**
+     * Creates a document collection for a stream of  documents.
+     *
+     * @param documents the documents
+     * @return the document collection
+     */
+    static DocumentCollection create(@NonNull MStream<Document> documents) {
+        return new MStreamDocumentCollection(documents);
+    }
 
-   /**
-    * Creates a document collection from a specification detailing the document format and path of the documents. The
-    * specification should have the document format as the schema, e.g. <code>FORMAT::PATH;OPTIONS</code>
-    *
-    * @param specification the specification
-    * @return the document collection
-    */
-   static DocumentCollection create(@NonNull String specification) {
-      try {
-         return create(Specification.parse(specification));
-      } catch (IllegalArgumentException e) {
-         throw new RuntimeException(e);
-      }
-   }
+    /**
+     * Creates a document collection from a specification detailing the document format and path of the documents. The
+     * specification should have the document format as the schema, e.g. <code>FORMAT::PATH;OPTIONS</code>
+     *
+     * @param specification the specification
+     * @return the document collection
+     */
+    static DocumentCollection create(@NonNull String specification) {
+        try {
+            return create(Specification.parse(specification));
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-   /**
-    * Creates a document collection from a specification detailing the document format and path of the documents. The
-    * specification should have the document format as the schema, e.g. <code>FORMAT::PATH;OPTIONS</code>
-    *
-    * @param specification the specification
-    * @return the document collection
-    */
-   static DocumentCollection create(@NonNull Specification specification) {
-      if (specification.getSchema().equalsIgnoreCase("corpus")) {
-         return Corpus.open(specification.getPath());
-      }
-      return create(DocFormatService.create(specification)
-                                    .read(Resources.from(specification.getPath())));
-   }
+    /**
+     * Creates a document collection from a specification detailing the document format and path of the documents. The
+     * specification should have the document format as the schema, e.g. <code>FORMAT::PATH;OPTIONS</code>
+     *
+     * @param specification the specification
+     * @return the document collection
+     */
+    static DocumentCollection create(@NonNull Specification specification) {
+        if (specification.getSchema().equalsIgnoreCase("corpus")) {
+            return Corpus.open(specification.getPath());
+        }
+        return create(DocFormatService.create(specification)
+                                      .read(Resources.from(specification.getPath())));
+    }
 
-   /**
-    * Annotates this corpus with the given annotation types and returns a new corpus with the given annotation types
-    * present
-    *
-    * @param annotatableTypes The annotation types to annotate
-    * @return A new corpus with the given annotation types present.
-    */
-   default DocumentCollection annotate(@NonNull AnnotatableType... annotatableTypes) {
-      AnnotationPipeline pipeline = new AnnotationPipeline(annotatableTypes);
-      if (pipeline.requiresUpdate()) {
-         return update("Annotate", pipeline::annotate);
-      }
-      return this;
-   }
+    /**
+     * Annotates this corpus with the given annotation types and returns a new corpus with the given annotation types
+     * present
+     *
+     * @param annotatableTypes The annotation types to annotate
+     * @return A new corpus with the given annotation types present.
+     */
+    default DocumentCollection annotate(@NonNull AnnotatableType... annotatableTypes) {
+        AnnotationPipeline pipeline = new AnnotationPipeline(annotatableTypes);
+        if (pipeline.requiresUpdate()) {
+            return update("Annotate", pipeline::annotate);
+        }
+        return this;
+    }
 
-   /**
-    * Applies a lexicon to the corpus creating annotations of the given type for matches.
-    *
-    * @param lexicon the lexicon to match
-    * @param onMatch the on match
-    * @return the corpus
-    */
-   default DocumentCollection apply(@NonNull Lexicon lexicon, @NonNull SerializableConsumer<HString> onMatch) {
-      return update("ApplyLexicon", doc -> lexicon.extract(doc).forEach(onMatch));
-   }
+    /**
+     * Applies a lexicon to the corpus creating annotations of the given type for matches.
+     *
+     * @param lexicon the lexicon to match
+     * @param onMatch the on match
+     * @return the corpus
+     */
+    default DocumentCollection apply(@NonNull Lexicon lexicon, @NonNull SerializableConsumer<HString> onMatch) {
+        return update("ApplyLexicon", doc -> lexicon.extract(doc).forEach(onMatch));
+    }
 
-   default DocumentCollection apply(@NonNull SerializableFunction<HString, HString> function) {
-      return update(function.getClass().getSimpleName(), function::apply);
-   }
+    default DocumentCollection apply(@NonNull SerializableFunction<HString, HString> function) {
+        return update(function.getClass().getSimpleName(), function::apply);
+    }
 
-   /**
-    * Applies token regular expression to the corpus creating annotations of the given type for matches.
-    *
-    * @param pattern the pattern
-    * @param onMatch the on match
-    * @return the corpus
-    */
-   default DocumentCollection apply(@NonNull TokenRegex pattern, @NonNull SerializableConsumer<TokenMatch> onMatch) {
-      return update("ApplyTokenRegex", doc -> {
-         TokenMatcher matcher = pattern.matcher(doc);
-         while (matcher.find()) {
-            onMatch.accept(matcher.asTokenMatch());
-         }
-      });
-   }
+    /**
+     * Applies token regular expression to the corpus creating annotations of the given type for matches.
+     *
+     * @param pattern the pattern
+     * @param onMatch the on match
+     * @return the corpus
+     */
+    default DocumentCollection apply(@NonNull TokenRegex pattern, @NonNull SerializableConsumer<TokenMatch> onMatch) {
+        return update("ApplyTokenRegex", doc -> {
+            TokenMatcher matcher = pattern.matcher(doc);
+            while (matcher.find()) {
+                onMatch.accept(matcher.asTokenMatch());
+            }
+        });
+    }
 
-   /**
-    * As data set data set.
-    *
-    * @param HStringDataSetGenerator the example generator
-    * @return the data set
-    */
-   default DataSet asDataSet(@NonNull HStringDataSetGenerator HStringDataSetGenerator) {
-      return HStringDataSetGenerator.generate(stream());
-   }
+    /**
+     * As data set data set.
+     *
+     * @param HStringDataSetGenerator the example generator
+     * @return the data set
+     */
+    default DataSet asDataSet(@NonNull HStringDataSetGenerator HStringDataSetGenerator) {
+        return HStringDataSetGenerator.generate(stream());
+    }
 
-   /**
-    * Caches any actions performed on this collection.
-    *
-    * @return the document collection
-    */
-   default DocumentCollection cache() {
-      return this;
-   }
+    /**
+     * Caches any actions performed on this collection.
+     *
+     * @return the document collection
+     */
+    default DocumentCollection cache() {
+        return this;
+    }
 
-   /**
-    * Calculates the document frequency of annotations of the given annotation type in the corpus. Annotations are
-    * transformed into strings using the given toString function.
-    *
-    * @param extractor the LyreExpression to use for extracting terms
-    * @return A counter containing document frequencies of the given annotation type
-    */
-   default Counter<String> documentCount(@NonNull Extractor extractor) {
-      ProgressLogger progressLogger = ProgressLogger.create(this, "documentCount");
-      MCounterAccumulator<String> documentCounts = getStreamingContext().counterAccumulator();
-      parallelStream().forEach(doc -> {
-         progressLogger.start();
-         extractor.extract(doc)
-                  .count()
-                  .forEach((term, count) -> documentCounts.increment(term, 1.0));
-         progressLogger.stop(doc.tokenLength());
-      });
-      progressLogger.report();
-      return documentCounts.value();
-   }
+    /**
+     * Calculates the document frequency of annotations of the given annotation type in the corpus. Annotations are
+     * transformed into strings using the given toString function.
+     *
+     * @param extractor the LyreExpression to use for extracting terms
+     * @return A counter containing document frequencies of the given annotation type
+     */
+    default Counter<String> documentCount(@NonNull Extractor extractor) {
+        ProgressLogger progressLogger = ProgressLogger.create(this, "documentCount");
+        MCounterAccumulator<String> documentCounts = getStreamingContext().counterAccumulator();
+        parallelStream().forEach(doc -> {
+            progressLogger.start();
+            extractor.extract(doc)
+                     .count()
+                     .forEach((term, count) -> documentCounts.increment(term, 1.0));
+            progressLogger.stop(doc.tokenLength());
+        });
+        progressLogger.report();
+        return documentCounts.value();
+    }
 
-   default void export(String specification) throws IOException {
-      Specification spec = Specification.parse(specification);
-      DocFormat format = DocFormatService.create(spec);
-      format.write(this, Resources.from(spec.getPath()));
-   }
+    default void export(String specification) throws IOException {
+        Specification spec = Specification.parse(specification);
+        DocFormat format = DocFormatService.create(spec);
+        Resources.from(spec.getPath()).mkdirs();
+        format.write(this, Resources.from(spec.getPath()));
+    }
 
-   /**
-    * Filters the documents in the collection using the given predicate
-    *
-    * @param predicate the predicate
-    * @return the filtered document collection
-    */
-   default DocumentCollection filter(@NonNull SerializablePredicate<Document> predicate) {
-      return new MStreamDocumentCollection(stream().filter(predicate));
-   }
+    /**
+     * Filters the documents in the collection using the given predicate
+     *
+     * @param predicate the predicate
+     * @return the filtered document collection
+     */
+    default DocumentCollection filter(@NonNull SerializablePredicate<Document> predicate) {
+        return new MStreamDocumentCollection(stream().filter(predicate));
+    }
 
-   /**
-    * Gets the streaming context associated with this stream
-    *
-    * @return the streaming context
-    */
-   StreamingContext getStreamingContext();
+    /**
+     * Gets the streaming context associated with this stream
+     *
+     * @return the streaming context
+     */
+    StreamingContext getStreamingContext();
 
-   /**
-    * Groups documents in the document store using the given function.
-    *
-    * @param <K>         The key type
-    * @param keyFunction Converts the document into a key to group the documents  by
-    * @return A <code>Multimap</code> of key - document pairs.
-    */
-   default <K> Multimap<K, Document> groupBy(@NonNull SerializableFunction<? super Document, K> keyFunction) {
-      ListMultimap<K, Document> grouping = new ArrayListMultimap<>();
-      forEach(document -> grouping.put(keyFunction.apply(document), document));
-      return grouping;
-   }
+    /**
+     * Groups documents in the document store using the given function.
+     *
+     * @param <K>         The key type
+     * @param keyFunction Converts the document into a key to group the documents  by
+     * @return A <code>Multimap</code> of key - document pairs.
+     */
+    default <K> Multimap<K, Document> groupBy(@NonNull SerializableFunction<? super Document, K> keyFunction) {
+        ListMultimap<K, Document> grouping = new ArrayListMultimap<>();
+        forEach(document -> grouping.put(keyFunction.apply(document), document));
+        return grouping;
+    }
 
-   /**
-    * Checks if the collection is empty
-    *
-    * @return True if this document collection has no documents.
-    */
-   default boolean isEmpty() {
-      return stream().isEmpty();
-   }
+    /**
+     * Checks if the collection is empty
+     *
+     * @return True if this document collection has no documents.
+     */
+    default boolean isEmpty() {
+        return stream().isEmpty();
+    }
 
-   @Override
-   default Iterator<Document> iterator() {
-      return stream().iterator();
-   }
+    @Override
+    default Iterator<Document> iterator() {
+        return stream().iterator();
+    }
 
-   /**
-    * Calculates the total corpus frequencies for NGrams extracted using the given extractor. Note tha all n-grams are
-    * returned in their string form as Tuples.
-    *
-    * @param nGramExtractor the extractor
-    * @return the counter of string tuples representing the ngrams
-    */
-   default Counter<Tuple> nGramCount(@NonNull NGramExtractor nGramExtractor) {
-      ProgressLogger progressLogger = ProgressLogger.create(this, "nGramCount");
-      Counter<Tuple> counter = newCounter(parallelStream().flatMap(doc -> {
-         progressLogger.start();
-         Stream<Tuple> stream = nGramExtractor.extractStringTuples(doc).stream();
-         progressLogger.stop(doc.tokenLength());
-         return stream;
-      }).countByValue());
-      progressLogger.report();
-      return counter;
-   }
+    /**
+     * Calculates the total corpus frequencies for NGrams extracted using the given extractor. Note tha all n-grams are
+     * returned in their string form as Tuples.
+     *
+     * @param nGramExtractor the extractor
+     * @return the counter of string tuples representing the ngrams
+     */
+    default Counter<Tuple> nGramCount(@NonNull NGramExtractor nGramExtractor) {
+        ProgressLogger progressLogger = ProgressLogger.create(this, "nGramCount");
+        Counter<Tuple> counter = newCounter(parallelStream().flatMap(doc -> {
+            progressLogger.start();
+            Stream<Tuple> stream = nGramExtractor.extractStringTuples(doc).stream();
+            progressLogger.stop(doc.tokenLength());
+            return stream;
+        }).countByValue());
+        progressLogger.report();
+        return counter;
+    }
 
-   /**
-    * Gets a parallel stream over the documents in the collection
-    *
-    * @return the stream of documents
-    */
-   MStream<Document> parallelStream();
+    /**
+     * Gets a parallel stream over the documents in the collection
+     *
+     * @return the stream of documents
+     */
+    MStream<Document> parallelStream();
 
-   /**
-    * Generates a new Corpus from the results of querying this corpus.
-    *
-    * @param query the query
-    * @return the SearchResult containing documents matching the query
-    * @throws ParseException the parse exception
-    */
-   default SearchResults query(@NonNull String query) throws ParseException {
-      return query(QueryParser.parse(query));
-   }
+    /**
+     * Generates a new Corpus from the results of querying this corpus.
+     *
+     * @param query the query
+     * @return the SearchResult containing documents matching the query
+     * @throws ParseException the parse exception
+     */
+    default SearchResults query(@NonNull String query) throws ParseException {
+        return query(QueryParser.parse(query));
+    }
 
-   /**
-    * Generates a new Corpus from the results of querying this corpus.
-    *
-    * @param query the query
-    * @return the SearchResult containing documents matching the query
-    */
-   SearchResults query(@NonNull Query query);
+    /**
+     * Generates a new Corpus from the results of querying this corpus.
+     *
+     * @param query the query
+     * @return the SearchResult containing documents matching the query
+     */
+    SearchResults query(@NonNull Query query);
 
-   /**
-    * Repartitions the corpus.
-    *
-    * @param numPartitions the number of partitions
-    * @return the corpus
-    */
-   default DocumentCollection repartition(int numPartitions) {
-      return this;
-   }
+    /**
+     * Repartitions the corpus.
+     *
+     * @param numPartitions the number of partitions
+     * @return the corpus
+     */
+    default DocumentCollection repartition(int numPartitions) {
+        return this;
+    }
 
-   /**
-    * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
-    * sampling</a>.
-    *
-    * @param size the number of documents to include in the sample
-    * @return the sampled corpus
-    */
-   default DocumentCollection sample(int size) {
-      return new MStreamDocumentCollection(stream().sample(false, size));
-   }
+    /**
+     * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
+     * sampling</a>.
+     *
+     * @param size the number of documents to include in the sample
+     * @return the sampled corpus
+     */
+    default DocumentCollection sample(int size) {
+        return new MStreamDocumentCollection(stream().sample(false, size));
+    }
 
-   /**
-    * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
-    * sampling</a>.
-    *
-    * @param count  the number of documents to include in the sample
-    * @param random Random number generator to use for selection
-    * @return the sampled corpus
-    */
-   default DocumentCollection sample(int count, @NonNull Random random) {
-      if (count <= 0) {
-         return new MStreamDocumentCollection(StreamingContext.local().empty());
-      }
-      List<Document> sample = stream().limit(count).collect();
-      AtomicInteger k = new AtomicInteger(count + 1);
-      stream().skip(count).forEach(document -> {
-         int rndIndex = random.nextInt(k.getAndIncrement());
-         if (rndIndex < count) {
-            sample.set(rndIndex, document);
-         }
-      });
-      return new MStreamDocumentCollection(StreamingContext.local().stream(sample).parallel());
-   }
+    /**
+     * Create a sample of this corpus using <a href="https://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
+     * sampling</a>.
+     *
+     * @param count  the number of documents to include in the sample
+     * @param random Random number generator to use for selection
+     * @return the sampled corpus
+     */
+    default DocumentCollection sample(int count, @NonNull Random random) {
+        if (count <= 0) {
+            return new MStreamDocumentCollection(StreamingContext.local().empty());
+        }
+        List<Document> sample = stream().limit(count).collect();
+        AtomicInteger k = new AtomicInteger(count + 1);
+        stream().skip(count).forEach(document -> {
+            int rndIndex = random.nextInt(k.getAndIncrement());
+            if (rndIndex < count) {
+                sample.set(rndIndex, document);
+            }
+        });
+        return new MStreamDocumentCollection(StreamingContext.local().stream(sample).parallel());
+    }
 
-   /**
-    * Calculates the bigrams with a significant co-occurrence using the Mikolov association measure.
-    *
-    * @param nGramExtractor the extractor to use for extracting NGrams
-    * @param minCount       the minimum co-occurrence count for a bigram to be considered
-    * @param minScore       the minimum score for a bigram to be significant
-    * @return the counter of bigrams and their scores
-    */
-   default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, double minScore) {
-      return significantBigrams(nGramExtractor, minCount, minScore, Association.MIKOLOV);
-   }
+    /**
+     * Calculates the bigrams with a significant co-occurrence using the Mikolov association measure.
+     *
+     * @param nGramExtractor the extractor to use for extracting NGrams
+     * @param minCount       the minimum co-occurrence count for a bigram to be considered
+     * @param minScore       the minimum score for a bigram to be significant
+     * @return the counter of bigrams and their scores
+     */
+    default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor, int minCount, double minScore) {
+        return significantBigrams(nGramExtractor, minCount, minScore, Association.MIKOLOV);
+    }
 
-   /**
-    * Calculates the bigrams with a significant co-occurrence using the given association measure.
-    *
-    * @param nGramExtractor the extractor to use for extracting NGrams
-    * @param minCount       the minimum co-occurrence count for a bigram to be considered
-    * @param minScore       the minimum score for a bigram to be significant
-    * @param calculator     the association measure to use for determining significance
-    * @return the counter of bigrams and their scores
-    */
-   default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor,
-                                             int minCount,
-                                             double minScore,
-                                             @NonNull ContingencyTableCalculator calculator
-   ) {
-      NGramExtractor temp = nGramExtractor.toBuilder().minOrder(1).maxOrder(2).build();
-      Counter<Tuple> ngrams = nGramCount(temp).filterByValue(v -> v >= minCount);
-      Counter<Tuple> unigrams = ngrams.filterByKey(t -> t.degree() == 1);
-      Counter<Tuple> bigrams = ngrams.filterByKey(t -> t.degree() == 2);
-      ngrams.clear();
-      Counter<Tuple> filtered = newCounter();
-      bigrams.items().forEach(bigram -> {
-         double score = calculator.calculate(ContingencyTable.create2X2(bigrams.get(bigram),
-                                                                        unigrams.get(bigram.slice(0, 1)),
-                                                                        unigrams.get(bigram.slice(1, 2)),
-                                                                        unigrams.sum()));
-         if (score >= minScore) {
-            filtered.set(bigram, score);
-         }
-      });
-      return filtered;
-   }
+    /**
+     * Calculates the bigrams with a significant co-occurrence using the given association measure.
+     *
+     * @param nGramExtractor the extractor to use for extracting NGrams
+     * @param minCount       the minimum co-occurrence count for a bigram to be considered
+     * @param minScore       the minimum score for a bigram to be significant
+     * @param calculator     the association measure to use for determining significance
+     * @return the counter of bigrams and their scores
+     */
+    default Counter<Tuple> significantBigrams(@NonNull NGramExtractor nGramExtractor,
+                                              int minCount,
+                                              double minScore,
+                                              @NonNull ContingencyTableCalculator calculator
+                                             ) {
+        NGramExtractor temp = nGramExtractor.toBuilder().minOrder(1).maxOrder(2).build();
+        Counter<Tuple> ngrams = nGramCount(temp).filterByValue(v -> v >= minCount);
+        Counter<Tuple> unigrams = ngrams.filterByKey(t -> t.degree() == 1);
+        Counter<Tuple> bigrams = ngrams.filterByKey(t -> t.degree() == 2);
+        ngrams.clear();
+        Counter<Tuple> filtered = newCounter();
+        bigrams.items().forEach(bigram -> {
+            double score = calculator.calculate(ContingencyTable.create2X2(bigrams.get(bigram),
+                                                                           unigrams.get(bigram.slice(0, 1)),
+                                                                           unigrams.get(bigram.slice(1, 2)),
+                                                                           unigrams.sum()));
+            if (score >= minScore) {
+                filtered.set(bigram, score);
+            }
+        });
+        return filtered;
+    }
 
-   /**
-    * The number of documents in the corpus
-    *
-    * @return the number of documents in the corpus
-    */
-   default long size() {
-      return parallelStream().count();
-   }
+    /**
+     * The number of documents in the corpus
+     *
+     * @return the number of documents in the corpus
+     */
+    default long size() {
+        return parallelStream().count();
+    }
 
-   /**
-    * Gets a stream over the documents in the collection
-    *
-    * @return the stream of documents
-    */
-   MStream<Document> stream();
+    /**
+     * Gets a stream over the documents in the collection
+     *
+     * @return the stream of documents
+     */
+    MStream<Document> stream();
 
-   /**
-    * Calculates the total corpus frequency of terms extracted using the given extractor.
-    *
-    * @param extractor the extractor to use for generating terms
-    * @return the counter of terms with frequencies
-    */
-   default Counter<String> termCount(@NonNull Extractor extractor) {
-      ProgressLogger progressLogger = ProgressLogger.create(this, "termCount");
-      MCounterAccumulator<String> termCounts = getStreamingContext().counterAccumulator();
-      parallelStream().forEach(doc -> {
-                         progressLogger.start();
-                         termCounts.merge(extractor.extract(doc).count());
-                         progressLogger.stop(doc.tokenLength());
-                      });
-      progressLogger.report();
-      return termCounts.value();
-   }
+    /**
+     * Calculates the total corpus frequency of terms extracted using the given extractor.
+     *
+     * @param extractor the extractor to use for generating terms
+     * @return the counter of terms with frequencies
+     */
+    default Counter<String> termCount(@NonNull Extractor extractor) {
+        ProgressLogger progressLogger = ProgressLogger.create(this, "termCount");
+        MCounterAccumulator<String> termCounts = getStreamingContext().counterAccumulator();
+        parallelStream().forEach(doc -> {
+            progressLogger.start();
+            termCounts.merge(extractor.extract(doc).count());
+            progressLogger.stop(doc.tokenLength());
+        });
+        progressLogger.report();
+        return termCounts.value();
+    }
 
-   /**
-    * Updates all documents in the corpus using the given document processor
-    *
-    * @param operationName     the name of the update operation being performed
-    * @param documentProcessor the document processor
-    * @return this corpus with updates
-    */
-   DocumentCollection update(String operationName, @NonNull SerializableConsumer<Document> documentProcessor);
+    /**
+     * Updates all documents in the corpus using the given document processor
+     *
+     * @param operationName     the name of the update operation being performed
+     * @param documentProcessor the document processor
+     * @return this corpus with updates
+     */
+    DocumentCollection update(String operationName, @NonNull SerializableConsumer<Document> documentProcessor);
 
-   /**
-    * Updates all documents in the corpus using the given {@link CaduceusProgram}
-    *
-    * @param program the CaduceusProgram to execute on each document.
-    * @return this corpus with updates
-    */
-   default DocumentCollection update(@NonNull CaduceusProgram program) {
-      return update("ExecuteCaduceusProgram", program::execute);
-   }
+    /**
+     * Updates all documents in the corpus using the given {@link CaduceusProgram}
+     *
+     * @param program the CaduceusProgram to execute on each document.
+     * @return this corpus with updates
+     */
+    default DocumentCollection update(@NonNull CaduceusProgram program) {
+        return update("ExecuteCaduceusProgram", program::execute);
+    }
 
 }//END OF DocumentCollection

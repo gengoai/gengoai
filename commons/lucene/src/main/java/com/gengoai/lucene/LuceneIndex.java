@@ -383,7 +383,7 @@ public abstract class LuceneIndex implements AutoCloseable, Iterable<IndexDocume
      * @throws IOException Something went wrong during the search.
      */
     public SearchResults search(@NonNull Query query, int N) throws IOException {
-        LogUtils.logInfo(log, "Calling search(query=''{0}'', n={1})", query, N);
+        LogUtils.logFine(log, "Calling search(query=''{0}'', n={1})", query, N);
         LuceneIndexSearcher supplier = searcher();
         try {
             TopDocs topDocs = supplier.openSearcher().search(query, N);

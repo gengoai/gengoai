@@ -31,34 +31,34 @@ import lombok.NonNull;
  * @author David B. Bracewell
  */
 class AnnotationTree extends IntervalTree<Annotation> {
-   private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-   /**
-    * Ceiling annotation.
-    *
-    * @param annotation the annotation
-    * @param type       the type
-    * @return the annotation
-    */
-   public Annotation ceiling(@NonNull Annotation annotation, @NonNull AnnotationType type) {
-      return Iterators.first(Iterators.filter(ceilingIterator(annotation),
-                                              ann -> ann.getType().isInstance(type) && ann != annotation))
-                      .orElse(Fragments.orphanedAnnotation(type));
-   }
+    /**
+     * Ceiling annotation.
+     *
+     * @param annotation the annotation
+     * @param type       the type
+     * @return the annotation
+     */
+    public Annotation ceiling(@NonNull Annotation annotation, @NonNull AnnotationType type) {
+        return Iterators.first(Iterators.filter(ceilingIterator(annotation),
+                                                ann -> ann.getType().isInstance(type) && ann != annotation))
+                        .orElse(Fragments.orphanedAnnotation(type));
+    }
 
-   /**
-    * Floor annotation.
-    *
-    * @param annotation the annotation
-    * @param type       the type
-    * @return the annotation
-    */
-   public Annotation floor(@NonNull Annotation annotation, @NonNull AnnotationType type) {
-      return Iterators.first(Iterators.filter(floorIterator(annotation),
-                                              ann -> ann.getType().isInstance(type) &&
-                                                    ann != annotation &&
-                                                    !ann.overlaps(annotation)))
-                      .orElse(Fragments.orphanedAnnotation(type));
-   }
+    /**
+     * Floor annotation.
+     *
+     * @param annotation the annotation
+     * @param type       the type
+     * @return the annotation
+     */
+    public Annotation floor(@NonNull Annotation annotation, @NonNull AnnotationType type) {
+        return Iterators.first(Iterators.filter(floorIterator(annotation),
+                                                ann -> ann.getType().isInstance(type) &&
+                                                        ann != annotation &&
+                                                        !ann.overlaps(annotation)))
+                        .orElse(Fragments.orphanedAnnotation(type));
+    }
 
 }//END OF AnnotationTree

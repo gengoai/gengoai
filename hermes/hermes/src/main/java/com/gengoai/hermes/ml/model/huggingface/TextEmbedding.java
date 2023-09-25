@@ -31,24 +31,26 @@ import lombok.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class FeatureExtraction {
+public final class TextEmbedding {
+    public static final String BERT_BASE_UNCASED = "bert-base-uncased";
+    public static final String ROBERTA_BASE = "roberta-base";
     public static final String BART_BASE = "facebook/bart-base";
     public static final String BART_LARGE_MNLI = "facebook/bart-large-mnli";
 
     private final String uniqueFuncName;
 
-    public FeatureExtraction(@NonNull String modelName) {
+    public TextEmbedding(@NonNull String modelName) {
         this(modelName, modelName, Config.get("gpu.device").asIntegerValue(-1));
     }
 
 
-    public FeatureExtraction(@NonNull String modelName, int device) {
+    public TextEmbedding(@NonNull String modelName, int device) {
         this(modelName, modelName, device);
     }
 
-    public FeatureExtraction(@NonNull String modelName,
-                             @NonNull String tokenizerName,
-                             int device) {
+    public TextEmbedding(@NonNull String modelName,
+                         @NonNull String tokenizerName,
+                         int device) {
         this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
         PythonInterpreter.getInstance()
                          .exec(String.format("from transformers import pipeline\n" +
@@ -58,7 +60,7 @@ public final class FeatureExtraction {
     }
 
 
-    public List<NumericNDArray> predict(List<String> texts) {
+    public List<NumericNDArray> embed(List<String> texts) {
         List<NumericNDArray> toReturn = new ArrayList<>();
         List<?> list = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, texts));
         for (Object sentenceO : list) {
@@ -82,16 +84,14 @@ public final class FeatureExtraction {
         return toReturn;
     }
 
-    public NDArray predict(String texts) {
-        return predict(List.of(texts)).get(0);
+    public NDArray embed(String texts) {
+        return embed(List.of(texts)).get(0);
     }
 
 
     public static void main(String[] args) {
-        FeatureExtraction te = new FeatureExtraction(BART_BASE, 0);
-        System.out.println(te.predict(
-                "I am not happy."
-                                     ));
+        TextEmbedding te = new TextEmbedding(BART_BASE, 0);
+        System.out.println(te.embed("I am not happy."));
     }
 
 

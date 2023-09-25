@@ -1447,6 +1447,15 @@ public interface HString extends Span, StringLike, Serializable {
     }
 
     /**
+     * Gets the PHRASE_CHUNK overlapping this HString
+     *
+     * @return the PHRASE_CHUNK overlapping this annotation.
+     */
+    default List<Annotation> chunks() {
+        return annotations(Types.PHRASE_CHUNK);
+    }
+
+    /**
      * Splits this HString using the given predicate to apply against tokens. An example of where this might be useful is
      * when we want to split long phrases on different punctuation, e.g. commas or semicolons.
      *

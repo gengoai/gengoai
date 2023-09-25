@@ -25,11 +25,9 @@ import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.tensorflow.Tensor;
-import org.tensorflow.ndarray.buffer.DataBuffers;
+import org.tensorflow.ndarray.StdArrays;
 import org.tensorflow.proto.framework.DataType;
 import org.tensorflow.types.TString;
-
-import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Dense NDArray representing String values.</p>
@@ -231,10 +229,64 @@ public class DenseStringNDArray extends StringNDArray {
 
     @Override
     public Tensor toTensor() {
-        TString tensor = TString.tensorOf(StandardCharsets.UTF_8,
-                                          org.tensorflow.ndarray.Shape.of(shape().toLongArray()),
-                                          DataBuffers.ofObjects(String.class, size()));
-        tensor.scalars().forEachIndexed((c, v) -> v.setObject(get(Index.index(c))));
-        return Cast.as(tensor.asBytes());
+
+        if (shape().rank() == 0) {
+            return Cast.as(StdArrays.ndCopyOf(new byte[0]));
+        }
+
+        if (shape().rank() == 1) {
+            byte[][] b = new byte[(int) length()][];
+            for (int i = 0; i < data[0].length; i++) {
+                b[i] = data[0][i].getBytes();
+            }
+            return Cast.as(StdArrays.ndCopyOf(b));
+        }
+
+        if (shape().rank() == 2) {
+            byte[][][] b = new byte[(int) shape().rows()][(int) shape().columns()][];
+            for (int row = 0; row < shape().rows(); row++) {
+                for (int col = 0; col < shape().columns(); col++) {
+                    b[row][col] = get(row, col).getBytes();
+                }
+            }
+            return Cast.as(StdArrays.ndCopyOf(b));
+        }
+
+        if (shape().rank() == 3) {
+            byte[][][][] b = new byte[(int) shape().channels()][(int) shape().rows()][(int) shape().columns()][];
+            for (int channel = 0; channel < shape().channels(); channel++) {
+                for (int row = 0; row < shape().rows(); row++) {
+                    for (int col = 0; col < shape().columns(); col++) {
+                        b[channel][row][col] = data[channel][shape().calculateMatrixIndex(row, col)].getBytes();
+                    }
+                }
+            }
+            return Cast.as(StdArrays.ndCopyOf(b));
+        }
+
+        if (shape().rank() == 4) {
+            byte[][][][][] b = new byte[(int) shape().kernels()][(int) shape().channels()][(int) shape()
+                    .rows()][(int) shape().columns()][];
+            for (int kernel = 0; kernel < shape().kernels(); kernel++) {
+                for (int channel = 0; channel < shape().channels(); channel++) {
+                    int sliceIndex = shape().calculateSliceIndex(kernel, channel);
+                    for (int row = 0; row < shape().rows(); row++) {
+                        for (int col = 0; col < shape().columns(); col++) {
+                            b[kernel][channel][row][col] = data[sliceIndex][shape().calculateMatrixIndex(row, col)].getBytes();
+                        }
+                    }
+                }
+            }
+            return Cast.as(StdArrays.ndCopyOf(b));
+        }
+
+
+//        TString tensor = TString.tensorOf(StandardCharsets.UTF_8,
+//                                          org.tensorflow.ndarray.Shape.of(shape().toLongArray()),
+//                                          DataBuffers.ofObjects(String.class, size()));
+//        tensor.scalars().forEachIndexed((c, v) -> v.setObject(get(Index.index(c))));
+//        return Cast.as(tensor.asBytes());
+
+        throw new IllegalStateException();
     }
 }//END OF DenseStringNDArray
