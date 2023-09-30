@@ -32,6 +32,7 @@ import com.gengoai.conversion.Cast;
 import com.gengoai.stream.Streams;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -162,12 +163,12 @@ class DefaultDocumentImpl extends BaseHString implements Document {
     }
 
     @Override
-    public List<Annotation> annotations(AnnotationType type) {
+    public List<Annotation> annotations(@NonNull AnnotationType type) {
         return annotationSet.select(a -> a.isInstance(type));
     }
 
     @Override
-    public List<Annotation> annotations(AnnotationType type, Predicate<? super Annotation> filter) {
+    public List<Annotation> annotations(@NonNull AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
         return annotationSet.select(a -> filter.test(a) && a.isInstance(type));
     }
 

@@ -54,11 +54,11 @@ public final class SentenceTransformer {
                               );
     }
 
-    public NumericNDArray apply(String sentence) {
-        return apply(List.of(sentence)).get(0);
+    public NumericNDArray embed(String sentence) {
+        return embed(List.of(sentence)).get(0);
     }
 
-    public List<NumericNDArray> apply(List<String> sentences) {
+    public List<NumericNDArray> embed(List<String> sentences) {
         List<NumericNDArray> toReturn = new ArrayList<>();
         jep.NDArray<float[]> ndArray = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, sentences));
         int vectorDim = ndArray.getDimensions()[1];
@@ -70,7 +70,7 @@ public final class SentenceTransformer {
         return toReturn;
     }
 
-    public void apply(@NonNull HString hString) {
+    public void embed(@NonNull HString hString) {
         List<String> sentences = new ArrayList<>();
         List<Annotation> sentenceHString = new ArrayList<>();
         for (Annotation sentence : hString.sentences()) {
@@ -83,13 +83,13 @@ public final class SentenceTransformer {
         for (int i = 0; i < sentenceHString.size(); i++) {
             Annotation sentence = sentenceHString.get(i);
             float[] vector = Arrays.copyOfRange(data, i * vectorDim, i * vectorDim + vectorDim);
-            sentence.put(Types.EMBEDDING, nd.DFLOAT32.array(vector));
+            sentence.put(Types.EMBEDDING, nd.DFLOAT32.array(vector).toFloatArray());
         }
     }
 
     public static void main(String[] args) {
         SentenceTransformer sentenceTransformer = new SentenceTransformer(SentenceTransformer.ALL_MINILM_L6_V2);
-        System.out.println(sentenceTransformer.apply("This is a test."));
+        System.out.println(sentenceTransformer.embed("This is a test."));
     }
 
 }//END OF SentenceTransformer

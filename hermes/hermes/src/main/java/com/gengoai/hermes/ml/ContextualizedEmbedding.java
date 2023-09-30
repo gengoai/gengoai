@@ -38,7 +38,7 @@ public interface ContextualizedEmbedding extends Transform {
       datum = transform(datum);
       for (String s : datum.keySet()) {
          Annotation annotation = hString.document().annotation(Long.parseLong(s));
-         annotation.put(Types.EMBEDDING, datum.get(s).asNumericNDArray());
+         annotation.put(Types.EMBEDDING, datum.get(s).asNumericNDArray().toFloatArray());
       }
       return hString;
    }

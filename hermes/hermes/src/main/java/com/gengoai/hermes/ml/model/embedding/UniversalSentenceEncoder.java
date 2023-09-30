@@ -56,7 +56,7 @@ public class UniversalSentenceEncoder extends TFModel implements HStringMLModel,
                .forEachRemaining(e -> {
                   Annotation sentence = e.getKey();
                   NumericNDArray embeddings = e.getValue().getDefaultOutput().asNumericNDArray();
-                  sentence.put(Types.EMBEDDING, embeddings);
+                  sentence.put(Types.EMBEDDING, embeddings.toFloatArray());
                });
       return hString;
    }

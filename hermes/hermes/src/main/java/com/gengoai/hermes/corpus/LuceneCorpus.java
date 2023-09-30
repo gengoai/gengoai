@@ -589,9 +589,15 @@ class LuceneCorpus implements Corpus {
             if (index >= reader.object.maxDoc()) {
                 throw new NoSuchElementException();
             }
-            Document doc = LuceneCorpus.this.loadDocument(reader.object, index);
-            advance();
-            return doc;
+            try {
+                Document doc = LuceneCorpus.this.loadDocument(reader.object, index);
+                advance();
+                return doc;
+            } catch (Exception e){
+                LogUtils.logSevere(log,e);
+                advance();
+                return next(); //This will error out if the last document is corrupt
+            }
         }
     }
 

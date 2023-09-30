@@ -65,20 +65,45 @@ public final class TokenEmbedding {
                                                      uniqueFuncName + "_pipeline = pipeline(\"feature-extraction\", model=\"%s\", tokenizer=\"%s\", device=%d)\n" +
                                                      "\n" +
                                                      "def " + uniqueFuncName + "(sentence:str,tokens: list):\n" +
-                                                     "    inputs = " + uniqueFuncName + "_tokenizer(sentence, return_tensors='pt')\n" +
-                                                     "    embeddings = np.asarray(" + uniqueFuncName + "_pipeline(sentence))\n" +
+                                                     "    inputs = " + uniqueFuncName + "_tokenizer(sentence, return_tensors='pt', truncation=True)\n" +
+                                                     "    embeddings = np.asarray(" + uniqueFuncName + "_pipeline(sentence, truncation=True))\n" +
                                                      "\n" +
                                                      "    to_return = []\n" +
                                                      "    for start,end in tokens:\n" +
                                                      "      ts = inputs.char_to_token(start)\n" +
                                                      "      te = inputs.char_to_token(end-1)\n" +
-                                                     "      phrase_embedding = embeddings[0][ts:te + 1]\n" +
-                                                     "      phrase_embedding = np.sum(phrase_embedding, axis=0) / (te + 1 - ts)\n" +
+                                                     "      if ts is None or te is None:\n" +
+                                                     "        phrase_embedding = np.zeros(embeddings[0][0].shape)\n" +
+                                                     "      else:\n" +
+                                                     "          phrase_embedding = embeddings[0][ts:te + 1]\n" +
+                                                     "          phrase_embedding = np.sum(phrase_embedding, axis=0) / (te + 1 - ts)\n" +
                                                      "      to_return.append(phrase_embedding)\n" +
                                                      "\n" +
                                                      "    return to_return", tokenizerName, modelName, tokenizerName, device));
     }
 
+
+    private void processHString(HString hString) {
+        if (hString.tokenLength() <= 128) {
+            List<int[]> offsets = new ArrayList<>();
+            for (Annotation token : hString.tokens()) {
+                //Offsets need to be relative to the input sentence
+                offsets.add(new int[]{token.start() - hString.start(), token.end() - hString.start()});
+            }
+            List<?> tokenEmbeddings = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, hString.toString(), offsets));
+            for (Map.Entry<Annotation, ?> e : Iterables.zip(hString.tokens(), tokenEmbeddings)) {
+                Annotation token = e.getKey();
+                jep.NDArray<double[]> embedding = Cast.as(e.getValue());
+                token.put(Types.EMBEDDING, nd.DFLOAT64.array(embedding.getData()).toFloatArray());
+            }
+        } else {
+            HString left = HString.union(hString.firstToken(),
+                                         hString.tokenAt(127));
+            processHString(left);
+            processHString(HString.union(hString.tokenAt(128),
+                                         hString.lastToken()));
+        }
+    }
 
     public List<NDArray> embed(String sentence, List<int[]> tokens) {
         List<?> tokenEmbeddings = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, sentence, tokens));
@@ -90,16 +115,9 @@ public final class TokenEmbedding {
                               .collect(Collectors.toList());
     }
 
-    public void embed(HString sentence) {
-        List<int[]> offsets = new ArrayList<>();
-        for (Annotation token : sentence.tokens()) {
-            offsets.add(new int[]{token.start(), token.end()});
-        }
-        List<?> tokenEmbeddings = Cast.as(PythonInterpreter.getInstance().invoke(uniqueFuncName, sentence.toString(), offsets));
-        for (Map.Entry<Annotation, ?> e : Iterables.zip(sentence.tokens(), tokenEmbeddings)) {
-            Annotation token = e.getKey();
-            jep.NDArray<double[]> embedding = Cast.as(e.getValue());
-            token.put(Types.EMBEDDING, nd.DFLOAT64.array(embedding.getData()));
+    public void embed(HString hString) {
+        for (Annotation sentence : hString.sentences()) {
+            processHString(sentence);
         }
     }
 
@@ -114,4 +132,4 @@ public final class TokenEmbedding {
     }
 
 
-}//END OF CLASS FeatureExtraction
+}//END OF CLASS TokenEmbedding

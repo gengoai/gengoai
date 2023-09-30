@@ -24,11 +24,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gengoai.Language;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.collection.Collect;
 import com.gengoai.collection.Iterables;
 import com.gengoai.collection.tree.Span;
 import com.gengoai.conversion.Cast;
+import com.gengoai.hermes.format.DocFormat;
+import com.gengoai.hermes.format.DocFormatService;
+import com.gengoai.io.resource.Resource;
 import com.gengoai.json.Json;
+import com.gengoai.stream.MStream;
+import com.gengoai.string.Strings;
 import com.gengoai.tuple.Tuple2;
 import lombok.Data;
 import lombok.NonNull;
@@ -58,6 +64,25 @@ import java.util.stream.Collectors;
  */
 @JsonDeserialize(as = DefaultDocumentImpl.class)
 public interface Document extends HString {
+
+
+    static MStream<Document> create(String format, Resource resource) throws IOException {
+        return create(format, resource, Collections.emptyMap());
+    }
+
+    static MStream<Document> create(String format, Resource resource, Map<String, String> parameters) throws IOException {
+        String parameterString = parameters.entrySet()
+                                           .stream()
+                                           .map(e -> e.getKey() + "=" + e.getValue())
+                                           .collect(Collectors.joining(";"));
+        String dummySpec = format + "::/tmp";
+        if (Strings.isNotNullOrBlank(parameterString)) {
+            dummySpec += ";" + parameterString;
+        }
+        DocFormat docFormat = DocFormatService.create(dummySpec);
+        return docFormat.read(resource);
+    }
+
 
     /**
      * Convenience method for creating a document using the default document factory.
@@ -373,7 +398,7 @@ public interface Document extends HString {
     @Override
     default NumericNDArray embedding() {
         if (hasAttribute(Types.EMBEDDING)) {
-            return attribute(Types.EMBEDDING);
+            return nd.DFLOAT32.array(attribute(Types.EMBEDDING));
         }
         return VectorCompositions.Average.compose(sentenceStream().map(HString::embedding)
                                                                   .filter(Objects::nonNull)
@@ -382,7 +407,7 @@ public interface Document extends HString {
 
     default NumericNDArray embedding(@NonNull Predicate<HString> filter) {
         if (hasAttribute(Types.EMBEDDING)) {
-            return attribute(Types.EMBEDDING);
+            return nd.DFLOAT32.array(attribute(Types.EMBEDDING));
         }
         return VectorCompositions.Average.compose(sentenceStream().filter(filter)
                                                                   .map(HString::embedding)
@@ -426,12 +451,12 @@ public interface Document extends HString {
     }
 
     @Override
-    default List<Annotation> incoming(RelationType type, String value, boolean includeSubAnnotations) {
+    default List<Annotation> incoming(@NonNull RelationType type, @NonNull String value, boolean includeSubAnnotations) {
         return Collections.emptyList();
     }
 
     @Override
-    default List<Annotation> incoming(RelationType type, boolean includeSubAnnotations) {
+    default List<Annotation> incoming(@NonNull RelationType type, boolean includeSubAnnotations) {
         return Collections.emptyList();
     }
 
@@ -441,7 +466,7 @@ public interface Document extends HString {
     }
 
     @Override
-    default List<Relation> incomingRelations(RelationType relationType, boolean includeSubAnnotations) {
+    default List<Relation> incomingRelations(@NonNull RelationType relationType, boolean includeSubAnnotations) {
         return Collections.emptyList();
     }
 
@@ -474,12 +499,12 @@ public interface Document extends HString {
     int numberOfAnnotations();
 
     @Override
-    default List<Annotation> outgoing(RelationType type, boolean includeSubAnnotations) {
+    default List<Annotation> outgoing(@NonNull RelationType type, boolean includeSubAnnotations) {
         return Collections.emptyList();
     }
 
     @Override
-    default List<Annotation> outgoing(RelationType type, String value, boolean includeSubAnnotations) {
+    default List<Annotation> outgoing(@NonNull RelationType type, String value, boolean includeSubAnnotations) {
         return Collections.emptyList();
     }
 

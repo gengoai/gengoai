@@ -22,6 +22,7 @@
 package com.gengoai.hermes;
 
 import lombok.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -113,12 +114,12 @@ public final class Fragments {
       }
 
       @Override
-      public List<Annotation> annotations(AnnotationType type, Predicate<? super Annotation> filter) {
+      public List<Annotation> annotations(@NotNull AnnotationType type, @NotNull Predicate<? super Annotation> filter) {
          return annotations(Types.TOKEN).stream().filter(filter).collect(Collectors.toList());
       }
 
       @Override
-      public List<Annotation> annotations(AnnotationType type) {
+      public List<Annotation> annotations(@NotNull AnnotationType type) {
          if (type == Types.TOKEN) {
             return Collections.singletonList(this);
          }

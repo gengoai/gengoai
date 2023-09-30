@@ -15,7 +15,9 @@ IFS=$(echo -en "\n\b")
 PROGRAMS=(
   "corpus" "com.gengoai.hermes.tools.CorpusApp" "Application for working with corpora."
   "tagger" "com.gengoai.hermes.tools.TaggerApp" "Application for training sequence taggers."
-  "gui" "com.gengoai.hermes.tools.swing.AnnotationGUI" "Annotate documents for a given task using a Swing-based gui."
+  "newscrawler" "com.gengoai.news.Crawler" "Application for crawling news articles."
+  "news-corpus-creator" "com.gengoai.news.CorpusCreator" "Application for creating a corpus from news articles."
+  "annotation-gui" "com.gengoai.hermes.tools.swing.AnnotationGUI" "Annotate documents for a given task using a Swing-based gui."
   "workflow" "com.gengoai.hermes.tools.WorkflowApp" "Application to run user defined workflows."
   "workflow-actions" "com.gengoai.hermes.tools.ListWorkflowActions" "List available workflow actions."
 )

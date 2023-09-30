@@ -64,7 +64,7 @@ public class SIFEmbeddingModel implements HStringMLModel {
       List<NumericNDArray> e = sif(hString);
       List<Annotation> sentences = hString.sentences();
       for (int i = 0; i < e.size(); i++) {
-         sentences.get(i).put(Types.EMBEDDING, e.get(i));
+         sentences.get(i).put(Types.EMBEDDING, e.get(i).toFloatArray());
       }
       return hString;
    }
@@ -111,9 +111,9 @@ public class SIFEmbeddingModel implements HStringMLModel {
       int nonZero = 0;
       for (int i = 0; i < sentence.tokenLength(); i++) {
          if (!sentence.tokenAt(i).hasAttribute(Types.EMBEDDING)) {
-            sentence.tokenAt(i).put(Types.EMBEDDING, embedding.embed(sentence.tokenAt(i).toLowerCase()));
+            sentence.tokenAt(i).put(Types.EMBEDDING, embedding.embed(sentence.tokenAt(i).toLowerCase()).toFloatArray());
          }
-         NumericNDArray e = sentence.tokenAt(i).attribute(Types.EMBEDDING);
+         NumericNDArray e = sentence.tokenAt(i).embedding();
          wordEmbeddings.setAxis(Shape.ROW, i, e);
          w.set(i, wordCounts.getOrDefault(sentence.tokenAt(i).toLowerCase(),  alpha * (alpha  + defaultTermCount)));
          if (w.getDouble(i) != 0) {

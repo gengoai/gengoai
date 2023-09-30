@@ -70,7 +70,7 @@ public class ElmoTokenEmbedding extends TFModel implements HStringMLModel, Conte
                      Annotation sentence = e.getKey();
                      NumericNDArray embeddings = e.getValue().getDefaultInput().asNumericNDArray();
                      for (int i = 0; i < sentence.tokenLength(); i++) {
-                         sentence.tokenAt(i).put(Types.EMBEDDING, embeddings.getAxis(Shape.ROW, i));
+                         sentence.tokenAt(i).put(Types.EMBEDDING, embeddings.getAxis(Shape.ROW, i).toFloatArray());
                      }
                  });
         return hString;

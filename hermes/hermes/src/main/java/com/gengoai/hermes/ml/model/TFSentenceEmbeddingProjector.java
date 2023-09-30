@@ -58,7 +58,7 @@ public abstract class TFSentenceEmbeddingProjector extends TFEmbeddingProjector 
                  .forEachRemaining(e -> {
                      Annotation sentence = e.getKey();
                      NumericNDArray embeddings = e.getValue().get(outputName).asNumericNDArray();
-                     sentence.put(Types.EMBEDDING, embeddings);
+                     sentence.put(Types.EMBEDDING, embeddings.toFloatArray());
                  });
         return hString;
     }

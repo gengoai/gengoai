@@ -102,6 +102,21 @@ enum LyreType implements TokenDef, GrammarRegistrable {
             });
         }
     },
+    IS_ALPHANUMERIC("isAlphaNumeric") {
+        @Override
+        public void register(Grammar grammar) {
+            method(grammar, (parser, token, arguments) -> {
+                switch (arguments.size()) {
+                    case 0:
+                        return LyreDSL.isAlphaNumeric;
+                    case 1:
+                        return LyreDSL.isAlphaNumeric(arguments.get(0));
+                    default:
+                        throw new ParseException("Illegal number of arguments for " + token.getText());
+                }
+            });
+        }
+    },
     IS_A(re("isA")) {
         public void register(Grammar grammar) {
             method(grammar, (parser, token, arguments) -> {
@@ -653,21 +668,7 @@ enum LyreType implements TokenDef, GrammarRegistrable {
             });
         }
     },
-    IS_ALPHANUMERIC("isAlphaNumeric") {
-        @Override
-        public void register(Grammar grammar) {
-            method(grammar, (parser, token, arguments) -> {
-                switch (arguments.size()) {
-                    case 0:
-                        return LyreDSL.isAlphaNumeric;
-                    case 1:
-                        return LyreDSL.isAlphaNumeric(arguments.get(0));
-                    default:
-                        throw new ParseException("Illegal number of arguments for " + token.getText());
-                }
-            });
-        }
-    },
+
     IS_WHITESPACE("isWhitespace") {
         @Override
         public void register(Grammar grammar) {

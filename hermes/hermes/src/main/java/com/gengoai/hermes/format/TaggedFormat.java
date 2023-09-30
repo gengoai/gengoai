@@ -87,7 +87,7 @@ public class TaggedFormat extends WholeFileTextFormat implements OneDocPerFileFo
       return parameters;
    }
 
-   private int gobbleEndWhiteSpace(int start, int end, CharSequence cs) {
+   private int gobbleEndWhiteSpace(int start, int end, StringLike cs) {
       while(end - 1 >= start && Character.isWhitespace(cs.charAt(end - 1))) {
          end--;
       }
@@ -96,7 +96,7 @@ public class TaggedFormat extends WholeFileTextFormat implements OneDocPerFileFo
              : -1;
    }
 
-   private int gobbleStartWhiteSpace(int start, CharSequence cs) {
+   private int gobbleStartWhiteSpace(int start, StringLike cs) {
       while(start < cs.length() && Character.isWhitespace(cs.charAt(start))) {
          start++;
       }

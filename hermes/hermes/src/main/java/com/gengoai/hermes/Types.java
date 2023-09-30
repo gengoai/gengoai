@@ -78,7 +78,7 @@ public interface Types {
     RelationType DEPENDENCY = RelationType.make("DEPENDENCY");
 
 
-    AttributeType<NumericNDArray> EMBEDDING = AttributeType.make("EMBEDDING", NumericNDArray.class);
+    AttributeType<float[]> EMBEDDING = AttributeType.make("EMBEDDING", float[].class);
 
 
     /**

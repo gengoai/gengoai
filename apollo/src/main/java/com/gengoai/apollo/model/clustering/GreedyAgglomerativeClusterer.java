@@ -19,6 +19,7 @@
 
 package com.gengoai.apollo.model.clustering;
 
+import com.gengoai.LogUtils;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.math.Optimum;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
@@ -26,6 +27,7 @@ import com.gengoai.apollo.math.measure.Measure;
 import com.gengoai.collection.Iterables;
 import com.gengoai.tuple.Tuple2;
 import lombok.NonNull;
+import lombok.extern.java.Log;
 
 import java.util.LinkedList;
 import java.util.Optional;
@@ -46,6 +48,7 @@ import static com.gengoai.tuple.Tuples.$;
  *
  * @author David B. Bracewell
  */
+@Log
 public class GreedyAgglomerativeClusterer extends HierarchicalClusterer {
 
    /**
@@ -100,6 +103,7 @@ public class GreedyAgglomerativeClusterer extends HierarchicalClusterer {
       Cluster B = findOptimal(A, active);
 
       final Measure measure = parameters.measure.value();
+      final long total = active.size();
       while (active.size() > 1) {
          double ab = measure.calculate(A.getCentroid(), B.getCentroid());
 
@@ -129,7 +133,9 @@ public class GreedyAgglomerativeClusterer extends HierarchicalClusterer {
             A = B;
             B = C;
          }
-
+         if( getFitParameters().verbose.value() && (total-active.size()) % 100 == 0) {
+            LogUtils.logInfo(log, "{0} / {1}", total - active.size(), total);
+         }
       }
 
       clustering.root = Iterables.getFirst(active, null);

@@ -95,4 +95,4 @@ public final class TextEmbedding {
     }
 
 
-}//END OF CLASS FeatureExtraction
+}//END OF CLASS TextEmbedding

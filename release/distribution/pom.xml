@@ -42,10 +42,14 @@
         </dependency>
         <dependency>
             <groupId>com.gengoai</groupId>
+            <artifactId>newscrawler</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gengoai</groupId>
             <artifactId>hermes-wordnet</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.gengoai</groupId>
             <artifactId>commons-spark</artifactId>

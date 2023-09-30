@@ -6,6 +6,7 @@ import com.gengoai.Tag;
 import com.gengoai.Validation;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.compose.VectorCompositions;
+import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.collection.Iterables;
 import com.gengoai.collection.Iterators;
 import com.gengoai.collection.tree.Span;
@@ -228,7 +229,7 @@ public interface HString extends Span, StringLike, Serializable {
      * @return the list of annotations of given type meeting the given filter that overlap with this HString
      */
     default List<Annotation> annotations(@NonNull AnnotationType type, @NonNull Predicate<? super Annotation> filter) {
-        if (document() == null || type == null || filter == null) {
+        if (document() == null) {
             return Collections.emptyList();
         }
         return document().annotations(type, this, filter);
@@ -248,7 +249,7 @@ public interface HString extends Span, StringLike, Serializable {
     }
 
     /**
-     * Gets this HString as an annotation. If the HString is already an annotation it is simply cast. Otherwise a
+     * Gets this HString as an annotation. If the HString is already an annotation it is simply cast. Otherwise, a
      * detached annotation of type <code>AnnotationType.ROOT</code> is created.
      *
      * @return An annotation.
@@ -519,22 +520,24 @@ public interface HString extends Span, StringLike, Serializable {
 
     default NumericNDArray embedding() {
         if (hasAttribute(Types.EMBEDDING)) {
-            return attribute(Types.EMBEDDING);
+            return nd.DFLOAT32.array(attribute(Types.EMBEDDING));
         }
         return VectorCompositions.Average.compose(tokenStream().filter(t -> t.hasAttribute(Types.EMBEDDING))
                                                                .map(t -> t.attribute(Types.EMBEDDING))
                                                                .filter(Objects::nonNull)
+                                                               .map(nd.DFLOAT32::array)
                                                                .collect(Collectors.toList()));
     }
 
     default NumericNDArray embedding(@NonNull Predicate<HString> filter) {
         if (hasAttribute(Types.EMBEDDING)) {
-            return attribute(Types.EMBEDDING);
+            return nd.DFLOAT32.array(attribute(Types.EMBEDDING));
         }
         filter = filter.and((HString t) -> t.hasAttribute(Types.EMBEDDING));
         return VectorCompositions.Average.compose(tokenStream().filter(filter)
                                                                .map(t -> t.attribute(Types.EMBEDDING))
                                                                .filter(Objects::nonNull)
+                                                               .map(nd.DFLOAT32::array)
                                                                .collect(Collectors.toList()));
     }
 
@@ -781,11 +784,11 @@ public interface HString extends Span, StringLike, Serializable {
      *
      * @param type  the relation type
      * @param value the relation value
-     * @return True if there as an incoming relation to this HString or a sub-annotation of the given type with the given
+     * @return True if there is an incoming relation to this HString or a sub-annotation of the given type with the given
      * value.
      */
     default boolean hasIncomingRelation(@NonNull RelationType type, String value) {
-        return incoming(type, value, true).size() > 0;
+        return !incoming(type, value, true).isEmpty();
     }
 
     /**
@@ -804,11 +807,11 @@ public interface HString extends Span, StringLike, Serializable {
      *
      * @param type  the relation type
      * @param value the relation value
-     * @return True if there as an outgoing relation to this HString or a sub-annotation of the given type with the given
+     * @return True if there is an outgoing relation to this HString or a sub-annotation of the given type with the given
      * value.
      */
     default boolean hasOutgoingRelation(@NonNull RelationType type, String value) {
-        return outgoing(type, value, true).size() > 0;
+        return !outgoing(type, value, true).isEmpty();
     }
 
     /**
@@ -818,7 +821,7 @@ public interface HString extends Span, StringLike, Serializable {
      * @return True if the relation is associated with the HString, False otherwise
      */
     default boolean hasOutgoingRelation(@NonNull RelationType relationType) {
-        return relationType != null && outgoingRelationStream().anyMatch(r -> r.getType().equals(relationType));
+        return outgoingRelationStream().anyMatch(r -> r.getType().equals(relationType));
     }
 
     /**
@@ -903,9 +906,6 @@ public interface HString extends Span, StringLike, Serializable {
      * @return the annotations
      */
     default List<Annotation> incoming(@NonNull RelationType type, boolean includeSubAnnotations) {
-        if (type == null) {
-            return Collections.emptyList();
-        }
         return incomingRelationStream(includeSubAnnotations).filter(r -> r.getType().isInstance(type))
                                                             .map(r -> document().annotation(r.getTarget()))
                                                             .distinct()
@@ -1519,6 +1519,16 @@ public interface HString extends Span, StringLike, Serializable {
         DefaultDocumentImpl doc = new DefaultDocumentImpl(String.format("%s-%d:%d", document().getId(), start(), end()),
                                                           toString());
         Map<Long, Long> idMap = new HashMap<>();
+        if (isAnnotation() && asAnnotation().getType() == Types.TOKEN) {
+            Annotation annotation = asAnnotation();
+            long id = doc.annotationBuilder(annotation.getType())
+                         .start(annotation.start() - start())
+                         .end(end() - annotation.end())
+                         .attributes(annotation)
+                         .createAttached()
+                         .getId();
+            idMap.put(annotation.getId(), id);
+        }
         for (Annotation annotation : enclosedAnnotations()) {
             long id = doc.annotationBuilder(annotation.getType())
                          .start(annotation.start() - start())
@@ -1528,6 +1538,7 @@ public interface HString extends Span, StringLike, Serializable {
                          .getId();
             idMap.put(annotation.getId(), id);
         }
+
         for (Annotation annotation : enclosedAnnotations()) {
             final Annotation targetAnnotation = document().annotation(annotation.getId());
             annotation.outgoingRelationStream(false)
