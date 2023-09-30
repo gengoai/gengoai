@@ -21,54 +21,61 @@ package com.gengoai.rss;
 
 import com.gengoai.LogUtils;
 import com.gengoai.collection.Lists;
-import com.gengoai.collection.disk.DiskMap;
+import com.gengoai.concurrent.Threads;
 import com.gengoai.io.Resources;
 import com.gengoai.io.Xml;
 import com.gengoai.io.resource.Resource;
+import com.gengoai.lucene.IndexDocument;
+import com.gengoai.lucene.LuceneIndex;
+import com.gengoai.lucene.field.Fields;
 import lombok.extern.java.Log;
+import org.apache.lucene.index.Term;
 import org.w3c.dom.Document;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 @Log
 public class RSSMonitor extends TimerTask {
 
     private final List<Resource> rssFeeds;
-    private final DiskMap<String, RSSItem> rssItemMap;
-    private final DiskMap<String, String> htmlMap;
+    private final LuceneIndex index;
 
     public RSSMonitor(Iterable<Resource> rssFeeds,
                       Resource database) {
         this.rssFeeds = Lists.asArrayList(rssFeeds);
-        this.rssItemMap = DiskMap.<String, RSSItem>builder()
-                                 .compressed(true)
-                                 .namespace("rss")
-                                 .file(database)
-                                 .build();
-        this.htmlMap = DiskMap.<String, String>builder()
-                              .compressed(true)
-                              .namespace("html")
-                              .file(database)
-                              .build();
+        try {
+            this.index = LuceneIndex.at(database)
+                                    .storedField("url", Fields.KEYWORD)
+                                    .storedField("html", Fields.BLOB)
+                                    .createIfNotExists();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void run() {
         for (Resource url : rssFeeds) {
             try {
+                LogUtils.logInfo(log, "Processing: {0}", url);
                 for (Document item : Xml.parse(url, "item")) {
                     RSSItem rssItem = RSSItem.from(item);
-                    String guid = rssItem.getGuid();
-                    if (!rssItemMap.containsKey(guid)) {
-                        rssItemMap.put(guid, rssItem);
-                        LogUtils.logInfo(log, "Adding {0}", guid);
-                        rssItemMap.commit();
-                    }
-                    if (!htmlMap.containsKey(guid)) {
-                        LogUtils.logInfo(log, "Retrieving html for {0}", guid);
-                        htmlMap.put(guid, Resources.from(rssItem.getLink()).readToString());
-                        htmlMap.commit();
+                    try {
+                        if (!index.get("url", rssItem.getLink()).hasField("html")) {
+                            LogUtils.logInfo(log, "Fetching: {0}", rssItem.getLink());
+                            IndexDocument indexDocument = IndexDocument.from(Map.of("url", rssItem.getLink(),
+                                                                                    "html", Resources.from(rssItem.getLink()).readToString()));
+                            index.updateWhere(new Term("url", rssItem.getLink()), List.of(indexDocument));
+                            index.commit();
+                            Threads.sleep(3, TimeUnit.SECONDS);
+                        }
+                    } catch (Exception e) {
+                        LogUtils.logSevere(log, "Error processing {0}", rssItem.getLink());
+                        e.printStackTrace();
                     }
                 }
             } catch (Exception e) {

@@ -19,19 +19,24 @@
 
 package com.gengoai.news;
 
+import com.gengoai.LogUtils;
 import com.gengoai.application.Option;
-import com.gengoai.collection.disk.DiskMap;
 import com.gengoai.hermes.Document;
 import com.gengoai.hermes.HermesCLI;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.io.resource.Resource;
+import com.gengoai.lucene.IndexDocument;
+import com.gengoai.lucene.LuceneIndex;
+import com.gengoai.lucene.field.Fields;
 import com.gengoai.string.Strings;
+import lombok.extern.java.Log;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+@Log
 public class CorpusCreator extends HermesCLI {
     @Option(description = "The location of the db to store rss and html")
     private Resource db;
@@ -45,32 +50,35 @@ public class CorpusCreator extends HermesCLI {
 
     @Override
     protected void programLogic() throws Exception {
-        DiskMap<String, String> html = DiskMap.<String, String>builder()
-                                              .compressed(true)
-                                              .namespace("html")
-                                              .readOnly(true)
-                                              .file(db)
-                                              .build();
+        LuceneIndex html = LuceneIndex.at(db)
+                                      .storedField("url", Fields.KEYWORD)
+                                      .storedField("html", Fields.BLOB)
+                                      .readOnly(true)
+                                      .open();
+        LogUtils.logInfo(log, "Creating corpus at {0} with {1} documents", corpus, html.size());
         List<Document> buffer = new ArrayList<>();
         Corpus c = Corpus.open(corpus);
-        html.forEach((url, rawHtml) -> {
-            NewsArticle article = null;
-            try {
-                url = Strings.prependIfNotPresent(url, "https://");
-                article = NewsArticle.fromHTML(new URL(url), rawHtml);
-                var doc = article.toDocument();
-                if (doc != null) {
-                    buffer.add(doc);
+        for (IndexDocument indexDocument : html) {
+            if (indexDocument.hasField("html")) {
+                NewsArticle article = null;
+                try {
+                    String url = Strings.prependIfNotPresent(indexDocument.get("url").asString(), "https://");
+                    article = NewsArticle.fromHTML(new URL(url), indexDocument.getBlobField("html"));
+                    var doc = article.toDocument();
+                    if (doc != null) {
+                        buffer.add(doc);
+                    } else {
+                        LogUtils.logWarning(log, "Error converting {0}", url);
+                    }
+                    if (buffer.size() >= 100) {
+                        c.addAll(buffer);
+                        buffer.clear();
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
-                if (buffer.size() >= 100) {
-                    c.addAll(buffer);
-                    buffer.clear();
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
-        });
-
+        }
         c.addAll(buffer);
         c.annotate(Types.SENTENCE, Types.ENTITY);
         c.close();
