@@ -107,6 +107,7 @@ public enum UniversalFeature {
       @Override
       public boolean isValidValue(@NonNull UniversalFeatureValue value) {
          return value.isInstance(UniversalFeatureValue.Abe,
+                                 UniversalFeatureValue.Gen,
                                  UniversalFeatureValue.Abl,
                                  UniversalFeatureValue.Abs,
                                  UniversalFeatureValue.Acc,

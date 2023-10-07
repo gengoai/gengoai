@@ -24,7 +24,7 @@ public class SimpleSpan implements Span {
      * @param end   the end
      */
     @JsonCreator
-    protected SimpleSpan(@JsonProperty("start") int start, @JsonProperty("end") int end) {
+    public SimpleSpan(@JsonProperty("start") int start, @JsonProperty("end") int end) {
         if (start >= end) {
             this.end = start;
         } else {

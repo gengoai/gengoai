@@ -250,7 +250,7 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
 
         @Override
         public boolean isWriteable() {
-            return false;
+            return true;
         }
     }
 

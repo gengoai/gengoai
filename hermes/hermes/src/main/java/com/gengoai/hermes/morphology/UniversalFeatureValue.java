@@ -32,6 +32,7 @@ public enum UniversalFeatureValue implements Tag {
    /**
     * (Case) ablative<br/>
     **/
+   Gen,
    Abl,
    /**
     * (Case) Absolutive<br/> (Degree) Absolute Superlative<br/>

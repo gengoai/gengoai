@@ -49,6 +49,7 @@ public class RSSMonitor extends TimerTask {
         this.rssFeeds = Lists.asArrayList(rssFeeds);
         try {
             this.index = LuceneIndex.at(database)
+                                    .storedField("guid", Fields.KEYWORD)
                                     .storedField("url", Fields.KEYWORD)
                                     .storedField("html", Fields.BLOB)
                                     .createIfNotExists();
@@ -65,11 +66,12 @@ public class RSSMonitor extends TimerTask {
                 for (Document item : Xml.parse(url, "item")) {
                     RSSItem rssItem = RSSItem.from(item);
                     try {
-                        if (!index.get("url", rssItem.getLink()).hasField("html")) {
+                        if (!index.get("guid", rssItem.getGuid()).hasField("html")) {
                             LogUtils.logInfo(log, "Fetching: {0}", rssItem.getLink());
                             IndexDocument indexDocument = IndexDocument.from(Map.of("url", rssItem.getLink(),
+                                                                                    "guid", rssItem.getGuid(),
                                                                                     "html", Resources.from(rssItem.getLink()).readToString()));
-                            index.updateWhere(new Term("url", rssItem.getLink()), List.of(indexDocument));
+                            index.updateWhere(new Term("guid", rssItem.getGuid()), List.of(indexDocument));
                             index.commit();
                             Threads.sleep(3, TimeUnit.SECONDS);
                         }

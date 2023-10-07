@@ -68,7 +68,7 @@ public class CorpusCreator extends HermesCLI {
                     if (doc != null) {
                         buffer.add(doc);
                     } else {
-                        LogUtils.logWarning(log, "Error converting {0}", url);
+                        LogUtils.logFine(log, "Error converting {0}", url);
                     }
                     if (buffer.size() >= 100) {
                         c.addAll(buffer);
