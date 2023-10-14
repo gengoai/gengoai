@@ -124,8 +124,12 @@ public class MiniBatchKMeans extends FlatCentroidClusterer {
                 final Cluster c = clustering.get(best.v1);
                 synchronized (locks[c.getId()]) {
                    c.addPoint(v);
+                   c.setScore(c.getScore() + best.v2);
                 }
              });
+      for (Cluster c : clustering) {
+         c.setScore(c.getScore() / c.size());
+      }
    }
 
    @Override

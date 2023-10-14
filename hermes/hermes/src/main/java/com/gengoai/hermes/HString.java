@@ -736,7 +736,11 @@ public interface HString extends Span, StringLike, Serializable {
         if (tokenLength() < 1) {
             return new UniversalFeatureSet();
         } else if (tokenLength() == 1) {
-            return attribute(Types.MORPHOLOGICAL_FEATURES, pos().getFeatures());
+            String features = attribute(Types.MORPHOLOGICAL_FEATURES);
+            if (features == null) {
+                return pos().getFeatures();
+            }
+            return UniversalFeatureSet.parse(features);
         }
         return new UniversalFeatureSet(tokenStream().map(HString::getMorphologicalFeatures).collect(Collectors.toList()));
     }

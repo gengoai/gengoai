@@ -2,13 +2,11 @@ package com.gengoai.hermes.format;
 
 import com.gengoai.LogUtils;
 import com.gengoai.collection.tree.SimpleSpan;
-import com.gengoai.config.Preloader;
 import com.gengoai.hermes.Annotation;
 import com.gengoai.hermes.Document;
 import com.gengoai.hermes.Relation;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.morphology.PartOfSpeech;
-import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.string.Strings;
 import lombok.Data;
@@ -67,8 +65,7 @@ public class CoNLLUFormat extends WholeFileTextFormat implements OneDocPerFileFo
                 row.annotationId = token.getId();
                 index2AnnotationId.put(row.index, token.getId());
                 if (!row.feats.equals("_")) {
-                    //IGNORE FOR NOW
-//                    token.put(Types.MORPHOLOGICAL_FEATURES, UniversalFeatureSet.parse(row.feats));
+                    token.put(Types.MORPHOLOGICAL_FEATURES, row.feats);
                 }
                 if (row.getXpos().equals("GW")) {
                     Row next = null;
@@ -185,21 +182,6 @@ public class CoNLLUFormat extends WholeFileTextFormat implements OneDocPerFileFo
         String deps;
         String misc;
         boolean addSpace;
-    }
-
-    public static void main(String[] args) {
-        Preloader.preload();
-        CoNLLUFormat format = new CoNLLUFormat(new DocFormatParameters());
-        List<Document> docs =
-                format.read(Resources.from("https://raw.githubusercontent.com/UniversalDependencies/UD_English-GUM/master/en_gum-ud-train.conllu"))
-                      .collect();
-        for (Document doc : docs) {
-            System.out.println(doc.getId());
-            System.out.println(doc);
-            for (Annotation sentence : doc.sentences()) {
-                System.out.println(sentence.toPOSString());
-            }
-        }
     }
 
     @MetaInfServices

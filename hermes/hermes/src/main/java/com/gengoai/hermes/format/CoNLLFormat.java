@@ -261,7 +261,7 @@ public class CoNLLFormat extends WholeFileTextFormat implements OneDocPerFileFor
         /**
          * True create a document per sentence, False multiple sentences per document
          */
-        Parameter<Boolean> docPerSentence = parameter(DOC_PER_SENTENCE, true);
+        Parameter<Boolean> docPerSentence = parameter(DOC_PER_SENTENCE, false);
         /**
          * The String used to separate fields
          */

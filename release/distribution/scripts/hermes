@@ -16,8 +16,9 @@ PROGRAMS=(
   "corpus" "com.gengoai.hermes.tools.CorpusApp" "Application for working with corpora."
   "tagger" "com.gengoai.hermes.tools.TaggerApp" "Application for training sequence taggers."
   "newscrawler" "com.gengoai.news.Crawler" "Application for crawling news articles."
-  "news-corpus-creator" "com.gengoai.news.CorpusCreator" "Application for creating a corpus from news articles."
+  "news-corpus-creator" "com.gengoai.news.CorpusCreator" "Application for creating a corpus from crawled news articles."
   "annotation-gui" "com.gengoai.hermes.tools.swing.AnnotationGUI" "Annotate documents for a given task using a Swing-based gui."
+  "conll-gui" "com.gengoai.hermes.tools.swing.conll.CoNLLEditor" "Annotate CoNLL formatted documents for one or more given tasks using a Swing-based gui."
   "workflow" "com.gengoai.hermes.tools.WorkflowApp" "Application to run user defined workflows."
   "workflow-actions" "com.gengoai.hermes.tools.ListWorkflowActions" "List available workflow actions."
 )
@@ -71,7 +72,7 @@ fi
 function help() {
   echo "Hermes CLI"
   echo "========================================================="
-  echo "Usage: ./hermes COMMAND [OPTIONS]"
+  echo "Usage: ./hermes (spark|spark-local) COMMAND [OPTIONS]"
   echo "========================================================="
   echo "Environment Variables"
   echo "---------------------------------------------------------"

@@ -25,7 +25,6 @@ import com.gengoai.hermes.HString;
 import com.gengoai.hermes.Types;
 import com.gengoai.hermes.format.CoNLLColumnProcessor;
 import com.gengoai.hermes.format.CoNLLRow;
-import com.gengoai.hermes.morphology.UniversalFeatureSet;
 import com.gengoai.string.Strings;
 import com.gengoai.tuple.Tuple2;
 import org.kohsuke.MetaInfServices;
@@ -36,27 +35,27 @@ import java.util.Map;
 @MetaInfServices(CoNLLColumnProcessor.class)
 public class MorphologicalFeatureProcessor implements CoNLLColumnProcessor {
 
-   @Override
-   public String getFieldName() {
-      return "MORPH";
-   }
+    @Override
+    public String getFieldName() {
+        return "MORPH";
+    }
 
-   @Override
-   public void processInput(Document document,
-                            List<CoNLLRow> documentRows,
-                            Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
-      documentRows.forEach(row -> {
-         String v = row.getOther(getFieldName());
-         if(!Strings.isNullOrBlank(v) && !v.strip().equalsIgnoreCase("_")) {
-            document.annotation(row.getAnnotationID())
-                    .put(Types.MORPHOLOGICAL_FEATURES, UniversalFeatureSet.parse(v));
-         }
-      });
-      document.setCompleted(Types.PART_OF_SPEECH, "PROVIDED");
-   }
+    @Override
+    public void processInput(Document document,
+                             List<CoNLLRow> documentRows,
+                             Map<Tuple2<Integer, Integer>, Long> sentenceIndexToAnnotationId) {
+        documentRows.forEach(row -> {
+            String v = row.getOther(getFieldName());
+            if (!Strings.isNullOrBlank(v) && !v.strip().equalsIgnoreCase("_")) {
+                document.annotation(row.getAnnotationID())
+                        .put(Types.MORPHOLOGICAL_FEATURES, v);
+            }
+        });
+        document.setCompleted(Types.PART_OF_SPEECH, "PROVIDED");
+    }
 
-   @Override
-   public String processOutput(HString document, Annotation token, int index) {
-      return token.getMorphologicalFeatures().toString();
-   }
+    @Override
+    public String processOutput(HString document, Annotation token, int index) {
+        return token.getMorphologicalFeatures().toString();
+    }
 }//END OF MorphologicalFeatureProcessor

@@ -19,12 +19,14 @@
 
 package com.gengoai.apollo.model.clustering;
 
+import com.gengoai.LogUtils;
 import com.gengoai.apollo.data.DataSet;
 import com.gengoai.apollo.data.Datum;
 import com.gengoai.apollo.data.InMemoryDataSet;
 import com.gengoai.apollo.model.Params;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
+import lombok.extern.java.Log;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 import static com.gengoai.function.Functional.with;
 import static com.gengoai.tuple.Tuples.$;
 
+@Log
 public class DivisiveKMeans extends FlatCentroidClusterer {
    private static final long serialVersionUID = 1L;
 
@@ -47,7 +50,12 @@ public class DivisiveKMeans extends FlatCentroidClusterer {
 
 
    private FlatClustering cluster(DataSet dataset) {
-      KMeans kMeans = new KMeans(p -> {
+      int K = getFitParameters().K.value();
+      int minPoints = getFitParameters().minPoints.value();
+      while( K > 2 && dataset.size() / K < minPoints) {
+         K--;
+      }
+      MiniBatchKMeans kMeans = new MiniBatchKMeans(p ->{
          p.K.set(getFitParameters().K.value());
          p.input.set(getFitParameters().input.value());
          p.maxIterations.set(20);
@@ -66,11 +74,19 @@ public class DivisiveKMeans extends FlatCentroidClusterer {
 
       Queue<FlatClustering> queue = new LinkedList<>();
       queue.add(cluster(dataset));
+      if(getFitParameters().verbose.value()) {
+         LogUtils.logInfo(log,"Initial Clusters: {0}",queue.peek().size());
+      }
       while (!queue.isEmpty()) {
          FlatClustering fc = queue.remove();
          for (Cluster c : fc) {
             if (c.size() == 0) {
                continue;
+            }
+            if(getFitParameters().verbose.value()) {
+               LogUtils.logInfo(log,"Cluster: size={0}, score={1}",
+                                c.size(),
+                                c.getScore());
             }
             if (c.getScore() <= getFitParameters().tolerance.value() ||
                   c.getPoints().size() <= getFitParameters().minPoints.value()) {
@@ -81,6 +97,11 @@ public class DivisiveKMeans extends FlatCentroidClusterer {
                                                  .collect(Collectors.toList()));
                queue.add(cluster(ds));
             }
+         }
+         if(getFitParameters().verbose.value()) {
+            LogUtils.logInfo(log,"Clusters: {0}, Queue: {1}",
+                             clustering.size(),
+                             queue.size());
          }
       }
 

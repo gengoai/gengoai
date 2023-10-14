@@ -54,18 +54,9 @@ public interface Entities {
     EntityType LOCATION = EntityType.make("LOCATION");
 
     EntityType GPE = EntityType.make(LOCATION, "GPE");
-//   EntityType CITY = EntityType.make(GPE, "CITY");
-//   EntityType COUNTY = EntityType.make(GPE, "COUNTY");
-//   EntityType PROVINCE = EntityType.make(GPE, "PROVINCE");
-//   EntityType COUNTRY = EntityType.make(GPE, "COUNTRY");
-//   EntityType REGION = EntityType.make(LOCATION, "REGION");
-//   EntityType CONTINENTAL_REGION = EntityType.make(REGION, "CONTINENTAL_REGION");
-//   EntityType DOMESTIC_REGION = EntityType.make(REGION, "DOMESTIC_REGION");
-
     EntityType GEOLOGICAL_REGION = EntityType.make(LOCATION, "GEOLOGICAL_REGION");
     EntityType LANDFORM = EntityType.make(GEOLOGICAL_REGION, "LANDFORM");
     EntityType WATER_FORM = EntityType.make(GEOLOGICAL_REGION, "WATER_FORM");
-//   EntityType SEA = EntityType.make(GEOLOGICAL_REGION, "SEA");
 
 
     EntityType ASTRAL_BODY = EntityType.make(LOCATION, "ASTRAL_BODY");
@@ -73,7 +64,6 @@ public interface Entities {
     EntityType PLANET = EntityType.make(ASTRAL_BODY, "PLANET");
     EntityType CONSTELLATION = EntityType.make(ASTRAL_BODY, "CONSTELLATION");
 
-//    EntityType RELATIVE_LOCATION = EntityType.make(LOCATION, "RELATIVE_LOCATION");
 
     EntityType ADDRESS = EntityType.make(LOCATION, "ADDRESS");
     EntityType POSTAL_ADDRESS = EntityType.make(ADDRESS, "POSTAL_ADDRESS");
@@ -99,11 +89,13 @@ public interface Entities {
     EntityType ZOO = EntityType.make(GOE, "ZOO");
     EntityType THEATER = EntityType.make(GOE, "THEATER");
     EntityType WORSHIP_PLACE = EntityType.make(GOE, "WORSHIP_PLACE");
+    EntityType HEALTHCARE_FACILITY = EntityType.make(GOE, "HEALTHCARE_FACILITY");
+    EntityType STORE = EntityType.make(GOE, "STORE");
     EntityType AMUSEMENT_PARK = EntityType.make(GOE, "AMUSEMENT_PARK");
     EntityType AIRPORT = EntityType.make(GOE, "AIRPORT");
     EntityType STATION = EntityType.make(GOE, "STATION");
     EntityType PORT = EntityType.make(GOE, "PORT");
-    EntityType CAR_STOP = EntityType.make(GOE, "CAR_STOP");
+//    EntityType CAR_STOP = EntityType.make(GOE, "CAR_STOP");
 
     EntityType LINE = EntityType.make(FACILITY, "LINE");
     EntityType RAILROAD = EntityType.make(LINE, "RAILROAD");
@@ -129,38 +121,12 @@ public interface Entities {
     EntityType MEASUREMENT = EntityType.make(NUMBER, "MEASUREMENT");
 
     //-----------------------------------------------------------------------------------------
-    // MEASUREMENT ENTITY TYPES
-    //-----------------------------------------------------------------------------------------
-    // Moved to Number
-//    EntityType PHYSICAL_EXTENT = EntityType.make(MEASUREMENT, "PHYSICAL_EXTENT");
-//    EntityType SPACE = EntityType.make(MEASUREMENT, "SPACE");
-//    EntityType VOLUME = EntityType.make(MEASUREMENT, "VOLUME");
-//    EntityType WEIGHT = EntityType.make(MEASUREMENT, "WEIGHT");
-//    EntityType SPEED = EntityType.make(MEASUREMENT, "SPEED");
-//    EntityType INTENSITY = EntityType.make(MEASUREMENT, "INTENSITY");
-//    EntityType TEMPERATURE = EntityType.make(MEASUREMENT, "TEMPERATURE");
-//    EntityType CALORIE = EntityType.make(MEASUREMENT, "CALORIE");
-//    EntityType SEISMIC_INTENSITY = EntityType.make(MEASUREMENT, "SEISMIC_INTENSITY");
-
-    //-----------------------------------------------------------------------------------------
     // ORGANIZATION ENTITY TYPES
     //-----------------------------------------------------------------------------------------
     EntityType ORGANIZATION = EntityType.make("ORGANIZATION");
-
-    //    EntityType INTERNATIONAL_ORGANIZATION = EntityType.make(ORGANIZATION, "INTERNATIONAL_ORGANIZATION");
-//    EntityType SHOW_ORGANIZATION = EntityType.make(ORGANIZATION, "SHOW_ORGANIZATION");
-//    EntityType FAMILY = EntityType.make(ORGANIZATION, "FAMILY");
-//    EntityType ETHNIC_GROUP = EntityType.make(ORGANIZATION, "ETHNIC_GROUP");
-//    EntityType NATIONALITY = EntityType.make(ETHNIC_GROUP, "NATIONALITY");
-
     EntityType SPORTS_ORGANIZATION = EntityType.make(ORGANIZATION, "SPORTS_ORGANIZATION");
     EntityType PRO_SPORTS_ORGANIZATION = EntityType.make(SPORTS_ORGANIZATION, "PRO_SPORTS_ORGANIZATION");
     EntityType SPORTS_LEAGUE = EntityType.make(SPORTS_ORGANIZATION, "SPORTS_LEAGUE");
-
-//   EntityType CORPORATION = EntityType.make(ORGANIZATION, "CORPORATION");
-//   EntityType COMPANY = EntityType.make(CORPORATION, "COMPANY");
-//   EntityType COMPANY_GROUP = EntityType.make(CORPORATION, "COMPANY_GROUP");
-
     EntityType POLITICAL_ORGANIZATION = EntityType.make(ORGANIZATION, "POLITICAL_ORGANIZATION");
     EntityType GOVERNMENT = EntityType.make(POLITICAL_ORGANIZATION, "GOVERNMENT");
     EntityType POLITICAL_PARTY = EntityType.make(POLITICAL_ORGANIZATION, "POLITICAL_PARTY");
@@ -175,7 +141,6 @@ public interface Entities {
 
     EntityType TITLE = EntityType.make(PERSON, "TITLE");
     EntityType POSITION_TITLE = EntityType.make(TITLE, "POSITION_TITLE");
-//   EntityType OCCUPATION = EntityType.make(PERSON, "OCCUPATION");
 
 
     //-----------------------------------------------------------------------------------------
@@ -201,6 +166,15 @@ public interface Entities {
     // EVENT ENTITY TYPES
     //-----------------------------------------------------------------------------------------
     EntityType EVENT = EntityType.make("EVENT");
+    EntityType CELEBRATION = EntityType.make(EVENT, "CELEBRATION");
+    EntityType SPORTS_EVENT = EntityType.make(EVENT, "SPORTS_EVENT");
+    EntityType VIOLENT_EVENT = EntityType.make(EVENT, "VIOLENT_EVENT");
+    EntityType NATURE_EVENT = EntityType.make(EVENT, "NATURE_EVENT");
+    EntityType POLITICAL_EVENT = EntityType.make(EVENT, "POLITICAL_EVENT");
+    EntityType ENTERTAINMENT_EVENT = EntityType.make(EVENT, "ENTERTAINMENT_EVENT");
+    EntityType HEALTH_EVENT = EntityType.make(EVENT, "HEALTH_EVENT");
+    EntityType LIFE_EVENT = EntityType.make(EVENT, "LIFE_EVENT");
+    EntityType COMMUNICATION_EVENT  = EntityType.make(EVENT, "COMMUNICATION_EVENT");
 
     //-----------------------------------------------------------------------------------------
     // MISC ENTITY TYPES
@@ -211,7 +185,7 @@ public interface Entities {
     // ATTRIBUTE ENTITY TYPES
     //-----------------------------------------------------------------------------------------
     EntityType ATTRIBUTE = EntityType.make("ATTRIBUTE");
-    EntityType COLOR = EntityType.make(ATTRIBUTE,"COLOR");
+    EntityType COLOR = EntityType.make(ATTRIBUTE, "COLOR");
 
 
 }//END OF Entities

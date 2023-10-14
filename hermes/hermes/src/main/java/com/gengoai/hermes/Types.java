@@ -28,7 +28,6 @@ import com.gengoai.annotation.Preload;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.hermes.morphology.PartOfSpeech;
 import com.gengoai.hermes.morphology.TokenType;
-import com.gengoai.hermes.morphology.UniversalFeatureSet;
 import com.gengoai.string.Strings;
 import lombok.NonNull;
 
@@ -142,8 +141,7 @@ public interface Types {
     /**
      * Attribute defining the Morphological Features for a given span of text.
      */
-    AttributeType<UniversalFeatureSet> MORPHOLOGICAL_FEATURES = AttributeType.make("MORPHO_FEATURES",
-                                                                                   UniversalFeatureSet.class);
+    AttributeType<String> MORPHOLOGICAL_FEATURES = AttributeType.make("MORPHO_FEATURES", String.class);
     /**
      * The part-of-speech associated with a span
      */
