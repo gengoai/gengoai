@@ -53,6 +53,9 @@ public class WorkflowApp extends HermesCLI {
     @Option(description = "The specification or location the document collection to process.", aliases = {"i", "corpus"})
     private String input;
 
+    @Option(description = "The workflow stage to perform (i.e name of the workflow.json)")
+    private String stage;
+
     public static void main(String[] args) throws Exception {
         new WorkflowApp().run(args);
     }
@@ -103,9 +106,9 @@ public class WorkflowApp extends HermesCLI {
 
     private void cleanWorkFlow() throws Exception {
         if (workflowFolder.exists()) {
-            workflowFolder.getChild("workflow.log").delete();
-            workflowFolder.getChild("workflow.log.lck").delete();
-            workflowFolder.getChild("workflow.output.json.gz").delete();
+            workflowFolder.getChildren("*.log").forEach(Resource::delete);
+            workflowFolder.getChildren("*.log.lck").forEach(Resource::delete);
+            workflowFolder.getChildren("*.output.json.gz").forEach(Resource::delete);
             workflowFolder.getChild("actions").delete(true);
             workflowFolder.getChild("analysis").delete(true);
             workflowFolder.getChild("corpus").delete(true);
@@ -114,14 +117,32 @@ public class WorkflowApp extends HermesCLI {
 
 
     private void runWorkflow() throws Exception {
-        final Resource contextOutputLocation = workflowFolder.getChild("workflow.output.json.gz");
+        if (!workflowFolder.exists()) {
+            throw new RuntimeException("Error: " + workflowFolder.path() + " does not exist");
+        }
+        Config.setProperty("com.gengoai.logging.dir", workflowFolder.path());
+
+        Resource contextOutputLocation = workflowFolder.getChild("workflow.output.json.gz");
         final Resource actionsFolder = workflowFolder.getChild("actions");
         final Resource analysisFolder = workflowFolder.getChild("analysis");
         final Resource workflowConf = workflowFolder.getChild("workflow.conf");
-
         if (workflowConf.exists()) {
             Config.loadConfig(workflowConf);
         }
+
+
+        if (Strings.isNotNullOrBlank(stage)) {
+            contextOutputLocation = workflowFolder.getChild(stage + ".output.json.gz");
+            LogUtils.addFileHandler(stage);
+
+            final Resource stageConf = workflowFolder.getChild(stage + ".conf");
+            if (stageConf.exists()) {
+                Config.loadConfig(stageConf);
+            }
+        } else {
+            LogUtils.addFileHandler("workflow");
+        }
+
 
         if (input == null && Config.hasProperty("context.inputLocation")) {
             input = Config.get("context.inputLocation").asString();
@@ -133,14 +154,13 @@ public class WorkflowApp extends HermesCLI {
 
         actionsFolder.mkdirs();
 
-        Config.setProperty("com.gengoai.logging.dir", workflowFolder.path());
-        LogUtils.addFileHandler("workflow");
         Context context = Context.builder()
                                  .property(INPUT_LOCATION, input)
                                  .property(CONTEXT_OUTPUT, contextOutputLocation)
                                  .property(WORKFLOW_FOLDER, workflowFolder)
                                  .property(ACTIONS_FOLDER, actionsFolder)
                                  .property(ANALYSIS_FOLDER, analysisFolder)
+                                 .property(STAGE, stage)
                                  .build();
 
 
@@ -154,7 +174,15 @@ public class WorkflowApp extends HermesCLI {
                   context.property(contextName, Config.get(key).get());
                   LogUtils.logInfo(log, "Setting Context property {0} to {1}", contextName, Config.get(key));
               });
-        Workflow workflow = BaseWorkflowIO.read(workflowFolder.getChild("workflow.json"));
+
+        Workflow workflow;
+        if (Strings.isNotNullOrBlank(stage)) {
+            loadContext(workflowFolder.getChild(stage + ".input.json"), context);
+            workflow = BaseWorkflowIO.read(workflowFolder.getChild(stage + ".json"));
+        } else {
+            workflow = BaseWorkflowIO.read(workflowFolder.getChild("workflow.json"));
+        }
+
         try (DocumentCollection inputCorpus = getDocumentCollection(workflowFolder)) {
             try (DocumentCollection outputCorpus = workflow.process(inputCorpus, context)) {
                 contextOutputLocation.compressed().write(Json.dumpsPretty(context));

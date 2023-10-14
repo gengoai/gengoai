@@ -51,6 +51,9 @@ public class BaseWorkflowIO {
         List<Action> actionList = new ArrayList<>();
         JsonEntry actions = entry.getProperty("actions");
         Counter<String> idCounter = Counters.newCounter();
+
+        final String stageName = description.baseName().substring(0, description.baseName().lastIndexOf('.'));
+
         actions.forEachElement(action -> {
             String actionName = action.getStringProperty("action");
             Action actionImpl = Actions.getAction(actionName);
@@ -68,8 +71,8 @@ public class BaseWorkflowIO {
             }
 
             if (actionImpl.getId() == null) {
-                idCounter.increment(actionImpl.getName());
-                actionImpl.setId(actionImpl.getName() + "-" + idCounter.get(actionImpl.getName()));
+                idCounter.increment(stageName + "-" + actionImpl.getName());
+                actionImpl.setId(stageName + "-" + actionImpl.getName() + "-" + (int) idCounter.get(stageName + "-" + actionImpl.getName()));
             }
 
 

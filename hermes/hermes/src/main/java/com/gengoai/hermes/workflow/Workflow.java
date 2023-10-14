@@ -50,6 +50,7 @@ public interface Workflow extends Serializable {
     String ANALYSIS_FOLDER = "ANALYSIS_FOLDER";
     String CONTEXT_ARG = "context.";
     String CONTEXT_OUTPUT = "CONTEXT_OUTPUT";
+    String STAGE = "STAGE";
 
     /**
      * Gets starting context.
