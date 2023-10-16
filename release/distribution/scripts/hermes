@@ -19,6 +19,7 @@ PROGRAMS=(
   "news-corpus-creator" "com.gengoai.news.CorpusCreator" "Application for creating a corpus from crawled news articles."
   "annotation-gui" "com.gengoai.hermes.tools.swing.AnnotationGUI" "Annotate documents for a given task using a Swing-based gui."
   "conll-gui" "com.gengoai.hermes.tools.swing.conll.CoNLLEditor" "Annotate CoNLL formatted documents for one or more given tasks using a Swing-based gui."
+  "lexicon-gui" "com.gengoai.hermes.tools.swing.LexiconEditor" "Edit a lexicon using a Swing-based gui."
   "workflow" "com.gengoai.hermes.tools.WorkflowApp" "Application to run user defined workflows."
   "workflow-actions" "com.gengoai.hermes.tools.ListWorkflowActions" "List available workflow actions."
 )

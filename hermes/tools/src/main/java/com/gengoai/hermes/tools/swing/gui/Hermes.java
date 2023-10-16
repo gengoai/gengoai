@@ -261,7 +261,7 @@ public class Hermes extends HermesGUI {
     }
 
     @Override
-    protected void initControls() throws Exception {
+    public void initControls() throws Exception {
         closeCorpusAction.setEnabled(false);
         calcKeywordsAction.setEnabled(false);
         calcTopicsAction.setEnabled(false);

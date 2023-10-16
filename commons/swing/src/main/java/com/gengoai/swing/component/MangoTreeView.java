@@ -35,132 +35,140 @@ import java.util.Queue;
 import java.util.Vector;
 import java.util.function.BiPredicate;
 
+/**
+ * MangoTreeView is a custom JTree extension that provides additional functionality for filtering and selecting nodes.
+ */
 public class MangoTreeView extends JTree {
-   private static final long serialVersionUID = 1L;
-   protected final DefaultTreeModel baseModel;
-   @NonNull
-   protected final BiPredicate<String, Object> itemMatcher;
-   private final Vector<TreeViewItemSelectionListener> selectActionListeners = new Vector<>();
-   protected DefaultMutableTreeNode ROOT;
+    private static final long serialVersionUID = 1L;
+    protected final DefaultTreeModel baseModel;
+    @NonNull
+    protected final BiPredicate<String, Object> itemMatcher;
+    private final Vector<TreeViewItemSelectionListener> selectActionListeners = new Vector<>();
+    protected DefaultMutableTreeNode ROOT;
 
-   public MangoTreeView(@NonNull BiPredicate<String, Object> itemMatcher) {
-      this.itemMatcher = itemMatcher;
-      this.baseModel = Cast.as(getModel());
-      addKeyListener(SwingListeners.enterKeyPressed(e -> {
-         if(getSelectionPath() != null) {
-            DefaultMutableTreeNode node = Cast.as(getSelectionPath().getLastPathComponent());
-            fireItemSelection(node.getUserObject());
-         }
-      }));
-   }
-
-   public static DefaultMutableTreeNode node(Object data, DefaultMutableTreeNode... children) {
-      DefaultMutableTreeNode node = new DefaultMutableTreeNode(data);
-      for(DefaultMutableTreeNode child : children) {
-         node.add(child);
-      }
-      return node;
-   }
-
-   public void addSelectedItemListener(@NonNull TreeViewItemSelectionListener listener) {
-      selectActionListeners.add(listener);
-   }
-
-   public void clearFilter() {
-      setFilter(Strings.EMPTY);
-   }
-
-   private DefaultMutableTreeNode copy(DefaultMutableTreeNode node) {
-      var newNode = new DefaultMutableTreeNode(node.getUserObject());
-      if(node.children() != null) {
-         node.children()
-             .asIterator()
-             .forEachRemaining(n -> newNode.add(copy(Cast.as(n))));
-      }
-      return newNode;
-   }
-
-   public void expandAll() {
-      for(int i = 0; i < getRowCount(); i++) {
-         expandRow(i);
-      }
-   }
-
-   private void filter(String filter) {
-      if(ROOT == null) {
-         return;
-      }
-      boolean rootIsVisible = isRootVisible();
-      if(Strings.isNullOrBlank(filter)) {
-         baseModel.setRoot(ROOT);
-      } else {
-         DefaultMutableTreeNode root = copy(ROOT);
-         Queue<DefaultMutableTreeNode> leaves = getLeafs(root);
-         while(leaves.size() > 0) {
-            DefaultMutableTreeNode leaf = leaves.remove();
-            if(leaf == root) {
-               continue;
+    /**
+     * Creates a new MangoTreeView with the specified itemMatcher.
+     *
+     * @param itemMatcher the BiPredicate used to match items in the tree
+     */
+    public MangoTreeView(@NonNull BiPredicate<String, Object> itemMatcher) {
+        this.itemMatcher = itemMatcher;
+        this.baseModel = Cast.as(getModel());
+        addKeyListener(SwingListeners.enterKeyPressed(e -> {
+            if (getSelectionPath() != null) {
+                DefaultMutableTreeNode node = Cast.as(getSelectionPath().getLastPathComponent());
+                fireItemSelection(node.getUserObject());
             }
-            if(!itemMatcher.test(filter, leaf.getUserObject())) {
-               DefaultMutableTreeNode parent = Cast.as(leaf.getParent());
-               if(parent != null) {
-                  parent.remove(leaf);
-                  if(parent.getChildCount() == 0) {
-                     leaves.add(parent);
-                  }
-               }
+        }));
+    }
+
+    public static DefaultMutableTreeNode node(Object data, DefaultMutableTreeNode... children) {
+        DefaultMutableTreeNode node = new DefaultMutableTreeNode(data);
+        for (DefaultMutableTreeNode child : children) {
+            node.add(child);
+        }
+        return node;
+    }
+
+    public void addSelectedItemListener(@NonNull TreeViewItemSelectionListener listener) {
+        selectActionListeners.add(listener);
+    }
+
+    public void clearFilter() {
+        setFilter(Strings.EMPTY);
+    }
+
+    private DefaultMutableTreeNode copy(DefaultMutableTreeNode node) {
+        var newNode = new DefaultMutableTreeNode(node.getUserObject());
+        if (node.children() != null) {
+            node.children()
+                .asIterator()
+                .forEachRemaining(n -> newNode.add(copy(Cast.as(n))));
+        }
+        return newNode;
+    }
+
+    public void expandAll() {
+        for (int i = 0; i < getRowCount(); i++) {
+            expandRow(i);
+        }
+    }
+
+    private void filter(String filter) {
+        if (ROOT == null) {
+            return;
+        }
+        boolean rootIsVisible = isRootVisible();
+        if (Strings.isNullOrBlank(filter)) {
+            baseModel.setRoot(ROOT);
+        } else {
+            DefaultMutableTreeNode root = copy(ROOT);
+            Queue<DefaultMutableTreeNode> leaves = getLeafs(root);
+            while (leaves.size() > 0) {
+                DefaultMutableTreeNode leaf = leaves.remove();
+                if (leaf == root) {
+                    continue;
+                }
+                if (!itemMatcher.test(filter, leaf.getUserObject())) {
+                    DefaultMutableTreeNode parent = Cast.as(leaf.getParent());
+                    if (parent != null) {
+                        parent.remove(leaf);
+                        if (parent.getChildCount() == 0) {
+                            leaves.add(parent);
+                        }
+                    }
+                }
             }
-         }
-         baseModel.setRoot(root);
-      }
-      setModel(baseModel);
-      setRootVisible(rootIsVisible);
-      updateUI();
-      expandAll();
-   }
+            baseModel.setRoot(root);
+        }
+        setModel(baseModel);
+        setRootVisible(rootIsVisible);
+        updateUI();
+        expandAll();
+    }
 
-   protected void fireItemSelection(Object o) {
-      for(TreeViewItemSelectionListener selectActionListener : selectActionListeners) {
-         selectActionListener.onSelect(o);
-      }
-   }
+    protected void fireItemSelection(Object o) {
+        for (TreeViewItemSelectionListener selectActionListener : selectActionListeners) {
+            selectActionListener.onSelect(o);
+        }
+    }
 
-   private Queue<DefaultMutableTreeNode> getLeafs(DefaultMutableTreeNode root) {
-      DefaultMutableTreeNode leaf = Cast.as(root.getFirstLeaf());
-      if(leaf.isRoot()) {
-         return new LinkedList<>();
-      }
-      Queue<DefaultMutableTreeNode> set = new LinkedList<>();
-      int numberOfLeaves = root.getLeafCount();
-      for(int i = 0; i < numberOfLeaves; i++) {
-         if(leaf.getChildCount() == 0) {
-            set.add(leaf);
-         }
-         leaf = Cast.as(leaf.getNextLeaf());
-      }
-      return set;
-   }
+    private Queue<DefaultMutableTreeNode> getLeafs(DefaultMutableTreeNode root) {
+        DefaultMutableTreeNode leaf = Cast.as(root.getFirstLeaf());
+        if (leaf.isRoot()) {
+            return new LinkedList<>();
+        }
+        Queue<DefaultMutableTreeNode> set = new LinkedList<>();
+        int numberOfLeaves = root.getLeafCount();
+        for (int i = 0; i < numberOfLeaves; i++) {
+            if (leaf.getChildCount() == 0) {
+                set.add(leaf);
+            }
+            leaf = Cast.as(leaf.getNextLeaf());
+        }
+        return set;
+    }
 
-   public void setFilter(String text) {
-      filter(text);
-   }
+    public void setFilter(String text) {
+        filter(text);
+    }
 
-   @Override
-   public void setModel(TreeModel model) {
-      if(model instanceof DefaultTreeModel) {
-         super.setModel(model);
-      } else {
-         throw new IllegalArgumentException("Only DefaultTreeModel are accepted");
-      }
-   }
+    @Override
+    public void setModel(TreeModel model) {
+        if (model instanceof DefaultTreeModel) {
+            super.setModel(model);
+        } else {
+            throw new IllegalArgumentException("Only DefaultTreeModel are accepted");
+        }
+    }
 
-   public void setRoot(TreeNode node) {
-      if(node instanceof DefaultMutableTreeNode) {
-         baseModel.setRoot(node);
-         ROOT = Cast.as(node);
-      } else {
-         throw new IllegalArgumentException("Only DefaultMutableTreeNode are accepted");
-      }
-   }
+    public void setRoot(TreeNode node) {
+        if (node instanceof DefaultMutableTreeNode) {
+            baseModel.setRoot(node);
+            ROOT = Cast.as(node);
+        } else {
+            throw new IllegalArgumentException("Only DefaultMutableTreeNode are accepted");
+        }
+    }
 
 }//END OF MangoTreeView

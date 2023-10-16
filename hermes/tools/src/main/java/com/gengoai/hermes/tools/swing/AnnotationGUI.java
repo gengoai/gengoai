@@ -83,7 +83,7 @@ public class AnnotationGUI extends HermesGUI {
    }
 
    @Override
-   protected void initControls() throws Exception {
+   public void initControls() throws Exception {
       mainWindowFrame.setTitle("Hermes Annotation GUI");
       ImageIcon ii = new ImageIcon(Resources.fromClasspath("img/editor.png").readBytes());
       setIcon(ii.getImage());

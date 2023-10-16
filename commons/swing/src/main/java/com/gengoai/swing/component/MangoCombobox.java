@@ -71,7 +71,6 @@ public class MangoCombobox<E> extends JComboBox<E> {
             for(int i = 0; i < getItemCount(); i++) {
                String item = toStringFunction.apply(getItemAt(i));
                if(item.toLowerCase().startsWith(text)) {
-                  System.out.println(item);
                   setSelectedIndex(i);
                   return;
                }

@@ -1019,7 +1019,16 @@ public enum FontAwesome {
       button.setIcon(createIcon(size));
       button.setRolloverIcon(createFocusedIcon(size));
       button.setDisabledIcon(createDisabledIcon(size));
-      button.setContentAreaFilled(false);
+      button.setContentAreaFilled(true);
+      button.setBorder(null);
+      return button;
+   }
+   public JButton createButton(String text, float size) {
+      JButton button = new JButton(text);
+      button.setIcon(createIcon(size));
+      button.setRolloverIcon(createFocusedIcon(size));
+      button.setDisabledIcon(createDisabledIcon(size));
+      button.setContentAreaFilled(true);
       button.setBorder(null);
       return button;
    }

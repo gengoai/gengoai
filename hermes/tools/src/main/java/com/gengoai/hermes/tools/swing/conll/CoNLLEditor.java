@@ -305,7 +305,7 @@ public class CoNLLEditor extends HermesGUI {
     }
 
     @Override
-    protected void initControls() throws Exception {
+    public void initControls() throws Exception {
         mainWindowFrame.setTitle("Hermes CoNLL Editor");
         menuBar(Menus.menu("File", 'F',
                            Menus.menuItem(faOpen)),

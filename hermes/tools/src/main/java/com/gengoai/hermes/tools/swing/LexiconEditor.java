@@ -131,7 +131,7 @@ public class LexiconEditor extends HermesGUI {
     }
 
     @Override
-    protected void initControls() throws Exception {
+    public void initControls() throws Exception {
         faDeleteEntry.setEnabled(false);
         mainWindowFrame.setTitle("Hermes Lexicon Editor");
         faSave.setEnabled(false);
