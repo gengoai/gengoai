@@ -17,16 +17,14 @@
  * under the License.
  */
 
-package com.gengoai.hermes.tools.ui.components;
+package com.gengoai.hermes.tools.swing.gui;
 
-import com.gengoai.conversion.Cast;
 import com.gengoai.hermes.corpus.Corpus;
 import com.gengoai.swing.Colors;
 import com.gengoai.swing.ComponentStyle;
 import com.gengoai.swing.Fonts;
 import com.gengoai.swing.TextAlignment;
 import com.gengoai.swing.component.Components;
-import com.gengoai.swing.component.HBox;
 import com.gengoai.swing.component.MangoTable;
 import com.gengoai.swing.component.VBox;
 import com.gengoai.swing.component.listener.SwingListeners;
@@ -38,10 +36,8 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.text.DecimalFormat;
-import java.util.Collection;
-import java.util.Vector;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static com.gengoai.function.Functional.with;
 import static com.gengoai.swing.Fonts.*;
@@ -53,25 +49,15 @@ public class CorpusView extends JPanel {
     private final Corpus corpus;
     @Getter
     private final String corpusSpecification;
-    private final JComboBox<AnnotationLayer> cboxTasks;
     private final AtomicReference<String> selectedDocumentId = new AtomicReference<>();
     @Setter
-    private BiConsumer<String, AnnotationLayer> onDocumentOpen = (s, a) -> System.out.println(selectedDocumentId.get());
+    private Consumer<String> onDocumentOpen = System.out::println;
 
     public CorpusView(String corpusSpecification, Corpus corpus) {
-        this(corpusSpecification, corpus, null);
-    }
-
-    public CorpusView(String corpusSpecification, Corpus corpus, Collection<AnnotationLayer> tasks) {
         setLayout(new BorderLayout(0, 10));
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         this.corpusSpecification = corpusSpecification;
         this.corpus = corpus;
-        if (tasks == null || tasks.size() == 0) {
-            this.cboxTasks = null;
-        } else {
-            this.cboxTasks = new JComboBox<>(new Vector<>(tasks));
-        }
         add(createStatsPanel(), BorderLayout.NORTH);
         add(createDocumentPicker(), BorderLayout.CENTER);
     }
@@ -109,22 +95,6 @@ public class CorpusView extends JPanel {
 
         vbox.add(filter);
         vbox.add(scrollPaneNoBorder(tblDocumentIds), true);
-
-        if (cboxTasks != null) {
-            vbox.add(with(new HBox(5, 0), $hbox -> {
-                $hbox.add(setFontStyle(new JLabel("Task:"), Font.BOLD));
-                $hbox.add(cboxTasks, true);
-            }));
-        }
-
-        vbox.add(with(new HBox(), $hbox -> {
-            var btn = new JButton(cboxTasks == null
-                                          ? "View"
-                                          : "Annotate");
-            btn.addActionListener(e -> performDocumentOpen());
-            $hbox.add(btn, true);
-        }));
-
         return vbox;
     }
 
@@ -172,11 +142,7 @@ public class CorpusView extends JPanel {
 
     private void performDocumentOpen() {
         if (onDocumentOpen != null) {
-            AnnotationLayer task = null;
-            if (cboxTasks!= null) {
-                task = Cast.as(cboxTasks.getSelectedItem());
-            }
-            onDocumentOpen.accept(selectedDocumentId.get(), task);
+            onDocumentOpen.accept(selectedDocumentId.get());
         }
     }
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.gengoai.hermes.tools.ui.components;
+package com.gengoai.hermes.tools.swing.gui;
 
 import com.gengoai.collection.Collect;
 import com.gengoai.hermes.HString;
@@ -32,12 +32,8 @@ import com.gengoai.swing.component.listener.FluentAction;
 import com.gengoai.swing.component.view.MangoButtonedTextField;
 import lombok.NonNull;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JSeparator;
-import javax.swing.JToolBar;
-import java.awt.Color;
-import java.awt.Font;
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;

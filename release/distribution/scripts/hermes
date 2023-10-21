@@ -17,7 +17,7 @@ PROGRAMS=(
   "tagger" "com.gengoai.hermes.tools.TaggerApp" "Application for training sequence taggers."
   "newscrawler" "com.gengoai.news.Crawler" "Application for crawling news articles."
   "news-corpus-creator" "com.gengoai.news.CorpusCreator" "Application for creating a corpus from crawled news articles."
-  "annotation-gui" "com.gengoai.hermes.tools.swing.AnnotationGUI" "Annotate documents for a given task using a Swing-based gui."
+  "gui" "com.gengoai.hermes.tools.swing.gui.Hermes" "View Documents in a Corpus"
   "conll-gui" "com.gengoai.hermes.tools.swing.conll.CoNLLEditor" "Annotate CoNLL formatted documents for one or more given tasks using a Swing-based gui."
   "lexicon-gui" "com.gengoai.hermes.tools.swing.LexiconEditor" "Edit a lexicon using a Swing-based gui."
   "workflow" "com.gengoai.hermes.tools.WorkflowApp" "Application to run user defined workflows."

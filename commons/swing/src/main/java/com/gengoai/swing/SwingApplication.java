@@ -22,7 +22,6 @@ package com.gengoai.swing;
 
 import com.gengoai.SystemInfo;
 import com.gengoai.application.Application;
-import com.gengoai.conversion.Cast;
 import com.gengoai.io.Resources;
 import lombok.NonNull;
 
@@ -304,7 +303,7 @@ public abstract class SwingApplication extends Application {
     }
 
     protected JToolBar statusBar(@NonNull Object... components) {
-        JToolBar toolBar = SwingHelpers.createToolBar(components);
+        JToolBar toolBar = Toolbars.createToolBar(components);
         toolBar.setBorderPainted(true);
         toolBar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("MenuBar.borderColor")),
@@ -315,7 +314,7 @@ public abstract class SwingApplication extends Application {
     }
 
     protected JToolBar toolBar(@NonNull Object... components) {
-        JToolBar toolBar = SwingHelpers.createToolBar(components);
+        JToolBar toolBar = Toolbars.createToolBar(components);
         toolBar.setBorderPainted(true);
         toolBar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("MenuBar.borderColor")),

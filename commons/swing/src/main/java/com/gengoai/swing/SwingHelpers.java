@@ -24,6 +24,9 @@ import lombok.NonNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Consumer;
+
+import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 
 public class SwingHelpers {
 
@@ -31,21 +34,18 @@ public class SwingHelpers {
         return new Insets(top, left, bottom, right);
     }
 
-    public static JToolBar createToolBar(@NonNull Object... components) {
-        JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
-        for (Object component : components) {
-            if (component == null) {
-                toolBar.addSeparator();
-            } else if (component instanceof Dimension) {
-                toolBar.addSeparator(Cast.as(component));
-            } else if (component instanceof View) {
-                toolBar.add(Cast.<View>as(component).getRoot());
-            } else {
-                toolBar.add(Cast.<Component>as(component));
+    public static void visitComponents(@NonNull Container parent, @NonNull Consumer<JComponent> visitor) {
+        for (Component c : parent.getComponents()) {
+            if( c instanceof JComponent) {
+                JComponent component = (JComponent) c;
+                visitor.accept(component);
+            }
+            if (c instanceof Container) {
+                visitComponents((Container) c, visitor);
             }
         }
-        return toolBar;
     }
+
+
 
 }//END OF SwingHelpers

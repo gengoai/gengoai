@@ -96,7 +96,7 @@ public class MangoFrame extends JFrame {
     }
 
     protected JToolBar toolBar(@NonNull Object... components) {
-        JToolBar toolBar = SwingHelpers.createToolBar(components);
+        JToolBar toolBar = Toolbars.createToolBar(components);
         toolBar.setBorderPainted(true);
         toolBar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("MenuBar.borderColor")),
@@ -106,7 +106,7 @@ public class MangoFrame extends JFrame {
     }
 
     public JToolBar statusBar(@NonNull Object... components) {
-        JToolBar toolBar = SwingHelpers.createToolBar(components);
+        JToolBar toolBar = Toolbars.createToolBar(components);
         toolBar.setBorderPainted(true);
         toolBar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("MenuBar.borderColor")),

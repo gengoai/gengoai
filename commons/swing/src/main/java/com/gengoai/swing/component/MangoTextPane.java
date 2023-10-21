@@ -36,103 +36,104 @@ import java.util.function.Consumer;
 import static com.gengoai.swing.component.listener.SwingListeners.mouseReleased;
 
 public class MangoTextPane extends JTextPane {
-   private static final long serialVersionUID = 1L;
-   private final Style DEFAULT;
-   private final AtomicBoolean alwaysHighlight = new AtomicBoolean(false);
-   private final AtomicReference<Span> selection = new AtomicReference<>();
+    private static final long serialVersionUID = 1L;
+    private final Style DEFAULT;
+    private final AtomicBoolean alwaysHighlight = new AtomicBoolean(false);
+    private final AtomicReference<Span> selection = new AtomicReference<>();
 
-   public MangoTextPane() {
-      this(new DefaultStyledDocument());
-   }
+    public MangoTextPane() {
+        this(new DefaultStyledDocument());
+    }
 
-   public MangoTextPane(@NonNull StyledDocument document) {
-      super(document);
-      setCaret(new DefaultCaret() {
-         private static final long serialVersionUID = 1L;
-         @Override
-         public void setSelectionVisible(boolean visible) {
-            super.setSelectionVisible(visible || alwaysHighlight.get());
-         }
-      });
-      this.DEFAULT = addStyle("DEFAULT", null);
-   }
+    public MangoTextPane(@NonNull StyledDocument document) {
+        super(document);
+        setCaret(new DefaultCaret() {
+            private static final long serialVersionUID = 1L;
 
-   public MangoTextPane addAnSetStyle(String name, @NonNull Consumer<FluentStyle> styleInitializer) {
-      styleInitializer.accept(new FluentStyle(super.addStyle(name, null)));
-      return this;
-   }
+            @Override
+            public void setSelectionVisible(boolean visible) {
+                super.setSelectionVisible(visible || alwaysHighlight.get());
+            }
+        });
+        this.DEFAULT = addStyle("DEFAULT", null);
+    }
 
-   public MangoTextPane addSelectionChangeListener(@NonNull Consumer<SelectionChangeEvent> listener) {
-      addMouseListener(mouseReleased(e -> {
-         Span newSelection = null;
-         if (getSelectionStart() < getSelectionEnd()) {
-            newSelection = Span.of(getSelectionStart(), getSelectionEnd());
-         }
-         if (selection.get() == null || newSelection == null || !selection.get().equals(newSelection)) {
-            listener.accept(new SelectionChangeEvent(selection.get(), newSelection));
-         }
-         selection.set(newSelection);
-      }));
-      return this;
-   }
+    public MangoTextPane addAnSetStyle(String name, @NonNull Consumer<FluentStyle> styleInitializer) {
+        styleInitializer.accept(new FluentStyle(super.addStyle(name, null)));
+        return this;
+    }
 
-   public FluentStyle addStyle(String name) {
-      return new FluentStyle(super.addStyle(name, null));
-   }
+    public MangoTextPane addSelectionChangeListener(@NonNull Consumer<SelectionChangeEvent> listener) {
+        addMouseListener(mouseReleased(e -> {
+            Span newSelection = null;
+            if (getSelectionStart() < getSelectionEnd()) {
+                newSelection = Span.of(getSelectionStart(), getSelectionEnd());
+            }
+            if (selection.get() == null || newSelection == null || !selection.get().equals(newSelection)) {
+                listener.accept(new SelectionChangeEvent(selection.get(), newSelection));
+            }
+            selection.set(newSelection);
+        }));
+        return this;
+    }
 
-   public int calculateMinimumHeight() {
-      if (getText().length() == 0) {
-         return 0;
-      }
-      AttributedString text = new AttributedString(getText());
-      FontRenderContext frc = getFontMetrics(getFont()).getFontRenderContext();
-      AttributedCharacterIterator charIt = text.getIterator();
-      LineBreakMeasurer lineMeasurer = new LineBreakMeasurer(charIt, frc);
-      float formatWidth = (float) getSize().width;
-      lineMeasurer.setPosition(charIt.getBeginIndex());
-      int noLines = 0;
-      while (lineMeasurer.getPosition() < charIt.getEndIndex()) {
-         lineMeasurer.nextLayout(formatWidth);
-         noLines++;
-      }
-      noLines += 2;
-      int fh = getFontMetrics(getFont()).getHeight();
-      int lineHeight = (int) Math.ceil(fh + (fh * 0.5));
-      Insets insets = getInsets();
-      return (int) Math.ceil(noLines * lineHeight) + insets.top + insets.bottom;
-   }
+    public FluentStyle addStyle(String name) {
+        return new FluentStyle(super.addStyle(name, null));
+    }
 
-   public MangoTextPane characterAttributes(AttributeSet attr, boolean replace) {
-      setCharacterAttributes(attr, replace);
-      return this;
-   }
+    public int calculateMinimumHeight() {
+        if (getText().length() == 0) {
+            return 0;
+        }
+        AttributedString text = new AttributedString(getText());
+        FontRenderContext frc = getFontMetrics(getFont()).getFontRenderContext();
+        AttributedCharacterIterator charIt = text.getIterator();
+        LineBreakMeasurer lineMeasurer = new LineBreakMeasurer(charIt, frc);
+        float formatWidth = (float) getSize().width;
+        lineMeasurer.setPosition(charIt.getBeginIndex());
+        int noLines = 0;
+        while (lineMeasurer.getPosition() < charIt.getEndIndex()) {
+            lineMeasurer.nextLayout(formatWidth);
+            noLines++;
+        }
+        noLines += 2;
+        int fh = getFontMetrics(getFont()).getHeight();
+        int lineHeight = (int) Math.ceil(fh + (fh * 0.5));
+        Insets insets = getInsets();
+        return (int) Math.ceil(noLines * lineHeight) + insets.top + insets.bottom;
+    }
 
-   public Style getDefaultStyle() {
-      return DEFAULT;
-   }
+    public MangoTextPane characterAttributes(AttributeSet attr, boolean replace) {
+        setCharacterAttributes(attr, replace);
+        return this;
+    }
 
-   public Span getSelectionRange() {
-      return selection.get();
-   }
+    public Style getDefaultStyle() {
+        return DEFAULT;
+    }
 
-   public boolean isAlwaysHighlight() {
-      return alwaysHighlight.get();
-   }
+    public Span getSelectionRange() {
+        return selection.get();
+    }
 
-   public MangoTextPane setAlwaysHighlight(boolean value) {
-      this.alwaysHighlight.set(value);
-      return this;
-   }
+    public boolean isAlwaysHighlight() {
+        return alwaysHighlight.get();
+    }
 
-   public void setLineSpacing(float space) {
-      MutableAttributeSet aSet = new SimpleAttributeSet(getParagraphAttributes());
-      StyleConstants.setLineSpacing(aSet, space);
-      setParagraphAttributes(aSet, true);
-   }
+    public MangoTextPane setAlwaysHighlight(boolean value) {
+        this.alwaysHighlight.set(value);
+        return this;
+    }
 
-   public MangoTextPane setStyle(int start, int end, String styleName) {
-      getStyledDocument().setCharacterAttributes(start, end - start, getStyle(styleName), true);
-      return this;
-   }
+    public void setLineSpacing(float space) {
+        MutableAttributeSet aSet = new SimpleAttributeSet(getParagraphAttributes());
+        StyleConstants.setLineSpacing(aSet, space);
+        setParagraphAttributes(aSet, true);
+    }
+
+    public MangoTextPane setStyle(int start, int end, String styleName) {
+        getStyledDocument().setCharacterAttributes(start, end - start, getStyle(styleName), true);
+        return this;
+    }
 
 }
