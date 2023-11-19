@@ -19,6 +19,9 @@
 
 package com.gengoai.hermes.tools.swing.gui;
 
+import com.gengoai.LogUtils;
+import com.gengoai.apollo.data.Datum;
+import com.gengoai.apollo.model.topic.MalletLDA;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.config.Config;
@@ -30,6 +33,8 @@ import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.corpus.SearchResults;
 import com.gengoai.hermes.extraction.keyword.KeywordExtractor;
 import com.gengoai.hermes.extraction.keyword.KeywordExtractors;
+import com.gengoai.hermes.extraction.lyre.LyreExpression;
+import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.tools.swing.HermesGUI;
 import com.gengoai.hermes.tools.swing.LoggingTask;
 import com.gengoai.io.Resources;
@@ -54,6 +59,7 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import static com.gengoai.swing.component.Components.button;
 import static com.gengoai.tuple.Tuples.$;
@@ -78,7 +84,7 @@ public class Hermes extends HermesGUI {
     private Corpus currentCorpus = null;
     private final FluentAction annotateCoreAction = new FluentAction("Annotate Core...", this::doAnnotateCore);
     private final FluentAction calcKeywordsAction = new FluentAction("Keywords...", this::doExtractKeywords);
-
+    private final FluentAction calcTopicsAction = new FluentAction("Topics...", this::doCalculateTopics);
 
     public static void main(String[] args) {
         SwingApplication.runApplication(Hermes::new, "Hermes", "Hermes", args);
@@ -106,6 +112,16 @@ public class Hermes extends HermesGUI {
         loggingTask.setVisible(true);
     }
 
+    private void doCalculateTopics(ActionEvent e) {
+        LoggingTask loggingTask = new LoggingTask(
+                mainWindowFrame,
+                "Extracting Topics",
+                new TopicsTask()
+        );
+        loggingTask.setModal(true);
+        loggingTask.setVisible(true);
+    }
+
     private void doExtractKeywords(ActionEvent e) {
         MangoCombobox<KeywordExtractors> combobox = new MangoCombobox<>();
         for (KeywordExtractors value : KeywordExtractors.values()) {
@@ -124,6 +140,88 @@ public class Hermes extends HermesGUI {
                                                      (int) currentCorpus.size());
             var task = new KeywordTask(progressWindow, Cast.as(combobox.getSelectedItem(), KeywordExtractors.class));
             task.execute();
+        }
+    }
+
+    class KeywordTask extends SwingWorker<Void, Void> {
+        private final ProgressMonitor progressMonitor;
+        private final KeywordExtractor extractor;
+        private final KeywordExtractors extractorsFactory;
+
+        KeywordTask(ProgressMonitor progressMonitor, KeywordExtractors extractor) {
+            this.progressMonitor = progressMonitor;
+            this.extractor = extractor.create();
+            this.extractorsFactory = extractor;
+        }
+
+        @Override
+        protected Void doInBackground() throws Exception {
+            extractor.fit(currentCorpus);
+            int i = 0;
+            Counter<String> keywords = Counters.newConcurrentCounter();
+            Counter<String> docFreq = Counters.newConcurrentCounter();
+            for (Document document : currentCorpus) {
+                Counter<String> kw = extractor.extract(document).count();
+                keywords.merge(kw);
+                docFreq.incrementAll(kw.items());
+                progressMonitor.setProgress(++i);
+            }
+            var mt = new MangoTable($("Keyword", String.class),
+                                    $("Score", Double.class),
+                                    $("Document Freq.", Double.class));
+            mt.setAutoCreateRowSorter(true);
+            for (String kw : keywords.items()) {
+                mt.addRow(kw, keywords.get(kw), docFreq.get(kw));
+            }
+            mt.addMouseListener(SwingListeners.mouseDoubleClicked(e -> {
+                String keyword = mt.getValueAtModel(
+                        mt.getRowSorter().convertRowIndexToModel(mt.getSelectedRow()),
+                        0).toString();
+                searchPanel.txt.setText(keyword);
+                searchPanel.performSearch(new ActionEvent(searchPanel, 0, ""));
+                tabbedPane.setSelectedIndex(0);
+            }));
+            JPanel panel = new JPanel();
+            panel.setLayout(new BorderLayout());
+            panel.add(new JScrollPane(mt), BorderLayout.CENTER);
+            JToolBar btnBar = new JToolBar();
+            FluentAction saveCsv = SwingListeners.fluentAction("Save..", l -> {
+                                                     try {
+                                                         mt.getModel().toCSV(Resources.from("/home/ik/test.csv"));
+                                                     } catch (IOException e) {
+                                                         e.printStackTrace();
+                                                     }
+                                                 }).smallIcon(FontAwesome.SAVE.createIcon(16))
+                                                 .largeIcon(FontAwesome.SAVE.createIcon(16));
+            btnBar.add(Box.createHorizontalGlue());
+            var save = button(saveCsv, false, false, 0);
+            save.setToolTipText("Save...");
+            btnBar.add(save);
+            btnBar.setFloatable(false);
+            panel.add(btnBar, BorderLayout.NORTH);
+            tabbedPane.addTab(extractorsFactory.name() + " Keywords", panel);
+            return null;
+        }
+    }
+
+    class TopicsTask extends SwingWorker<Void, Void> {
+
+        @Override
+        protected Void doInBackground() throws Exception {
+            final MalletLDA lda = new MalletLDA();
+            LogUtils.logInfo(Logger.getLogger(Hermes.class.getName()),
+                             "Estimating {0} topics on {1} documents",
+                             lda.getFitParameters().K.value(),
+                             currentCorpus.size());
+            lda.estimate(currentCorpus.asDataSet(HStringDataSetGenerator.builder(Types.SENTENCE)
+                                                                        .tokenSequence(Datum.DEFAULT_INPUT,
+                                                                                       LyreExpression.parse(
+                                                                                               "filter(lower(@TOKEN), isContentWord)"))
+                                                                        .build()));
+            for (int i = 0; i < lda.getNumberOfTopics(); i++) {
+                System.out.println(lda.getTopic(i));
+            }
+            return null;
         }
     }
 
@@ -186,6 +284,7 @@ public class Hermes extends HermesGUI {
                 Menus.menu("Corpus Analysis",
                            'A',
                            Menus.menuItem(calcKeywordsAction),
+                           Menus.menuItem(calcTopicsAction),
                            Menus.SEPARATOR,
                            Menus.menuItem(annotateCoreAction))
                );
@@ -202,73 +301,7 @@ public class Hermes extends HermesGUI {
         mainWindowFrame.add(tabbedPane);
         ImageIcon ii = new ImageIcon(Resources.fromClasspath("img/editor.png").readBytes());
         setIcon(ii.getImage());
-    }
 
-    class KeywordTask extends SwingWorker<Void, Void> {
-        private final ProgressMonitor progressMonitor;
-        private final KeywordExtractor extractor;
-        private final KeywordExtractors extractorsFactory;
-
-        KeywordTask(ProgressMonitor progressMonitor, KeywordExtractors extractor) {
-            this.progressMonitor = progressMonitor;
-            this.extractor = extractor.create();
-            this.extractorsFactory = extractor;
-        }
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            extractor.fit(currentCorpus);
-            int i = 0;
-            Counter<String> keywords = Counters.newConcurrentCounter();
-            Counter<String> docFreq = Counters.newConcurrentCounter();
-            for (Document document : currentCorpus) {
-                Counter<String> kw = extractor.extract(document).count();
-                keywords.merge(kw);
-                docFreq.incrementAll(kw.items());
-                progressMonitor.setProgress(++i);
-            }
-            var mt = new MangoTable($("Keyword", String.class),
-                                    $("Score", Double.class),
-                                    $("Document Freq.", Double.class));
-            mt.setAutoCreateRowSorter(true);
-            for (String kw : keywords.items()) {
-                mt.addRow(kw, keywords.get(kw), docFreq.get(kw));
-            }
-            mt.addMouseListener(SwingListeners.mouseDoubleClicked(e -> {
-                String keyword = mt.getValueAtModel(
-                        mt.getRowSorter().convertRowIndexToModel(mt.getSelectedRow()),
-                        0).toString();
-                searchPanel.txt.setText(keyword);
-                searchPanel.performSearch(new ActionEvent(searchPanel, 0, ""));
-                tabbedPane.setSelectedIndex(0);
-            }));
-            JPanel panel = new JPanel();
-            panel.setLayout(new BorderLayout());
-            panel.add(new JScrollPane(mt), BorderLayout.CENTER);
-            JToolBar btnBar = new JToolBar();
-            FluentAction saveCsv = SwingListeners.fluentAction("Save..", l -> {
-                                                     try {
-                                                         JFileChooser fileChooser = new JFileChooser();
-                                                         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                                                         fileChooser.setDialogTitle("Save CSV");
-                                                         fileChooser.setApproveButtonText("Save");
-                                                         if (fileChooser.showOpenDialog(mainWindowFrame) == JFileChooser.APPROVE_OPTION) {
-                                                             mt.getModel().toCSV(Resources.fromFile(fileChooser.getSelectedFile()));
-                                                         }
-                                                     } catch (IOException e) {
-                                                         e.printStackTrace();
-                                                     }
-                                                 }).smallIcon(FontAwesome.SAVE.createIcon(16))
-                                                 .largeIcon(FontAwesome.SAVE.createIcon(16));
-            btnBar.add(Box.createHorizontalGlue());
-            var save = button(saveCsv, false, false, 0);
-            save.setToolTipText("Save...");
-            btnBar.add(save);
-            btnBar.setFloatable(false);
-            panel.add(btnBar, BorderLayout.NORTH);
-            tabbedPane.addTab(extractorsFactory.name() + " Keywords", panel);
-            return null;
-        }
     }
 
     private class SearchPanel extends JPanel {
