@@ -393,6 +393,9 @@ public abstract class SQLDialect implements Serializable {
      */
     protected abstract void defineColumn(Column column, StringBuilder builder);
 
+
+    protected abstract String convertDataType(SQLDataType dataType);
+
     /**
      * Define constraint.
      *

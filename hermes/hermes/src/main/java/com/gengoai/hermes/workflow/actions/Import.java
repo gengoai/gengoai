@@ -39,6 +39,7 @@ import java.time.format.DateTimeFormatter;
 public class Import implements Action {
     private static final long serialVersionUID = 1L;
     private String id;
+    private boolean dropExisting = false;
 
     @Override
     public String getName() {
@@ -47,13 +48,19 @@ public class Import implements Action {
 
     @Override
     public String getDescription() {
-        return "Import documents into a Corpus. The corpus is specified using the context value 'CORPUS_LOCATION'.";
+        return "Import documents into a Corpus.";
     }
 
     @Override
     public DocumentCollection process(DocumentCollection corpus, Context context) throws Exception {
         final Resource workflowFolder = context.getWorkflowFolder();
-        String location = workflowFolder.getChild("corpus").path();
+        final Resource location = workflowFolder.getChild("corpus");
+
+        if (dropExisting && location.exists()) {
+            LogUtils.logConfig(log, "Dropping existing corpus at ''{0}''.", location);
+            location.delete(true);
+        }
+
         LogUtils.logConfig(log, "Saving document collection to ''{0}''.", location);
         Corpus toCorpus = Corpus.open(location);
         String importDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);

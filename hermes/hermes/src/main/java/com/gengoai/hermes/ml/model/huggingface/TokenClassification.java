@@ -83,42 +83,4 @@ public final class TokenClassification {
         return predict(List.of(context)).get(0);
     }
 
-    public static void main(String[] args) {
-        Config.initialize("Sandbox", args);
-        TokenClassification tc = new TokenClassification("/work/prj/huggingface/token-classification/bert-finetuned-ner", 0);
-        Corpus docs = Corpus.open("/work/shortDocs.corpus");
-        docs.clearAnnotations();
-        Resources.from("/work/magic.corpus").delete(true);
-        Corpus c = Corpus.open("/work/magic.corpus");
-        List<Document> buffer = new ArrayList<>();
-        for (Document d : docs) {
-            d.annotate(Types.SENTENCE);
-            for (Annotation sentence : d.sentences()) {
-                System.out.println(sentence);
-                List<Output> outputs = tc.predict(sentence.toString());
-                for (Output output : outputs) {
-                    HString eHStr = sentence.substring(output.start, output.end);
-                    d.createAnnotation(Types.ENTITY,
-                                       eHStr.start(),
-                                       eHStr.end(),
-                                       Map.of(Types.ENTITY_TYPE, EntityType.valueOf(output.label),
-                                              Types.CONFIDENCE, output.confidence));
-                }
-            }
-            for (Annotation entity : d.annotations(Types.ENTITY)) {
-                System.out.println(entity + " / " + entity.attribute(Types.ENTITY_TYPE) + " / " + entity.attribute(Types.CONFIDENCE));
-            }
-            buffer.add(d);
-
-            if (buffer.size() > 100) {
-                c.addAll(buffer);
-                buffer.clear();
-            }
-
-        }
-
-        c.addAll(buffer);
-
-    }
-
 }//END OF TokenClassification

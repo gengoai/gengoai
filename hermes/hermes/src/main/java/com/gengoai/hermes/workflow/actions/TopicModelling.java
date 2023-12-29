@@ -89,7 +89,7 @@ public class TopicModelling implements Action {
         }
         context.property(TOPIC_MODELLING_TOPIC_INFO, topics);
         context.property(TOPIC_MODELLING_MODEL, lda);
-        context.getAnalysisFolder().getChild(getId() + "-topics.json").write(Json.dumpsPretty(topics));
+        Json.dumpPretty(topics, context.getAnalysisFolder().getChild(getId() + "-topics.json"));
         return corpus;
     }
 }

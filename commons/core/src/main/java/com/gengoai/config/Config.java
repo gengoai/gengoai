@@ -164,6 +164,7 @@ public final class Config implements Serializable {
                root
          }
          ) {
+
             if (hasProperty(key)) {
                return key;
             }

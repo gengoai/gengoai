@@ -46,11 +46,12 @@ public class SQLiteDialect extends SQLDialect {
         return context;
     }
 
+
     @Override
     protected void defineColumn(Column column, StringBuilder builder) {
         builder.append(column.getName())
                .append(" ")
-               .append(column.getType());
+               .append(convertDataType(column.getType()));
         if (column.isPrimaryKey() || column.isAutoIncrement()) {
             builder.append(" PRIMARY KEY");
         }
@@ -80,6 +81,17 @@ public class SQLiteDialect extends SQLDialect {
             builder.append(" COLLATE ")
                    .append(Strings.prependIfNotPresent(Strings.appendIfNotPresent(column.getCollate(), "\""), "\""));
         }
+    }
+
+    @Override
+    protected String convertDataType(SQLDataType dataType) {
+        if (dataType.getName().startsWith("VARCHAR") || dataType.getName().startsWith("CHAR")) {
+            return dataType.getName();
+        }
+        if (dataType == SQLDataType.JSON) {
+            return "JSON";
+        }
+        return dataType.getAffinity().name();
     }
 
 

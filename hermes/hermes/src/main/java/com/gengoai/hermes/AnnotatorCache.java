@@ -121,9 +121,9 @@ final class AnnotatorCache {
       cache.put(createKey(annotationType, language), annotator);
 
       if (language == Language.UNKNOWN) {
-         Config.setProperty("Annotator" + annotationType.name() + ".annotator", "CACHED");
+         Config.setProperty("Annotator." + annotationType.name() + ".annotator", "CACHED");
       } else {
-         Config.setProperty("Annotator" + annotationType.name() + ".annotator." + language, "CACHED");
+         Config.setProperty("Annotator." + annotationType.name() + ".annotator." + language, "CACHED");
       }
 
       assert cache.containsKey(createKey(annotationType, language));

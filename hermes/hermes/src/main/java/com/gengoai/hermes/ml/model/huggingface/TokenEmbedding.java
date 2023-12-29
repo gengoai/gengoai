@@ -20,6 +20,7 @@
 package com.gengoai.hermes.ml.model.huggingface;
 
 import com.gengoai.apollo.math.linalg.NDArray;
+import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
 import com.gengoai.collection.Iterables;
 import com.gengoai.config.Config;
@@ -113,6 +114,13 @@ public final class TokenEmbedding {
                                   return nd.DFLOAT64.array(embedding.getData());
                               })
                               .collect(Collectors.toList());
+    }
+
+    public NumericNDArray embed(String tokens) {
+        Document document = Document.create(tokens);
+        document.annotate(Types.TOKEN, Types.SENTENCE);
+        embed(document);
+        return document.embedding();
     }
 
     public void embed(HString hString) {

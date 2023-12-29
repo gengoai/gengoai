@@ -27,101 +27,103 @@ import com.gengoai.string.Strings;
 import lombok.NonNull;
 import lombok.extern.java.Log;
 
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import static com.gengoai.sql.SQLConstants.*;
 
 @Log
 public class PostgreSQLDialect extends SQLDialect {
-   private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-   @Override
-   protected void defineColumn(Column column, StringBuilder builder) {
-      builder.append(column.getName())
-             .append(" ");
-      if (column.isAutoIncrement()) {
-         switch (column.getType().toUpperCase()) {
-            case "LONG":
-            case "BIGINT":
-            case "BIGINTEGER":
-               builder.append("BIGSERIAL");
-               break;
-            case "SHORT":
-            case "SMALLINT":
-               builder.append("SMALLSERIAL");
-               break;
+    public static SQLContext createContext(@NonNull String jdbcConnectionString) throws SQLException {
+        return SQLContext.create(DriverManager.getConnection(jdbcConnectionString), new PostgreSQLDialect());
+    }
+
+    @Override
+    protected String convertDataType(SQLDataType dataType) {
+        if (dataType.getName().startsWith("VARCHAR") || dataType.getName().startsWith("CHAR")) {
+            return dataType.getName();
+        }
+        if (dataType == SQLDataType.JSON) {
+            return "JSON";
+        }
+        return dataType.getName();
+    }
+
+    @Override
+    protected void defineColumn(Column column, StringBuilder builder) {
+        builder.append(column.getName())
+               .append(" ")
+               .append(convertDataType(column.getType()));
+        if (column.isPrimaryKey()) {
+            builder.append(" PRIMARY KEY");
+        }
+        if (column.getDefaultValue() != null) {
+            builder.append(" DEFAULT ")
+                   .append(render(column.getDefaultValue()));
+        }
+        if (column.getStoredValue() != null) {
+            builder.append(" GENERATED ALWAYS AS ( ")
+                   .append(render(column.getStoredValue()))
+                   .append(" ) STORED");
+        }
+        if (column.getVirtualValue() != null) {
+            LogUtils.logWarning(log, "PostgreSQL does not support 'VIRTUAL' columns using 'STORED' instead");
+            builder.append(" GENERATED ALWAYS AS ( ")
+                   .append(render(column.getVirtualValue()))
+                   .append(" ) STORED");
+        }
+        if (Strings.isNotNullOrBlank(column.getCollate())) {
+            builder.append(" COLLATE ")
+                   .append(Strings.prependIfNotPresent(Strings.appendIfNotPresent(column.getCollate(), "\""), "\""));
+        }
+    }
+
+    @Override
+    protected String function(@NonNull SQLFunction function) {
+        switch (function.getName()) {
+            case JSON_EXTRACT:
+                return String.format("(%s->>%s)",
+                                     render(function.getArguments().get(0)),
+                                     render(function.getArguments().get(1)));
+            case REGEXP:
+                return String.format("%s ~ %s",
+                                     render(function.getArguments().get(0)),
+                                     render(function.getArguments().get(1)));
             default:
-               builder.append("SERIAL");
-         }
-      } else {
-         builder.append(column.getType());
-      }
-      if (column.isPrimaryKey()) {
-         builder.append(" PRIMARY KEY");
-      }
-      if (column.getDefaultValue() != null) {
-         builder.append(" DEFAULT ")
-                .append(render(column.getDefaultValue()));
-      }
-      if (column.getStoredValue() != null) {
-         builder.append(" GENERATED ALWAYS AS ( ")
-                .append(render(column.getStoredValue()))
-                .append(" ) STORED");
-      }
-      if (column.getVirtualValue() != null) {
-         LogUtils.logWarning(log, "PostgreSQL does not support 'VIRTUAL' columns using 'STORED' instead");
-         builder.append(" GENERATED ALWAYS AS ( ")
-                .append(render(column.getVirtualValue()))
-                .append(" ) STORED");
-      }
-      if (Strings.isNotNullOrBlank(column.getCollate())) {
-         builder.append(" COLLATE ")
-                .append(Strings.prependIfNotPresent(Strings.appendIfNotPresent(column.getCollate(), "\""), "\""));
-      }
-   }
+                return super.function(function);
+        }
+    }
 
-   @Override
-   protected String function(@NonNull SQLFunction function) {
-      switch (function.getName()) {
-         case JSON_EXTRACT:
-            return String.format("(%s->>%s)",
-                                 render(function.getArguments().get(0)),
-                                 render(function.getArguments().get(1)));
-         case REGEXP:
-            return String.format("%s ~ %s",
-                                 render(function.getArguments().get(0)),
-                                 render(function.getArguments().get(1)));
-         default:
-            return super.function(function);
-      }
-   }
+    @Override
+    protected String insertType(InsertType insertType) {
+        if (insertType == InsertType.INSERT_OR_FAIL) {
+            return "INSERT";
+        }
+        LogUtils.logWarning(log, "PostgreSQL does not support ''{0}'' using ''INSERT'' instead", insertType);
+        return "INSERT";
+    }
 
-   @Override
-   protected String insertType(InsertType insertType) {
-      if (insertType == InsertType.INSERT_OR_FAIL) {
-         return "INSERT";
-      }
-      LogUtils.logWarning(log, "PostgreSQL does not support ''{0}'' using ''INSERT'' instead", insertType);
-      return "INSERT";
-   }
+    @Override
+    protected String translate(String keyword) {
+        switch (keyword) {
+            case NOT_EQUALS:
+                return "!=";
+            case REGEXP:
+                return "~";
+            default:
+                return super.translate(keyword);
+        }
 
-   @Override
-   protected String translate(String keyword) {
-      switch (keyword) {
-         case NOT_EQUALS:
-            return "!=";
-         case REGEXP:
-            return "~";
-         default:
-            return super.translate(keyword);
-      }
+    }
 
-   }
-
-   @Override
-   protected String updateType(UpdateType updateType) {
-      if (updateType == UpdateType.UPDATE) {
-         return "UPDATE";
-      }
-      LogUtils.logWarning(log, "PostgreSQL does not support ''{0}'' using ''UPDATE'' instead", updateType);
-      return "UPDATE";
-   }
+    @Override
+    protected String updateType(UpdateType updateType) {
+        if (updateType == UpdateType.UPDATE) {
+            return "UPDATE";
+        }
+        LogUtils.logWarning(log, "PostgreSQL does not support ''{0}'' using ''UPDATE'' instead", updateType);
+        return "UPDATE";
+    }
 }//END OF PostgreSQLDialect

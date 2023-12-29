@@ -25,6 +25,7 @@ import com.gengoai.sql.constraint.Constraint;
 import com.gengoai.sql.constraint.ConstraintBuilder;
 import com.gengoai.sql.object.Column;
 import com.gengoai.sql.object.Table;
+import com.gengoai.sql.operator.InfixBinaryOperator;
 import com.gengoai.sql.operator.PrefixUnaryOperator;
 import com.gengoai.sql.operator.SQLOperable;
 import com.gengoai.sql.statement.QueryStatement;
@@ -78,7 +79,7 @@ public final class SQL {
     * @param type the data type of the column
     * @return the column
     */
-   public static Column column(String name, String type) {
+   public static Column column(String name, SQLDataType type) {
       return new Column(name, type);
    }
 
@@ -138,6 +139,10 @@ public final class SQL {
       return new Numeric(value);
    }
 
+
+   public static SQLOperable eq(@NonNull SQLElement arg1, @NonNull SQLElement arg2) {
+      return new InfixBinaryOperator( arg1, arg2);
+   }
 
    /**
     * Combines one or more SQLElements via an <code>AND</code>
@@ -1042,7 +1047,7 @@ public final class SQL {
       private final List<Column> columns = new ArrayList<>();
       private final List<Constraint> constraints = new ArrayList<>();
 
-      public Column column(String name, String type) {
+      public Column column(String name, SQLDataType type) {
          Column column = new Column(name, type);
          columns.add(column);
          return column;

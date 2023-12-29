@@ -58,6 +58,7 @@ public class CorpusCreator extends HermesCLI {
         LogUtils.logInfo(log, "Creating corpus at {0} with {1} documents", corpus, html.size());
         List<Document> buffer = new ArrayList<>();
         Corpus c = Corpus.open(corpus);
+        long totalDocumentsAdded = 0;
         for (IndexDocument indexDocument : html) {
             if (indexDocument.hasField("html")) {
                 NewsArticle article = null;
@@ -71,11 +72,13 @@ public class CorpusCreator extends HermesCLI {
                         LogUtils.logFine(log, "Error converting {0}", url);
                     }
                     if (buffer.size() >= 100) {
+                        totalDocumentsAdded += buffer.size();
+                        System.out.println("Added " + totalDocumentsAdded + " documents");
                         c.addAll(buffer);
                         buffer.clear();
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
         }

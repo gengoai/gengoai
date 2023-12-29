@@ -94,10 +94,7 @@ public abstract class SwingApplication extends Application {
     }
 
 
-    public static void runApplication(Supplier<? extends SwingApplication> supplier,
-                                      String applicationName,
-                                      String windowTitle,
-                                      String[] args) {
+    public static void runApplication(Supplier<? extends SwingApplication> supplier, String applicationName, String windowTitle, String[] args) {
         SwingUtilities.invokeLater(() -> {
             SwingApplicationConfig config = new SwingApplicationConfig();
             try {
@@ -216,12 +213,24 @@ public abstract class SwingApplication extends Application {
         }
     }
 
+    public void setCenterComponent(View component) {
+        mainWindowFrame.add(component.getRoot(), BorderLayout.CENTER);
+    }
+
     public void setEastComponent(Component component) {
         if (component instanceof View) {
             mainWindowFrame.add(((View) component).getRoot(), BorderLayout.EAST);
         } else {
             mainWindowFrame.add(component, BorderLayout.EAST);
         }
+    }
+
+    public void setEastComponent(View component) {
+        mainWindowFrame.add(component.getRoot(), BorderLayout.EAST);
+    }
+
+    public void setWestComponent(View component) {
+        mainWindowFrame.add(component.getRoot(), BorderLayout.WEST);
     }
 
     public void setIconImage(Image icon) {
@@ -252,6 +261,10 @@ public abstract class SwingApplication extends Application {
         }
     }
 
+    public void setSouthComponent(View component) {
+        southPanel.add(component.getRoot(), BorderLayout.CENTER);
+    }
+
     public void setTitle(String title) {
         mainWindowFrame.setTitle(title);
     }
@@ -274,10 +287,8 @@ public abstract class SwingApplication extends Application {
                 mainWindowFrame.setExtendedState(mainWindowFrame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
             } else {
                 Dimension screenRectangle = mainWindowFrame.getToolkit().getScreenSize();
-                int xPos = properties.get("window.position.x")
-                                     .asIntegerValue(screenRectangle.width / 2 - width / 2);
-                int yPos = properties.get("window.position.y")
-                                     .asIntegerValue(screenRectangle.height / 2 - height / 2);
+                int xPos = properties.get("window.position.x").asIntegerValue(screenRectangle.width / 2 - width / 2);
+                int yPos = properties.get("window.position.y").asIntegerValue(screenRectangle.height / 2 - height / 2);
                 mainWindowFrame.setLocation(xPos, yPos);
             }
         }
@@ -305,9 +316,7 @@ public abstract class SwingApplication extends Application {
     protected JToolBar statusBar(@NonNull Object... components) {
         JToolBar toolBar = Toolbars.createToolBar(components);
         toolBar.setBorderPainted(true);
-        toolBar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("MenuBar.borderColor")),
-                BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+        toolBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("MenuBar.borderColor")), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
         southPanel.setVisible(true);
         southPanel.add(toolBar, BorderLayout.SOUTH);
         return toolBar;
@@ -316,9 +325,7 @@ public abstract class SwingApplication extends Application {
     protected JToolBar toolBar(@NonNull Object... components) {
         JToolBar toolBar = Toolbars.createToolBar(components);
         toolBar.setBorderPainted(true);
-        toolBar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("MenuBar.borderColor")),
-                BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+        toolBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("MenuBar.borderColor")), BorderFactory.createEmptyBorder(2, 2, 2, 2)));
         mainWindowFrame.add(toolBar, BorderLayout.NORTH);
         return toolBar;
     }

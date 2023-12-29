@@ -27,10 +27,7 @@ import com.gengoai.io.Resources;
 import com.gengoai.io.resource.Resource;
 import com.gengoai.json.Json;
 import com.gengoai.reflection.Reflect;
-import com.gengoai.sql.NamedPreparedStatement;
-import com.gengoai.sql.SQL;
-import com.gengoai.sql.SQLContext;
-import com.gengoai.sql.SQLiteDialect;
+import com.gengoai.sql.*;
 import com.gengoai.sql.object.*;
 import com.gengoai.sql.sqlite.SQLiteConnectionRegistry;
 import com.gengoai.sql.statement.InsertType;
@@ -59,9 +56,9 @@ import static com.gengoai.tuple.Tuples.$;
 public final class SQLiteDataSet extends DataSet {
    private static final long serialVersionUID = 1L;
    private static final String SIZE_NAME = "__size__";
-   private static final Column json = new Column("json", "JSON");
-   private static final Column name = new Column("name", "TEXT").primaryKey();
-   private static final Column value = new Column("value", "BLOB");
+   private static final Column json = new Column("json", SQLDataType.JSON);
+   private static final Column name = new Column("name", SQLDataType.TEXT).primaryKey();
+   private static final Column value = new Column("value", SQLDataType.BLOB);
    private static final Table dataTable = Table.builder("data")
                                                .column(json)
                                                .build();

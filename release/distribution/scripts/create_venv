@@ -1,0 +1,12 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(dirname "${BASH_SOUCE}")
+
+if [[ "$SCRIPT_DIR" == "." ]]; then
+  WORK_DIR=$(pwd)
+else
+  WORK_DIR=$(dirname "$(cd "$(dirname "${BASH_SOURCE}")" >/dev/null 2>&1 && pwd)")
+fi
+
+python3 -m venv .venv
+source .venv/bin/activate && pip install -r requirements.txt

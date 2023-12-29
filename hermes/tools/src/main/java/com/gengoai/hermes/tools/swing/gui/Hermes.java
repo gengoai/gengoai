@@ -19,9 +19,6 @@
 
 package com.gengoai.hermes.tools.swing.gui;
 
-import com.gengoai.LogUtils;
-import com.gengoai.apollo.data.Datum;
-import com.gengoai.apollo.model.topic.MalletLDA;
 import com.gengoai.collection.counter.Counter;
 import com.gengoai.collection.counter.Counters;
 import com.gengoai.config.Config;
@@ -33,8 +30,6 @@ import com.gengoai.hermes.corpus.DocumentCollection;
 import com.gengoai.hermes.corpus.SearchResults;
 import com.gengoai.hermes.extraction.keyword.KeywordExtractor;
 import com.gengoai.hermes.extraction.keyword.KeywordExtractors;
-import com.gengoai.hermes.extraction.lyre.LyreExpression;
-import com.gengoai.hermes.ml.HStringDataSetGenerator;
 import com.gengoai.hermes.tools.swing.HermesGUI;
 import com.gengoai.hermes.tools.swing.LoggingTask;
 import com.gengoai.io.Resources;
@@ -59,7 +54,6 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static com.gengoai.swing.component.Components.button;
 import static com.gengoai.tuple.Tuples.$;
@@ -78,16 +72,33 @@ public class Hermes extends HermesGUI {
             .accelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK))
             .smallIcon(FontAwesome.FOLDER_OPEN.createIcon(16))
             .largeIcon(FontAwesome.FOLDER_OPEN.createIcon(32));
+
+    private final FluentAction analyzeText = new FluentAction("Analyze Text...", this::analyzeText)
+            .smallIcon(FontAwesome.FOLDER_OPEN.createIcon(16))
+            .largeIcon(FontAwesome.FOLDER_OPEN.createIcon(32));
     private SearchPanel searchPanel;
     private final FluentAction closeCorpusAction = new FluentAction("Close", this::closeCorpus);
     private CorpusView corpusView;
     private Corpus currentCorpus = null;
     private final FluentAction annotateCoreAction = new FluentAction("Annotate Core...", this::doAnnotateCore);
     private final FluentAction calcKeywordsAction = new FluentAction("Keywords...", this::doExtractKeywords);
-    private final FluentAction calcTopicsAction = new FluentAction("Topics...", this::doCalculateTopics);
 
     public static void main(String[] args) {
         SwingApplication.runApplication(Hermes::new, "Hermes", "Hermes", args);
+    }
+
+
+    private void analyzeText(ActionEvent e) {
+        AnalyzeTextDialog dialog = new AnalyzeTextDialog(text -> {
+            var doc = Document.create(text);
+            doc.annotate(Types.ENTITY, Types.PHRASE_CHUNK);
+            var docView = new DocumentView(doc);
+            tabbedPane.addTab("Analyzed Text", docView);
+            tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
+        });
+        dialog.setModal(true);
+        dialog.setLocationRelativeTo(this.mainWindowFrame);
+        dialog.setVisible(true);
     }
 
     private void newCorpus(ActionEvent e) {
@@ -107,16 +118,6 @@ public class Hermes extends HermesGUI {
                         return null;
                     }
                 }
-        );
-        loggingTask.setModal(true);
-        loggingTask.setVisible(true);
-    }
-
-    private void doCalculateTopics(ActionEvent e) {
-        LoggingTask loggingTask = new LoggingTask(
-                mainWindowFrame,
-                "Extracting Topics",
-                new TopicsTask()
         );
         loggingTask.setModal(true);
         loggingTask.setVisible(true);
@@ -204,26 +205,6 @@ public class Hermes extends HermesGUI {
         }
     }
 
-    class TopicsTask extends SwingWorker<Void, Void> {
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            final MalletLDA lda = new MalletLDA();
-            LogUtils.logInfo(Logger.getLogger(Hermes.class.getName()),
-                             "Estimating {0} topics on {1} documents",
-                             lda.getFitParameters().K.value(),
-                             currentCorpus.size());
-            lda.estimate(currentCorpus.asDataSet(HStringDataSetGenerator.builder(Types.SENTENCE)
-                                                                        .tokenSequence(Datum.DEFAULT_INPUT,
-                                                                                       LyreExpression.parse(
-                                                                                               "filter(lower(@TOKEN), isContentWord)"))
-                                                                        .build()));
-            for (int i = 0; i < lda.getNumberOfTopics(); i++) {
-                System.out.println(lda.getTopic(i));
-            }
-            return null;
-        }
-    }
 
     private void openCorpus(ActionEvent e) {
         var od = new JFileChooser();
@@ -284,9 +265,10 @@ public class Hermes extends HermesGUI {
                 Menus.menu("Corpus Analysis",
                            'A',
                            Menus.menuItem(calcKeywordsAction),
-                           Menus.menuItem(calcTopicsAction),
                            Menus.SEPARATOR,
-                           Menus.menuItem(annotateCoreAction))
+                           Menus.menuItem(annotateCoreAction)),
+                Menus.menu("Tools", 'T',
+                           Menus.menuItem(analyzeText))
                );
 
         var newCorpusBtn = button(newCorpusAction, false, true, 0);

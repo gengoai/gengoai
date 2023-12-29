@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gengoai.Validation;
 import com.gengoai.sql.NamedSQLElement;
 import com.gengoai.sql.SQL;
+import com.gengoai.sql.SQLDataType;
 import com.gengoai.sql.SQLElement;
 import com.gengoai.sql.constraint.ConflictClause;
 import com.gengoai.sql.constraint.Constraint;
@@ -47,7 +48,7 @@ public class Column implements Serializable, NamedSQLElement, SQLOperable {
     private static final long serialVersionUID = 1L;
     private final List<Constraint> constraints = new ArrayList<>();
     @Setter
-    private String type;
+    private SQLDataType type;
     @Setter
     private String name;
     private boolean primaryKey = false;
@@ -63,9 +64,8 @@ public class Column implements Serializable, NamedSQLElement, SQLOperable {
      * @param name the name of the column
      * @param type the data type of the column
      */
-    public Column(String name, String type) {
-        this.name = Validation.notNullOrBlank(name);
-        this.type = Validation.notNullOrBlank(type);
+    public Column(String name, SQLDataType type) {
+        this(name, type, List.of());
     }
 
     /**
@@ -75,10 +75,13 @@ public class Column implements Serializable, NamedSQLElement, SQLOperable {
      * @param type        the data type of the column
      * @param constraints the column constraints
      */
-    public Column(String name, String type, @NonNull Collection<Constraint> constraints) {
+    public Column(String name, SQLDataType type, @NonNull Collection<Constraint> constraints) {
         this.name = Validation.notNullOrBlank(name);
-        this.type = Validation.notNullOrBlank(type);
+        this.type = Validation.notNull(type);
         this.constraints.addAll(constraints);
+        if (this.type == SQLDataType.SERIAL || this.type == SQLDataType.BIG_SERIAL || this.type == SQLDataType.SMALL_SERIAL) {
+            this.autoIncrement = true;
+        }
     }
 
     /**

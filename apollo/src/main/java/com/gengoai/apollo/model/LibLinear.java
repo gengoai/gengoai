@@ -33,6 +33,7 @@ import com.gengoai.collection.Table;
 import de.bwaldvogel.liblinear.*;
 import lombok.NonNull;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -162,6 +163,7 @@ public class LibLinear extends SingleSourceModel<LibLinear.Parameters, LibLinear
         biasIndex = parameters.bias.value()
                 ? 0
                 : -1;
+
         int numFeatures = (int) dataset.getMetadata(parameters.input.value()).getDimension();
         Problem problem = new Problem();
         problem.l = (int) dataset.size();
