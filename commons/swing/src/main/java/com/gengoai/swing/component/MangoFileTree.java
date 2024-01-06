@@ -17,19 +17,19 @@ import java.util.List;
 /**
  * <p>Displays a file tree.</p>
  */
-public class FileTree implements View {
+public class MangoFileTree implements View {
     private final JTree tree = new JTree();
     private final JScrollPane scrollPane = new JScrollPane(tree);
 
 
-    public FileTree() {
+    public MangoFileTree() {
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     }
 
     /**
      * Instantiates a new File tree.
      */
-    public FileTree(@NonNull Resource root) {
+    public MangoFileTree(@NonNull Resource root) {
         setLocation(root);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     }
@@ -89,7 +89,7 @@ public class FileTree implements View {
             JOptionPane.showMessageDialog(null, "File already exists");
             return;
         }
-        FileTree.FileTreeNode node = new FileTree.FileTreeNode(newFile);
+        MangoFileTree.FileTreeNode node = new MangoFileTree.FileTreeNode(newFile);
         parent.add(node);
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         model.nodesWereInserted(parent, new int[]{parent.getChildCount() - 1});
