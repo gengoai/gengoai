@@ -117,7 +117,8 @@ public final class Resources {
             try {
                return new URIResource(new URI(resource));
             } catch(URISyntaxException e) {
-               throw new IllegalStateException(schema + " is an unknown protocol.");
+//               throw new IllegalStateException(schema + " is an unknown protocol.");
+               return new FileResource(resource); // No Provider and bad protocol, assume Windows file path
             }
          }
 

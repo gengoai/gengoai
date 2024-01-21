@@ -66,6 +66,14 @@ public class CSVWriter implements AutoCloseable {
    }
 
    /**
+    * Flushes the writer
+    * @throws IOException Something went wrong flushing the writer
+    */
+   public void flush() throws IOException {
+      writer.flush();
+   }
+
+   /**
     * Writes the items in the row to the resource in DSV format.
     *
     * @param row the row
