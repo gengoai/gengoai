@@ -1019,16 +1019,30 @@ public enum FontAwesome {
       button.setIcon(createIcon(size));
       button.setRolloverIcon(createFocusedIcon(size));
       button.setDisabledIcon(createDisabledIcon(size));
-      button.setContentAreaFilled(true);
+      button.setContentAreaFilled(false);
       button.setBorder(null);
       return button;
    }
+
+   public JButton createButton(float size,
+                               Color foreground,
+                               Color focusedForeground,
+                               Color disabled) {
+      JButton button = new JButton();
+      button.setIcon(createIcon(size, foreground));
+      button.setRolloverIcon(createIcon(size,focusedForeground));
+      button.setDisabledIcon(createIcon(size,disabled));
+      button.setContentAreaFilled(false);
+      button.setBorder(null);
+      return button;
+   }
+
    public JButton createButton(String text, float size) {
       JButton button = new JButton(text);
       button.setIcon(createIcon(size));
       button.setRolloverIcon(createFocusedIcon(size));
       button.setDisabledIcon(createDisabledIcon(size));
-      button.setContentAreaFilled(true);
+      button.setContentAreaFilled(false);
       button.setBorder(null);
       return button;
    }
@@ -1057,8 +1071,8 @@ public enum FontAwesome {
    public final Icon createFocusedIcon(float size) {
       Validation.checkArgument(size > 0);
       Color fg = Colors.isDark(Button_background.color())
-            ? Button_foreground.color().brighter()
-            : Button_focus.color().darker();
+            ? Button_foreground.color().brighter().brighter()
+            : Button_background.color().darker().darker();
       return fontIcon.createIcon(Character.toString(icon),
                                  size,
                                  fg);
