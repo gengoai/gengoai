@@ -28,7 +28,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>commons-sql</artifactId>
     <packaging>jar</packaging>
-
+    <name>${project.groupId}:${project.artifactId}</name>
     <dependencies>
         <dependency>
             <groupId>com.gengoai</groupId>
