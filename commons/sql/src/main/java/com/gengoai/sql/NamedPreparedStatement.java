@@ -1442,4 +1442,8 @@ public class NamedPreparedStatement implements PreparedStatement {
       return statement.unwrap(arg0);
    }
 
+   @Override
+   public String toString() {
+      return statement.toString();
+   }
 }// END CLASS NamedPreparedStatement

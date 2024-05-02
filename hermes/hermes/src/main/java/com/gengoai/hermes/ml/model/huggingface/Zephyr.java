@@ -10,52 +10,75 @@ import com.gengoai.io.CSV;
 import com.gengoai.io.CSVWriter;
 import com.gengoai.io.Resources;
 import com.gengoai.python.PythonInterpreter;
+import lombok.NonNull;
+import org.apache.commons.text.StringSubstitutor;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Zephyr {
     private final String uniqueFuncName;
 
-    public Zephyr(boolean doSample) {
-        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
-        PythonInterpreter.getInstance()
-                         .exec("from transformers import pipeline\n" +
-                                       "import torch\n" +
-                                       uniqueFuncName + "_nlp = pipeline('text-generation',model=\"HuggingFaceH4/zephyr-7b-alpha\",\n" +
-                                       "    torch_dtype=torch.bfloat16,\n" +
-                                       "    device_map=\"auto\")\n" +
-                                       "def " + uniqueFuncName + "(context):\n" +
-                                       "   prompt = " + uniqueFuncName + "_nlp.tokenizer.apply_chat_template(\n" +
-                                       "        context, tokenize=False, add_generation_prompt=True\n" +
-                                       "    )\n" +
-                                       "   decoded = " + uniqueFuncName + "_nlp(prompt,max_new_tokens=4000,do_sample=" + (doSample ? "True" : "False") + ",temperature=0.7,top_k=50,top_p=0.95)[0][\"generated_text\"]\n" +
-                                       "   decoded = decoded[ decoded.rfind(\"<|assistant|>\") + len(\"<|assistant|>\"): ].strip()\n" +
-                                       "   return decoded\n");
+    public Zephyr() {
+        this(config -> {
+        });
     }
 
-    public String predict(List<Map<String, String>> context) {
+    public Zephyr(@NonNull Consumer<ChatConfig> consumer) {
+        ChatConfig config = new ChatConfig();
+        consumer.accept(config);
+        this.uniqueFuncName = PythonInterpreter.getInstance().generateUniqueFuncName();
+        PythonInterpreter.getInstance()
+                         .exec(new StringSubstitutor(Map.of("uniqueFuncName", uniqueFuncName,
+                                                            "maxTokens", Integer.toString(config.maxTokens.value()),
+                                                            "doSample", config.doSample.value() ? "True" : "False",
+                                                            "temperature", Double.toString(config.temperature.value()),
+                                                            "topK", Integer.toString(config.topK.value()),
+                                                            "topP", Double.toString(config.topP.value())
+                                                           ))
+                                       .replace("""
+                                                        from transformers import pipeline
+                                                        import torch
+                                                        ${uniqueFuncName}_nlp = pipeline('text-generation',
+                                                                                         model="HuggingFaceH4/zephyr-7b-beta",
+                                                                                         torch_dtype=torch.bfloat16,
+                                                                                         device_map="auto")
+                                                         
+                                                        def ${uniqueFuncName}(context):
+                                                            prompt = ${uniqueFuncName}_nlp.tokenizer.apply_chat_template(
+                                                                context, tokenize=False, add_generation_prompt=True
+                                                            )
+                                                            decoded = ${uniqueFuncName}_nlp(prompt,
+                                                                                          max_new_tokens=${maxTokens},
+                                                                                          do_sample=${doSample},
+                                                                                          temperature=${temperature},
+                                                                                          top_k=${topK},
+                                                                                          top_p=${topP})[0]["generated_text"]
+                                                            decoded = decoded[decoded.rfind("<|assistant|>") + len("<|assistant|>"):].strip()
+                                                            return decoded
+                                                         """));
+    }
+
+    public String predict(ChatTemplate context) {
         return PythonInterpreter.getInstance().invoke(uniqueFuncName, context).toString();
     }
 
     public static void main(String[] args) throws Exception {
         Config.initialize("Zephyr", args);
-        Zephyr tg = new Zephyr(false);
-        List<Map<String, String>> m = List.of(
-                Map.of("role", "system", "content", "You're a helpful taxonomer. Fill in the blank with the concept that best fits the instance. Only answer with what goes in the blank."),
-                Map.of("role", "user", "content", "Afghanistan is a type of _."),
-                Map.of("role", "assistant", "content", "Country"),
-                Map.of("role", "user", "content", "Toyota is a type of _."),
-                Map.of("role", "assistant", "content", "Organization"),
-                Map.of("role", "user", "content", "Jane Doe is a type of _."),
-                Map.of("role", "assistant", "content", "Person"),
-                Map.of("role", "user", "content", "Christmas is a type of _."),
-                Map.of("role", "assistant", "content", "Holiday"),
-                Map.of("role", "user", "content", "Olympics is a type of _."),
-                Map.of("role", "assistant", "content", "Sporting Event")
-                                             );
+        Zephyr tg = new Zephyr(p -> p.doSample.set(false));
+        ChatTemplate.Builder builder = ChatTemplate.builder()
+                                                   .system("You're a helpful taxonomer. Fill in the blank with the concept that best fits the instance. Only answer with what goes in the blank.")
+                                                   .user("Afghanistan is a type of _.")
+                                                   .assistant("Country")
+                                                   .user("Toyota is a type of _.")
+                                                   .assistant("Organization")
+                                                   .user("Jane Doe is a type of _.")
+                                                   .assistant("Person")
+                                                   .user("Christmas is a type of _.")
+                                                   .assistant("Holiday")
+                                                   .user("Olympics is a type of _.")
+                                                   .assistant("Sporting Event");
 
         Corpus corpus = Corpus.open("/home/ik/news.corpus");
         long counter = 0;
@@ -65,12 +88,12 @@ public class Zephyr {
                     if (chunk.pos().isNoun()) {
                         HString np = chunk.trim(StopWords.isStopWord());
                         if (!np.isEmpty()) {
-                            var m2 = new ArrayList<>(m);
-                            m2.add(Map.of("role", "user", "content", np + " is a type of _."));
-                            writer.write(Arrays.asList(
-                                    np.toString(),
-                                    tg.predict(m2)
-                                                      ));
+                            var m2 = builder.copy();
+                            m2.user(np + " is a type of _.");
+                            String prediction = tg.predict(m2.build());
+                            writer.write(Arrays.asList(np.toString(), prediction));
+                            writer.flush();
+                            System.out.println(np + " is a type of " + prediction);
                         }
                     }
                 }

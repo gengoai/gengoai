@@ -121,6 +121,11 @@
             <!-- ======================================================================== -->
 
             <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>1.11.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
                 <version>1.16.1</version>
@@ -244,7 +249,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
-                <version>1.21</version>
+                <version>1.26.1</version>
             </dependency>
             <dependency>
                 <groupId>org.tukaani</groupId>
