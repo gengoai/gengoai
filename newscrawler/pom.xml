@@ -35,5 +35,11 @@
             <artifactId>hermes-chinese</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.gengoai</groupId>
+            <artifactId>commons-swing</artifactId>
+            <version>2.2-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>

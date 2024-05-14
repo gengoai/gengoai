@@ -311,6 +311,7 @@ public abstract class SwingApplication extends Application {
         });
         southPanel.setVisible(false);
         initControls();
+        pack();
     }
 
     protected JToolBar statusBar(@NonNull Object... components) {
