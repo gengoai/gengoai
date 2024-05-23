@@ -1,17 +1,15 @@
-package com.gengoai.news;
+package com.gengoai.news.gui;
 
 import com.gengoai.io.Resources;
 import com.gengoai.json.Json;
 import com.gengoai.swing.Menus;
 import com.gengoai.swing.SwingApplication;
-import com.gengoai.swing.component.HBox;
 import com.gengoai.swing.component.VBox;
 import com.gengoai.swing.component.listener.FluentAction;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;

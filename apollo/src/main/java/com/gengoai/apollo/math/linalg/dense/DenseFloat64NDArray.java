@@ -28,7 +28,7 @@ import org.jblas.DoubleMatrix;
 import org.jblas.FloatMatrix;
 import org.jblas.MatrixFunctions;
 import org.tensorflow.Tensor;
-import org.tensorflow.proto.framework.DataType;
+import org.tensorflow.proto.DataType;
 import org.tensorflow.types.TFloat64;
 
 import java.util.function.UnaryOperator;

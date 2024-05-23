@@ -72,13 +72,19 @@
         <dependency>
             <groupId>org.tensorflow</groupId>
             <artifactId>tensorflow-core-api</artifactId>
-            <version>0.4.2</version>
+            <version>1.0.0-rc.1</version>
         </dependency>
         <dependency>
             <groupId>org.tensorflow</groupId>
-            <artifactId>tensorflow-core-api</artifactId>
-            <version>0.4.2</version>
-            <classifier>linux-x86_64${javacpp.platform.extension}</classifier>
+            <artifactId>tensorflow-core-native</artifactId>
+            <version>1.0.0-rc.1</version>
+            <classifier>linux-x86_64</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.tensorflow</groupId>
+            <artifactId>tensorflow-core-native</artifactId>
+            <version>1.0.0-rc.1</version>
+            <classifier>macosx-arm64</classifier>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

@@ -25,7 +25,7 @@ import com.gengoai.apollo.math.linalg.*;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 import org.tensorflow.Tensor;
-import org.tensorflow.proto.framework.DataType;
+import org.tensorflow.proto.DataType;
 import org.tensorflow.types.TInt64;
 
 import static com.gengoai.Validation.checkArgument;
