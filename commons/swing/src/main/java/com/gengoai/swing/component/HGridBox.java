@@ -36,5 +36,9 @@ public class HGridBox extends JPanel {
       layout.setColumns(layout.getColumns() - 1);
    }
 
-
+   @Override
+   public void removeAll() {
+      super.removeAll();
+      layout.setColumns(0);
+   }
 }

@@ -36,5 +36,9 @@ public class VGridBox extends JPanel {
       layout.setRows(layout.getRows() - 1);
    }
 
-
+   @Override
+   public void removeAll() {
+      super.removeAll();
+      layout.setRows(0);
+   }
 }
