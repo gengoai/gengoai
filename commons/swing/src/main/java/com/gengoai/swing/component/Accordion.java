@@ -1,7 +1,9 @@
 package com.gengoai.swing.component;
 
+import com.gengoai.swing.Colors;
 import com.gengoai.swing.FlatLafColors;
 import com.gengoai.swing.Fonts;
+import com.gengoai.swing.TitleBoxBorder;
 import com.gengoai.swing.component.listener.SwingListeners;
 
 import javax.swing.*;
@@ -18,7 +20,7 @@ public class Accordion extends JPanel {
    private int activeItem = 0;
    private java.util.List<AccordionItem> items = new ArrayList<>();
 
-   private  class AccordionItem {
+   private class AccordionItem {
       private final JLabel title;
       private final JComponent component;
 
@@ -34,11 +36,12 @@ public class Accordion extends JPanel {
          this.title.setForeground(FlatLafColors.Button_foreground.color());
          this.title.setBackground(FlatLafColors.Button_background.color());
          this.title.setOpaque(true);
-         this.title.addMouseListener(SwingListeners.mouseClicked(e->{
+         this.title.addMouseListener(SwingListeners.mouseClicked(e -> {
             int index = items.indexOf(this);
             setActiveItem(index);
          }));
          this.component = component;
+         this.component.setBorder(new LineBorder(FlatLafColors.Button_default_focusColor.color(), 2));
       }
    }
 
@@ -73,11 +76,23 @@ public class Accordion extends JPanel {
          } else {
             southPanel.add(item.title);
          }
-         if( i == activeItem ){
-            item.title.setBackground(FlatLafColors.Button_default_focusColor.color());
+         if (i == activeItem) {
+            Color background = FlatLafColors.Button_default_focusColor.color();
+            item.title.setBackground(background);
+            item.title.setForeground(Colors.calculateBestFontColor(background));
+            item.title.setBorder(new CompoundBorder(
+                  new LineBorder(background, 1),
+                  new EmptyBorder(5, 5, 5, 5)
+            ));
             add(item.component, BorderLayout.CENTER);
          } else {
-            item.title.setBackground(FlatLafColors.Button_background.color());
+            Color background = FlatLafColors.Button_background.color();
+            item.title.setBackground(background);
+            item.title.setForeground(Colors.calculateBestFontColor(background));
+            item.title.setBorder(new CompoundBorder(
+                  new LineBorder(FlatLafColors.Button_borderColor.color(), 1),
+                  new EmptyBorder(5, 5, 5, 5)
+            ));
          }
       }
       repaint();
