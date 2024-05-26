@@ -1,9 +1,6 @@
 package com.gengoai.swing.component;
 
-import com.gengoai.swing.Colors;
-import com.gengoai.swing.FlatLafColors;
-import com.gengoai.swing.Fonts;
-import com.gengoai.swing.TitleBoxBorder;
+import com.gengoai.swing.*;
 import com.gengoai.swing.component.listener.SwingListeners;
 
 import javax.swing.*;
@@ -18,7 +15,31 @@ public class Accordion extends JPanel {
    private final VGridBox northPanel = new VGridBox();
    private final VGridBox southPanel = new VGridBox();
    private int activeItem = 0;
-   private java.util.List<AccordionItem> items = new ArrayList<>();
+   private final java.util.List<AccordionItem> items = new ArrayList<>();
+
+   private static final ComponentStyle<JLabel> defaultTitleStyle = ComponentStyle.defineStyle($ -> {
+      TextAlignment.HorizontalLeft.set($);
+      Border compoundBorder = new CompoundBorder(
+            new LineBorder(FlatLafColors.Button_borderColor.color(), 1),
+            new EmptyBorder(5, 5, 5, 5)
+      );
+      $.setBorder(compoundBorder);
+      $.setForeground(FlatLafColors.Button_foreground.color());
+      $.setBackground(FlatLafColors.Button_background.color());
+      $.setOpaque(true);
+   });
+
+   private static final ComponentStyle<JLabel> focusedTitleStyle = ComponentStyle.defineStyle($ -> {
+      TextAlignment.HorizontalLeft.set($);
+      Color background = FlatLafColors.Button_default_focusColor.color();
+      $.setBackground(background);
+      $.setForeground(Colors.calculateBestFontColor(background));
+      $.setBorder(new CompoundBorder(
+            new LineBorder(background, 1),
+            new EmptyBorder(5, 5, 5, 5)
+      ));
+      $.setOpaque(true);
+   });
 
    private class AccordionItem {
       private final JLabel title;
@@ -26,19 +47,12 @@ public class Accordion extends JPanel {
 
       public AccordionItem(String title, JComponent component) {
          this.title = new JLabel(title);
-         Fonts.adjustFont(this.title, Font.BOLD, 14);
-         this.title.setHorizontalAlignment(SwingConstants.LEFT);
-         Border compoundBorder = new CompoundBorder(
-               new LineBorder(FlatLafColors.Button_borderColor.color(), 1),
-               new EmptyBorder(5, 5, 5, 5)
-         );
-         this.title.setBorder(compoundBorder);
-         this.title.setForeground(FlatLafColors.Button_foreground.color());
-         this.title.setBackground(FlatLafColors.Button_background.color());
-         this.title.setOpaque(true);
+         defaultTitleStyle.style(this.title);
          this.title.addMouseListener(SwingListeners.mouseClicked(e -> {
-            int index = items.indexOf(this);
-            setActiveItem(index);
+            if (e.getButton() == 1) {
+               int index = items.indexOf(this);
+               setActiveItem(index);
+            }
          }));
          this.component = component;
          this.component.setBorder(new LineBorder(FlatLafColors.Button_default_focusColor.color(), 2));
@@ -77,22 +91,10 @@ public class Accordion extends JPanel {
             southPanel.add(item.title);
          }
          if (i == activeItem) {
-            Color background = FlatLafColors.Button_default_focusColor.color();
-            item.title.setBackground(background);
-            item.title.setForeground(Colors.calculateBestFontColor(background));
-            item.title.setBorder(new CompoundBorder(
-                  new LineBorder(background, 1),
-                  new EmptyBorder(5, 5, 5, 5)
-            ));
+            focusedTitleStyle.style(item.title);
             add(item.component, BorderLayout.CENTER);
          } else {
-            Color background = FlatLafColors.Button_background.color();
-            item.title.setBackground(background);
-            item.title.setForeground(Colors.calculateBestFontColor(background));
-            item.title.setBorder(new CompoundBorder(
-                  new LineBorder(FlatLafColors.Button_borderColor.color(), 1),
-                  new EmptyBorder(5, 5, 5, 5)
-            ));
+            defaultTitleStyle.style(item.title);
          }
       }
       repaint();
