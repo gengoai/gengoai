@@ -23,6 +23,7 @@ public class Accordion extends JPanel {
             new LineBorder(FlatLafColors.Button_borderColor.color(), 1),
             new EmptyBorder(5, 5, 5, 5)
       );
+      $.setFont($.getFont().deriveFont(Font.BOLD));
       $.setBorder(compoundBorder);
       $.setForeground(FlatLafColors.Button_foreground.color());
       $.setBackground(FlatLafColors.Button_background.color());
@@ -32,6 +33,7 @@ public class Accordion extends JPanel {
    private static final ComponentStyle<JLabel> focusedTitleStyle = ComponentStyle.defineStyle($ -> {
       TextAlignment.HorizontalLeft.set($);
       Color background = FlatLafColors.Button_default_focusColor.color();
+      $.setFont($.getFont().deriveFont(Font.BOLD));
       $.setBackground(background);
       $.setForeground(Colors.calculateBestFontColor(background));
       $.setBorder(new CompoundBorder(
