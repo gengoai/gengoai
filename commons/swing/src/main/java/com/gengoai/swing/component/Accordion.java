@@ -1,6 +1,9 @@
 package com.gengoai.swing.component;
 
-import com.gengoai.swing.*;
+import com.gengoai.swing.Colors;
+import com.gengoai.swing.ComponentStyle;
+import com.gengoai.swing.FlatLafColors;
+import com.gengoai.swing.TextAlignment;
 import com.gengoai.swing.component.listener.SwingListeners;
 
 import javax.swing.*;
@@ -11,6 +14,8 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.util.ArrayList;
 
+import static com.gengoai.swing.component.Components.panel;
+
 public class Accordion extends JPanel {
    private final VGridBox northPanel = new VGridBox();
    private final VGridBox southPanel = new VGridBox();
@@ -19,6 +24,14 @@ public class Accordion extends JPanel {
 
    private static final ComponentStyle<JLabel> defaultTitleStyle = ComponentStyle.defineStyle($ -> {
       TextAlignment.HorizontalLeft.set($);
+      $.setFont($.getFont().deriveFont(Font.BOLD));
+      $.setBorder(new EmptyBorder(5, 5, 5, 5));
+      $.setForeground(FlatLafColors.Button_foreground.color());
+      $.setBackground(FlatLafColors.Button_background.color());
+      $.setOpaque(true);
+   });
+
+   private static final ComponentStyle<JPanel> defaultTitlePanelStyle = ComponentStyle.defineStyle($ -> {
       Border compoundBorder = new CompoundBorder(
             new LineBorder(FlatLafColors.Button_borderColor.color(), 1),
             new EmptyBorder(5, 5, 5, 5)
@@ -36,6 +49,14 @@ public class Accordion extends JPanel {
       $.setFont($.getFont().deriveFont(Font.BOLD));
       $.setBackground(background);
       $.setForeground(Colors.calculateBestFontColor(background));
+      $.setOpaque(true);
+   });
+
+   private static final ComponentStyle<JPanel> focusedTitlePanelStyle = ComponentStyle.defineStyle($ -> {
+      Color background = FlatLafColors.Button_default_focusColor.color();
+      $.setFont($.getFont().deriveFont(Font.BOLD));
+      $.setBackground(background);
+      $.setForeground(Colors.calculateBestFontColor(background));
       $.setBorder(new CompoundBorder(
             new LineBorder(background, 1),
             new EmptyBorder(5, 5, 5, 5)
@@ -44,13 +65,28 @@ public class Accordion extends JPanel {
    });
 
    private class AccordionItem {
-      private final JLabel title;
+      private final JPanel titlePanel;
+      private final JLabel titleLabel;
       private final JComponent component;
 
-      public AccordionItem(String title, JComponent component) {
-         this.title = new JLabel(title);
-         defaultTitleStyle.style(this.title);
-         this.title.addMouseListener(SwingListeners.mouseClicked(e -> {
+      public AccordionItem(String title, Icon icon, JComponent component) {
+         this.titleLabel = new JLabel(title);
+         this.titlePanel = panel($ -> {
+            if(icon != null) {
+               var iconLabel = new JLabel(icon);
+               iconLabel.setBorder(new EmptyBorder(0, 0, 0, 5));
+               $.add(iconLabel, BorderLayout.WEST);
+            }
+            $.add(titleLabel, BorderLayout.CENTER);
+            defaultTitleStyle.style(titleLabel);
+         });
+
+//         this.title = new JLabel(title);
+//         if (icon != null) {
+//            this.title.setIcon(icon);
+//         }
+         defaultTitlePanelStyle.style(this.titlePanel);
+         this.titlePanel.addMouseListener(SwingListeners.mouseClicked(e -> {
             if (e.getButton() == 1) {
                int index = items.indexOf(this);
                setActiveItem(index);
@@ -66,7 +102,11 @@ public class Accordion extends JPanel {
    }
 
    public void addItem(String title, JComponent component) {
-      var item = new AccordionItem(title, component);
+      addItem(title, null, component);
+   }
+
+   public void addItem(String title, Icon icon, JComponent component) {
+      var item = new AccordionItem(title, icon, component);
       items.add(item);
       render();
    }
@@ -88,15 +128,17 @@ public class Accordion extends JPanel {
       for (int i = 0; i < items.size(); i++) {
          var item = items.get(i);
          if (i <= activeItem) {
-            northPanel.add(item.title);
+            northPanel.add(item.titlePanel);
          } else {
-            southPanel.add(item.title);
+            southPanel.add(item.titlePanel);
          }
          if (i == activeItem) {
-            focusedTitleStyle.style(item.title);
+            focusedTitleStyle.style(item.titleLabel);
+            focusedTitlePanelStyle.style(item.titlePanel);
             add(item.component, BorderLayout.CENTER);
          } else {
-            defaultTitleStyle.style(item.title);
+            defaultTitleStyle.style(item.titleLabel);
+            defaultTitlePanelStyle.style(item.titlePanel);
          }
       }
       repaint();
