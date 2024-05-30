@@ -56,7 +56,7 @@ public class MangoCombobox<E> extends JComboBox<E> {
    private class AutoCompleteEditor extends BasicComboBoxEditor {
 
       public AutoCompleteEditor() {
-         editor.addKeyListener(SwingListeners.keyPressed(e -> {
+         editor.addKeyListener(SwingListeners.keyReleased(e -> {
             char key = e.getKeyChar();
             if(!(Character.isLetterOrDigit(key) || Character.isSpaceChar(key))) return;
             caretPos = editor.getCaretPosition();
@@ -66,8 +66,8 @@ public class MangoCombobox<E> extends JComboBox<E> {
             } catch(BadLocationException ble) {
                //pass
             }
-            text += key;
             text = text.toLowerCase();
+            System.out.println(text);
             for(int i = 0; i < getItemCount(); i++) {
                String item = toStringFunction.apply(getItemAt(i));
                if(item.toLowerCase().startsWith(text)) {
