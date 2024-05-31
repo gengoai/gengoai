@@ -58,12 +58,14 @@ public class Accordion extends JPanel {
             this.titleLabel.setIcon(icon);
             this.titleLabel.setIconTextGap(5);
          }
+         defaultTitleStyle.style(titleLabel);
          this.titleLabel.addMouseListener(SwingListeners.mouseClicked(e -> {
             if (e.getButton() == 1) {
                int index = items.indexOf(this);
                setActiveItem(index);
             }
          }));
+
          this.component = component;
          this.component.setBorder(new LineBorder(FlatLafColors.Button_default_focusColor.color(), 2));
       }
