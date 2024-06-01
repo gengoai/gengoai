@@ -21,6 +21,16 @@ public class MangoFileTreeView extends JTree {
       getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
    }
 
+   public void setShowHidden(boolean showHidden) {
+      var ftm = new FileTreeModel((File) getModel().getRoot());
+      ftm.setShowHidden(showHidden);
+      setModel(ftm);
+   }
+
+   public boolean isShowHidden() {
+      return ((FileTreeModel) getModel()).isShowHidden();
+   }
+
    public void setRoot(@NonNull File root) {
       setModel(new FileTreeModel(root));
    }
