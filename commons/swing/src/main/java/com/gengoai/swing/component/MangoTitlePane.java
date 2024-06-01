@@ -44,8 +44,8 @@ import static javax.swing.BorderFactory.*;
  */
 public class MangoTitlePane extends MangoPanel {
    private static final long serialVersionUID = 1L;
-   private final Color bgColor = FlatLafColors.inactiveCaption.color();
-   private final Color bgFocus = FlatLafColors.activeCaption.color();
+   private final Color bgColor = FlatLafColors.Button_background.color();
+   private final Color bgFocus = FlatLafColors.Button_default_focusColor.color();
    private final Color fgColor = FlatLafColors.inactiveCaptionText.color();
    private final Color fgFocus = FlatLafColors.activeCaptionText.color();
    private final Border bdrMargin = createEmptyBorder(8, 8, 8, 8);
