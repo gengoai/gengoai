@@ -23,29 +23,31 @@ import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.io.File;
 import java.util.function.Consumer;
 
 import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 
 public class SwingHelpers {
 
-    public static Insets insets(int top, int left, int bottom, int right) {
-        return new Insets(top, left, bottom, right);
-    }
+   public static Insets insets(int top, int left, int bottom, int right) {
+      return new Insets(top, left, bottom, right);
+   }
 
-    public static void visitComponents(@NonNull Container parent, @NonNull Consumer<JComponent> visitor) {
-        for (Component c : parent.getComponents()) {
-            if( c instanceof JComponent) {
-                JComponent component = (JComponent) c;
-                visitor.accept(component);
-            }
-            if (c instanceof Container) {
-                visitComponents((Container) c, visitor);
-            }
-        }
-    }
 
+   public static void visitComponents(@NonNull Container parent, @NonNull Consumer<JComponent> visitor) {
+      for (Component c : parent.getComponents()) {
+         if (c instanceof JComponent) {
+            JComponent component = (JComponent) c;
+            visitor.accept(component);
+         }
+         if (c instanceof Container) {
+            visitComponents((Container) c, visitor);
+         }
+      }
+   }
 
 
 }//END OF SwingHelpers
