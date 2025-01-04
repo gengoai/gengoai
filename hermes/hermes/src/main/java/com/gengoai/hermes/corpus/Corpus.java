@@ -45,6 +45,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -175,15 +177,6 @@ public interface Corpus extends DocumentCollection {
      */
     Set<AnnotatableType> getCompleted();
 
-    /**
-     * Gets the document with the given document id
-     *
-     * @param id the id of the document
-     * @return the document or null if it doesn't exist
-     */
-    default Document getDocument(String id) {
-        return parallelStream().filter(d -> d.getId().equals(id)).first().orElse(null);
-    }
 
     /**
      * @return the document ids of all documents in the corpus
@@ -262,5 +255,6 @@ public interface Corpus extends DocumentCollection {
      * @return True if the document is updated, False if not
      */
     boolean update(Document document);
+
 
 }//END OF Corpus

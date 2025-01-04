@@ -30,10 +30,7 @@ import com.gengoai.collection.multimap.Multimap;
 import com.gengoai.function.SerializableConsumer;
 import com.gengoai.function.SerializableFunction;
 import com.gengoai.function.SerializablePredicate;
-import com.gengoai.hermes.AnnotatableType;
-import com.gengoai.hermes.AnnotationPipeline;
-import com.gengoai.hermes.Document;
-import com.gengoai.hermes.HString;
+import com.gengoai.hermes.*;
 import com.gengoai.hermes.extraction.Extractor;
 import com.gengoai.hermes.extraction.NGramExtractor;
 import com.gengoai.hermes.extraction.caduceus.CaduceusProgram;
@@ -58,6 +55,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.gengoai.collection.counter.Counters.newCounter;
@@ -478,4 +477,32 @@ public interface DocumentCollection extends Iterable<Document>, AutoCloseable {
         return update("ExecuteCaduceusProgram", program::execute);
     }
 
+    /**
+     * Gets the document with the given document id
+     *
+     * @param id the id of the document
+     * @return the document or null if it doesn't exist
+     */
+    default Document getDocument(String id) {
+        return parallelStream().filter(d -> d.getId().equals(id)).first().orElse(null);
+    }
+
+    default HString getSpanById(String spanId) {
+        Pattern p = Pattern.compile("(.*?)::([FA]+)::(\\d+)(?:::(\\d+))?");
+        Matcher m = p.matcher(spanId);
+        if( m.find() ){
+            String docId = m.group(1);
+            Document document = getDocument(docId);
+            if( document != null) {
+                if( m.group(2).equals("F") ) {
+                    int start = Integer.parseInt(m.group(3));
+                    int end   = Integer.parseInt(m.group(4));
+                    return document.substring(start,end);
+                } else {
+                    return document.annotation(Long.parseLong(m.group(3)));
+                }
+            }
+        }
+        return Fragments.stringWrapper("");
+    }
 }//END OF DocumentCollection
