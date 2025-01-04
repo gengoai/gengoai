@@ -31,11 +31,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
- * <p>An in-memory implementation of a {@link KeyedVectorStore}.</p>
+ * <p>An in-memory implementation of a {@link MLVectorStore}.</p>
  *
  * @author David B. Bracewell
  */
-public class InMemoryVectorStore implements KeyedVectorStore {
+public class InMemoryVectorStore extends MLVectorStore {
    private static final long serialVersionUID = 1L;
    protected final Map<String, NumericNDArray> vectors = new ConcurrentHashMap<>();
    @NonNull
@@ -70,7 +70,7 @@ public class InMemoryVectorStore implements KeyedVectorStore {
    }
 
    @Override
-   public Set<String> getAlphabet() {
+   public Set<String> keySet() {
       return vectors.keySet();
    }
 
@@ -90,7 +90,18 @@ public class InMemoryVectorStore implements KeyedVectorStore {
    }
 
    @Override
-   public void updateVector(String word, @NonNull NumericNDArray vector) {
-      vectors.put(word, vector);
+   protected NumericNDArray getVectorImpl(String id) {
+      return vectors.get(id);
+   }
+
+   @Override
+   public boolean putVector(@NonNull String id, @NonNull NumericNDArray vector) {
+      vectors.put(id, vector);
+      return true;
+   }
+
+   @Override
+   public boolean containsKey(String id) {
+      return vectors.containsKey(id);
    }
 }//END OF InMemoryVectorStore

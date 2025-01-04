@@ -98,9 +98,9 @@ public class FaruquiRetrofitting implements Retrofitting {
       out.vectorStore = new InMemoryVectorStore(origVectors.dimension());
       for(String key : origVectors.getAlphabet()) {
          if(retrofittedVectors.containsKey(key)) {
-            out.vectorStore.updateVector(key, retrofittedVectors.get(key).unitize());
+            out.vectorStore.putVector(key, retrofittedVectors.get(key).unitize());
          } else {
-            out.vectorStore.updateVector(key, origVectors.embed(key).unitize());
+            out.vectorStore.putVector(key, origVectors.embed(key).unitize());
          }
       }
       return out;

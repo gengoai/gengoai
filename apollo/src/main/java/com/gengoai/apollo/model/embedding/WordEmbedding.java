@@ -50,152 +50,152 @@ import java.util.stream.Stream;
  * @author David B. Bracewell
  */
 public abstract class WordEmbedding implements Transform {
-    private static final long serialVersionUID = 1L;
-    protected KeyedVectorStore vectorStore;
+   private static final long serialVersionUID = 1L;
+   protected MLVectorStore vectorStore;
 
-    /**
-     * Creates a vector using the given vector composition for the given words.
-     *
-     * @param composition the composition function to use
-     * @param words       the words whose vectors we want to compose
-     * @return a composite vector consisting of the given words and calculated using the given vector composition
-     */
-    public final NumericNDArray compose(@NonNull VectorComposition composition, @NonNull String... words) {
-        if (words == null) {
-            return nd.DFLOAT32.zeros(dimension());
-        } else if (words.length == 1) {
-            return embed(words[0]);
-        }
-        return composition.compose(Arrays.stream(words)
-                                         .map(this::embed)
-                                         .collect(Collectors.toList()));
-    }
+   /**
+    * Creates a vector using the given vector composition for the given words.
+    *
+    * @param composition the composition function to use
+    * @param words       the words whose vectors we want to compose
+    * @return a composite vector consisting of the given words and calculated using the given vector composition
+    */
+   public final NumericNDArray compose(@NonNull VectorComposition composition, @NonNull String... words) {
+      if (words == null) {
+         return nd.DFLOAT32.zeros(dimension());
+      } else if (words.length == 1) {
+         return embed(words[0]);
+      }
+      return composition.compose(Arrays.stream(words)
+                                       .map(this::embed)
+                                       .collect(Collectors.toList()));
+   }
 
-    public boolean contains(@NonNull String key) {
-        return vectorStore.getAlphabet().contains(key);
-    }
+   public boolean contains(@NonNull String key) {
+      return vectorStore.containsKey(key);
+   }
 
-    /**
-     * The dimension of the vectors in the store
-     *
-     * @return the dimension of the vectors
-     */
-    public final int dimension() {
-        return vectorStore.dimension();
-    }
+   /**
+    * The dimension of the vectors in the store
+    *
+    * @return the dimension of the vectors
+    */
+   public final int dimension() {
+      return vectorStore.dimension();
+   }
 
-    /**
-     * Looks up the NDArray associated with the given feature name
-     *
-     * @param feature the feature name whose NDArray we want
-     * @return the NDArray for the given feature, zero vector or unknown vector if feature is not valid.
-     */
-    public final NumericNDArray embed(@NonNull String feature) {
-        if (vectorStore.getAlphabet().contains(feature)) {
-            return vectorStore.getVector(feature);
-        } else if (feature.contains(" ")) {
-            String[] parts = feature.split("\\s+");
-            return VectorCompositions.Average.compose(Arrays.stream(parts)
-                                                            .map(this::embed).collect(Collectors.toList()));
-        }
-        return vectorStore.getVector(feature);
-    }
+   /**
+    * Looks up the NDArray associated with the given feature name
+    *
+    * @param feature the feature name whose NDArray we want
+    * @return the NDArray for the given feature, zero vector or unknown vector if feature is not valid.
+    */
+   public final NumericNDArray embed(@NonNull String feature) {
+      if (vectorStore.containsKey(feature)) {
+         return vectorStore.getVector(feature);
+      } else if (feature.contains(" ")) {
+         String[] parts = feature.split("\\s+");
+         return VectorCompositions.Average.compose(Arrays.stream(parts)
+                                                         .map(this::embed).collect(Collectors.toList()));
+      }
+      return vectorStore.getVector(feature);
+   }
 
-    @Override
-    public DataSet fitAndTransform(@NonNull DataSet dataset) {
-        return transform(dataset);
-    }
+   @Override
+   public DataSet fitAndTransform(@NonNull DataSet dataset) {
+      return transform(dataset);
+   }
 
-    /**
-     * Gets the alphabet of words that are known
-     *
-     * @return the alphabet
-     */
-    public final Set<String> getAlphabet() {
-        return vectorStore.getAlphabet();
-    }
+   /**
+    * Gets the alphabet of words that are known
+    *
+    * @return the alphabet
+    */
+   public final Set<String> getAlphabet() {
+      return vectorStore.keySet();
+   }
 
-    /**
-     * Translates a variable into a string
-     *
-     * @param v the variable
-     * @return the variable name
-     */
-    protected String getVariableName(Variable v) {
-        return v.getSuffix();
-    }
+   /**
+    * Translates a variable into a string
+    *
+    * @param v the variable
+    * @return the variable name
+    */
+   protected String getVariableName(Variable v) {
+      return v.getSuffix();
+   }
 
-    /**
-     * Queries the vector store to find similar vectors to the given {@link VSQuery}.
-     *
-     * @param query the query to use find similar vectors
-     * @return Stream of vectors matching the query
-     */
-    public final Stream<NumericNDArray> query(@NonNull VSQuery query) {
-        NumericNDArray queryVector = query.queryVector(this);
-        return query.applyFilters(vectorStore.stream()
-                                             .parallel()
-                                             .map(v -> v.copy().setWeight(query.measure().calculate(v, queryVector))));
-    }
+   /**
+    * Queries the vector store to find similar vectors to the given {@link VSQuery}.
+    *
+    * @param query the query to use find similar vectors
+    * @return Stream of vectors matching the query
+    */
+   public final Stream<NumericNDArray> query(@NonNull VSQuery query) {
+      NumericNDArray queryVector = query.queryVector(this);
+      return query.applyFilters(vectorStore.stream()
+                                           .parallel()
+                                           .map(v -> v.copy().setWeight(query.measure().calculate(v, queryVector))));
+   }
 
-    /**
-     * The number of vectors in the embedding
-     *
-     * @return the number of vectors in the embedding
-     */
-    public final int size() {
-        return vectorStore.size();
-    }
+   /**
+    * The number of vectors in the embedding
+    *
+    * @return the number of vectors in the embedding
+    */
+   public final int size() {
+      return vectorStore.size();
+   }
 
 
-    protected NumericNDArray transform(Observation o) {
-        if (o.isVariable()) {
-            return embed(getVariableName(o.asVariable()));
-        } else if (o.isVariableCollection()) {
-            if (o.getVariableSpace().count() == 0) {
-                return nd.DFLOAT32.zeros(1, dimension());
-            }
-            return VectorCompositions.Average.compose(o.asVariableCollection()
-                                                       .getVariableSpace()
-                                                       .map(v -> embed(getVariableName(v)))
-                                                       .collect(Collectors.toList()));
-        } else if (o.isSequence()) {
-            Sequence<?> sequence = o.asSequence();
-            List<NumericNDArray> vectors = new ArrayList<>();
-            for (Observation observation : sequence) {
-                vectors.add(transform(observation));
-            }
-            return nd.vstack(vectors);
-        }
-        throw new IllegalArgumentException("Cannot transform Observations of type " + o.getClass());
-    }
+   protected NumericNDArray transform(Observation o) {
+      if (o.isVariable()) {
+         return embed(getVariableName(o.asVariable()));
+      } else if (o.isVariableCollection()) {
+         if (o.getVariableSpace().count() == 0) {
+            return nd.DFLOAT32.zeros(1, dimension());
+         }
+         return VectorCompositions.Average.compose(o.asVariableCollection()
+                                                    .getVariableSpace()
+                                                    .map(v -> embed(getVariableName(v)))
+                                                    .collect(Collectors.toList()));
+      } else if (o.isSequence()) {
+         Sequence<?> sequence = o.asSequence();
+         List<NumericNDArray> vectors = new ArrayList<>();
+         for (Observation observation : sequence) {
+            vectors.add(transform(observation));
+         }
+         return nd.vstack(vectors);
+      }
+      throw new IllegalArgumentException("Cannot transform Observations of type " + o.getClass());
+   }
 
-    @Override
-    public DataSet transform(@NonNull DataSet dataset) {
-        dataset = dataset.map(this::transform);
-        for (String output : getOutputs()) {
-            dataset.updateMetadata(output, m -> {
-                m.setDimension(dimension());
-                m.setType(NDArray.class);
-                m.setEncoder(NoOptEncoder.INSTANCE);
-            });
-        }
-        return dataset;
-    }
+   @Override
+   public DataSet transform(@NonNull DataSet dataset) {
+      dataset = dataset.map(this::transform);
+      for (String output : getOutputs()) {
+         dataset.updateMetadata(output, m -> {
+            m.setDimension(dimension());
+            m.setType(NDArray.class);
+            m.setEncoder(NoOptEncoder.INSTANCE);
+         });
+      }
+      return dataset;
+   }
 
-    public void writeWord2VecFormat(@NonNull Resource output) throws IOException {
-        vectorStore.writeWord2VecFormat(output);
-    }
+   public void writeWord2VecFormat(@NonNull Resource output) throws IOException {
+      vectorStore.writeWord2VecFormat(output);
+   }
 
-    public void writeOnDiskVectorStore(@NonNull Resource output) throws IOException {
-        OnDiskVectorStore diskVectorStore = new OnDiskVectorStore(vectorStore.dimension(),
-                                                                  vectorStore.getUnknownKey(),
-                                                                  vectorStore.getSpecialKeys(),
-                                                                  output);
-        for (String word : vectorStore.getAlphabet()) {
-            diskVectorStore.updateVector(word, vectorStore.getVector(word));
-        }
-        diskVectorStore.commit();
-    }
+   public void writeOnDiskVectorStore(@NonNull Resource output) throws IOException {
+      OnDiskVectorStore diskVectorStore = new OnDiskVectorStore(vectorStore.dimension(),
+                                                                vectorStore.getUnknownKey(),
+                                                                vectorStore.getSpecialKeys(),
+                                                                output);
+      for (String word : vectorStore.keySet()) {
+         diskVectorStore.putVector(word, vectorStore.getVector(word));
+      }
+      diskVectorStore.commit();
+   }
 
 }//END OF WordEmbedding

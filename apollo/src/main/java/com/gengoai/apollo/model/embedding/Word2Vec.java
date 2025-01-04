@@ -76,7 +76,7 @@ public class Word2Vec extends TrainableWordEmbedding<Word2Vec.Parameters, Word2V
                 parameters.specialWords.value());
         java.util.Map<String, float[]> m = CollectionConverters$.MODULE$.MapHasAsJava(model.getVectors()).asJava();
         m.forEach((k, v) ->
-                vectorStore.updateVector(k,
+                vectorStore.putVector(k,
                         nd.DFLOAT32.array(new FloatMatrix(1, v.length, v))
                                 .setLabel(k))
         );

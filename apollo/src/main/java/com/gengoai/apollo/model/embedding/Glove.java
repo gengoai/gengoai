@@ -227,7 +227,7 @@ public class Glove extends TrainableWordEmbedding<Glove.Parameters, Glove> {
       for (int i = 0; i < vocabLength; i++) {
          W[i].addi(W[i + vocabLength]);
          String k = index.get(i);
-         vectorStore.updateVector(k, nd.DFLOAT32.array(W[i]).T().setLabel(k));
+         vectorStore.putVector(k, nd.DFLOAT32.array(W[i]).T().setLabel(k));
       }
 
    }

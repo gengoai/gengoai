@@ -20,17 +20,17 @@
 package com.gengoai.apollo.model.tensorflow;
 
 import com.gengoai.apollo.encoder.NoOptEncoder;
-import com.gengoai.apollo.model.embedding.KeyedVectorStore;
+import com.gengoai.apollo.model.embedding.MLVectorStore;
 import lombok.Getter;
 import lombok.NonNull;
 
 public class TFEmbeddingInputVar extends TFInputVar {
    @Getter
-   private final KeyedVectorStore embeddings;
+   private final MLVectorStore embeddings;
 
    public TFEmbeddingInputVar(@NonNull String name,
                               @NonNull String servingName,
-                              @NonNull KeyedVectorStore embeddings) {
+                              @NonNull MLVectorStore embeddings) {
       super(name, servingName, NoOptEncoder.INSTANCE, -1, embeddings.dimension());
       this.embeddings = embeddings;
    }

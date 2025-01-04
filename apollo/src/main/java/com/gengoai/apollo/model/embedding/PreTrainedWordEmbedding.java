@@ -43,7 +43,7 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
    private String output = Datum.DEFAULT_OUTPUT;
 
 
-   public static PreTrainedWordEmbedding from(@NonNull KeyedVectorStore keyedVectorStore) {
+   public static PreTrainedWordEmbedding from(@NonNull MLVectorStore keyedVectorStore) {
       PreTrainedWordEmbedding e = new PreTrainedWordEmbedding();
       e.vectorStore = keyedVectorStore;
       return e;
@@ -67,7 +67,7 @@ public class PreTrainedWordEmbedding extends WordEmbedding implements SingleSour
          if (Strings.isNotNullOrBlank(line) && !line.startsWith("#")) {
             NumericNDArray v = VSTextUtils.convertLineToVector(line, e.dimension());
             synchronized (e) {
-               e.vectorStore.updateVector(v.getLabel(), v);
+               e.vectorStore.putVector(v.getLabel(), v);
             }
          }
       });

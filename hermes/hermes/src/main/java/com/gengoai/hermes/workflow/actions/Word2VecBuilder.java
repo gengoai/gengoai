@@ -80,7 +80,7 @@ public class Word2VecBuilder implements Action {
                                                               new String[]{"--PAD--"},
                                                               saveLocation.getChild("word2vec.vectors"));
         for (String word : word2Vec.getAlphabet()) {
-            vectorStore.updateVector(word, word2Vec.embed(word));
+            vectorStore.putVector(word, word2Vec.embed(word));
         }
 
         context.property(WORD2VEC_EMBEDDING, word2Vec);

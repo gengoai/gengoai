@@ -20,7 +20,7 @@
 package com.gengoai.hermes.en;
 
 import com.gengoai.Language;
-import com.gengoai.apollo.model.embedding.KeyedVectorStore;
+import com.gengoai.apollo.model.embedding.MLVectorStore;
 import com.gengoai.hermes.ResourceType;
 import com.gengoai.hermes.lexicon.WordList;
 
@@ -42,7 +42,7 @@ public final class ENResources {
       throw new IllegalAccessError();
    }
 
-   public static KeyedVectorStore gloveLargeEmbeddings() {
+   public static MLVectorStore gloveLargeEmbeddings() {
       return ResourceType.EMBEDDINGS.load(GLOVE_LARGE, Language.ENGLISH);
    }
 
@@ -54,7 +54,7 @@ public final class ENResources {
       return ResourceType.WORD_LIST.load(GLOVE_SMALL_ALPHABET, Language.ENGLISH);
    }
 
-   public static KeyedVectorStore gloveSmallEmbeddings(int dimension) {
+   public static MLVectorStore gloveSmallEmbeddings(int dimension) {
       switch (dimension) {
          case 50:
             return ResourceType.EMBEDDINGS.load(GLOVE_SMALL_50, Language.ENGLISH);

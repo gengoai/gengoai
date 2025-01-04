@@ -21,7 +21,7 @@ package com.gengoai.apollo.model.tensorflow;
 
 import com.gengoai.apollo.encoder.Encoder;
 import com.gengoai.apollo.encoder.IndexEncoder;
-import com.gengoai.apollo.model.embedding.KeyedVectorStore;
+import com.gengoai.apollo.model.embedding.MLVectorStore;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -73,11 +73,11 @@ public class TFInputVar extends TFVar {
         return new TFOneHotInputVar(name, servingName, shape);
     }
 
-    public static TFEmbeddingInputVar embedding(String name, KeyedVectorStore vectors) {
+    public static TFEmbeddingInputVar embedding(String name, MLVectorStore vectors) {
         return new TFEmbeddingInputVar(name, name, vectors);
     }
 
-    public static TFEmbeddingInputVar embedding(String name, String servingName, KeyedVectorStore vectors) {
+    public static TFEmbeddingInputVar embedding(String name, String servingName, MLVectorStore vectors) {
         return new TFEmbeddingInputVar(name, servingName, vectors);
     }
 

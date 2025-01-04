@@ -114,7 +114,7 @@ public class LocalWord2Vec extends TrainableWordEmbedding<LocalWord2Vec.Paramete
                                             parameters.unknownWord.value(),
                                             parameters.specialWords.value());
 
-      syn0.forEach((idx, vector) -> vectorStore.updateVector(huffmanEncoder.decode(idx), vector));
+      syn0.forEach((idx, vector) -> vectorStore.putVector(huffmanEncoder.decode(idx), vector));
    }
 
    /**

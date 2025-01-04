@@ -28,18 +28,17 @@ import com.gengoai.apollo.encoder.NoOptEncoder;
 import com.gengoai.apollo.math.linalg.NDArray;
 import com.gengoai.apollo.math.linalg.NumericNDArray;
 import com.gengoai.apollo.math.linalg.nd;
-import com.gengoai.apollo.model.embedding.KeyedVectorStore;
+import com.gengoai.apollo.model.embedding.MLVectorStore;
 import com.gengoai.conversion.Cast;
 import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class EmbeddingVectorizer extends Vectorizer<EmbeddingVectorizer> {
-   private final KeyedVectorStore vectorStore;
+   private final MLVectorStore vectorStore;
 
-   public EmbeddingVectorizer(KeyedVectorStore embedding) {
+   public EmbeddingVectorizer(MLVectorStore embedding) {
       super(NoOptEncoder.INSTANCE);
       this.vectorStore = embedding;
    }

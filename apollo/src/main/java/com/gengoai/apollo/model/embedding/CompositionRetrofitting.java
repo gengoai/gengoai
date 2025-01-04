@@ -74,7 +74,7 @@ public class CompositionRetrofitting implements Retrofitting {
                          .forEach(n -> tv.addi(n.mul((float) neighborWeight)));
             }
          }
-         out.vectorStore.updateVector(key, tv);
+         out.vectorStore.putVector(key, tv);
       }
       return out;
    }
